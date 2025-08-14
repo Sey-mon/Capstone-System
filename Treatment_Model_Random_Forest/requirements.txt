@@ -1,0 +1,28 @@
+# Required packages for the Child Malnutrition Assessment System
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.1.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+scipy>=1.9.0
+plotly>=5.10.0
+joblib>=1.1.0
+openpyxl>=3.0.0
+
+# FastAPI and API dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# Database dependencies
+mysql-connector-python>=8.0.33
+
+# Optional: For production deployment
+gunicorn>=21.2.0
+
+# Security dependencies
+PyJWT>=2.8.0
+cryptography>=41.0.0
+slowapi>=0.1.9
