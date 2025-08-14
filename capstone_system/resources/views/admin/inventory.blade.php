@@ -2,6 +2,10 @@
 
 @section('title', 'Inventory Management')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory.css') }}">
+@endpush
+
 @section('page-title', 'Inventory Management')
 @section('page-subtitle', 'Manage your inventory items and track stock levels.')
 
@@ -60,7 +64,7 @@
         </div>
         <div class="card-content">
             <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
+                <table class="inventory-table" style="border-collapse: collapse;">
                     <thead>
                         <tr style="border-bottom: 2px solid var(--border-light);">
                             <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">ID</th>
@@ -92,16 +96,14 @@
                             </td>
                             <td style="padding: 1rem;">
                                 @php
-                                    $stockStatus = '';
+                                    $quantityClass = 'high';
                                     if ($item->quantity <= 5) {
-                                        $stockStatus = 'color: var(--danger-color); font-weight: 600;';
+                                        $quantityClass = 'low';
                                     } elseif ($item->quantity <= 10) {
-                                        $stockStatus = 'color: var(--warning-color); font-weight: 600;';
-                                    } else {
-                                        $stockStatus = 'color: var(--success-color); font-weight: 500;';
+                                        $quantityClass = 'medium';
                                     }
                                 @endphp
-                                <span style="{{ $stockStatus }}">{{ $item->quantity }}</span>
+                                <span class="quantity-display {{ $quantityClass }}">{{ $item->quantity }}</span>
                             </td>
                             <td style="padding: 1rem; color: var(--text-secondary);">{{ $item->unit }}</td>
                             <td style="padding: 1rem; color: var(--text-secondary);">
@@ -123,53 +125,57 @@
                             <td style="padding: 1rem;">
                                 @php
                                     $status = 'In Stock';
-                                    $statusStyle = 'background: linear-gradient(135deg, var(--success-color), #16a34a); color: white;';
+                                    $statusClass = 'in-stock';
                                     
                                     if ($item->quantity <= 0) {
                                         $status = 'Out of Stock';
-                                        $statusStyle = 'background: linear-gradient(135deg, var(--danger-color), #dc2626); color: white;';
+                                        $statusClass = 'out-of-stock';
                                     } elseif ($item->quantity <= 5) {
                                         $status = 'Critical';
-                                        $statusStyle = 'background: linear-gradient(135deg, var(--danger-color), #dc2626); color: white;';
+                                        $statusClass = 'critical';
                                     } elseif ($item->quantity <= 10) {
                                         $status = 'Low Stock';
-                                        $statusStyle = 'background: linear-gradient(135deg, var(--warning-color), #d97706); color: white;';
+                                        $statusClass = 'low-stock';
                                     }
                                     
                                     if ($item->expiry_date && \Carbon\Carbon::now()->gt($item->expiry_date)) {
                                         $status = 'Expired';
-                                        $statusStyle = 'background: linear-gradient(135deg, #6b7280, #4b5563); color: white;';
+                                        $statusClass = 'expired';
                                     }
                                 @endphp
-                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; {{ $statusStyle }}">
+                                <span class="stock-status {{ $statusClass }}">
                                     {{ $status }}
                                 </span>
                             </td>
-                            <td style="padding: 1rem;">
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <button style="padding: 0.5rem; background: var(--primary-color); color: white; border: none; border-radius: 0.375rem; cursor: pointer; transition: all var(--transition-fast);" 
-                                            onmouseover="this.style.backgroundColor='var(--primary-dark)'" 
-                                            onmouseout="this.style.backgroundColor='var(--primary-color)'"
+                            <td class="actions-cell">
+                                <div class="action-buttons">
+                                    <button class="action-btn stock-in" 
+                                            onclick="openStockInModal({{ $item->item_id }}, '{{ addslashes($item->item_name) }}')"
+                                            title="Stock In">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="action-btn stock-out" 
+                                            onclick="openStockOutModal({{ $item->item_id }}, '{{ addslashes($item->item_name) }}', {{ $item->quantity }})"
+                                            title="Stock Out">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <button class="action-btn edit" 
                                             onclick="openEditModal({{ $item->item_id }})"
                                             title="Edit Item">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button style="padding: 0.5rem; background: var(--success-color); color: white; border: none; border-radius: 0.375rem; cursor: pointer; transition: all var(--transition-fast);" 
-                                            onmouseover="this.style.backgroundColor='#16a34a'" 
-                                            onmouseout="this.style.backgroundColor='var(--success-color)'"
-                                            title="Add Stock">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                    <button style="padding: 0.5rem; background: var(--warning-color); color: white; border: none; border-radius: 0.375rem; cursor: pointer; transition: all var(--transition-fast);" 
-                                            onmouseover="this.style.backgroundColor='#d97706'" 
-                                            onmouseout="this.style.backgroundColor='var(--warning-color)'"
+                                    <button class="action-btn view" 
+                                            onclick="window.location.href='{{ route('admin.inventory.transactions') }}?item_id={{ $item->item_id }}'"
                                             title="View Transactions">
                                         <i class="fas fa-history"></i>
                                     </button>
-                                    <button style="padding: 0.5rem; background: var(--danger-color); color: white; border: none; border-radius: 0.375rem; cursor: pointer; transition: all var(--transition-fast);" 
-                                            onmouseover="this.style.backgroundColor='#dc2626'" 
-                                            onmouseout="this.style.backgroundColor='var(--danger-color)'"
+                                    <button class="action-btn delete" 
                                             onclick="confirmDelete({{ $item->item_id }}, '{{ addslashes($item->item_name) }}')"
+                                            title="Delete Item">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
                                             title="Delete Item">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -278,6 +284,102 @@
                     Delete
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Stock In Modal -->
+    <div id="stockInModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Stock In</h3>
+                <button type="button" onclick="closeStockInModal()" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="stockInForm" onsubmit="processStockIn(event)">
+                <div class="form-group">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" id="stockInItemName" class="form-input" readonly style="background-color: var(--bg-tertiary);">
+                </div>
+                
+                <div class="form-group">
+                    <label for="stockInQuantity" class="form-label">Quantity to Add <span class="required">*</span></label>
+                    <input type="number" id="stockInQuantity" name="quantity" class="form-input" min="1" required>
+                    <small class="form-help">Enter the number of units to add to stock</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="stockInRemarks" class="form-label">Remarks</label>
+                    <textarea id="stockInRemarks" name="remarks" class="form-input" rows="3" placeholder="Optional notes about this stock in..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" onclick="closeStockInModal()" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus"></i>
+                        Add Stock
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stock Out Modal -->
+    <div id="stockOutModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Stock Out</h3>
+                <button type="button" onclick="closeStockOutModal()" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="stockOutForm" onsubmit="processStockOut(event)">
+                <div class="form-group">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" id="stockOutItemName" class="form-input" readonly style="background-color: var(--bg-tertiary);">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Available Stock</label>
+                    <input type="text" id="stockOutAvailable" class="form-input" readonly style="background-color: var(--bg-tertiary);">
+                </div>
+                
+                <div class="form-group">
+                    <label for="stockOutQuantity" class="form-label">Quantity to Remove <span class="required">*</span></label>
+                    <input type="number" id="stockOutQuantity" name="quantity" class="form-input" min="1" required>
+                    <small class="form-help">Enter the number of units to remove from stock</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="stockOutPatient" class="form-label">Patient (Optional)</label>
+                    <select id="stockOutPatient" name="patient_id" class="form-input">
+                        <option value="">Select patient (if applicable)</option>
+                        @if(isset($patients))
+                            @foreach($patients as $patient)
+                                <option value="{{ $patient->patient_id }}">{{ $patient->first_name }} {{ $patient->last_name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                    <small class="form-help">Select a patient if this stock out is for a specific patient</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="stockOutRemarks" class="form-label">Remarks</label>
+                    <textarea id="stockOutRemarks" name="remarks" class="form-input" rows="3" placeholder="Optional notes about this stock out..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" onclick="closeStockOutModal()" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-minus"></i>
+                        Remove Stock
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 @endsection

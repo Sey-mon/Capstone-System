@@ -5,6 +5,9 @@
 
 let currentItemId = null;
 let isEditMode = false;
+let currentStockItemId = null;
+let currentStockItemName = '';
+let currentAvailableStock = 0;
 
 // CSRF token for AJAX requests
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -245,6 +248,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const stockInModal = document.getElementById('stockInModal');
+    if (stockInModal) {
+        stockInModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeStockInModal();
+            }
+        });
+    }
+
+    const stockOutModal = document.getElementById('stockOutModal');
+    if (stockOutModal) {
+        stockOutModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeStockOutModal();
+            }
+        });
+    }
+
     // Set minimum date for expiry date to tomorrow
     const expiryDateInput = document.getElementById('expiryDate');
     if (expiryDateInput) {
@@ -256,6 +277,143 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Stock In Modal Functions
+function openStockInModal(itemId, itemName) {
+    currentStockItemId = itemId;
+    currentStockItemName = itemName;
+    document.getElementById('stockInItemName').value = itemName;
+    document.getElementById('stockInForm').reset();
+    document.getElementById('stockInItemName').value = itemName; // Reset clears this, so set it again
+    document.getElementById('stockInModal').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('stockInModal').classList.add('show');
+    }, 10);
+}
+
+function closeStockInModal() {
+    document.getElementById('stockInModal').classList.remove('show');
+    setTimeout(() => {
+        document.getElementById('stockInModal').style.display = 'none';
+        currentStockItemId = null;
+        currentStockItemName = '';
+    }, 300);
+}
+
+function processStockIn(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    submitButton.disabled = true;
+    
+    const formData = new FormData(form);
+    
+    fetch(`/admin/inventory/${currentStockItemId}/stock-in`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closeStockInModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while processing stock in', 'error');
+    })
+    .finally(() => {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    });
+}
+
+// Stock Out Modal Functions
+function openStockOutModal(itemId, itemName, availableStock) {
+    currentStockItemId = itemId;
+    currentStockItemName = itemName;
+    currentAvailableStock = availableStock;
+    
+    document.getElementById('stockOutItemName').value = itemName;
+    document.getElementById('stockOutAvailable').value = `${availableStock} units`;
+    document.getElementById('stockOutForm').reset();
+    document.getElementById('stockOutItemName').value = itemName; // Reset clears this, so set it again
+    document.getElementById('stockOutAvailable').value = `${availableStock} units`; // Reset clears this, so set it again
+    document.getElementById('stockOutQuantity').setAttribute('max', availableStock);
+    document.getElementById('stockOutModal').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('stockOutModal').classList.add('show');
+    }, 10);
+}
+
+function closeStockOutModal() {
+    document.getElementById('stockOutModal').classList.remove('show');
+    setTimeout(() => {
+        document.getElementById('stockOutModal').style.display = 'none';
+        currentStockItemId = null;
+        currentStockItemName = '';
+        currentAvailableStock = 0;
+    }, 300);
+}
+
+function processStockOut(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    const quantity = parseInt(document.getElementById('stockOutQuantity').value);
+    
+    // Validate quantity against available stock
+    if (quantity > currentAvailableStock) {
+        showNotification(`Cannot remove ${quantity} units. Only ${currentAvailableStock} units available.`, 'error');
+        return;
+    }
+    
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    submitButton.disabled = true;
+    
+    const formData = new FormData(form);
+    
+    fetch(`/admin/inventory/${currentStockItemId}/stock-out`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closeStockOutModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while processing stock out', 'error');
+    })
+    .finally(() => {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    });
+}
+
 // Make functions globally available
 window.openAddModal = openAddModal;
 window.openEditModal = openEditModal;
@@ -263,3 +421,9 @@ window.closeModal = closeModal;
 window.confirmDelete = confirmDelete;
 window.closeDeleteModal = closeDeleteModal;
 window.deleteItem = deleteItem;
+window.openStockInModal = openStockInModal;
+window.closeStockInModal = closeStockInModal;
+window.processStockIn = processStockIn;
+window.openStockOutModal = openStockOutModal;
+window.closeStockOutModal = closeStockOutModal;
+window.processStockOut = processStockOut;
