@@ -35,6 +35,10 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/inventory/{id}', [AdminController::class, 'updateInventoryItem'])->name('inventory.update');
     Route::delete('/inventory/{id}', [AdminController::class, 'deleteInventoryItem'])->name('inventory.delete');
     
+    // Stock In/Out routes
+    Route::post('/inventory/{id}/stock-in', [AdminController::class, 'stockIn'])->name('inventory.stock.in');
+    Route::post('/inventory/{id}/stock-out', [AdminController::class, 'stockOut'])->name('inventory.stock.out');
+    
     // System Management routes
     Route::get('/system-management', [AdminController::class, 'systemManagement'])->name('system.management');
     

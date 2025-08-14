@@ -78,7 +78,10 @@ class AdminController extends Controller
         $items = InventoryItem::with(['category', 'inventoryTransactions'])
             ->paginate(15);
         $categories = ItemCategory::all();
-        return view('admin.inventory', compact('items', 'categories'));
+        $patients = Patient::select('patient_id', 'first_name', 'last_name')
+            ->orderBy('first_name')
+            ->get();
+        return view('admin.inventory', compact('items', 'categories', 'patients'));
     }
 
     /**
@@ -794,6 +797,136 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Stock In - Add inventory to existing item
+     */
+    public function stockIn(Request $request, $id)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $item = InventoryItem::findOrFail($id);
+            $oldQuantity = $item->quantity;
+            $newQuantity = $oldQuantity + $request->quantity;
+
+            // Update item quantity
+            $item->update(['quantity' => $newQuantity]);
+
+            // Create transaction record
+            InventoryTransaction::create([
+                'item_id' => $item->item_id,
+                'user_id' => Auth::id(),
+                'patient_id' => null, // Stock in doesn't involve patients
+                'transaction_type' => 'In',
+                'quantity' => $request->quantity,
+                'transaction_date' => now(),
+                'remarks' => $request->remarks ?? "Stock in - Added {$request->quantity} {$item->unit}(s)",
+            ]);
+
+            // Log the activity
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'stock_in',
+                'table_name' => 'inventory_items',
+                'record_id' => $item->item_id,
+                'old_values' => json_encode(['quantity' => $oldQuantity]),
+                'new_values' => json_encode(['quantity' => $newQuantity]),
+                'description' => "Stock in for {$item->item_name}: Added {$request->quantity} {$item->unit}(s). New total: {$newQuantity}",
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully added {$request->quantity} {$item->unit}(s) to {$item->item_name}",
+                'item' => $item->load('category'),
+                'new_quantity' => $newQuantity
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process stock in. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Stock Out - Remove inventory from existing item
+     */
+    public function stockOut(Request $request, $id)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'patient_id' => 'nullable|exists:patients,patient_id',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $item = InventoryItem::findOrFail($id);
+            $oldQuantity = $item->quantity;
+
+            // Check if there's enough stock
+            if ($oldQuantity < $request->quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient stock. Available: {$oldQuantity} {$item->unit}(s), Requested: {$request->quantity} {$item->unit}(s)"
+                ], 400);
+            }
+
+            $newQuantity = $oldQuantity - $request->quantity;
+
+            // Update item quantity
+            $item->update(['quantity' => $newQuantity]);
+
+            // Create transaction record
+            InventoryTransaction::create([
+                'item_id' => $item->item_id,
+                'user_id' => Auth::id(),
+                'patient_id' => $request->patient_id,
+                'transaction_type' => 'Out',
+                'quantity' => $request->quantity,
+                'transaction_date' => now(),
+                'remarks' => $request->remarks ?? "Stock out - Removed {$request->quantity} {$item->unit}(s)",
+            ]);
+
+            // Log the activity
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'stock_out',
+                'table_name' => 'inventory_items',
+                'record_id' => $item->item_id,
+                'old_values' => json_encode(['quantity' => $oldQuantity]),
+                'new_values' => json_encode(['quantity' => $newQuantity]),
+                'description' => "Stock out for {$item->item_name}: Removed {$request->quantity} {$item->unit}(s). New total: {$newQuantity}",
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully removed {$request->quantity} {$item->unit}(s) from {$item->item_name}",
+                'item' => $item->load('category'),
+                'new_quantity' => $newQuantity
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process stock out. Please try again.'
             ], 500);
         }
     }
