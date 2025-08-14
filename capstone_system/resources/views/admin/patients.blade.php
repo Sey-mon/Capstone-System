@@ -10,7 +10,7 @@
 @endpush
 
 @section('navigation')
-    @include('partials.navigation')
+    @include('partials.admin-navigation')
 @endsection
 
 @section('content')

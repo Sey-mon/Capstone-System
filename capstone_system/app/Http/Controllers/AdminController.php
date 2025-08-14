@@ -24,20 +24,23 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        $stats = [
-            'total_users' => User::count(),
-            'total_patients' => Patient::count(),
-            'total_assessments' => Assessment::count(),
-            'total_inventory_items' => InventoryItem::count(),
-            'recent_transactions' => InventoryTransaction::with(['user', 'inventoryItem'])
-                ->latest()
-                ->take(5)
-                ->get(),
-            'recent_audit_logs' => AuditLog::with('user')
-                ->latest()
-                ->take(10)
-                ->get(),
-        ];
+        // Cache dashboard stats for 5 minutes to improve performance
+        $stats = cache()->remember('admin_dashboard_stats', 300, function () {
+            return [
+                'total_users' => User::count(),
+                'total_patients' => Patient::count(),
+                'total_assessments' => Assessment::count(),
+                'total_inventory_items' => InventoryItem::count(),
+                'recent_transactions' => InventoryTransaction::with(['user', 'inventoryItem'])
+                    ->latest()
+                    ->take(5)
+                    ->get(),
+                'recent_audit_logs' => AuditLog::with('user')
+                    ->latest()
+                    ->take(10)
+                    ->get(),
+            ];
+        });
 
         return view('admin.dashboard', compact('stats'));
     }
@@ -111,12 +114,8 @@ class AdminController extends Controller
             // Log the activity
             AuditLog::create([
                 'user_id' => Auth::id(),
-                'action' => 'create',
-                'table_name' => 'inventory_items',
-                'record_id' => $item->item_id,
-                'old_values' => null,
-                'new_values' => json_encode($item->toArray()),
-                'description' => "Created new inventory item: {$item->item_name}",
+                'action' => 'inventory_create',
+                'description' => "Created new inventory item: {$item->item_name} (Qty: {$item->quantity} {$item->unit})",
             ]);
 
             DB::commit();
@@ -166,12 +165,8 @@ class AdminController extends Controller
             // Log the activity
             AuditLog::create([
                 'user_id' => Auth::id(),
-                'action' => 'update',
-                'table_name' => 'inventory_items',
-                'record_id' => $item->item_id,
-                'old_values' => json_encode($oldValues),
-                'new_values' => json_encode($item->toArray()),
-                'description' => "Updated inventory item: {$item->item_name}",
+                'action' => 'inventory_update',
+                'description' => "Updated inventory item: {$item->item_name} (New qty: {$item->quantity} {$item->unit})",
             ]);
 
             DB::commit();
@@ -213,12 +208,8 @@ class AdminController extends Controller
             // Log the activity before deletion
             AuditLog::create([
                 'user_id' => Auth::id(),
-                'action' => 'delete',
-                'table_name' => 'inventory_items',
-                'record_id' => $item->item_id,
-                'old_values' => json_encode($item->toArray()),
-                'new_values' => null,
-                'description' => "Deleted inventory item: {$itemName}",
+                'action' => 'inventory_delete',
+                'description' => "Deleted inventory item: {$itemName} (Had {$item->quantity} {$item->unit})",
             ]);
 
             $item->delete();
@@ -836,11 +827,7 @@ class AdminController extends Controller
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'stock_in',
-                'table_name' => 'inventory_items',
-                'record_id' => $item->item_id,
-                'old_values' => json_encode(['quantity' => $oldQuantity]),
-                'new_values' => json_encode(['quantity' => $newQuantity]),
-                'description' => "Stock in for {$item->item_name}: Added {$request->quantity} {$item->unit}(s). New total: {$newQuantity}",
+                'description' => "Stock in for {$item->item_name}: Added {$request->quantity} {$item->unit}(s). Total: {$oldQuantity} → {$newQuantity}",
             ]);
 
             DB::commit();
@@ -906,11 +893,7 @@ class AdminController extends Controller
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'stock_out',
-                'table_name' => 'inventory_items',
-                'record_id' => $item->item_id,
-                'old_values' => json_encode(['quantity' => $oldQuantity]),
-                'new_values' => json_encode(['quantity' => $newQuantity]),
-                'description' => "Stock out for {$item->item_name}: Removed {$request->quantity} {$item->unit}(s). New total: {$newQuantity}",
+                'description' => "Stock out for {$item->item_name}: Removed {$request->quantity} {$item->unit}(s). Total: {$oldQuantity} → {$newQuantity}" . ($request->patient_id ? " (Patient involved)" : ""),
             ]);
 
             DB::commit();
@@ -930,4 +913,8 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Show inventory transactions
+     */
 }

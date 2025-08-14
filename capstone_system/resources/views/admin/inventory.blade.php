@@ -10,7 +10,7 @@
 @section('page-subtitle', 'Manage your inventory items and track stock levels.')
 
 @section('navigation')
-    @include('partials.navigation')
+    @include('partials.admin-navigation')
 @endsection
 
 @section('content')
@@ -52,22 +52,56 @@
         <div class="card-header">
             <h3 class="card-title">Inventory Items</h3>
             <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-secondary">
-                    <i class="fas fa-filter"></i>
-                    Filter
-                </button>
                 <button class="btn btn-primary" onclick="openAddModal()">
                     <i class="fas fa-plus"></i>
                     Add Item
                 </button>
             </div>
         </div>
+        
+        <!-- Real-time Filters -->
+        <div class="filter-section" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-light); background: var(--bg-tertiary);">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: center;">
+                <div class="form-group" style="margin: 0;">
+                    <input type="text" 
+                           id="searchFilter" 
+                           placeholder="Search items by name or category..." 
+                           class="form-input"
+                           style="margin: 0;">
+                </div>
+                
+                <div class="form-group" style="margin: 0;">
+                    <select id="categoryFilter" class="form-input" style="margin: 0;">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->category_name }}">{{ $category->category_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin: 0;">
+                    <select id="statusFilter" class="form-input" style="margin: 0;">
+                        <option value="">All Status</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="critical">Critical</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+                
+                <button onclick="clearFilters()" class="btn btn-secondary" style="height: fit-content;">
+                    <i class="fas fa-times"></i>
+                    Clear
+                </button>
+            </div>
+        </div>
+        
         <div class="card-content">
             <div style="overflow-x: auto;">
                 <table class="inventory-table" style="border-collapse: collapse;">
                     <thead>
                         <tr style="border-bottom: 2px solid var(--border-light);">
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">ID</th>
                             <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Item Name</th>
                             <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Category</th>
                             <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Quantity</th>
@@ -82,7 +116,6 @@
                         <tr style="border-bottom: 1px solid var(--border-light); transition: background-color var(--transition-fast);" 
                             onmouseover="this.style.backgroundColor='var(--bg-tertiary)'" 
                             onmouseout="this.style.backgroundColor='transparent'">
-                            <td style="padding: 1rem; font-weight: 500;">#{{ $item->item_id }}</td>
                             <td style="padding: 1rem;">
                                 <div style="font-weight: 500;">{{ $item->item_name }}</div>
                                 <div style="font-size: 0.75rem; color: var(--text-secondary);">
@@ -165,8 +198,8 @@
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="action-btn view" 
-                                            onclick="window.location.href='{{ route('admin.inventory.transactions') }}?item_id={{ $item->item_id }}'"
-                                            title="View Transactions">
+                                            onclick="window.location.href='{{ route('admin.audit.logs') }}'"
+                                            title="View Activity Logs">
                                         <i class="fas fa-history"></i>
                                     </button>
                                     <button class="action-btn delete" 
@@ -176,15 +209,10 @@
                                     </button>
                                 </div>
                             </td>
-                                            title="Delete Item">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" style="padding: 3rem; text-align: center;">
+                            <td colspan="7" style="padding: 3rem; text-align: center;">
                                 <div style="color: var(--text-secondary);">
                                     <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
                                     <p>No inventory items found.</p>

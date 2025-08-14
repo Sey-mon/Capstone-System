@@ -18,15 +18,19 @@
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .action-left {
     flex: 1;
+    min-width: 250px;
 }
 
 .action-right {
     display: flex;
     gap: 0.75rem;
+    flex-shrink: 0;
 }
 
 /* Search Form */
@@ -365,5 +369,63 @@
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
+    }
+    
+    .action-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .action-left {
+        min-width: auto;
+    }
+    
+    .search-form {
+        max-width: none;
+    }
+}
+
+/* Enhanced Zoom Responsiveness */
+@media (min-width: 1200px) {
+    .action-bar {
+        padding: 1.25rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 1rem 0.75rem;
+    }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .action-bar {
+        flex-wrap: wrap;
+    }
+    
+    .action-left {
+        min-width: 200px;
+    }
+}
+
+/* Improved table scrolling on small screens */
+@media (max-width: 768px) {
+    .table-responsive {
+        margin: 0 -1rem;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .nutritionist-patients {
+        padding: 0.75rem;
     }
 }

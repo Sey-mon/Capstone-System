@@ -5,76 +5,145 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const floatingMenuBtn = document.getElementById('floatingMenuBtn');
     const mobileOverlay = document.getElementById('mobileOverlay');
     const navLinks = document.querySelectorAll('.nav-link');
     
-    // Initialize sidebar state - start visible by default
-    const sidebarHidden = localStorage.getItem('sidebarHidden') === 'true';
-    if (sidebarHidden) {
-        // Hide sidebar if previously hidden
-        sidebar.classList.add('mobile-hidden');
-    } else {
-        // Sidebar starts visible
-        sidebar.classList.remove('mobile-hidden');
+    // Initialize sidebar state
+    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (sidebarCollapsed && window.innerWidth > 768) {
+        sidebar.classList.add('collapsed');
     }
     
-    // Desktop sidebar toggle - toggles visibility
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('mobile-hidden');
+    // Function to toggle sidebar
+    function toggleSidebar() {
+        const isDesktop = window.innerWidth > 768;
+        
+        if (isDesktop) {
+            // Add animation class
+            sidebar.classList.add('toggling');
+            
+            sidebar.classList.toggle('collapsed');
             
             // Save state to localStorage
-            const isHidden = sidebar.classList.contains('mobile-hidden');
-            localStorage.setItem('sidebarHidden', isHidden);
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                sidebar.classList.remove('toggling');
+            }, 300);
             
             // Dispatch custom event for other components to listen
             window.dispatchEvent(new CustomEvent('sidebarToggle', {
-                detail: { hidden: isHidden }
+                detail: { collapsed: isCollapsed }
             }));
+        }
+    }
+    
+    // Desktop sidebar toggle - toggles collapsed state
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+    
+    // Floating menu button - shows sidebar when hidden
+    if (floatingMenuBtn) {
+        floatingMenuBtn.addEventListener('click', function() {
+            const isDesktop = window.innerWidth > 768;
+            
+            if (isDesktop) {
+                // Show sidebar by removing collapsed class
+                sidebar.classList.remove('collapsed');
+                localStorage.setItem('sidebarCollapsed', false);
+                
+                window.dispatchEvent(new CustomEvent('sidebarToggle', {
+                    detail: { collapsed: false }
+                }));
+            }
         });
     }
     
     // Mobile menu toggle
     if (mobileMenuBtn) {
         mobileMenuBtn.addEventListener('click', function() {
-            sidebar.classList.toggle('mobile-hidden');
+            const isMobile = window.innerWidth <= 768;
             
-            // Save state to localStorage
-            const isHidden = sidebar.classList.contains('mobile-hidden');
-            localStorage.setItem('sidebarHidden', isHidden);
+            if (isMobile) {
+                // Mobile behavior - show/hide sidebar with overlay
+                const isActive = sidebar.classList.contains('mobile-active');
+                
+                if (isActive) {
+                    // Close sidebar
+                    sidebar.classList.remove('mobile-active');
+                    mobileOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Check if sidebar is collapsed, if so expand it first
+                    if (sidebar.classList.contains('collapsed')) {
+                        sidebar.classList.remove('collapsed');
+                    }
+                    // Open sidebar
+                    sidebar.classList.add('mobile-active');
+                    mobileOverlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            } else {
+                // Desktop behavior - toggle collapsed state
+                toggleSidebar();
+            }
         });
     }
     
     // Mobile overlay click
     if (mobileOverlay) {
         mobileOverlay.addEventListener('click', function() {
-            sidebar.classList.add('mobile-hidden');
+            sidebar.classList.remove('mobile-active');
             mobileOverlay.classList.remove('active');
             document.body.style.overflow = '';
-            
-            // Save state to localStorage
-            localStorage.setItem('sidebarHidden', true);
         });
     }
     
-    // Handle window resize
+    // Handle window resize with debounce
+    let resizeTimeout;
     window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-            // Desktop view
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            handleResponsiveLayout();
+        }, 150);
+    });
+    
+    function handleResponsiveLayout() {
+        const isMobile = window.innerWidth <= 768;
+        const isDesktop = window.innerWidth > 768;
+        
+        if (isMobile) {
+            // Mobile view - ensure sidebar starts hidden
+            sidebar.classList.remove('mobile-active');
+            mobileOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // Remove collapsed class on mobile to show full sidebar when active
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+            }
+        } else {
+            // Desktop view - restore collapsed state
             sidebar.classList.remove('mobile-active');
             mobileOverlay.classList.remove('active');
             document.body.style.overflow = '';
             
             // Restore collapsed state on desktop
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            if (isCollapsed) {
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
                 sidebar.classList.add('collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
             }
-        } else {
-            // Mobile view - remove collapsed class
-            sidebar.classList.remove('collapsed');
         }
-    });
+    }
+    
+    // Initialize responsive layout
+    handleResponsiveLayout();
     
     // Set active navigation link
     function setActiveNavLink() {
@@ -103,8 +172,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add active class to clicked link
             this.classList.add('active');
             
-            // Close mobile menu if open
-            if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-active')) {
+            // Close mobile menu if open and on mobile
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile && sidebar.classList.contains('mobile-active')) {
                 sidebar.classList.remove('mobile-active');
                 mobileOverlay.classList.remove('active');
                 document.body.style.overflow = '';
@@ -119,12 +189,27 @@ document.addEventListener('DOMContentLoaded', function() {
         navItems.forEach(item => {
             const text = item.querySelector('.nav-text');
             if (text) {
-                item.setAttribute('title', text.textContent);
+                item.setAttribute('title', text.textContent.trim());
             }
         });
+        
+        // Also add tooltip for logout button
+        const logoutBtn = document.querySelector('.logout-btn');
+        if (logoutBtn) {
+            const span = logoutBtn.querySelector('span');
+            if (span) {
+                logoutBtn.setAttribute('title', span.textContent.trim());
+            }
+        }
     }
     
     initializeTooltips();
+    
+    // Update tooltips when sidebar state changes
+    window.addEventListener('sidebarToggle', function() {
+        // Small delay to allow transition to complete
+        setTimeout(initializeTooltips, 100);
+    });
     
     // Animation for stat cards
     function animateStatCards() {

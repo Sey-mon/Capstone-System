@@ -6,50 +6,7 @@
 @section('page-subtitle', 'Welcome back, ' . Auth::user()->first_name . '! Here\'s what\'s happening today.')
 
 @section('navigation')
-    <ul>
-        <li class="nav-item">
-            <a href="{{ route('admin.dashboard') }}" class="nav-link active">
-                <i class="fas fa-chart-pie"></i>
-                <span class="nav-text">Dashboard</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.users') }}" class="nav-link">
-                <i class="fas fa-users"></i>
-                <span class="nav-text">Users</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.patients') }}" class="nav-link">
-                <i class="fas fa-child"></i>
-                <span class="nav-text">Patients</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.inventory') }}" class="nav-link">
-                <i class="fas fa-boxes"></i>
-                <span class="nav-text">Inventory</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.reports') }}" class="nav-link">
-                <i class="fas fa-chart-bar"></i>
-                <span class="nav-text">Reports</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.audit.logs') }}" class="nav-link">
-                <i class="fas fa-clipboard-check"></i>
-                <span class="nav-text">Audit Logs</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('admin.inventory.transactions') }}" class="nav-link">
-                <i class="fas fa-exchange-alt"></i>
-                <span class="nav-text">Inventory Transactions</span>
-            </a>
-        </li>
-    </ul>
+    @include('partials.admin-navigation')
 @endsection
 
 @section('content')
