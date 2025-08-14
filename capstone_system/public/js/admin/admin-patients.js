@@ -67,16 +67,16 @@ function savePatient() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Patient added successfully!', 'success');
+            showEnhancedNotification('Patient added successfully!', 'success');
             closeAddPatientModal();
             setTimeout(() => window.location.reload(), 1000);
         } else {
-            showNotification(data.message || 'Error adding patient', 'error');
+            showEnhancedNotification(data.message || 'Error adding patient', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error adding patient', 'error');
+        showEnhancedNotification('Error adding patient', 'error');
     })
     .finally(() => {
         saveBtn.innerHTML = originalText;
@@ -95,12 +95,12 @@ function editPatient(patientId) {
             populateEditForm(data.patient);
             showEditPatientModal();
         } else {
-            showNotification('Error loading patient data', 'error');
+            showEnhancedNotification('Error loading patient data', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error loading patient data', 'error');
+        showEnhancedNotification('Error loading patient data', 'error');
     });
 }
 
@@ -109,6 +109,9 @@ function updatePatient() {
 
     const form = document.getElementById('editPatientForm');
     const formData = new FormData(form);
+    
+    // Add method override for PUT request
+    formData.append('_method', 'PUT');
 
     // Basic validation
     if (!validatePatientForm(form)) {
@@ -131,16 +134,16 @@ function updatePatient() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Patient updated successfully!', 'success');
+            showEnhancedNotification('Patient updated successfully!', 'success');
             closeEditPatientModal();
             setTimeout(() => window.location.reload(), 1000);
         } else {
-            showNotification(data.message || 'Error updating patient', 'error');
+            showEnhancedNotification(data.message || 'Error updating patient', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error updating patient', 'error');
+        showEnhancedNotification('Error updating patient', 'error');
     })
     .finally(() => {
         updateBtn.innerHTML = originalText;
@@ -186,80 +189,130 @@ function deletePatient(patientId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Patient deleted successfully!', 'success');
+            showEnhancedNotification('Patient deleted successfully!', 'success');
             setTimeout(() => window.location.reload(), 1000);
         } else {
-            showNotification(data.message || 'Error deleting patient', 'error');
+            showEnhancedNotification(data.message || 'Error deleting patient', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error deleting patient', 'error');
+        showEnhancedNotification('Error deleting patient', 'error');
     });
 }
 
 // Helper functions
+// Helper functions
 function populateEditForm(patient) {
     document.getElementById('edit_patient_id').value = patient.patient_id;
     document.getElementById('edit_first_name').value = patient.first_name || '';
+    document.getElementById('edit_middle_name').value = patient.middle_name || '';
     document.getElementById('edit_last_name').value = patient.last_name || '';
-    document.getElementById('edit_date_of_birth').value = patient.date_of_birth || '';
-    document.getElementById('edit_gender').value = patient.gender || '';
+    document.getElementById('edit_parent_id').value = patient.parent_id || '';
+    document.getElementById('edit_nutritionist_id').value = patient.nutritionist_id || '';
     document.getElementById('edit_barangay_id').value = patient.barangay_id || '';
-    document.getElementById('edit_status').value = patient.status || 'Active';
-    document.getElementById('edit_guardian_name').value = patient.guardian_name || '';
-    document.getElementById('edit_guardian_contact').value = patient.guardian_contact || '';
-    document.getElementById('edit_address').value = patient.address || '';
+    document.getElementById('edit_contact_number').value = patient.contact_number || '';
+    document.getElementById('edit_age_months').value = patient.age_months || '';
+    document.getElementById('edit_sex').value = patient.sex || '';
+    document.getElementById('edit_date_of_admission').value = patient.date_of_admission || '';
+    document.getElementById('edit_weight_kg').value = patient.weight_kg || '';
+    document.getElementById('edit_height_cm').value = patient.height_cm || '';
+    document.getElementById('edit_total_household_adults').value = patient.total_household_adults || 0;
+    document.getElementById('edit_total_household_children').value = patient.total_household_children || 0;
+    document.getElementById('edit_total_household_twins').value = patient.total_household_twins || 0;
+    document.getElementById('edit_is_4ps_beneficiary').checked = patient.is_4ps_beneficiary || false;
+    document.getElementById('edit_weight_for_age').value = patient.weight_for_age || '';
+    document.getElementById('edit_height_for_age').value = patient.height_for_age || '';
+    document.getElementById('edit_bmi_for_age').value = patient.bmi_for_age || '';
+    document.getElementById('edit_breastfeeding').value = patient.breastfeeding || '';
+    document.getElementById('edit_edema').value = patient.edema || '';
+    document.getElementById('edit_other_medical_problems').value = patient.other_medical_problems || '';
 }
 
 function displayPatientDetails(patient) {
-    const age = patient.date_of_birth ? calculateAge(patient.date_of_birth) : 'N/A';
+    const parentName = patient.parent ? `${patient.parent.first_name} ${patient.parent.last_name}` : 'Not assigned';
+    const nutritionistName = patient.nutritionist ? `${patient.nutritionist.first_name} ${patient.nutritionist.last_name}` : 'Not assigned';
     const barangayName = patient.barangay ? patient.barangay.barangay_name : 'Not assigned';
     
     const html = `
         <div class="patient-details-grid">
-            <div class="detail-group">
-                <div class="detail-label">Patient ID</div>
-                <div class="detail-value">#${patient.patient_id}</div>
-            </div>
-            <div class="detail-group">
-                <div class="detail-label">Full Name</div>
-                <div class="detail-value">${patient.first_name} ${patient.last_name}</div>
-            </div>
-            <div class="detail-group">
-                <div class="detail-label">Date of Birth</div>
-                <div class="detail-value">${patient.date_of_birth || 'N/A'}</div>
-            </div>
-            <div class="detail-group">
-                <div class="detail-label">Age</div>
-                <div class="detail-value">${age} years</div>
-            </div>
-            <div class="detail-group">
-                <div class="detail-label">Gender</div>
-                <div class="detail-value">${patient.gender || 'N/A'}</div>
-            </div>
-            <div class="detail-group">
-                <div class="detail-label">Status</div>
-                <div class="detail-value">
-                    <span class="badge badge-${getStatusClass(patient.status)}">${patient.status || 'Active'}</span>
+            <div class="detail-section">
+                <h6>Basic Information</h6>
+                <div class="detail-group">
+                    <div class="detail-label">Full Name</div>
+                    <div class="detail-value">${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Age</div>
+                    <div class="detail-value">${patient.age_months} months</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Sex</div>
+                    <div class="detail-value">${patient.sex || 'N/A'}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Contact Number</div>
+                    <div class="detail-value">${patient.contact_number || 'N/A'}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Date of Admission</div>
+                    <div class="detail-value">${new Date(patient.date_of_admission).toLocaleDateString()}</div>
                 </div>
             </div>
-            <div class="detail-group">
-                <div class="detail-label">Barangay</div>
-                <div class="detail-value">${barangayName}</div>
+            
+            <div class="detail-section">
+                <h6>Assignment Information</h6>
+                <div class="detail-group">
+                    <div class="detail-label">Parent</div>
+                    <div class="detail-value">${parentName}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Nutritionist</div>
+                    <div class="detail-value">${nutritionistName}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Barangay</div>
+                    <div class="detail-value">${barangayName}</div>
+                </div>
             </div>
-            <div class="detail-group">
-                <div class="detail-label">Guardian Name</div>
-                <div class="detail-value">${patient.guardian_name || 'N/A'}</div>
+            
+            <div class="detail-section">
+                <h6>Health Information</h6>
+                <div class="detail-group">
+                    <div class="detail-label">Weight</div>
+                    <div class="detail-value">${patient.weight_kg} kg</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Height</div>
+                    <div class="detail-value">${patient.height_cm} cm</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Weight for Age</div>
+                    <div class="detail-value">${patient.weight_for_age || 'N/A'}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Height for Age</div>
+                    <div class="detail-value">${patient.height_for_age || 'N/A'}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">BMI for Age</div>
+                    <div class="detail-value">${patient.bmi_for_age || 'N/A'}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">4Ps Beneficiary</div>
+                    <div class="detail-value">${patient.is_4ps_beneficiary ? 'Yes' : 'No'}</div>
+                </div>
             </div>
-            <div class="detail-group">
-                <div class="detail-label">Guardian Contact</div>
-                <div class="detail-value">${patient.guardian_contact || 'N/A'}</div>
+            
+            ${patient.other_medical_problems ? `
+            <div class="detail-section">
+                <h6>Medical Notes</h6>
+                <div class="detail-group">
+                    <div class="detail-label">Other Medical Problems</div>
+                    <div class="detail-value">${patient.other_medical_problems}</div>
+                </div>
             </div>
-            <div class="detail-group">
-                <div class="detail-label">Address</div>
-                <div class="detail-value">${patient.address || 'N/A'}</div>
-            </div>
+            ` : ''}
         </div>
     `;
     
@@ -267,21 +320,40 @@ function displayPatientDetails(patient) {
 }
 
 function validatePatientForm(form) {
-    const requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'barangay_id'];
+    const requiredFields = ['first_name', 'last_name', 'barangay_id', 'contact_number', 'age_months', 'sex', 'date_of_admission', 'weight_kg', 'height_cm'];
     let isValid = true;
     
     requiredFields.forEach(fieldName => {
         const field = form.querySelector(`[name="${fieldName}"]`);
-        if (!field.value.trim()) {
+        if (field && !field.value.trim()) {
             field.classList.add('is-invalid');
             isValid = false;
-        } else {
+        } else if (field) {
             field.classList.remove('is-invalid');
         }
     });
+
+    // Additional validations
+    const ageField = form.querySelector('[name="age_months"]');
+    if (ageField && parseInt(ageField.value) < 0) {
+        ageField.classList.add('is-invalid');
+        isValid = false;
+    }
+
+    const weightField = form.querySelector('[name="weight_kg"]');
+    if (weightField && parseFloat(weightField.value) <= 0) {
+        weightField.classList.add('is-invalid');
+        isValid = false;
+    }
+
+    const heightField = form.querySelector('[name="height_cm"]');
+    if (heightField && parseFloat(heightField.value) <= 0) {
+        heightField.classList.add('is-invalid');
+        isValid = false;
+    }
     
     if (!isValid) {
-        showNotification('Please fill in all required fields', 'error');
+        showEnhancedNotification('Please fill in all required fields with valid values', 'error');
     }
     
     return isValid;

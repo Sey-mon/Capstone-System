@@ -29,6 +29,12 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
     
+    // Patient CRUD routes
+    Route::post('/patients', [AdminController::class, 'storePatient'])->name('patients.store');
+    Route::get('/patients/{id}', [AdminController::class, 'getPatient'])->name('patients.get');
+    Route::put('/patients/{id}', [AdminController::class, 'updatePatient'])->name('patients.update');
+    Route::delete('/patients/{id}', [AdminController::class, 'deletePatient'])->name('patients.delete');
+    
     // Inventory CRUD routes
     Route::post('/inventory', [AdminController::class, 'storeInventoryItem'])->name('inventory.store');
     Route::get('/inventory/{id}', [AdminController::class, 'getInventoryItem'])->name('inventory.get');
