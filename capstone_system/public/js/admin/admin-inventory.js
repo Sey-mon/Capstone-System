@@ -10,10 +10,15 @@ let currentStockItemName = '';
 let currentAvailableStock = 0;
 
 // CSRF token for AJAX requests
-const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const csrfToken = document.querySelector('meta[name="csrf-token"]');
+if (!csrfToken) {
+    console.error('CSRF token meta tag not found!');
+}
+const csrfTokenValue = csrfToken ? csrfToken.getAttribute('content') : null;
 
 // Modal functions
 function openAddModal() {
+    console.log('Opening Add Modal...');
     isEditMode = false;
     currentItemId = null;
     document.getElementById('modalTitle').textContent = 'Add New Item';
@@ -24,6 +29,7 @@ function openAddModal() {
 }
 
 function openEditModal(itemId) {
+    console.log('Opening Edit Modal for item:', itemId);
     isEditMode = true;
     currentItemId = itemId;
     document.getElementById('modalTitle').textContent = 'Edit Item';
@@ -33,7 +39,7 @@ function openEditModal(itemId) {
     fetch(`/admin/inventory/${itemId}`, {
         method: 'GET',
         headers: {
-            'X-CSRF-TOKEN': csrfToken,
+            'X-CSRF-TOKEN': csrfTokenValue,
             'Accept': 'application/json',
         }
     })
@@ -59,27 +65,55 @@ function openEditModal(itemId) {
 }
 
 function showModal() {
-    document.getElementById('itemModal').style.display = 'flex';
+    console.log('Showing modal...');
+    const modal = document.getElementById('itemModal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        return;
+    }
+    modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    // Force a reflow then add the show class for proper animation
+    modal.offsetHeight;
+    modal.classList.add('show');
+    console.log('Modal should now be visible');
 }
 
 function closeModal() {
-    document.getElementById('itemModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-    document.getElementById('itemForm').reset();
+    const modal = document.getElementById('itemModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        document.getElementById('itemForm').reset();
+    }, 300);
 }
 
 function confirmDelete(itemId, itemName) {
+    console.log('Opening Delete Modal for item:', itemId, itemName);
     currentItemId = itemId;
     document.getElementById('deleteItemName').textContent = itemName;
-    document.getElementById('deleteModal').style.display = 'flex';
+    const modal = document.getElementById('deleteModal');
+    if (!modal) {
+        console.error('Delete modal element not found!');
+        return;
+    }
+    modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    // Force a reflow then add the show class for proper animation
+    modal.offsetHeight;
+    modal.classList.add('show');
+    console.log('Delete modal should now be visible');
 }
 
 function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-    currentItemId = null;
+    const modal = document.getElementById('deleteModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        currentItemId = null;
+    }, 300);
 }
 
 function deleteItem() {
@@ -93,7 +127,7 @@ function deleteItem() {
     fetch(`/admin/inventory/${currentItemId}`, {
         method: 'DELETE',
         headers: {
-            'X-CSRF-TOKEN': csrfToken,
+            'X-CSRF-TOKEN': csrfTokenValue,
             'Accept': 'application/json',
         }
     })
@@ -176,6 +210,9 @@ function showNotification(message, type = 'info') {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Set up real-time filtering
+    setupRealTimeFilters();
+    
     // Form submission
     const itemForm = document.getElementById('itemForm');
     if (itemForm) {
@@ -202,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(url, {
                 method: method,
                 headers: {
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-CSRF-TOKEN': csrfTokenValue,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
@@ -284,16 +321,20 @@ function openStockInModal(itemId, itemName) {
     document.getElementById('stockInItemName').value = itemName;
     document.getElementById('stockInForm').reset();
     document.getElementById('stockInItemName').value = itemName; // Reset clears this, so set it again
-    document.getElementById('stockInModal').style.display = 'flex';
-    setTimeout(() => {
-        document.getElementById('stockInModal').classList.add('show');
-    }, 10);
+    const modal = document.getElementById('stockInModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    // Force a reflow then add the show class for proper animation
+    modal.offsetHeight;
+    modal.classList.add('show');
 }
 
 function closeStockInModal() {
-    document.getElementById('stockInModal').classList.remove('show');
+    const modal = document.getElementById('stockInModal');
+    modal.classList.remove('show');
     setTimeout(() => {
-        document.getElementById('stockInModal').style.display = 'none';
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
         currentStockItemId = null;
         currentStockItemName = '';
     }, 300);
@@ -314,7 +355,7 @@ function processStockIn(event) {
     fetch(`/admin/inventory/${currentStockItemId}/stock-in`, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': csrfToken,
+            'X-CSRF-TOKEN': csrfTokenValue,
             'Accept': 'application/json',
         },
         body: formData
@@ -351,16 +392,20 @@ function openStockOutModal(itemId, itemName, availableStock) {
     document.getElementById('stockOutItemName').value = itemName; // Reset clears this, so set it again
     document.getElementById('stockOutAvailable').value = `${availableStock} units`; // Reset clears this, so set it again
     document.getElementById('stockOutQuantity').setAttribute('max', availableStock);
-    document.getElementById('stockOutModal').style.display = 'flex';
-    setTimeout(() => {
-        document.getElementById('stockOutModal').classList.add('show');
-    }, 10);
+    const modal = document.getElementById('stockOutModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    // Force a reflow then add the show class for proper animation
+    modal.offsetHeight;
+    modal.classList.add('show');
 }
 
 function closeStockOutModal() {
-    document.getElementById('stockOutModal').classList.remove('show');
+    const modal = document.getElementById('stockOutModal');
+    modal.classList.remove('show');
     setTimeout(() => {
-        document.getElementById('stockOutModal').style.display = 'none';
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
         currentStockItemId = null;
         currentStockItemName = '';
         currentAvailableStock = 0;
@@ -389,7 +434,7 @@ function processStockOut(event) {
     fetch(`/admin/inventory/${currentStockItemId}/stock-out`, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': csrfToken,
+            'X-CSRF-TOKEN': csrfTokenValue,
             'Accept': 'application/json',
         },
         body: formData
@@ -427,3 +472,225 @@ window.processStockIn = processStockIn;
 window.openStockOutModal = openStockOutModal;
 window.closeStockOutModal = closeStockOutModal;
 window.processStockOut = processStockOut;
+window.clearFilters = clearFilters;
+
+// Real-time filtering functionality
+function setupRealTimeFilters() {
+    const searchFilter = document.getElementById('searchFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    
+    if (searchFilter) {
+        searchFilter.addEventListener('input', filterTable);
+        
+        // Add placeholder animation
+        searchFilter.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary-color)';
+            this.style.boxShadow = '0 0 0 3px rgba(67, 160, 71, 0.1)';
+        });
+        
+        searchFilter.addEventListener('blur', function() {
+            if (!this.value) {
+                this.style.borderColor = 'var(--border-light)';
+                this.style.boxShadow = 'none';
+            }
+        });
+    }
+    
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', filterTable);
+    }
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterTable);
+    }
+    
+    // Add keyboard shortcut for search (Ctrl+F or Cmd+F)
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f' && searchFilter) {
+            e.preventDefault();
+            searchFilter.focus();
+            searchFilter.select();
+        }
+        
+        // ESC to clear filters
+        if (e.key === 'Escape') {
+            clearFilters();
+            if (searchFilter) {
+                searchFilter.blur();
+            }
+        }
+    });
+}
+
+function filterTable() {
+    const searchValue = document.getElementById('searchFilter')?.value.toLowerCase() || '';
+    const categoryValue = document.getElementById('categoryFilter')?.value.toLowerCase() || '';
+    const statusValue = document.getElementById('statusFilter')?.value.toLowerCase() || '';
+    
+    const tableRows = document.querySelectorAll('.inventory-table tbody tr');
+    let visibleCount = 0;
+    
+    tableRows.forEach(row => {
+        // Skip the "no items found" row
+        if (row.querySelector('td[colspan]')) {
+            return;
+        }
+        
+        const itemNameCell = row.querySelector('td:nth-child(1) div:first-child');
+        const categoryCell = row.querySelector('td:nth-child(2) span');
+        const statusElement = row.querySelector('.stock-status');
+        
+        const itemName = itemNameCell?.textContent.toLowerCase() || '';
+        const category = categoryCell?.textContent.toLowerCase() || '';
+        const status = statusElement?.className.toLowerCase() || '';
+        
+        // Check search filter (search in name and category)
+        const matchesSearch = searchValue === '' || 
+            itemName.includes(searchValue) || 
+            category.includes(searchValue);
+        
+        // Check category filter
+        const matchesCategory = categoryValue === '' || category.includes(categoryValue);
+        
+        // Check status filter
+        const matchesStatus = statusValue === '' || status.includes(statusValue);
+        
+        const shouldShow = matchesSearch && matchesCategory && matchesStatus;
+        
+        if (shouldShow) {
+            row.style.display = '';
+            visibleCount++;
+            
+            // Highlight matching search terms
+            if (searchValue && matchesSearch) {
+                highlightSearchTerms(itemNameCell, searchValue);
+                highlightSearchTerms(categoryCell, searchValue);
+            } else {
+                // Remove existing highlights
+                removeHighlights(itemNameCell);
+                removeHighlights(categoryCell);
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update filter results info
+    updateFilterResults(visibleCount);
+}
+
+function highlightSearchTerms(element, searchTerm) {
+    if (!element || !searchTerm) return;
+    
+    const text = element.textContent;
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const highlightedText = text.replace(regex, '<mark style="background: var(--warning-color); color: white; padding: 0.1rem 0.2rem; border-radius: 0.2rem;">$1</mark>');
+    
+    if (highlightedText !== text) {
+        element.innerHTML = highlightedText;
+    }
+}
+
+function removeHighlights(element) {
+    if (!element) return;
+    
+    const marks = element.querySelectorAll('mark');
+    marks.forEach(mark => {
+        mark.replaceWith(mark.textContent);
+    });
+}
+
+function updateFilterResults(visibleCount) {
+    // Remove existing filter info
+    const existingInfo = document.querySelector('.filter-results-info');
+    if (existingInfo) {
+        existingInfo.remove();
+    }
+    
+    // Remove existing "no results" row
+    const existingNoResults = document.querySelector('.no-filter-results');
+    if (existingNoResults) {
+        existingNoResults.remove();
+    }
+    
+    const filterSection = document.querySelector('.filter-section');
+    const tableBody = document.querySelector('.inventory-table tbody');
+    
+    if (visibleCount === 0) {
+        // Add "no results found" message
+        if (tableBody) {
+            const noResultsRow = document.createElement('tr');
+            noResultsRow.className = 'no-filter-results';
+            noResultsRow.innerHTML = `
+                <td colspan="7" style="padding: 3rem; text-align: center;">
+                    <div style="color: var(--text-secondary);">
+                        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>No items match your current filters.</p>
+                        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="clearFilters()">
+                            <i class="fas fa-times"></i>
+                            Clear Filters
+                        </button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(noResultsRow);
+        }
+    }
+    
+    // Add filter info
+    if (filterSection && visibleCount !== undefined) {
+        const filterInfo = document.createElement('div');
+        filterInfo.className = 'filter-results-info';
+        filterInfo.style.cssText = `
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-align: center;
+            border-top: 1px solid var(--border-light);
+            margin-top: 1rem;
+        `;
+        
+        if (visibleCount === 0) {
+            filterInfo.textContent = 'No items found matching filters';
+            filterInfo.style.color = 'var(--warning-color)';
+        } else {
+            filterInfo.innerHTML = `
+                <i class="fas fa-filter" style="margin-right: 0.5rem;"></i>
+                Showing ${visibleCount} item${visibleCount !== 1 ? 's' : ''}
+            `;
+        }
+        
+        filterSection.appendChild(filterInfo);
+    }
+}
+
+function clearFilters() {
+    const searchFilter = document.getElementById('searchFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    
+    if (searchFilter) searchFilter.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    if (statusFilter) statusFilter.value = '';
+    
+    // Show all rows and remove highlights
+    const tableRows = document.querySelectorAll('.inventory-table tbody tr');
+    tableRows.forEach(row => {
+        if (!row.querySelector('td[colspan]')) {
+            row.style.display = '';
+            
+            // Remove highlights from all cells
+            const itemNameCell = row.querySelector('td:nth-child(1) div:first-child');
+            const categoryCell = row.querySelector('td:nth-child(2) span');
+            
+            removeHighlights(itemNameCell);
+            removeHighlights(categoryCell);
+        }
+    });
+    
+    // Remove filter info
+    const existingInfo = document.querySelector('.filter-results-info');
+    if (existingInfo) {
+        existingInfo.remove();
+    }
+}

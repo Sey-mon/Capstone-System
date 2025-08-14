@@ -3,14 +3,14 @@
 @section('title', 'Audit Logs')
 
 @section('page-title', 'Audit Logs')
-@section('page-subtitle', 'Monitor all system activities and user actions.')
+@section('page-subtitle', 'Comprehensive system activity tracking including inventory management, user actions, and data changes.')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/admin-audit-logs.css') }}">
 @endpush
 
 @section('navigation')
-    @include('partials.navigation')
+    @include('partials.admin-navigation')
 @endsection
 
 @section('content')
@@ -28,13 +28,65 @@
             </div>
         </div>
         
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <form method="GET" action="{{ route('admin.audit.logs') }}" class="filters-form" id="filtersForm">
+                <div class="filter-group">
+                    <label for="action_filter">Action</label>
+                    <select name="action" id="action_filter" class="form-select auto-filter">
+                        <option value="">All Actions</option>
+                        <optgroup label="User Actions">
+                            <option value="login" {{ request('action') == 'login' ? 'selected' : '' }}>Login</option>
+                            <option value="logout" {{ request('action') == 'logout' ? 'selected' : '' }}>Logout</option>
+                        </optgroup>
+                        <optgroup label="Data Management">
+                            <option value="create" {{ request('action') == 'create' ? 'selected' : '' }}>Create</option>
+                            <option value="update" {{ request('action') == 'update' ? 'selected' : '' }}>Update</option>
+                            <option value="delete" {{ request('action') == 'delete' ? 'selected' : '' }}>Delete</option>
+                        </optgroup>
+                        <optgroup label="Inventory Management">
+                            <option value="stock_in" {{ request('action') == 'stock_in' ? 'selected' : '' }}>Stock In</option>
+                            <option value="stock_out" {{ request('action') == 'stock_out' ? 'selected' : '' }}>Stock Out</option>
+                            <option value="inventory_create" {{ request('action') == 'inventory_create' ? 'selected' : '' }}>Inventory Item Created</option>
+                            <option value="inventory_update" {{ request('action') == 'inventory_update' ? 'selected' : '' }}>Inventory Item Updated</option>
+                            <option value="inventory_delete" {{ request('action') == 'inventory_delete' ? 'selected' : '' }}>Inventory Item Deleted</option>
+                        </optgroup>
+                        <optgroup label="Patient Management">
+                            <option value="patient_create" {{ request('action') == 'patient_create' ? 'selected' : '' }}>Patient Created</option>
+                            <option value="patient_update" {{ request('action') == 'patient_update' ? 'selected' : '' }}>Patient Updated</option>
+                            <option value="patient_delete" {{ request('action') == 'patient_delete' ? 'selected' : '' }}>Patient Deleted</option>
+                            <option value="assessment_create" {{ request('action') == 'assessment_create' ? 'selected' : '' }}>Assessment Created</option>
+                            <option value="assessment_update" {{ request('action') == 'assessment_update' ? 'selected' : '' }}>Assessment Updated</option>
+                            <option value="assessment_complete" {{ request('action') == 'assessment_complete' ? 'selected' : '' }}>Assessment Completed</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="date_from">Date From</label>
+                    <input type="date" name="date_from" id="date_from" class="form-input auto-filter" value="{{ request('date_from') }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="date_to">Date To</label>
+                    <input type="date" name="date_to" id="date_to" class="form-input auto-filter" value="{{ request('date_to') }}">
+                </div>
+                
+                <div class="filter-actions">
+                    <a href="{{ route('admin.audit.logs') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+        
         <div class="card-content">
             @if($logs->count() > 0)
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Log ID</th>
                                 <th>User</th>
                                 <th>Action</th>
                                 <th>Description</th>
@@ -44,9 +96,6 @@
                         <tbody>
                             @foreach($logs as $log)
                                 <tr>
-                                    <td>
-                                        <span class="badge badge-info">#{{ $log->log_id }}</span>
-                                    </td>
                                     <td>
                                         <div class="user-info-cell">
                                             @if($log->user)
@@ -65,15 +114,32 @@
                                     <td>
                                         @php
                                             $actionClass = match(strtolower($log->action)) {
-                                                'create', 'insert' => 'success',
-                                                'update', 'edit' => 'warning',
-                                                'delete', 'remove' => 'danger',
+                                                'create', 'insert', 'inventory_create', 'patient_create', 'assessment_create' => 'success',
+                                                'update', 'edit', 'inventory_update', 'patient_update', 'assessment_update', 'assessment_complete' => 'warning',
+                                                'delete', 'remove', 'inventory_delete', 'patient_delete' => 'danger',
+                                                'stock_in' => 'success',
+                                                'stock_out' => 'info',
                                                 'login' => 'info',
                                                 'logout' => 'secondary',
                                                 default => 'primary'
                                             };
+                                            
+                                            $actionDisplay = match(strtolower($log->action)) {
+                                                'stock_in' => 'Stock In',
+                                                'stock_out' => 'Stock Out',
+                                                'inventory_create' => 'Inventory Created',
+                                                'inventory_update' => 'Inventory Updated', 
+                                                'inventory_delete' => 'Inventory Deleted',
+                                                'patient_create' => 'Patient Created',
+                                                'patient_update' => 'Patient Updated',
+                                                'patient_delete' => 'Patient Deleted',
+                                                'assessment_create' => 'Assessment Created',
+                                                'assessment_update' => 'Assessment Updated',
+                                                'assessment_complete' => 'Assessment Completed',
+                                                default => ucfirst($log->action)
+                                            };
                                         @endphp
-                                        <span class="badge badge-{{ $actionClass }}">{{ ucfirst($log->action) }}</span>
+                                        <span class="badge badge-{{ $actionClass }}">{{ $actionDisplay }}</span>
                                     </td>
                                     <td>
                                         <div class="description-cell">
@@ -110,6 +176,43 @@
             @endif
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all filter elements
+        const filterElements = document.querySelectorAll('.auto-filter');
+        const form = document.getElementById('filtersForm');
+        
+        // Add event listeners for automatic filtering
+        filterElements.forEach(element => {
+            if (element.type === 'select-one') {
+                // For select elements, trigger on change
+                element.addEventListener('change', function() {
+                    submitForm();
+                });
+            } else if (element.type === 'date') {
+                // For date inputs, trigger on change with slight delay
+                element.addEventListener('change', function() {
+                    setTimeout(() => {
+                        submitForm();
+                    }, 300);
+                });
+            }
+        });
+        
+        function submitForm() {
+            // Add loading state
+            const tableContainer = document.querySelector('.table-responsive');
+            if (tableContainer) {
+                tableContainer.style.opacity = '0.6';
+                tableContainer.style.pointerEvents = 'none';
+            }
+            
+            // Submit the form
+            form.submit();
+        }
+    });
+    </script>
 @endsection
 
 

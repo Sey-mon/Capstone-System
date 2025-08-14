@@ -15,6 +15,11 @@ return [
             'text' => 'Users',
         ],
         [
+            'route' => 'admin.patients',
+            'icon' => 'fas fa-user-injured',
+            'text' => 'Patients',
+        ],
+        [
             'route' => 'admin.inventory',
             'icon' => 'fas fa-boxes',
             'text' => 'Inventory',
@@ -33,11 +38,6 @@ return [
             'route' => 'admin.audit.logs',
             'icon' => 'fas fa-clipboard-check',
             'text' => 'Audit Logs',
-        ],
-        [
-            'route' => 'admin.inventory.transactions',
-            'icon' => 'fas fa-exchange-alt',
-            'text' => 'Inventory Transactions',
         ],
     ],
     

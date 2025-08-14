@@ -56,7 +56,6 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     
     Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
-    Route::get('/inventory-transactions', [InventoryTransactionController::class, 'index'])->name('inventory.transactions');
 
 });
 

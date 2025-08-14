@@ -1,5 +1,155 @@
 /* Admin Audit Logs Styles */
 
+/* Full width layout */
+.page-content {
+    max-width: none;
+    width: 100%;
+}
+
+/* Content Layout */
+.content-card {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    background: var(--bg-primary);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+}
+
+.card-content {
+    padding: 0;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin: 0;
+}
+
+.data-table {
+    width: 100%;
+    min-width: 800px;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+}
+
+.data-table th {
+    background-color: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+/* Column widths */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+    width: 25%; /* User column */
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+    width: 15%; /* Action column */
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+    width: 35%; /* Description column */
+}
+
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+    width: 25%; /* Timestamp column */
+}
+
+/* Filters Section */
+.filters-section {
+    background: var(--bg-tertiary);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 0;
+}
+
+.filters-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+}
+
+.filter-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.form-select,
+.form-input {
+    padding: 0.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color var(--transition-fast);
+}
+
+.form-select:focus,
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.1);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: end;
+    justify-content: flex-end;
+}
+
+.filter-actions .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Loading state for table */
+.table-responsive.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.table-responsive.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
 .user-info-cell {
     display: flex;
     align-items: center;
@@ -29,17 +179,31 @@
 }
 
 .description-cell {
-    max-width: 300px;
+    width: 100%;
     word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.4;
+}
+
+.timestamp-cell {
+    width: 100%;
 }
 
 .timestamp-cell .timestamp {
     font-weight: 500;
+    margin-bottom: 0.25rem;
 }
 
 .timestamp-cell .time {
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.timestamp-cell small {
+    display: block;
+    font-size: 0.75rem;
 }
 
 .badge {
@@ -81,21 +245,93 @@
 }
 
 /* Responsive design */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .user-info-cell {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+    .data-table {
+        min-width: 600px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem 0.5rem;
     }
     
     .user-avatar-small {
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    
+    .user-details-small .user-name {
+        font-size: 13px;
+    }
+    
+    .user-details-small .user-role {
+        font-size: 11px;
+    }
+    
+    .badge {
+        padding: 3px 6px;
         font-size: 10px;
     }
     
     .description-cell {
-        max-width: 200px;
-        font-size: 12px;
+        font-size: 0.875rem;
+    }
+    
+    .timestamp-cell .timestamp {
+        font-size: 0.875rem;
+    }
+    
+    .timestamp-cell .time {
+        font-size: 0.75rem;
+    }
+    
+    .timestamp-cell small {
+        font-size: 0.625rem;
+    }
+    
+    /* Responsive Filters */
+    .filters-form {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .filter-actions {
+        justify-content: center;
+    }
+    
+    .filter-actions .btn {
+        min-width: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .data-table {
+        min-width: 500px;
+    }
+    
+    /* Stack user info vertically on very small screens */
+    .user-info-cell {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .filters-section {
+        padding: 1rem;
+    }
+    
+    .filter-actions {
+        justify-content: stretch;
+    }
+    
+    .filter-actions .btn {
+        flex: 1;
+        min-width: auto;
     }
 }

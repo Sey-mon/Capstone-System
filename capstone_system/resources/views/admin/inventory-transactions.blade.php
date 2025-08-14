@@ -1,8 +1,8 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Inventory Transactions')
+@section('title', 'Inventory Logs')
 
-@section('page-title', 'Inventory Transactions')
+@section('page-title', 'Inventory Logs')
 @section('page-subtitle', 'Track all inventory movements and transactions.')
 
 @push('styles')
@@ -10,15 +10,27 @@
 @endpush
 
 @section('navigation')
-    @include('partials.navigation')
+    @include('partials.admin-navigation')
 @endsection
 
 @section('content')
+    <!-- Notice about consolidated logs -->
+    <div class="info-banner" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white; padding: 1rem 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+        <div style="flex: 1;">
+            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">📊 Enhanced Audit Tracking Available</h4>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">For comprehensive activity tracking including inventory movements, user actions, and system changes, visit the enhanced Audit Logs section.</p>
+        </div>
+        <a href="{{ route('admin.audit.logs') }}?action=stock_in,stock_out" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); text-decoration: none;">
+            <i class="fas fa-clipboard-check"></i>
+            View Audit Logs
+        </a>
+    </div>
+
     <div class="content-card">
         <div class="card-header">
             <h3 class="card-title">
-                <i class="fas fa-exchange-alt"></i>
-                Inventory Transactions
+                <i class="fas fa-clipboard-list"></i>
+                Inventory Logs
             </h3>
             <div class="card-actions">
                 <button class="btn btn-secondary" onclick="window.location.reload()">

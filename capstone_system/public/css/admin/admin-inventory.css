@@ -4,6 +4,99 @@
    INVENTORY SPECIFIC STYLES 
    ========================= */
 
+/* Filter Section */
+.filter-section {
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-light);
+    transition: all var(--transition-fast);
+}
+
+.filter-section .form-input {
+    border: 1px solid var(--border-light);
+    background: var(--bg-primary);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.filter-section .form-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.1);
+    outline: none;
+}
+
+.filter-results-info {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Search highlighting */
+mark {
+    background: var(--warning-color) !important;
+    color: white !important;
+    padding: 0.1rem 0.2rem !important;
+    border-radius: 0.2rem !important;
+    font-weight: 500 !important;
+}
+
+/* Filter section responsive design */
+@media (max-width: 768px) {
+    .filter-section > div {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    .filter-section .form-input {
+        font-size: 0.875rem;
+    }
+    
+    /* Ensure tables are responsive when sidebar is visible */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table {
+        min-width: 600px;
+    }
+}
+
+/* Improve responsiveness for hidden sidebar */
+@media (min-width: 769px) {
+    .main-content {
+        transition: margin-left var(--transition-medium), width var(--transition-medium);
+    }
+    
+    /* Ensure content adjusts when sidebar is hidden */
+    .sidebar.collapsed ~ .main-content .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    /* Add padding when sidebar is hidden to avoid content touching edges */
+    .sidebar.collapsed ~ .main-content {
+        padding-left: 1rem;
+    }
+    
+    /* Floating menu button should not interfere with content */
+    .sidebar.collapsed ~ .main-content .floating-menu-btn {
+        position: fixed;
+        z-index: 1001;
+    }
+}
+
+@media (max-width: 1024px) {
+    .filter-section > div {
+        grid-template-columns: 2fr 1fr auto !important;
+    }
+    
+    .filter-section > div > div:nth-child(3) {
+        grid-column: 1 / -1;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* Stock Status Indicators */
 .stock-status {
     display: inline-flex;
@@ -157,6 +250,7 @@
 }
 
 .modal-overlay.show {
+    display: flex;
     opacity: 1;
 }
 

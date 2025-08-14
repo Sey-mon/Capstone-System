@@ -6,7 +6,7 @@
 @section('page-subtitle', 'Manage system categories and barangays for your application.')
 
 @section('navigation')
-    @include('partials.navigation')
+    @include('partials.admin-navigation')
 @endsection
 
 @push('styles')
