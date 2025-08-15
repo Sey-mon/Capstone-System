@@ -34,6 +34,14 @@ class InventoryTransaction extends Model
     }
 
     /**
+     * Get the item that owns the transaction (alias for inventoryItem).
+     */
+    public function item()
+    {
+        return $this->belongsTo(InventoryItem::class, 'item_id', 'item_id');
+    }
+
+    /**
      * Get the user that owns the transaction.
      */
     public function user()

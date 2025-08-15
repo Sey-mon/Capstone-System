@@ -435,9 +435,228 @@ class AdminController extends Controller
             'monthly_assessments' => Assessment::whereMonth('created_at', now()->month)->count(),
             'low_stock_items' => InventoryItem::where('quantity', '<', 10)->count(),
             'active_users' => User::where('created_at', '>=', now()->subDays(30))->count(),
+            'total_patients' => Patient::count(),
+            'total_inventory_value' => InventoryItem::all()->sum(function($item) {
+                return $item->quantity * $item->unit_cost;
+            }),
+            'assessment_trends' => $this->getAssessmentTrends(),
+            'inventory_by_category' => $this->getInventoryByCategory(),
+            'recent_activities' => $this->getRecentActivities(),
         ];
 
         return view('admin.reports', compact('reports'));
+    }
+
+    /**
+     * Generate User Activity Report
+     */
+    public function generateUserActivityReport()
+    {
+        $users = User::with('role')->get();
+        $assessments = Assessment::with(['user', 'patient'])->get();
+        
+        $report_data = [
+            'total_users' => $users->count(),
+            'active_users_30_days' => User::where('updated_at', '>=', now()->subDays(30))->count(),
+            'users_by_role' => $users->filter(function($user) {
+                return $user->role !== null;
+            })->groupBy('role.name')->map->count(),
+            'recent_assessments' => $assessments->take(10)->map(function($assessment) {
+                return [
+                    'id' => $assessment->assessment_id,
+                    'patient' => $assessment->patient ? [
+                        'first_name' => $assessment->patient->first_name,
+                        'last_name' => $assessment->patient->last_name
+                    ] : null,
+                    'user' => $assessment->user ? ['name' => $assessment->user->name] : null,
+                    'created_at' => $assessment->created_at
+                ];
+            }),
+            'assessments_by_user' => $assessments->filter(function($assessment) {
+                return $assessment->user !== null;
+            })->groupBy('nutritionist_id')->map->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $report_data,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Generate Inventory Report
+     */
+    public function generateInventoryReport()
+    {
+        $inventory_items = InventoryItem::with('category')->get();
+        $transactions = InventoryTransaction::with('item', 'user')->latest()->take(50)->get();
+        
+        $report_data = [
+            'total_items' => $inventory_items->count(),
+            'total_value' => $inventory_items->sum(function($item) {
+                return $item->quantity * $item->unit_cost;
+            }),
+            'low_stock_items' => $inventory_items->where('quantity', '<', 10)->values(),
+            'items_by_category' => $inventory_items->groupBy('category.name')->map->count(),
+            'recent_transactions' => $transactions,
+            'stock_levels' => $inventory_items->map(function($item) {
+                return [
+                    'name' => $item->name,
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'status' => $item->quantity < 10 ? 'Low' : ($item->quantity < 50 ? 'Medium' : 'Good')
+                ];
+            })
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $report_data,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Generate Assessment Trends Report
+     */
+    public function generateAssessmentTrendsReport()
+    {
+        $assessments = Assessment::with('patient')->get();
+        
+        $report_data = [
+            'total_assessments' => $assessments->count(),
+            'completed_assessments' => $assessments->whereNotNull('completed_at')->count(),
+            'pending_assessments' => $assessments->whereNull('completed_at')->count(),
+            'assessments_by_month' => $assessments->groupBy(function($assessment) {
+                return $assessment->created_at->format('Y-m');
+            })->map->count(),
+            'assessments_by_barangay' => $assessments->groupBy('patient.barangay.name')->map->count(),
+            'recent_assessments' => $assessments->latest()->take(10)->values(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $report_data,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Generate Low Stock Alert Report
+     */
+    public function generateLowStockReport()
+    {
+        $low_stock_items = InventoryItem::with('category')
+            ->where('quantity', '<', 10)
+            ->orderBy('quantity', 'asc')
+            ->get();
+        
+        $report_data = [
+            'critical_items' => $low_stock_items->where('quantity', '<', 5)->values(),
+            'low_items' => $low_stock_items->where('quantity', '>=', 5)->values(),
+            'total_affected_value' => $low_stock_items->sum(function($item) {
+                return $item->quantity * $item->unit_cost;
+            }),
+            'categories_affected' => $low_stock_items->groupBy('category.name')->map->count(),
+            'recommendations' => $this->getRestockRecommendations($low_stock_items),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $report_data,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Get assessment trends for dashboard
+     */
+    private function getAssessmentTrends()
+    {
+        $trends = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $trends[$date->format('M d')] = Assessment::whereDate('created_at', $date)->count();
+        }
+        return $trends;
+    }
+
+    /**
+     * Get inventory by category
+     */
+    private function getInventoryByCategory()
+    {
+        return ItemCategory::withCount('inventoryItems')
+            ->get()
+            ->pluck('inventory_items_count', 'name')
+            ->toArray();
+    }
+
+    /**
+     * Get recent activities
+     */
+    private function getRecentActivities()
+    {
+        $activities = collect();
+        
+        // Recent assessments
+        $recent_assessments = Assessment::with(['user', 'patient'])
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function($assessment) {
+                return [
+                    'type' => 'assessment',
+                    'description' => "Assessment for " . ($assessment->patient ? "{$assessment->patient->first_name} {$assessment->patient->last_name}" : "Unknown Patient"),
+                    'user' => $assessment->user ? $assessment->user->name : 'Unknown User',
+                    'time' => $assessment->created_at,
+                ];
+            });
+        
+        // Recent inventory transactions
+        $recent_transactions = InventoryTransaction::with(['user', 'item'])
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function($transaction) {
+                return [
+                    'type' => 'inventory',
+                    'description' => "{$transaction->transaction_type} - " . ($transaction->item ? $transaction->item->name : "Unknown Item") . " (Qty: {$transaction->quantity})",
+                    'user' => $transaction->user ? $transaction->user->name : 'Unknown User',
+                    'time' => $transaction->created_at,
+                ];
+            });
+        
+        return $activities->merge($recent_assessments)
+            ->merge($recent_transactions)
+            ->sortByDesc('time')
+            ->take(10)
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Get restock recommendations
+     */
+    private function getRestockRecommendations($low_stock_items)
+    {
+        return $low_stock_items->map(function($item) {
+            $usage_rate = InventoryTransaction::where('item_id', $item->id)
+                ->where('transaction_type', 'Out')
+                ->where('created_at', '>=', now()->subDays(30))
+                ->sum('quantity');
+            
+            $recommended_quantity = max(50, $usage_rate * 2); // At least 50 or 2 months usage
+            
+            return [
+                'item' => $item->name,
+                'current_stock' => $item->quantity,
+                'recommended_order' => $recommended_quantity,
+                'estimated_cost' => $recommended_quantity * $item->unit_cost,
+                'urgency' => $item->quantity < 5 ? 'Critical' : 'Medium'
+            ];
+        })->toArray();
     }
 
     /**

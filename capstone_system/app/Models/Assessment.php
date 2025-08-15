@@ -45,4 +45,12 @@ class Assessment extends Model
     {
         return $this->belongsTo(User::class, 'nutritionist_id', 'user_id');
     }
+
+    /**
+     * Get the user that owns the assessment (alias for nutritionist).
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'nutritionist_id', 'user_id');
+    }
 }

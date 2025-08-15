@@ -61,6 +61,10 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/barangays/{id}', [AdminController::class, 'deleteBarangay'])->name('barangays.delete');
     
     Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+    Route::get('/reports/user-activity', [AdminController::class, 'generateUserActivityReport'])->name('reports.user-activity');
+    Route::get('/reports/inventory', [AdminController::class, 'generateInventoryReport'])->name('reports.inventory');
+    Route::get('/reports/assessment-trends', [AdminController::class, 'generateAssessmentTrendsReport'])->name('reports.assessment-trends');
+    Route::get('/reports/low-stock', [AdminController::class, 'generateLowStockReport'])->name('reports.low-stock');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
 });
