@@ -15,6 +15,24 @@ Route::post('/', [AuthController::class, 'login'])->name('login.root.post'); // 
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Registration Routes
+Route::get('/register', [AuthController::class, 'showRegistrationOptions'])->name('register');
+Route::get('/register/parent', [AuthController::class, 'showParentRegistration'])->name('register.parent');
+Route::post('/register/parent', [AuthController::class, 'registerParent'])->name('register.parent.post');
+Route::get('/register/success', function () {
+    return view('auth.registration-success');
+})->name('registration.success');
+Route::get('/apply/nutritionist', [AuthController::class, 'showNutritionistApplication'])->name('apply.nutritionist');
+Route::post('/apply/nutritionist', [AuthController::class, 'applyNutritionist'])->name('apply.nutritionist.post');
+
+// Legal Pages
+Route::get('/terms', function () {
+    return view('legal.terms');
+})->name('terms');
+Route::get('/privacy', function () {
+    return view('legal.privacy');
+})->name('privacy');
+
 // Admin Routes (Protected by auth and role middleware)
 Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -28,6 +46,13 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users/{id}', [AdminController::class, 'getUser'])->name('users.get');
     Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
+    Route::post('/users/{id}/restore', [AdminController::class, 'restoreUser'])->name('users.restore');
+    Route::get('/users-with-trashed', [AdminController::class, 'getUsersWithTrashed'])->name('users.with-trashed');
+    
+    // Nutritionist application routes
+    Route::get('/nutritionist-applications', [AdminController::class, 'getPendingNutritionistApplications'])->name('nutritionist.applications');
+    Route::post('/nutritionist-applications/{id}/approve', [AdminController::class, 'approveNutritionist'])->name('nutritionist.approve');
+    Route::post('/nutritionist-applications/{id}/reject', [AdminController::class, 'rejectNutritionist'])->name('nutritionist.reject');
     
     // Patient CRUD routes
     Route::post('/patients', [AdminController::class, 'storePatient'])->name('patients.store');
@@ -61,6 +86,10 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/barangays/{id}', [AdminController::class, 'deleteBarangay'])->name('barangays.delete');
     
     Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+    Route::get('/reports/user-activity', [AdminController::class, 'generateUserActivityReport'])->name('reports.user-activity');
+    Route::get('/reports/inventory', [AdminController::class, 'generateInventoryReport'])->name('reports.inventory');
+    Route::get('/reports/assessment-trends', [AdminController::class, 'generateAssessmentTrendsReport'])->name('reports.assessment-trends');
+    Route::get('/reports/low-stock', [AdminController::class, 'generateLowStockReport'])->name('reports.low-stock');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
 });
