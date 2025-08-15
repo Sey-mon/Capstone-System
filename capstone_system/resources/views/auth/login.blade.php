@@ -64,6 +64,10 @@
                 <a href="#">Forgot Password?</a> | 
                 <a href="#">Contact Admin</a>
             </div>
+            
+            <div class="form-footer" style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280;">Don't have an account? <a href="{{ route('register') }}" style="color: #3b82f6; text-decoration: none;">Register here</a></p>
+            </div>
         </form>
     </div>
 

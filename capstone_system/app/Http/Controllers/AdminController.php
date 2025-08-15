@@ -31,6 +31,9 @@ class AdminController extends Controller
                 'total_patients' => Patient::count(),
                 'total_assessments' => Assessment::count(),
                 'total_inventory_items' => InventoryItem::count(),
+                'pending_nutritionist_applications' => User::whereHas('role', function($query) {
+                    $query->where('role_name', 'Nutritionist');
+                })->where('is_active', false)->count(),
                 'recent_transactions' => InventoryTransaction::with(['user', 'inventoryItem'])
                     ->latest()
                     ->take(5)
@@ -997,7 +1000,7 @@ class AdminController extends Controller
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|unique:users,email,NULL,user_id,deleted_at,NULL',
             'password' => 'required|string|min:8|confirmed',
             'role_id' => 'required|exists:roles,role_id',
             'contact_number' => 'nullable|string|max:15',
@@ -1075,7 +1078,9 @@ class AdminController extends Controller
             'email' => [
                 'required',
                 'email',
-                Rule::unique('users', 'email')->ignore($user->user_id, 'user_id')
+                Rule::unique('users', 'email')
+                    ->ignore($user->user_id, 'user_id')
+                    ->whereNull('deleted_at')
             ],
             'role_id' => 'required|exists:roles,role_id',
             'contact_number' => 'nullable|string|max:15',
@@ -1130,7 +1135,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Delete a user
+     * Delete a user (soft delete)
      */
     public function deleteUser($id)
     {
@@ -1145,18 +1150,6 @@ class AdminController extends Controller
                 ], 403);
             }
 
-            // Check if user has associated records
-            $hasPatients = $user->patientsAsParent()->exists() || $user->patientsAsNutritionist()->exists();
-            $hasAssessments = $user->assessments()->exists();
-            $hasTransactions = $user->inventoryTransactions()->exists();
-
-            if ($hasPatients || $hasAssessments || $hasTransactions) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete user. User has associated records (patients, assessments, or transactions).'
-                ], 400);
-            }
-
             DB::beginTransaction();
 
             $userName = "{$user->first_name} {$user->last_name}";
@@ -1167,9 +1160,10 @@ class AdminController extends Controller
                 'action' => 'DELETE',
                 'table_name' => 'users',
                 'record_id' => $user->user_id,
-                'description' => "Deleted user: {$userName}",
+                'description' => "Soft deleted user: {$userName}",
             ]);
 
+            // Soft delete the user
             $user->delete();
 
             DB::commit();
@@ -1184,6 +1178,201 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Restore a soft-deleted user
+     */
+    public function restoreUser($id)
+    {
+        try {
+            $user = User::withTrashed()->findOrFail($id);
+
+            if (!$user->trashed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is not deleted.'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            $userName = "{$user->first_name} {$user->last_name}";
+
+            // Log the action before restoration
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'RESTORE',
+                'table_name' => 'users',
+                'record_id' => $user->user_id,
+                'description' => "Restored user: {$userName}",
+            ]);
+
+            // Restore the user
+            $user->restore();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User restored successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to restore user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all users including soft-deleted ones
+     */
+    public function getUsersWithTrashed()
+    {
+        try {
+            $users = User::withTrashed()->with('role')->paginate(15);
+            return response()->json([
+                'success' => true,
+                'users' => $users
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch users: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get pending nutritionist applications
+     */
+    public function getPendingNutritionistApplications()
+    {
+        $pendingApplications = User::with('role')
+            ->whereHas('role', function($query) {
+                $query->where('role_name', 'Nutritionist');
+            })
+            ->where('is_active', false)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'applications' => $pendingApplications
+        ]);
+    }
+
+    /**
+     * Approve nutritionist application
+     */
+    public function approveNutritionist(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = User::findOrFail($id);
+
+            // Check if user is a nutritionist and inactive
+            if ($user->role->role_name !== 'Nutritionist' || $user->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid application or already approved.'
+                ], 400);
+            }
+
+            // Generate a new temporary password for the nutritionist
+            $tempPassword = 'nutri_' . substr(md5(time() . $user->email), 0, 8);
+
+            // Activate the user account
+            $user->update([
+                'is_active' => true,
+                'password' => Hash::make($tempPassword)
+            ]);
+
+            // Log the approval
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'APPROVE',
+                'table_name' => 'users',
+                'record_id' => $user->user_id,
+                'description' => "Approved nutritionist application for: {$user->first_name} {$user->last_name}",
+            ]);
+
+            DB::commit();
+
+            // In a real application, you would send an email to the nutritionist here
+            // with their login credentials and welcome information
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nutritionist application approved successfully.',
+                'temp_password' => $tempPassword // In production, this should be sent via email
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to approve application: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reject nutritionist application
+     */
+    public function rejectNutritionist(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $user = User::findOrFail($id);
+
+            // Check if user is a nutritionist and inactive
+            if ($user->role->role_name !== 'Nutritionist' || $user->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid application or already processed.'
+                ], 400);
+            }
+
+            $userName = "{$user->first_name} {$user->last_name}";
+
+            // Log the rejection
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'REJECT',
+                'table_name' => 'users',
+                'record_id' => $user->user_id,
+                'description' => "Rejected nutritionist application for: {$userName}. Reason: {$request->reason}",
+            ]);
+
+            // Delete the application
+            $user->delete();
+
+            DB::commit();
+
+            // In a real application, you would send an email to the applicant here
+            // with the rejection reason
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nutritionist application rejected successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject application: ' . $e->getMessage()
             ], 500);
         }
     }
