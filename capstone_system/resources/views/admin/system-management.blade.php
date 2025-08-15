@@ -231,30 +231,26 @@
     <div id="addCategoryModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>
-                    <i class="fas fa-plus-circle"></i>
-                    Add New Category
-                </h3>
-                <button type="button" class="close-modal">&times;</button>
+                <h3>Add New Category</h3>
+                <span class="close" onclick="closeModal('addCategoryModal')">&times;</span>
             </div>
             <form id="addCategoryForm">
                 @csrf
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="category_name">Category Name</label>
-                        <input type="text" id="category_name" name="category_name" class="form-control" required placeholder="Enter category name">
-                        <div class="invalid-feedback" id="category_name_error"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category_name">Category Name *</label>
+                            <input type="text" id="category_name" name="category_name" required placeholder="Enter category name">
+                            <div class="invalid-feedback" id="category_name_error"></div>
+                        </div>
+                        <div class="form-group">
+                            <!-- Empty div for alignment in 2-column layout -->
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addCategoryModal')">
-                        <i class="fas fa-times"></i>
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus"></i>
-                        Add Category
-                    </button>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
                 </div>
             </form>
         </div>
@@ -264,32 +260,28 @@
     <div id="editCategoryModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>
-                    <i class="fas fa-edit"></i>
-                    Edit Category
-                </h3>
-                <button type="button" class="close-modal">&times;</button>
+                <h3>Edit Category</h3>
+                <span class="close" onclick="closeModal('editCategoryModal')">&times;</span>
             </div>
             <form id="editCategoryForm">
                 @csrf
                 @method('PUT')
                 <input type="hidden" id="edit_category_id">
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="edit_category_name">Category Name</label>
-                        <input type="text" id="edit_category_name" name="category_name" class="form-control" required placeholder="Enter category name">
-                        <div class="invalid-feedback" id="edit_category_name_error"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_category_name">Category Name *</label>
+                            <input type="text" id="edit_category_name" name="category_name" required placeholder="Enter category name">
+                            <div class="invalid-feedback" id="edit_category_name_error"></div>
+                        </div>
+                        <div class="form-group">
+                            <!-- Empty div for alignment in 2-column layout -->
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editCategoryModal')">
-                        <i class="fas fa-times"></i>
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
-                        Update Category
-                    </button>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editCategoryModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
                 </div>
             </form>
         </div>
@@ -299,30 +291,26 @@
     <div id="addBarangayModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>
-                    <i class="fas fa-plus-circle"></i>
-                    Add New Barangay
-                </h3>
-                <button type="button" class="close-modal">&times;</button>
+                <h3>Add New Barangay</h3>
+                <span class="close" onclick="closeModal('addBarangayModal')">&times;</span>
             </div>
             <form id="addBarangayForm">
                 @csrf
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="barangay_name">Barangay Name</label>
-                        <input type="text" id="barangay_name" name="barangay_name" class="form-control" required placeholder="Enter barangay name">
-                        <div class="invalid-feedback" id="barangay_name_error"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="barangay_name">Barangay Name *</label>
+                            <input type="text" id="barangay_name" name="barangay_name" required placeholder="Enter barangay name">
+                            <div class="invalid-feedback" id="barangay_name_error"></div>
+                        </div>
+                        <div class="form-group">
+                            <!-- Empty div for alignment in 2-column layout -->
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addBarangayModal')">
-                        <i class="fas fa-times"></i>
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus"></i>
-                        Add Barangay
-                    </button>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addBarangayModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Barangay</button>
                 </div>
             </form>
         </div>
@@ -332,32 +320,28 @@
     <div id="editBarangayModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>
-                    <i class="fas fa-edit"></i>
-                    Edit Barangay
-                </h3>
-                <button type="button" class="close-modal">&times;</button>
+                <h3>Edit Barangay</h3>
+                <span class="close" onclick="closeModal('editBarangayModal')">&times;</span>
             </div>
             <form id="editBarangayForm">
                 @csrf
                 @method('PUT')
                 <input type="hidden" id="edit_barangay_id">
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="edit_barangay_name">Barangay Name</label>
-                        <input type="text" id="edit_barangay_name" name="barangay_name" class="form-control" required placeholder="Enter barangay name">
-                        <div class="invalid-feedback" id="edit_barangay_name_error"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_barangay_name">Barangay Name *</label>
+                            <input type="text" id="edit_barangay_name" name="barangay_name" required placeholder="Enter barangay name">
+                            <div class="invalid-feedback" id="edit_barangay_name_error"></div>
+                        </div>
+                        <div class="form-group">
+                            <!-- Empty div for alignment in 2-column layout -->
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editBarangayModal')">
-                        <i class="fas fa-times"></i>
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
-                        Update Barangay
-                    </button>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editBarangayModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Barangay</button>
                 </div>
             </form>
         </div>

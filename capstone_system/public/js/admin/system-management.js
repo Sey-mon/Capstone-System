@@ -33,7 +33,7 @@ class SystemManagement {
             if (e.target.classList.contains('modal')) {
                 this.closeModal(e.target.id);
             }
-            if (e.target.classList.contains('close-modal')) {
+            if (e.target.classList.contains('close')) {
                 const modal = e.target.closest('.modal');
                 if (modal) this.closeModal(modal.id);
             }
@@ -42,7 +42,7 @@ class SystemManagement {
         // Keyboard handlers
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const openModal = document.querySelector('.modal[style*="flex"]');
+                const openModal = document.querySelector('.modal[style*="block"]');
                 if (openModal) this.closeModal(openModal.id);
             }
         });
@@ -57,7 +57,7 @@ class SystemManagement {
 
     setupFormValidation() {
         // Real-time validation
-        document.querySelectorAll('.form-control').forEach(input => {
+        document.querySelectorAll('input, select').forEach(input => {
             input.addEventListener('input', (e) => {
                 this.validateField(e.target);
             });
@@ -143,11 +143,11 @@ class SystemManagement {
     openModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
-            modal.style.display = 'flex';
+            modal.style.display = 'block';
             modal.classList.add('show');
             
             // Focus first input
-            const firstInput = modal.querySelector('.form-control');
+            const firstInput = modal.querySelector('input[type="text"], input[type="email"], select');
             if (firstInput) {
                 setTimeout(() => firstInput.focus(), 100);
             }
@@ -176,7 +176,7 @@ class SystemManagement {
             form.reset();
             
             // Clear validation states
-            form.querySelectorAll('.form-control').forEach(field => {
+            form.querySelectorAll('input, select').forEach(field => {
                 field.classList.remove('is-invalid', 'is-valid');
             });
             
