@@ -350,6 +350,78 @@
     <script>
         // New Password Field Functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Add CSRF token refresh functionality
+            window.refreshCSRFToken = function() {
+                fetch('/csrf-token', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.csrf_token) {
+                        // Update the CSRF token in the form
+                        const csrfInput = document.querySelector('input[name="_token"]');
+                        if (csrfInput) {
+                            csrfInput.value = data.csrf_token;
+                        }
+                        // Update meta tag
+                        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                        if (csrfMeta) {
+                            csrfMeta.content = data.csrf_token;
+                        }
+                        console.log('CSRF token refreshed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to refresh CSRF token:', error);
+                });
+            };
+
+            // Debug form submission
+            const form = document.getElementById('parentRegistrationForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    console.log('Form submission intercepted');
+                    console.log('Form action:', this.action);
+                    console.log('Form method:', this.method);
+                    
+                    // Check CSRF token
+                    const csrfToken = document.querySelector('input[name="_token"]');
+                    console.log('CSRF token present:', csrfToken ? 'Yes' : 'No');
+                    if (csrfToken) {
+                        console.log('CSRF token value:', csrfToken.value);
+                    }
+                    
+                    // Check required fields
+                    const requiredFields = ['first_name', 'last_name', 'email', 'password'];
+                    const missingFields = [];
+                    
+                    requiredFields.forEach(field => {
+                        const input = document.querySelector(`input[name="${field}"]`);
+                        if (!input || !input.value.trim()) {
+                            missingFields.push(field);
+                        }
+                    });
+                    
+                    if (missingFields.length > 0) {
+                        console.error('Missing required fields:', missingFields);
+                    }
+                    
+                    console.log('Form data being submitted:');
+                    const formData = new FormData(this);
+                    for (let [key, value] of formData.entries()) {
+                        if (key !== 'password' && key !== 'password_confirmation') {
+                            console.log(`${key}: ${value}`);
+                        } else {
+                            console.log(`${key}: [HIDDEN]`);
+                        }
+                    }
+                });
+            }
+
             // Password visibility toggle
             const passwordToggles = document.querySelectorAll('.password-visibility-toggle');
             passwordToggles.forEach(toggle => {

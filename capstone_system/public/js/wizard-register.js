@@ -521,14 +521,28 @@ class RegistrationWizard {
                 submitButton.textContent = 'Processing...';
             }
             
-            console.log('Submitting form now'); // Debug log
-            console.log('Form action:', form.action); // Debug log
-            console.log('Form method:', form.method); // Debug log
+            console.log('Refreshing CSRF token before submission'); // Debug log
             
-            // Add a small delay to ensure all data is populated
-            setTimeout(() => {
-                form.submit();
-            }, 100);
+            // Refresh CSRF token before submission
+            if (window.refreshCSRFToken) {
+                window.refreshCSRFToken();
+                
+                // Wait a moment for the token to be refreshed, then submit
+                setTimeout(() => {
+                    console.log('Submitting form with fresh CSRF token'); // Debug log
+                    console.log('Form action:', form.action); // Debug log
+                    console.log('Form method:', form.method); // Debug log
+                    form.submit();
+                }, 200);
+            } else {
+                // Fallback: submit immediately if refresh function not available
+                console.log('CSRF refresh not available, submitting immediately'); // Debug log
+                console.log('Form action:', form.action); // Debug log
+                console.log('Form method:', form.method); // Debug log
+                setTimeout(() => {
+                    form.submit();
+                }, 100);
+            }
         } else {
             console.error('Form not found!'); // Debug log
         }

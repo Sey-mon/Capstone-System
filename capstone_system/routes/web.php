@@ -8,12 +8,67 @@ use App\Http\Controllers\NutritionistController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\InventoryTransactionController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 
 // Authentication Routes
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/', [AuthController::class, 'login'])->name('login.root.post'); // Handle POST to root
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Email Verification Routes
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->name('verification.notice');
+
+// Verification Gate - Paywall style for logged-in unverified users
+Route::get('/verify-to-continue', [AuthController::class, 'showVerificationGate'])->middleware('auth')->name('verification.gate');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect()->route('verification.success');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Verification link sent!');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// Public resend verification email (for logged-out users)
+Route::post('/resend-verification', [AuthController::class, 'resendVerification'])->middleware('throttle:6,1')->name('verification.resend');
+
+// Logout after resend
+Route::post('/resend-and-logout', [AuthController::class, 'resendAndLogout'])->middleware('auth')->name('resend.logout');
+
+// Development-only email verification bypass
+if (app()->environment(['local', 'development'])) {
+    Route::get('/dev/verify-email/{email}', [AuthController::class, 'devVerifyEmail'])->name('dev.verify');
+    Route::get('/dev/verification-panel', [AuthController::class, 'showDevVerificationPanel'])->name('dev.panel');
+}
+
+Route::get('/email/verified', function () {
+    return view('auth.verification-success');
+})->name('verification.success');
+
+// CSRF Token Refresh Route
+Route::get('/csrf-token', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+});
+
+// CSRF Test Page (for debugging)
+Route::get('/test-csrf', function () {
+    return view('test-csrf');
+})->name('test.csrf');
+
+// Test route for debugging registration
+Route::post('/test-registration', function (Request $request) {
+    return response()->json([
+        'message' => 'Form submission successful!',
+        'data' => $request->except(['password', 'password_confirmation']),
+        'csrf_token_received' => $request->header('X-CSRF-TOKEN') ?? 'not_provided'
+    ]);
+})->name('test.registration');
 
 // Registration Routes
 Route::get('/register', [AuthController::class, 'showRegistrationOptions'])->name('register');
@@ -33,8 +88,8 @@ Route::get('/privacy', function () {
     return view('legal.privacy');
 })->name('privacy');
 
-// Admin Routes (Protected by auth and role middleware)
-Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
+// Admin Routes (Protected by auth, verified email, and role middleware)
+Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/patients', [AdminController::class, 'patients'])->name('patients');
@@ -94,8 +149,8 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
 
 });
 
-// Nutritionist Routes (Protected by auth and role middleware)
-Route::middleware(['auth', 'role:Nutritionist'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
+// Nutritionist Routes (Protected by auth, verified email, and role middleware)
+Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
     Route::get('/dashboard', [NutritionistController::class, 'dashboard'])->name('dashboard');
     Route::get('/patients', [NutritionistController::class, 'patients'])->name('patients');
     
@@ -109,8 +164,8 @@ Route::middleware(['auth', 'role:Nutritionist'])->prefix('nutritionist')->name('
     Route::get('/profile', [NutritionistController::class, 'profile'])->name('profile');
 });
 
-// Parent Routes (Protected by auth and role middleware)
-Route::middleware(['auth', 'role:Parent'])->prefix('parent')->name('parent.')->group(function () {
+// Parent Routes (Protected by auth, verified email, and role middleware)
+Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('dashboard');
     Route::get('/children', [ParentController::class, 'children'])->name('children');
     Route::get('/assessments', [ParentController::class, 'assessments'])->name('assessments');
