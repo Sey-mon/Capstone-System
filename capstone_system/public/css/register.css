@@ -28,7 +28,7 @@ body {
 
 /* Wizard Container */
 .wizard-container {
-    width: 600px;
+    width: 750px;
     max-width: 95%;
 }
 
@@ -568,15 +568,20 @@ body {
     font-style: italic;
 }
 
-/* Password Requirements */
+/* Password Requirements (legacy - kept for compatibility) */
 .password-requirements {
+    display: block;
+    width: 100%;
     margin-top: 8px;
-    padding: 10px;
+    margin-bottom: 12px;
+    padding: 12px;
     background: #f8f9fa;
     border-radius: 6px;
     font-size: 12px;
     color: #6b7280;
-    order: 3; /* Show after error messages */
+    clear: both;
+    border: 1px solid #e9ecef;
+    box-sizing: border-box;
 }
 
 .password-requirements small {
@@ -596,25 +601,41 @@ body {
     margin: 2px 0;
 }
 
-/* Error message positioning */
+/* Form Groups - Clean Structure */
 .form-group {
-    display: flex;
-    flex-direction: column;
+    display: block;
+    width: 100%;
+    margin-bottom: 20px;
+    position: relative;
 }
 
-.form-group .error-message {
-    order: 2;
-    margin: 5px 0 0 0;
-    color: #dc2626;
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
     font-size: 14px;
-    font-weight: 500;
 }
 
 .form-group input,
 .form-group select,
-.form-group textarea,
-.form-group .password-input-container {
-    order: 1;
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #fff;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #66bb6a;
+    box-shadow: 0 0 0 3px rgba(102, 187, 106, 0.1);
+    outline: none;
 }
 
 /* Button */
@@ -696,12 +717,20 @@ body {
     margin: 0;
 }
 
-/* Error Text */
+/* Error Text - General */
 .error-text {
-    display: block;
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: 5px;
+    display: block !important;
+    color: #dc3545 !important;
+    font-size: 14px !important;
+    margin-top: 8px !important;
+    font-weight: 500 !important;
+    width: 100% !important;
+    clear: both !important;
+    position: static !important;
+    float: none !important;
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 /* Info Box for Application */
@@ -892,42 +921,19 @@ body {
     padding: 2px;
 }
 
-/* Password Input Container */
+/* Legacy Password Input Container (kept for compatibility) */
 .password-input-container {
     position: relative;
-    display: flex;
-    align-items: center;
+    display: block;
+    width: 100%;
+    margin-bottom: 0;
 }
 
-.password-input-container input[type="password"],
-.password-input-container input[type="text"] {
-    padding-right: 45px;
-}
-
-.password-toggle {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #6b7280;
-    font-size: 18px;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    z-index: 10;
-}
-
-.password-toggle:hover {
-    color: #374151;
-    background: #f3f4f6;
-}
-
-.password-toggle:focus {
-    outline: 2px solid #66bb6a;
-    outline-offset: 2px;
+/* Ensure password form groups have proper structure */
+.form-group .password-input-container {
+    display: block;
+    position: relative;
+    width: 100%;
 }
 
 /* Success Message Styling */
@@ -996,4 +1002,170 @@ body {
 
 .success-message {
     animation: fadeInScale 0.5s ease-out;
+}
+
+/* Clean Password Field Styles */
+.password-field-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.password-field-wrapper input[type="password"],
+.password-field-wrapper input[type="text"] {
+    width: 100%;
+    height: 48px;
+    padding: 12px 48px 12px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #fff;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.password-field-wrapper input:focus {
+    border-color: #66bb6a;
+    box-shadow: 0 0 0 3px rgba(102, 187, 106, 0.1);
+    outline: none;
+}
+
+.password-visibility-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 18px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.password-visibility-toggle:hover {
+    color: #374151;
+    background: #f3f4f6;
+}
+
+.password-visibility-toggle:focus {
+    outline: 2px solid #66bb6a;
+    outline-offset: 2px;
+}
+
+/* Password Requirements Styling */
+.password-strength-info {
+    margin-top: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.password-strength-info small {
+    font-weight: 600;
+    color: #374151;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.password-requirements-list {
+    margin: 0;
+    padding-left: 20px;
+    list-style: none;
+}
+
+.password-requirements-list .requirement {
+    margin: 3px 0;
+    position: relative;
+    padding-left: 20px;
+    transition: color 0.2s ease;
+}
+
+.password-requirements-list .requirement::before {
+    content: "✗";
+    position: absolute;
+    left: 0;
+    color: #dc2626;
+    font-weight: bold;
+}
+
+.password-requirements-list .requirement.met::before {
+    content: "✓";
+    color: #059669;
+}
+
+.password-requirements-list .requirement.met {
+    color: #059669;
+}
+
+/* Password Match Indicator */
+.password-match-indicator {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.password-match-indicator.match {
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #059669;
+}
+
+.password-match-indicator.no-match {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+/* Field Error Messages */
+.field-error-message {
+    display: block;
+    width: 100%;
+    color: #dc2626;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    line-height: 1.4;
+}
+
+/* Hide Laravel validation errors when JS validation is active */
+.field-error-message.hidden {
+    display: none !important;
+}
+
+/* Form Group Enhanced Spacing */
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Prevent layout shift on error appearance */
+.password-field-wrapper + .password-strength-info + .field-error-message,
+.password-field-wrapper + .password-match-indicator + .field-error-message {
+    margin-top: 4px;
 }

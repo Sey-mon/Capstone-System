@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Registration - Nutrition System</title>
+    <title>Parent Registrati                        <button type="button" class="password-visibility-toggle" data-target="password">
+                            <span class="show-text">👁️</span>
+                            <span class="hide-text" style="display: none;">🙈</span>
+                        </button> Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/register.css') }}">
 </head>
@@ -168,42 +171,43 @@
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <div class="password-input-container">
+                    <div class="password-field-wrapper">
                         <input type="password" name="password" id="password" 
                                placeholder="Create a strong password (minimum 8 characters)" 
+                               value="{{ old('password') }}"
                                required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
-                            👁️
+                        <button type="button" class="password-visibility-toggle" data-target="password">
+                            <span class="show-text">👁️</span>
+                            <span class="hide-text" style="display: none;">�</span>
                         </button>
                     </div>
-                    <div class="password-requirements">
+                    <div class="password-strength-info">
                         <small>Password must contain:</small>
-                        <ul>
-                            <li>At least 8 characters</li>
-                            <li>One uppercase letter (A-Z)</li>
-                            <li>One lowercase letter (a-z)</li>
-                            <li>One number (0-9)</li>
-                            <li>One special character (@$!%*?&#)</li>
+                        <ul class="password-requirements-list">
+                            <li class="requirement" data-requirement="length">At least 8 characters</li>
+                            <li class="requirement" data-requirement="uppercase">One uppercase letter (A-Z)</li>
+                            <li class="requirement" data-requirement="lowercase">One lowercase letter (a-z)</li>
+                            <li class="requirement" data-requirement="number">One number (0-9)</li>
+                            <li class="requirement" data-requirement="special">One special character (@$!%*?&#)</li>
                         </ul>
                     </div>
                     @error('password')
-                        <span class="error-text">{{ $message }}</span>
+                        <div class="field-error-message">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="form-group">
                     <label for="password_confirmation">Confirm Password</label>
-                    <div class="password-input-container">
+                    <div class="password-field-wrapper">
                         <input type="password" name="password_confirmation" id="password_confirmation" 
                                placeholder="Confirm your password" 
+                               value="{{ old('password_confirmation') }}"
                                required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('password_confirmation')">
-                            👁️
+                        <button type="button" class="password-visibility-toggle" data-target="password_confirmation">
+                            <span class="show-text">👁️</span>
+                            <span class="hide-text" style="display: none;">🙈</span>
                         </button>
                     </div>
-                    @error('password_confirmation')
-                        <span class="error-text">{{ $message }}</span>
-                    @enderror
                 </div>
                 
                 <!-- Step 2 Navigation -->
@@ -344,25 +348,139 @@
     <script src="{{ asset('js/wizard-register.js') }}"></script>
     
     <script>
-        // Password toggle functionality
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            const button = field.nextElementSibling;
-            
-            if (field.type === 'password') {
-                field.type = 'text';
-                button.innerHTML = '🙈';
-                button.setAttribute('aria-label', 'Hide password');
-            } else {
-                field.type = 'password';
-                button.innerHTML = '👁️';
-                button.setAttribute('aria-label', 'Show password');
-            }
-        }
-
-        // Enhanced date input styling
+        // New Password Field Functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Add custom styling to date inputs
+            // Add CSRF token refresh functionality
+            window.refreshCSRFToken = function() {
+                fetch('/csrf-token', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.csrf_token) {
+                        // Update the CSRF token in the form
+                        const csrfInput = document.querySelector('input[name="_token"]');
+                        if (csrfInput) {
+                            csrfInput.value = data.csrf_token;
+                        }
+                        // Update meta tag
+                        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                        if (csrfMeta) {
+                            csrfMeta.content = data.csrf_token;
+                        }
+                        console.log('CSRF token refreshed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to refresh CSRF token:', error);
+                });
+            };
+
+            // Debug form submission
+            const form = document.getElementById('parentRegistrationForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    console.log('Form submission intercepted');
+                    console.log('Form action:', this.action);
+                    console.log('Form method:', this.method);
+                    
+                    // Check CSRF token
+                    const csrfToken = document.querySelector('input[name="_token"]');
+                    console.log('CSRF token present:', csrfToken ? 'Yes' : 'No');
+                    if (csrfToken) {
+                        console.log('CSRF token value:', csrfToken.value);
+                    }
+                    
+                    // Check required fields
+                    const requiredFields = ['first_name', 'last_name', 'email', 'password'];
+                    const missingFields = [];
+                    
+                    requiredFields.forEach(field => {
+                        const input = document.querySelector(`input[name="${field}"]`);
+                        if (!input || !input.value.trim()) {
+                            missingFields.push(field);
+                        }
+                    });
+                    
+                    if (missingFields.length > 0) {
+                        console.error('Missing required fields:', missingFields);
+                    }
+                    
+                    console.log('Form data being submitted:');
+                    const formData = new FormData(this);
+                    for (let [key, value] of formData.entries()) {
+                        if (key !== 'password' && key !== 'password_confirmation') {
+                            console.log(`${key}: ${value}`);
+                        } else {
+                            console.log(`${key}: [HIDDEN]`);
+                        }
+                    }
+                });
+            }
+
+            // Password visibility toggle
+            const passwordToggles = document.querySelectorAll('.password-visibility-toggle');
+            passwordToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const targetId = this.getAttribute('data-target');
+                    const targetField = document.getElementById(targetId);
+                    const showText = this.querySelector('.show-text');
+                    const hideText = this.querySelector('.hide-text');
+                    
+                    if (targetField && showText && hideText) {
+                        if (targetField.type === 'password') {
+                            targetField.type = 'text';
+                            showText.style.display = 'none';
+                            hideText.style.display = 'block';
+                        } else {
+                            targetField.type = 'password';
+                            showText.style.display = 'block';
+                            hideText.style.display = 'none';
+                        }
+                    }
+                });
+            });
+
+            // Password strength checking
+            const passwordField = document.getElementById('password');
+            const confirmField = document.getElementById('password_confirmation');
+
+            if (passwordField) {
+                passwordField.addEventListener('input', function() {
+                    checkPasswordStrength(this.value);
+                });
+            }
+
+            function checkPasswordStrength(password) {
+                const requirements = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[@$!%*?&#]/.test(password)
+                };
+
+                // Update requirement indicators
+                Object.keys(requirements).forEach(req => {
+                    const element = document.querySelector(`[data-requirement="${req}"]`);
+                    if (element) {
+                        if (requirements[req]) {
+                            element.classList.add('met');
+                        } else {
+                            element.classList.remove('met');
+                        }
+                    }
+                });
+            }
+
+            // Enhanced date input styling
             const dateInputs = document.querySelectorAll('input[type="date"]');
             dateInputs.forEach(input => {
                 input.addEventListener('focus', function() {
