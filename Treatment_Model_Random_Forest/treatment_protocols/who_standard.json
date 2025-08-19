@@ -1,0 +1,221 @@
+{
+  "version": "2.0",
+  "description": "WHO standard treatment protocols with age-specific and risk-based considerations",
+  "protocols": {
+    "Severe Acute Malnutrition (SAM)": {
+      "with_edema": {
+        "treatment": "Inpatient therapeutic care",
+        "details": "Start with stabilization phase 1 using F75 (100 kcal/kg/day) and proceed with transition (130 kcal/kg/day) and/or phase 2 (200kcal/kg/day) using either F100 RUTF as inpatient/child's condition and appetite improve",
+        "follow_up": "Monitor closely until stabilized",
+        "priority": "critical",
+        "duration_weeks": "2-4",
+        "medications": [
+          "F75 formula",
+          "F100 formula",
+          "RUTF",
+          "Antibiotics as needed"
+        ],
+        "monitoring": [
+          "Daily weight",
+          "Vital signs",
+          "Appetite assessment",
+          "Edema monitoring"
+        ],
+        "age_specific": {
+          "0-6_months": {
+            "treatment": "Specialized neonatal intensive care",
+            "details": "Breast milk priority with F75 supplementation only if breastfeeding inadequate. Start 100 kcal/kg/day, increase gradually. Requires specialized pediatric unit with neonatal expertise.",
+            "special_considerations": "Maintain body temperature, frequent small feeds every 2-3 hours, monitor blood glucose closely",
+            "medications": ["F75 formula (if needed)", "IV glucose", "Specialized antibiotics for neonates"],
+            "caloric_progression": "100→110→130 kcal/kg/day over 1-2 weeks"
+          },
+          "6-24_months": {
+            "treatment": "Inpatient therapeutic care with developmental support",
+            "details": "Standard 3-phase approach: Stabilization (F75, 100 kcal/kg/day for 2-7 days), Transition (mixed F75/F100, 130 kcal/kg/day for 3-7 days), Rehabilitation (F100/RUTF, 200 kcal/kg/day until recovery)",
+            "special_considerations": "Include developmental stimulation, play therapy, caregiver training on feeding techniques",
+            "medications": ["F75", "F100", "RUTF", "Broad-spectrum antibiotics", "Vitamin A (100,000 IU)", "Folic acid"],
+            "caloric_progression": "100→130→200 kcal/kg/day"
+          },
+          "24-60_months": {
+            "treatment": "Inpatient care with family involvement",
+            "details": "Modified approach considering child's eating habits and food preferences. Family-centered care with caregiver education on home preparation of therapeutic foods.",
+            "special_considerations": "Involve child in food choices when possible, address feeding behaviors, family counseling",
+            "medications": ["F75", "F100", "RUTF varieties", "Antibiotics", "Vitamin A (200,000 IU)", "Folic acid"],
+            "caloric_progression": "100→130→200 kcal/kg/day with variety"
+          }
+        },
+        "risk_modifiers": {
+          "twins": {
+            "additional_care": "Enhanced monitoring for competition during feeding, separate feeding schedules if needed, increased caregiver support",
+            "resource_allocation": "1.5x standard resource allocation per child"
+          },
+          "tuberculosis": {
+            "additional_care": "Anti-TB treatment concurrent with nutritional rehabilitation, isolation protocols, enhanced infection control",
+            "medication_interactions": "Monitor for drug interactions between TB medications and nutritional supplements"
+          },
+          "malaria": {
+            "additional_care": "Anti-malarial treatment before nutritional rehabilitation, monitor for cerebral complications",
+            "feeding_modifications": "May need IV glucose initially, gradual introduction of oral feeds"
+          },
+          "4ps_beneficiary": {
+            "social_support": "Enhanced social worker involvement, family nutrition education, follow-up support for sustainable care",
+            "resource_provision": "Extended support package including take-home rations for family"
+          }
+        }
+      },
+      "without_edema": {
+        "treatment": "Outpatient therapeutic care",
+        "details": "Provide 200 kcal/kg/day using RUTF, 5 days of antibiotics, routine health and nutrition care (Vitamin A, measles immunization, deworming, routine growth monitoring, etc.)",
+        "follow_up": "Follow-up every 1-2 weeks until edema resolves, clinically well, and WHZ score is normal",
+        "priority": "high",
+        "duration_weeks": "6-8",
+        "medications": [
+          "RUTF (Ready-to-Use Therapeutic Food)",
+          "Antibiotics (5 days)",
+          "Vitamin A",
+          "Deworming medication"
+        ],
+        "monitoring": [
+          "Weekly weight",
+          "Appetite assessment",
+          "Clinical status",
+          "Growth monitoring"
+        ],
+        "age_specific": {
+          "0-6_months": {
+            "treatment": "Outpatient care with breastfeeding support",
+            "details": "Prioritize breastfeeding counseling and support. RUTF only if breastfeeding inadequate. Weekly monitoring initially.",
+            "special_considerations": "Maternal nutrition support, breastfeeding technique training",
+            "follow_up": "Weekly for first month, then bi-weekly"
+          },
+          "6-24_months": {
+            "treatment": "Community-based outpatient therapeutic care",
+            "details": "RUTF 200 kcal/kg/day, weekly distribution, community health worker support",
+            "special_considerations": "Complementary feeding education, food demonstration, hygiene training",
+            "follow_up": "Weekly until weight gain established, then bi-weekly"
+          },
+          "24-60_months": {
+            "treatment": "Family-centered outpatient care",
+            "details": "RUTF with gradual introduction of family foods, cooking demonstrations for caregivers",
+            "special_considerations": "School feeding programs if applicable, peer support groups",
+            "follow_up": "Weekly initially, then every 2 weeks"
+          }
+        }
+      }
+    },
+    "Moderate Acute Malnutrition (MAM)": {
+      "standard": {
+        "treatment": "Targeted supplementary feeding program",
+        "details": "Provide 75 kcal/kg/day routine health and nutrition care (Vit A and immunization counselling, deworming, routine growth monitoring, etc.)",
+        "follow_up": "Follow up every 2 weeks until WHZ score returns to normal",
+        "priority": "medium",
+        "duration_weeks": "8-12",
+        "medications": [
+          "Supplementary food (75 kcal/kg/day)",
+          "Vitamin A",
+          "Iron supplements",
+          "Deworming medication"
+        ],
+        "monitoring": [
+          "Bi-weekly weight",
+          "Growth monitoring",
+          "Appetite assessment",
+          "Family counseling"
+        ],
+        "age_specific": {
+          "0-6_months": {
+            "treatment": "Breastfeeding support and counseling",
+            "details": "Focus on improving breastfeeding practices, maternal nutrition, complementary feeding preparation",
+            "special_considerations": "Assess breastfeeding effectiveness, maternal health status",
+            "supplements": ["Vitamin A for mother and child", "Iron for mother"]
+          },
+          "6-24_months": {
+            "treatment": "Supplementary feeding with education",
+            "details": "Fortified blended food 75 kcal/kg/day, complementary feeding counseling, growth monitoring",
+            "special_considerations": "Food preparation training, hygiene education, feeding frequency guidance",
+            "supplements": ["Fortified blended food", "Vitamin A", "Iron", "Zinc"]
+          },
+          "24-60_months": {
+            "treatment": "Community-based supplementary feeding",
+            "details": "School-based or community feeding programs, family nutrition education",
+            "special_considerations": "Involve child in learning about nutrition, peer group activities",
+            "supplements": ["Supplementary food", "Micronutrient powder", "Deworming"]
+          }
+        }
+      }
+    },
+    "Normal": {
+      "standard": {
+        "treatment": "Routine health check and nutrition care",
+        "details": "Vit A and nutrition counselling, immunization, deworming, routine growth monitoring, micronutrient supplementation (Vit A, iron, zinc, etc.) with close monitoring to high risk children",
+        "follow_up": "Regular monitoring as per standard schedule",
+        "priority": "low",
+        "duration_weeks": "ongoing",
+        "medications": [
+          "Vitamin A (as per schedule)",
+          "Iron supplements (if needed)",
+          "Zinc supplements (if needed)",
+          "Deworming (as per schedule)"
+        ],
+        "monitoring": [
+          "Monthly growth monitoring",
+          "Vaccination status",
+          "Nutrition counseling",
+          "Family education"
+        ],
+        "age_specific": {
+          "0-6_months": {
+            "treatment": "Breastfeeding promotion and support",
+            "details": "Exclusive breastfeeding counseling, maternal nutrition support, preparation for complementary feeding",
+            "special_considerations": "Monitor maternal health, breastfeeding adequacy, infant weight gain patterns"
+          },
+          "6-24_months": {
+            "treatment": "Complementary feeding guidance",
+            "details": "Age-appropriate complementary feeding education, continued breastfeeding support, micronutrient supplementation",
+            "special_considerations": "Food safety education, feeding frequency guidance, growth velocity monitoring"
+          },
+          "24-60_months": {
+            "treatment": "Family nutrition education",
+            "details": "Healthy eating patterns, school readiness nutrition, family meal planning",
+            "special_considerations": "Involve child in learning, establish healthy food preferences, prepare for school nutrition"
+          }
+        }
+      }
+    }
+  },
+  "risk_factors": {
+    "high_priority_conditions": [
+      "edema",
+      "tuberculosis",
+      "malaria",
+      "twins",
+      "age_months < 6",
+      "congenital_anomalies",
+      "other_medical_problems"
+    ],
+    "social_risk_factors": [
+      "4ps_beneficiary",
+      "large_household_size",
+      "low_adult_to_child_ratio",
+      "single_caregiver",
+      "rural_location"
+    ]
+  },
+  "emergency_criteria": {
+    "immediate_referral": [
+      "whz_score < -4",
+      "edema with fever",
+      "inability to feed",
+      "severe dehydration",
+      "hypothermia",
+      "hypoglycemia"
+    ]
+  },
+  "discharge_criteria": {
+    "SAM": {
+      "with_edema": "No edema for 14 consecutive days AND WHZ ≥ -2 for 2 consecutive visits AND good appetite AND no medical complications",
+      "without_edema": "WHZ ≥ -2 for 2 consecutive visits AND weight gain >15% from admission AND good appetite"
+    },
+    "MAM": "WHZ ≥ -2 AND weight gain sustained for 4 weeks"
+  }
+}
