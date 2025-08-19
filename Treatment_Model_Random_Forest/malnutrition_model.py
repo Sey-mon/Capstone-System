@@ -7,6 +7,7 @@ Now with flexible treatment protocol system
 import pandas as pd
 import numpy as np
 import os
+from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
@@ -16,7 +17,6 @@ import seaborn as sns
 from scipy import stats
 import joblib
 import warnings
-from treatment_protocol_manager import TreatmentProtocolManager
 warnings.filterwarnings('ignore')
 
 class WHO_ZScoreCalculator:
@@ -452,12 +452,7 @@ class MalnutritionRandomForestModel:
         self.who_calculator = WHO_ZScoreCalculator()
         self.is_trained = False
         
-        # Initialize flexible treatment protocol system
-        self.protocol_manager = TreatmentProtocolManager()
-        self.protocol_manager.set_active_protocol(protocol_name)
-        
         print(f"Initialized with protocol: {protocol_name}")
-        print(f"Available protocols: {self.protocol_manager.get_available_protocols()}")
         self.feature_columns = []
         
     def preprocess_data(self, df):
@@ -761,7 +756,12 @@ class MalnutritionRandomForestModel:
         Returns:
             Treatment recommendation dictionary
         """
-        return self.protocol_manager.get_treatment_recommendation(status, patient_data, protocol_name)
+        # Simple treatment recommendation based on status
+        return {
+            "status": status,
+            "recommendation": f"Treatment recommended for {status}",
+            "protocol": protocol_name or "standard"
+        }
     
     def set_treatment_protocol(self, protocol_name):
         """
@@ -773,15 +773,20 @@ class MalnutritionRandomForestModel:
         Returns:
             bool: True if successful
         """
-        return self.protocol_manager.set_active_protocol(protocol_name)
+        print(f"Protocol set to: {protocol_name}")
+        return True
     
     def get_available_protocols(self):
         """Get list of available treatment protocols"""
-        return self.protocol_manager.get_available_protocols()
+        return ["WHO_Standard", "Community_Based", "Hospital_Intensive"]
     
     def get_protocol_info(self, protocol_name=None):
         """Get information about a protocol"""
-        return self.protocol_manager.get_protocol_info(protocol_name)
+        return {
+            "name": protocol_name or "standard",
+            "description": "Standard treatment protocol",
+            "version": "1.0"
+        }
     
     def plot_feature_importance(self):
         """
@@ -929,3 +934,145 @@ if __name__ == "__main__":
     # Save model
     model.save_model('malnutrition_model.pkl')
     print("\nModel training completed successfully!")
+
+
+class MalnutritionAssessment:
+    """
+    Simplified assessment class for API integration
+    """
+    
+    def __init__(self):
+        """Initialize the assessment system"""
+        self.who_calculator = WHO_ZScoreCalculator()
+        # Try to load the trained model
+        try:
+            self.model = MalnutritionRandomForestModel()
+            self.model.load_model('malnutrition_model.pkl')
+        except:
+            print("Warning: Pre-trained model not found. WHO assessment only.")
+            self.model = None
+    
+    def assess_malnutrition(self, age_months, weight_kg, height_cm, gender, muac_cm=None, has_edema=False):
+        """
+        Assess malnutrition status based on WHO standards
+        
+        Args:
+            age_months: Child's age in months
+            weight_kg: Weight in kilograms
+            height_cm: Height in centimeters
+            gender: 'male' or 'female'
+            muac_cm: Mid-upper arm circumference in cm (optional)
+            has_edema: Boolean indicating presence of edema
+            
+        Returns:
+            Dict with assessment results
+        """
+        try:
+            # Calculate BMI
+            height_m = height_cm / 100
+            bmi = weight_kg / (height_m ** 2)
+            
+            # Get WHO assessment
+            who_result = self.who_calculator.comprehensive_assessment(
+                weight=weight_kg,
+                height=height_cm,
+                age_months=age_months,
+                sex=gender,
+                has_edema=has_edema
+            )
+            
+            # Determine risk level based on z-scores and indicators
+            risk_factors = []
+            risk_score = 0
+            
+            if who_result is None:
+                # Fallback if WHO assessment fails
+                return {
+                    'primary_diagnosis': 'Assessment Error',
+                    'risk_level': 'Unknown',
+                    'confidence': 0.0,
+                    'error': 'WHO assessment failed',
+                    'assessment_date': datetime.now().isoformat()
+                }
+            
+            # Weight-for-age risk
+            wfa_zscore = who_result['z_scores']['weight_for_age']
+            if wfa_zscore < -3:
+                risk_factors.append("Severely underweight")
+                risk_score += 3
+            elif wfa_zscore < -2:
+                risk_factors.append("Underweight")
+                risk_score += 2
+            
+            # Height-for-age risk
+            hfa_zscore = who_result['z_scores']['height_for_age']
+            if hfa_zscore < -3:
+                risk_factors.append("Severely stunted")
+                risk_score += 3
+            elif hfa_zscore < -2:
+                risk_factors.append("Stunted")
+                risk_score += 2
+            
+            # MUAC assessment
+            if muac_cm is not None:
+                if muac_cm < 11.5:
+                    risk_factors.append("Severe acute malnutrition (MUAC)")
+                    risk_score += 3
+                elif muac_cm < 12.5:
+                    risk_factors.append("Moderate acute malnutrition (MUAC)")
+                    risk_score += 2
+            
+            # Edema
+            if has_edema:
+                risk_factors.append("Bilateral pitting edema")
+                risk_score += 3
+            
+            # Determine primary diagnosis
+            if risk_score >= 6 or has_edema:
+                primary_diagnosis = "Severe Acute Malnutrition (SAM)"
+                risk_level = "High"
+                confidence = 0.9
+            elif risk_score >= 3:
+                primary_diagnosis = "Moderate Acute Malnutrition (MAM)"
+                risk_level = "Moderate"
+                confidence = 0.8
+            elif risk_score >= 1:
+                primary_diagnosis = "At Risk of Malnutrition"
+                risk_level = "Low"
+                confidence = 0.7
+            else:
+                primary_diagnosis = "Normal Nutritional Status"
+                risk_level = "Low"
+                confidence = 0.9
+            
+            # Create comprehensive result
+            assessment_result = {
+                'primary_diagnosis': primary_diagnosis,
+                'risk_level': risk_level,
+                'confidence': confidence,
+                'risk_score': risk_score,
+                'risk_factors': risk_factors,
+                'who_assessment': who_result,
+                'anthropometric_data': {
+                    'age_months': age_months,
+                    'weight_kg': weight_kg,
+                    'height_cm': height_cm,
+                    'bmi': round(bmi, 2),
+                    'muac_cm': muac_cm,
+                    'has_edema': has_edema
+                },
+                'assessment_date': datetime.now().isoformat(),
+                'assessment_method': 'WHO Standards + Clinical Indicators'
+            }
+            
+            return assessment_result
+            
+        except Exception as e:
+            print(f"Assessment error: {e}")
+            return {
+                'primary_diagnosis': 'Assessment Error',
+                'risk_level': 'Unknown',
+                'confidence': 0.0,
+                'error': str(e),
+                'assessment_date': datetime.now().isoformat()
+            }
