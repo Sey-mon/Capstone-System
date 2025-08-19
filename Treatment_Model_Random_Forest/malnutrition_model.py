@@ -411,8 +411,8 @@ class WHO_ZScoreCalculator:
             
             return {
                 'measurements': {
-                    'weight': weight,
-                    'height': height,
+                    'weight_kg': weight,
+                    'height_cm': height,
                     'age_months': age_months,
                     'sex': sex,
                     'bmi': bmi
@@ -469,7 +469,7 @@ class MalnutritionRandomForestModel:
         # Calculate BMI
         df_processed['bmi'] = df_processed.apply(
             lambda row: self.who_calculator.calculate_bmi(
-                row['weight'], row['height']
+                row['weight_kg'], row['height_cm']
             ), axis=1
         )
         
@@ -481,7 +481,40 @@ class MalnutritionRandomForestModel:
         )
         
         # Calculate BMI
-        df_processed['bmi'] = df_processed['weight'] / ((df_processed['height']/100) ** 2)
+        df_processed['bmi'] = df_processed['weight_kg'] / ((df_processed['height_cm']/100) ** 2)
+        
+        # Calculate WHO Z-scores
+        df_processed['wfa_zscore'] = df_processed.apply(
+            lambda row: self.who_calculator.calculate_weight_for_age_zscore(
+                row['weight_kg'], row['age_months'], row['sex']
+            ), axis=1
+        )
+        
+        df_processed['hfa_zscore'] = df_processed.apply(
+            lambda row: self.who_calculator.calculate_height_for_age_zscore(
+                row['height_cm'], row['age_months'], row['sex']
+            ), axis=1
+        )
+        
+        # For WHZ, we'll use a simple approximation based on BMI
+        df_processed['whz_score'] = df_processed.apply(
+            lambda row: (row['bmi'] - 15.5) / 1.5,  # Approximate WHZ from BMI
+            axis=1
+        )
+        
+        # Update the database fields if they exist (weight_for_age, height_for_age, bmi_for_age)
+        if 'weight_for_age' in df_processed.columns:
+            df_processed['weight_for_age'] = df_processed.apply(
+                lambda row: self._classify_zscore(row['wfa_zscore']), axis=1
+            )
+        
+        if 'height_for_age' in df_processed.columns:
+            df_processed['height_for_age'] = df_processed.apply(
+                lambda row: self._classify_zscore(row['hfa_zscore']), axis=1
+            )
+        
+        if 'bmi_for_age' in df_processed.columns:
+            df_processed['bmi_for_age'] = df_processed['bmi_status']
         
         # Create age groups
         df_processed['age_group'] = pd.cut(
@@ -491,9 +524,43 @@ class MalnutritionRandomForestModel:
         )
         
         # Encode categorical variables
-        categorical_columns = ['sex', 'municipality', '4ps_beneficiary', 'breastfeeding', 
-                             'tuberculosis', 'malaria', 'congenital_anomalies', 'other_medical_problems',
-                             'age_group']
+        categorical_columns = ['sex', 'is_4ps_beneficiary', 'breastfeeding', 
+                             'other_medical_problems', 'edema', 'age_group']
+        
+        for col in categorical_columns:
+            if col in df_processed.columns:
+                if col not in self.label_encoders:
+                    self.label_encoders[col] = LabelEncoder()
+                    df_processed[col] = self.label_encoders[col].fit_transform(df_processed[col].astype(str))
+                else:
+                    # Handle new categories during prediction
+                    unique_values = set(df_processed[col].astype(str))
+                    known_values = set(self.label_encoders[col].classes_)
+                    new_values = unique_values - known_values
+                    
+                    if new_values:
+                        # Add new values to encoder
+                        all_values = list(known_values) + list(new_values)
+                        self.label_encoders[col].classes_ = np.array(all_values)
+                    
+                    df_processed[col] = self.label_encoders[col].transform(df_processed[col].astype(str))
+        
+        return df_processed
+    
+    def _classify_zscore(self, zscore):
+        """
+        Classify Z-score into WHO categories
+        """
+        if zscore < -3:
+            return "Severely Low"
+        elif zscore < -2:
+            return "Low"
+        elif zscore > 2:
+            return "High"
+        elif zscore > 3:
+            return "Very High"
+        else:
+            return "Normal"
         
         for col in categorical_columns:
             if col in df_processed.columns:
@@ -545,11 +612,10 @@ class MalnutritionRandomForestModel:
         y = self.create_target_variable(df_processed)
         
         # Select features for training
-        feature_columns = ['age_months', 'weight', 'height', 'bmi', 'whz_score',
-                          'total_household', 'adults', 'children', 'twins',
-                          'sex', '4ps_beneficiary', 'breastfeeding',
-                          'tuberculosis', 'malaria', 'congenital_anomalies',
-                          'other_medical_problems', 'age_group']
+        feature_columns = ['age_months', 'weight_kg', 'height_cm', 'bmi', 'whz_score',
+                          'total_household_adults', 'total_household_children', 'total_household_twins',
+                          'sex', 'is_4ps_beneficiary', 'breastfeeding',
+                          'other_medical_problems', 'edema', 'age_group']
         
         # Filter available columns
         available_columns = [col for col in feature_columns if col in df_processed.columns]
@@ -610,6 +676,7 @@ class MalnutritionRandomForestModel:
         
         return {
             'prediction': prediction,
+            'whz_score': df_processed['whz_score'].iloc[0],
             'bmi': df_processed['bmi'].iloc[0],
             'bmi_status': df_processed['bmi_status'].iloc[0],
             'probabilities': prob_dict,
@@ -632,14 +699,16 @@ class MalnutritionRandomForestModel:
                 
                 # Add patient info to result
                 batch_result = {
-                    'name': patient_data.get('name', f'Patient_{index+1}'),
+                    'first_name': patient_data.get('first_name', f'Patient_{index+1}'),
+                    'middle_name': patient_data.get('middle_name', ''),
+                    'last_name': patient_data.get('last_name', ''),
                     'age_months': patient_data.get('age_months', 0),
-                    'weight': patient_data.get('weight', 0),
-                    'height': patient_data.get('height', 0),
+                    'weight_kg': patient_data.get('weight_kg', 0),
+                    'height_cm': patient_data.get('height_cm', 0),
                     'whz_score': result['whz_score'],
                     'prediction': result['prediction'],
                     'treatment': result['recommendation']['treatment'],
-                    'bmi': patient_data['weight'] / ((patient_data['height']/100) ** 2) if patient_data.get('weight') and patient_data.get('height') else 0
+                    'bmi': patient_data['weight_kg'] / ((patient_data['height_cm']/100) ** 2) if patient_data.get('weight_kg') and patient_data.get('height_cm') else 0
                 }
                 
                 results.append(batch_result)
@@ -647,10 +716,12 @@ class MalnutritionRandomForestModel:
             except Exception as e:
                 # Handle errors gracefully
                 error_result = {
-                    'name': patient_data.get('name', f'Patient_{index+1}'),
+                    'first_name': patient_data.get('first_name', f'Patient_{index+1}'),
+                    'middle_name': patient_data.get('middle_name', ''),
+                    'last_name': patient_data.get('last_name', ''),
                     'age_months': 'Error',
-                    'weight': 'Error',
-                    'height': 'Error',
+                    'weight_kg': 'Error',
+                    'height_cm': 'Error',
                     'whz_score': 'Error',
                     'prediction': f'Error: {str(e)}',
                     'treatment': 'Unable to determine',
@@ -692,8 +763,8 @@ class MalnutritionRandomForestModel:
                 # Create prediction data
                 prediction_data = {
                     'age_months': age_months,
-                    'weight': weight,
-                    'height': height,
+                    'weight_kg': weight,
+                    'height_cm': height,
                     'sex': sex
                 }
                 
@@ -834,12 +905,22 @@ def generate_sample_data(n_samples=1000):
     """
     np.random.seed(42)
     
-    municipalities = ['Manila', 'Quezon City', 'Caloocan', 'Davao', 'Cebu', 'Zamboanga']
+    # Sample Filipino names for realistic data
+    first_names_male = ['Juan', 'Jose', 'Antonio', 'Pedro', 'Francisco', 'Manuel', 'Roberto', 'Carlos', 'Eduardo', 'Miguel']
+    first_names_female = ['Maria', 'Anna', 'Elena', 'Carmen', 'Rosa', 'Teresa', 'Patricia', 'Sofia', 'Luz', 'Gloria']
+    middle_names = ['Santos', 'Reyes', 'Cruz', 'Bautista', 'Ocampo', 'Garcia', 'Mendoza', 'Torres', 'Ramirez', 'Flores']
+    last_names = ['Dela Cruz', 'Garcia', 'Reyes', 'Ramos', 'Mendoza', 'Santos', 'Gonzales', 'Rodriguez', 'Hernandez', 'Torres']
     
     data = []
     for i in range(n_samples):
         age_months = np.random.randint(0, 61)
         sex = np.random.choice(['Male', 'Female'])
+        
+        # Generate names based on sex
+        if sex == 'Male':
+            first_name = np.random.choice(first_names_male)
+        else:
+            first_name = np.random.choice(first_names_female)
         
         # Generate realistic height and weight based on age
         if age_months <= 6:
@@ -857,26 +938,44 @@ def generate_sample_data(n_samples=1000):
         weight = max(1, base_weight * malnutrition_factor + np.random.normal(0, 0.5))
         
         record = {
-            'name': f'Child_{i+1}',
-            'municipality': np.random.choice(municipalities),
-            'number': f'ID_{i+1:04d}',
+            'patient_id': i + 1,
+            'parent_id': np.random.randint(1000, 9999) if np.random.random() > 0.1 else None,
+            'nutritionist_id': np.random.randint(100, 199) if np.random.random() > 0.2 else None,
+            'first_name': first_name,
+            'middle_name': np.random.choice(middle_names) if np.random.random() > 0.3 else None,
+            'last_name': np.random.choice(last_names),
+            'barangay_id': np.random.randint(1, 100),
+            'contact_number': f"09{np.random.randint(100000000, 999999999)}" if np.random.random() > 0.2 else None,
             'age_months': age_months,
             'sex': sex,
             'date_of_admission': pd.Timestamp.now() - pd.Timedelta(days=np.random.randint(0, 365)),
-            'total_household': np.random.randint(3, 12),
-            'adults': np.random.randint(2, 6),
-            'children': np.random.randint(1, 6),
-            'twins': np.random.choice([0, 1], p=[0.97, 0.03]),
-            '4ps_beneficiary': np.random.choice(['Yes', 'No'], p=[0.6, 0.4]),
-            'weight': round(weight, 1),
-            'height': round(height, 1),
+            'total_household_adults': np.random.randint(2, 6),
+            'total_household_children': np.random.randint(1, 6),
+            'total_household_twins': np.random.choice([0, 1], p=[0.97, 0.03]),
+            'is_4ps_beneficiary': np.random.choice([True, False], p=[0.6, 0.4]),
+            'weight_kg': round(weight, 2),
+            'height_cm': round(height, 2),
+            'weight_for_age': None,  # To be calculated by WHO standards
+            'height_for_age': None,  # To be calculated by WHO standards
+            'bmi_for_age': None,     # To be calculated by WHO standards
             'breastfeeding': np.random.choice(['Yes', 'No'], p=[0.7, 0.3]) if age_months <= 24 else 'No',
-            'tuberculosis': np.random.choice(['Yes', 'No'], p=[0.05, 0.95]),
-            'malaria': np.random.choice(['Yes', 'No'], p=[0.08, 0.92]),
-            'congenital_anomalies': np.random.choice(['Yes', 'No'], p=[0.03, 0.97]),
-            'other_medical_problems': np.random.choice(['Yes', 'No'], p=[0.1, 0.9]),
-            'edema': np.random.choice([True, False], p=[0.02, 0.98])
+            'other_medical_problems': None,  # Can include tuberculosis, malaria, congenital anomalies combined
+            'edema': np.random.choice(['Yes', 'No'], p=[0.02, 0.98])
         }
+        
+        # Combine medical problems into other_medical_problems text field
+        medical_issues = []
+        if np.random.random() < 0.05:  # 5% chance of tuberculosis
+            medical_issues.append("Tuberculosis")
+        if np.random.random() < 0.08:  # 8% chance of malaria
+            medical_issues.append("Malaria")
+        if np.random.random() < 0.03:  # 3% chance of congenital anomalies
+            medical_issues.append("Congenital anomalies")
+        if np.random.random() < 0.1:   # 10% chance of other issues
+            medical_issues.append("Other medical conditions")
+        
+        record['other_medical_problems'] = "; ".join(medical_issues) if medical_issues else None
+        
         data.append(record)
     
     return pd.DataFrame(data)
@@ -899,25 +998,29 @@ if __name__ == "__main__":
     # Example prediction
     print("\nExample prediction:")
     sample_patient = {
-        'name': 'Test Child',
-        'municipality': 'Manila',
-        'number': 'TEST001',
+        'patient_id': 1001,
+        'parent_id': 5001,
+        'nutritionist_id': 101,
+        'first_name': 'Juan',
+        'middle_name': 'Santos',
+        'last_name': 'Dela Cruz',
+        'barangay_id': 25,
+        'contact_number': '09123456789',
         'age_months': 18,
         'sex': 'Male',
         'date_of_admission': pd.Timestamp.now(),
-        'total_household': 5,
-        'adults': 2,
-        'children': 3,
-        'twins': 0,
-        '4ps_beneficiary': 'Yes',
-        'weight': 7.5,
-        'height': 75.0,
+        'total_household_adults': 2,
+        'total_household_children': 3,
+        'total_household_twins': 0,
+        'is_4ps_beneficiary': True,
+        'weight_kg': 7.5,
+        'height_cm': 75.0,
+        'weight_for_age': None,
+        'height_for_age': None,
+        'bmi_for_age': None,
         'breastfeeding': 'No',
-        'tuberculosis': 'No',
-        'malaria': 'No',
-        'congenital_anomalies': 'No',
-        'other_medical_problems': 'No',
-        'edema': False
+        'other_medical_problems': None,
+        'edema': 'No'
     }
     
     result = model.predict_single(sample_patient)
