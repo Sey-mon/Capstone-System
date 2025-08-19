@@ -1,0 +1,125 @@
+{
+  "version": "1.0",
+  "description": "Hospital-based intensive treatment protocols for severe cases",
+  "protocols": {
+    "Severe Acute Malnutrition (SAM)": {
+      "with_edema": {
+        "treatment": "Intensive inpatient care unit",
+        "details": "Structured 3-phase approach: Stabilization (F75, 100 kcal/kg/day), Transition (F75-F100 mix, 130 kcal/kg/day), Rehabilitation (F100/RUTF, 200 kcal/kg/day). Include IV fluids if needed, strict infection control",
+        "follow_up": "24/7 medical monitoring, daily medical rounds, weekly multidisciplinary team review",
+        "priority": "critical",
+        "duration_weeks": "2-6",
+        "medications": [
+          "F75 therapeutic formula",
+          "F100 therapeutic formula",
+          "RUTF (multiple varieties)",
+          "IV antibiotics",
+          "IV fluids (if indicated)",
+          "Vitamin A (high dose)",
+          "Folic acid",
+          "Zinc supplements"
+        ],
+        "monitoring": [
+          "Hourly vital signs",
+          "Daily weight",
+          "Fluid balance monitoring",
+          "Blood glucose monitoring",
+          "Electrolyte monitoring",
+          "Infection surveillance"
+        ]
+      },
+      "without_edema": {
+        "treatment": "Outpatient therapeutic program with hospital backup",
+        "details": "Intensive outpatient management with daily clinic visits initially, structured RUTF provision, immediate hospital admission criteria established",
+        "follow_up": "Daily visits week 1, every 2 days week 2-4, weekly thereafter until recovery",
+        "priority": "high",
+        "duration_weeks": "6-10",
+        "medications": [
+          "RUTF (standardized packets)",
+          "Oral antibiotics (full course)",
+          "Vitamin A (therapeutic dose)",
+          "Iron supplements",
+          "Zinc supplements",
+          "Deworming medication"
+        ],
+        "monitoring": [
+          "Daily weight (first 2 weeks)",
+          "Weekly blood tests",
+          "Appetite monitoring",
+          "Clinical assessment",
+          "Family compliance tracking"
+        ]
+      }
+    },
+    "Moderate Acute Malnutrition (MAM)": {
+      "standard": {
+        "treatment": "Specialized outpatient program",
+        "details": "Structured supplementary feeding with specialized products, regular medical monitoring, nutrition counseling with dietitian",
+        "follow_up": "Weekly medical check-ups, bi-weekly dietitian consultations, monthly progress review",
+        "priority": "medium",
+        "duration_weeks": "8-12",
+        "medications": [
+          "Specialized supplementary food",
+          "Vitamin A supplements",
+          "Iron with vitamin C",
+          "Zinc supplements",
+          "Multivitamin",
+          "Deworming (as per protocol)"
+        ],
+        "monitoring": [
+          "Weekly weight and height",
+          "Bi-weekly body composition",
+          "Monthly blood work",
+          "Nutritional intake assessment",
+          "Family counseling sessions"
+        ]
+      }
+    },
+    "Normal": {
+      "standard": {
+        "treatment": "Preventive care program",
+        "details": "Comprehensive preventive care including nutrition counseling, growth monitoring, immunizations, and family education programs",
+        "follow_up": "Monthly growth monitoring, quarterly comprehensive assessment, annual nutritional screening",
+        "priority": "low",
+        "duration_weeks": "ongoing",
+        "medications": [
+          "Age-appropriate vitamins",
+          "Iron supplements (if indicated)",
+          "Vaccine series (as per schedule)",
+          "Deworming (routine schedule)"
+        ],
+        "monitoring": [
+          "Monthly growth parameters",
+          "Quarterly development assessment",
+          "Annual blood screening",
+          "Family nutrition education",
+          "Immunization tracking"
+        ]
+      }
+    }
+  },
+  "admission_criteria": {
+    "immediate_admission": [
+      "whz_score < -4",
+      "edema with complications",
+      "severe dehydration",
+      "hypoglycemia",
+      "hypothermia",
+      "serious infection"
+    ],
+    "outpatient_criteria": [
+      "whz_score >= -3.5",
+      "no edema",
+      "good appetite",
+      "family compliance"
+    ]
+  },
+  "discharge_criteria": {
+    "recovered": [
+      "whz_score >= -2 for 2 consecutive visits",
+      "no edema for 2 weeks",
+      "clinically well",
+      "family ready for home care"
+    ]
+  }
+}

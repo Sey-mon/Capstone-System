@@ -147,7 +147,7 @@ class TreatmentProtocolManager:
         """Get list of available protocol names"""
         return list(self.protocols.keys())
     
-    def get_protocol_info(self, protocol_name: str = None) -> Dict[str, Any]: # type: ignore
+    def get_protocol_info(self, protocol_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Get information about a protocol
         
@@ -172,7 +172,7 @@ class TreatmentProtocolManager:
         }
     
     def get_treatment_recommendation(self, status: str, patient_data: Dict[str, Any], 
-                                   protocol_name: str = None) -> Dict[str, Any]: # type: ignore
+                                   protocol_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Get treatment recommendation based on active protocol
         

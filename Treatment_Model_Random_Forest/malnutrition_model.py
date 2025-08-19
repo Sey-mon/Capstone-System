@@ -6,6 +6,7 @@ Now with flexible treatment protocol system
 
 import pandas as pd
 import numpy as np
+import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
@@ -24,9 +25,13 @@ class WHO_ZScoreCalculator:
     """
     
     def __init__(self):
-        # WHO reference data - simplified version (you can expand with full WHO tables)
-        # These are approximations for demonstration
-        self.who_reference = {
+        # Load WHO reference data from Excel files
+        self.who_reference = {}
+        self.who_folder = "who_standard"
+        self._load_who_reference_data()
+        
+        # Fallback data in case Excel files are not available (keeping original for safety)
+        self.fallback_who_reference = {
             'weight_for_height': {
                 'boys': {
                     45: {'mean': 2.5, 'sd': 0.3},
@@ -63,45 +68,370 @@ class WHO_ZScoreCalculator:
             }
         }
     
-    def calculate_whz_score(self, weight, height, sex):
+    def _load_who_reference_data(self):
         """
-        Calculate Weight-for-Height Z-score
+        Load WHO reference data from Excel files
+        """
+        import os
+        
+        try:
+            # Initialize the reference data structure
+            self.who_reference = {
+                'weight_for_age': {'boys': {}, 'girls': {}},
+                'height_for_age': {'boys': {}, 'girls': {}},
+                'weight_for_height': {'boys': {}, 'girls': {}}  # Keep for backward compatibility
+            }
+            
+            # Define the Excel files to load
+            excel_files = {
+                'weight_for_age': {
+                    'boys': 'wfa_boys_0-to-5-years_zscores.xlsx',
+                    'girls': 'wfa_girls_0-to-5-years_zscores.xlsx'
+                },
+                'height_for_age': {
+                    'boys': 'lhfa_boys_0-to-5-years_zscores.xlsx',
+                    'girls': 'lhfa_girls_0-to-5-years_zscores.xlsx'
+                }
+            }
+            
+            # Load each Excel file
+            for measurement_type, genders in excel_files.items():
+                for gender, filename in genders.items():
+                    file_path = os.path.join(self.who_folder, filename)
+                    
+                    if os.path.exists(file_path):
+                        try:
+                            # Read the Excel file
+                            df = pd.read_excel(file_path)
+                            
+                            # Process each row to create lookup table
+                            for _, row in df.iterrows():
+                                month = int(row['Month'])
+                                
+                                # Store the data with month as key
+                                self.who_reference[measurement_type][gender][month] = {
+                                    'L': float(row['L']),
+                                    'M': float(row['M']),  # Median
+                                    'S': float(row['S']),
+                                    'mean': float(row['M']),  # For backward compatibility
+                                    'sd': float(row['S']),    # For backward compatibility
+                                    'SD3neg': float(row['SD3neg']),
+                                    'SD2neg': float(row['SD2neg']),
+                                    'SD1neg': float(row['SD1neg']),
+                                    'SD0': float(row['SD0']),
+                                    'SD1': float(row['SD1']),
+                                    'SD2': float(row['SD2']),
+                                    'SD3': float(row['SD3'])
+                                }
+                            
+                            print(f"Successfully loaded {filename}")
+                            
+                        except Exception as e:
+                            print(f"Error loading {filename}: {e}")
+                    else:
+                        print(f"WHO reference file not found: {file_path}")
+            
+            # If no Excel files were loaded, use fallback data
+            if not any(self.who_reference[measurement_type][gender] 
+                      for measurement_type in self.who_reference 
+                      for gender in ['boys', 'girls']):
+                print("No WHO Excel files found, using fallback data")
+                self.who_reference = self.fallback_who_reference
+            
+        except Exception as e:
+            print(f"Error loading WHO reference data: {e}")
+            print("Using fallback reference data")
+            self.who_reference = self.fallback_who_reference
+    
+    def calculate_weight_for_age_zscore(self, weight, age_months, sex):
+        """
+        Calculate Weight-for-Age Z-score using WHO standards
         """
         try:
-            # Round height to nearest 0.5 cm for lookup
-            height_rounded = round(height * 2) / 2
-            
-            # Find closest height in reference table
             sex_key = 'boys' if sex.lower() in ['male', 'm', 'boy'] else 'girls'
-            reference_data = self.who_reference['weight_for_height'][sex_key]
             
-            closest_height = min(reference_data.keys(), key=lambda x: abs(x - height_rounded))
-            
-            mean_weight = reference_data[closest_height]['mean']
-            sd_weight = reference_data[closest_height]['sd']
-            
-            # Calculate Z-score
-            z_score = (weight - mean_weight) / sd_weight
-            return round(z_score, 2)
-        
+            # Check if we have weight_for_age data
+            if 'weight_for_age' in self.who_reference and sex_key in self.who_reference['weight_for_age']:
+                age_data = self.who_reference['weight_for_age'][sex_key]
+                
+                # Find closest age in months
+                if age_months in age_data:
+                    reference = age_data[age_months]
+                else:
+                    # Find closest age
+                    closest_age = min(age_data.keys(), key=lambda x: abs(x - age_months))
+                    reference = age_data[closest_age]
+                
+                # Calculate Z-score using LMS method
+                L = reference['L']
+                M = reference['M']
+                S = reference['S']
+                
+                if L != 0:
+                    z_score = (((weight / M) ** L) - 1) / (L * S)
+                else:
+                    z_score = np.log(weight / M) / S
+                
+                return round(z_score, 2)
+            else:
+                return 0
+                
         except Exception as e:
-            print(f"Error calculating WHZ score: {e}")
+            print(f"Error calculating Weight-for-Age Z-score: {e}")
             return 0
     
-    def classify_nutritional_status(self, whz_score, has_edema=False):
+    def calculate_height_for_age_zscore(self, height, age_months, sex):
         """
-        Classify nutritional status based on WHZ score and edema
-        Following WHO guidelines as per the flowchart
+        Calculate Height-for-Age Z-score using WHO standards
+        """
+        try:
+            sex_key = 'boys' if sex.lower() in ['male', 'm', 'boy'] else 'girls'
+            
+            # Check if we have height_for_age data
+            if 'height_for_age' in self.who_reference and sex_key in self.who_reference['height_for_age']:
+                age_data = self.who_reference['height_for_age'][sex_key]
+                
+                # Find closest age in months
+                if age_months in age_data:
+                    reference = age_data[age_months]
+                else:
+                    # Find closest age
+                    closest_age = min(age_data.keys(), key=lambda x: abs(x - age_months))
+                    reference = age_data[closest_age]
+                
+                # Calculate Z-score using LMS method
+                L = reference['L']
+                M = reference['M']
+                S = reference['S']
+                
+                if L != 0:
+                    z_score = (((height / M) ** L) - 1) / (L * S)
+                else:
+                    z_score = np.log(height / M) / S
+                
+                return round(z_score, 2)
+            else:
+                return 0
+                
+        except Exception as e:
+            print(f"Error calculating Height-for-Age Z-score: {e}")
+            return 0
+    
+    def calculate_bmi(self, weight, height):
+        """
+        Calculate BMI (Body Mass Index)
+        BMI = weight (kg) / height (m)²
+        """
+        try:
+            # Convert height from cm to meters
+            height_m = height / 100
+            
+            # Calculate BMI
+            bmi = weight / (height_m ** 2)
+            
+            return round(bmi, 2)
+        
+        except Exception as e:
+            print(f"Error calculating BMI: {e}")
+            return 0
+    
+    def classify_bmi_status(self, bmi, age_months):
+        """
+        Classify BMI status for children based on WHO standards
+        """
+        try:
+            if age_months < 24:  # Under 2 years
+                if bmi < 13:
+                    return "Severely Underweight"
+                elif bmi < 15:
+                    return "Underweight" 
+                elif bmi <= 18:
+                    return "Normal"
+                else:
+                    return "Overweight"
+            else:  # 2-5 years
+                if bmi < 13.5:
+                    return "Severely Underweight"
+                elif bmi < 15.5:
+                    return "Underweight"
+                elif bmi <= 17.5:
+                    return "Normal"
+                else:
+                    return "Overweight"
+        except Exception as e:
+            print(f"Error classifying BMI status: {e}")
+            return "Unknown"
+    
+    def classify_nutritional_status(self, wfa_zscore, hfa_zscore, bmi, age_months, has_edema=False):
+        """
+        Classify nutritional status based on multiple indicators
+        Following WHO guidelines with comprehensive assessment
         """
         if has_edema:
             return "Severe Acute Malnutrition (SAM)"
         
-        if whz_score >= -2:
-            return "Normal"
-        elif whz_score >= -3 and whz_score < -2:
-            return "Moderate Acute Malnutrition (MAM)"
-        else:  # whz_score < -3
+        # Classify based on BMI status
+        bmi_status = self.classify_bmi_status(bmi, age_months)
+        
+        # Count severe indicators
+        severe_indicators = 0
+        moderate_indicators = 0
+        
+        if wfa_zscore < -3:
+            severe_indicators += 1
+        elif wfa_zscore < -2:
+            moderate_indicators += 1
+            
+        if hfa_zscore < -3:
+            severe_indicators += 1  
+        elif hfa_zscore < -2:
+            moderate_indicators += 1
+            
+        if bmi_status in ["Severely Underweight"]:
+            severe_indicators += 1
+        elif bmi_status in ["Underweight"]:
+            moderate_indicators += 1
+            
+        # Classification logic
+        if severe_indicators >= 2:
             return "Severe Acute Malnutrition (SAM)"
+        elif severe_indicators >= 1 or moderate_indicators >= 2:
+            return "Moderate Acute Malnutrition (MAM)"
+        elif moderate_indicators >= 1:
+            return "At Risk"
+        else:
+            return "Normal"
+    
+    def calculate_confidence_score(self, weight, height, age_months, sex, wfa_zscore, hfa_zscore, bmi):
+        """
+        Calculate confidence score for the nutritional assessment
+        Returns a score from 0-100 indicating reliability of the assessment
+        """
+        confidence_factors = []
+        
+        # 1. Data quality factors (40% of total confidence)
+        # Age appropriateness (0-60 months)
+        if 0 <= age_months <= 60:
+            age_confidence = 100
+        elif age_months > 60:
+            age_confidence = max(0, 100 - (age_months - 60) * 2)
+        else:
+            age_confidence = 0
+        confidence_factors.append(("Age Range", age_confidence, 0.15))
+        
+        # Height plausibility (45-120 cm for 0-5 years)
+        if 45 <= height <= 120:
+            height_confidence = 100
+        else:
+            height_confidence = max(0, 100 - abs(height - 80) * 2)
+        confidence_factors.append(("Height Range", height_confidence, 0.15))
+        
+        # Weight plausibility (2-30 kg for 0-5 years)
+        if 2 <= weight <= 30:
+            weight_confidence = 100
+        else:
+            weight_confidence = max(0, 100 - abs(weight - 15) * 5)
+        confidence_factors.append(("Weight Range", weight_confidence, 0.10))
+        
+        # 2. Z-score consistency (30% of total confidence)
+        # Check if Z-scores are within expected ranges (-5 to +5)
+        wfa_confidence = max(0, 100 - abs(wfa_zscore) * 10) if abs(wfa_zscore) <= 5 else 0
+        hfa_confidence = max(0, 100 - abs(hfa_zscore) * 10) if abs(hfa_zscore) <= 5 else 0
+        confidence_factors.append(("WFA Z-score", wfa_confidence, 0.15))
+        confidence_factors.append(("HFA Z-score", hfa_confidence, 0.15))
+        
+        # 3. BMI reasonableness (20% of total confidence)
+        # Expected BMI range for children: 12-25
+        if 12 <= bmi <= 25:
+            bmi_confidence = 100
+        else:
+            bmi_confidence = max(0, 100 - abs(bmi - 17) * 5)
+        confidence_factors.append(("BMI Range", bmi_confidence, 0.20))
+        
+        # 4. Indicator consistency (10% of total confidence)
+        # Check if different indicators point to similar conclusions
+        indicators = []
+        if wfa_zscore < -2:
+            indicators.append("underweight")
+        if hfa_zscore < -2:
+            indicators.append("stunted")
+        if bmi < 15:
+            indicators.append("thin")
+            
+        if len(set(indicators)) <= 1:  # Consistent indicators
+            consistency_confidence = 100
+        elif len(set(indicators)) == 2:
+            consistency_confidence = 70
+        else:
+            consistency_confidence = 40
+        confidence_factors.append(("Indicator Consistency", consistency_confidence, 0.10))
+        
+        # Calculate weighted confidence score
+        total_confidence = sum(score * weight for _, score, weight in confidence_factors)
+        
+        return {
+            'overall_confidence': round(total_confidence, 1),
+            'confidence_level': self._get_confidence_level(total_confidence),
+            'factors': confidence_factors
+        }
+    
+    def _get_confidence_level(self, score):
+        """Get confidence level description"""
+        if score >= 85:
+            return "Very High"
+        elif score >= 70:
+            return "High"
+        elif score >= 55:
+            return "Moderate"
+        elif score >= 40:
+            return "Low"
+        else:
+            return "Very Low"
+    
+    def comprehensive_assessment(self, weight, height, age_months, sex, has_edema=False):
+        """
+        Perform comprehensive nutritional assessment with confidence scoring
+        """
+        try:
+            # Calculate all indicators
+            wfa_zscore = self.calculate_weight_for_age_zscore(weight, age_months, sex)
+            hfa_zscore = self.calculate_height_for_age_zscore(height, age_months, sex)
+            bmi = self.calculate_bmi(weight, height)
+            bmi_status = self.classify_bmi_status(bmi, age_months)
+            
+            # Classify nutritional status
+            nutritional_status = self.classify_nutritional_status(
+                wfa_zscore, hfa_zscore, bmi, age_months, has_edema
+            )
+            
+            # Calculate confidence score
+            confidence_data = self.calculate_confidence_score(
+                weight, height, age_months, sex, wfa_zscore, hfa_zscore, bmi
+            )
+            
+            return {
+                'measurements': {
+                    'weight': weight,
+                    'height': height,
+                    'age_months': age_months,
+                    'sex': sex,
+                    'bmi': bmi
+                },
+                'z_scores': {
+                    'weight_for_age': wfa_zscore,
+                    'height_for_age': hfa_zscore
+                },
+                'classifications': {
+                    'bmi_status': bmi_status,
+                    'nutritional_status': nutritional_status
+                },
+                'confidence': confidence_data,
+                'has_edema': has_edema
+            }
+            
+        except Exception as e:
+            print(f"Error in comprehensive assessment: {e}")
+            return None
 
 class MalnutritionRandomForestModel:
     """
@@ -136,10 +466,17 @@ class MalnutritionRandomForestModel:
         """
         df_processed = df.copy()
         
-        # Calculate WHZ score
-        df_processed['whz_score'] = df_processed.apply(
-            lambda row: self.who_calculator.calculate_whz_score(
-                row['weight'], row['height'], row['sex']
+        # Calculate BMI
+        df_processed['bmi'] = df_processed.apply(
+            lambda row: self.who_calculator.calculate_bmi(
+                row['weight'], row['height']
+            ), axis=1
+        )
+        
+        # Calculate BMI status
+        df_processed['bmi_status'] = df_processed.apply(
+            lambda row: self.who_calculator.classify_bmi_status(
+                row['bmi'], row['age_months']
             ), axis=1
         )
         
@@ -273,7 +610,8 @@ class MalnutritionRandomForestModel:
         
         return {
             'prediction': prediction,
-            'whz_score': df_processed['whz_score'].iloc[0],
+            'bmi': df_processed['bmi'].iloc[0],
+            'bmi_status': df_processed['bmi_status'].iloc[0],
             'probabilities': prob_dict,
             'recommendation': self.get_treatment_recommendation(prediction, df_processed.iloc[0])
         }
@@ -321,6 +659,95 @@ class MalnutritionRandomForestModel:
                 results.append(error_result)
         
         return pd.DataFrame(results)
+    
+    def enhanced_assessment(self, weight, height, age_months, sex, has_edema=False):
+        """
+        Perform enhanced nutritional assessment with confidence scoring
+        Combines WHO Z-scores, BMI analysis, and confidence metrics
+        
+        Args:
+            weight: Weight in kg
+            height: Height in cm  
+            age_months: Age in months
+            sex: 'male' or 'female'
+            has_edema: Boolean indicating presence of edema
+            
+        Returns:
+            Dictionary with comprehensive assessment results and confidence score
+        """
+        try:
+            # Get comprehensive assessment from WHO calculator
+            result = self.who_calculator.comprehensive_assessment(
+                weight, height, age_months, sex, has_edema
+            )
+            
+            if result is None:
+                return {
+                    'error': 'Assessment failed',
+                    'confidence': {'overall_confidence': 0, 'confidence_level': 'Very Low'}
+                }
+            
+            # Add model prediction if data is suitable for ML prediction
+            try:
+                # Create prediction data
+                prediction_data = {
+                    'age_months': age_months,
+                    'weight': weight,
+                    'height': height,
+                    'sex': sex
+                }
+                
+                # Get ML model prediction
+                ml_prediction = self.predict_single(prediction_data)
+                result['ml_prediction'] = ml_prediction
+                
+            except Exception as e:
+                result['ml_prediction'] = {
+                    'error': f'ML prediction failed: {str(e)}',
+                    'prediction': 'Unknown'
+                }
+            
+            # Add interpretation
+            confidence_level = result['confidence']['confidence_level']
+            nutritional_status = result['classifications']['nutritional_status']
+            
+            result['interpretation'] = {
+                'reliability': confidence_level,
+                'recommendation': self._get_assessment_recommendation(nutritional_status, confidence_level),
+                'follow_up': self._get_follow_up_recommendation(nutritional_status, confidence_level)
+            }
+            
+            return result
+            
+        except Exception as e:
+            return {
+                'error': f'Enhanced assessment failed: {str(e)}',
+                'confidence': {'overall_confidence': 0, 'confidence_level': 'Very Low'}
+            }
+    
+    def _get_assessment_recommendation(self, status, confidence_level):
+        """Get assessment-based recommendations"""
+        if confidence_level in ['Very Low', 'Low']:
+            return "Re-assess with more accurate measurements before making clinical decisions"
+        elif status == "Severe Acute Malnutrition (SAM)":
+            return "Immediate medical intervention required"
+        elif status == "Moderate Acute Malnutrition (MAM)":
+            return "Nutritional support and monitoring needed"
+        elif status == "At Risk":
+            return "Monitor closely and provide nutritional counseling"
+        else:
+            return "Continue regular monitoring and healthy feeding practices"
+    
+    def _get_follow_up_recommendation(self, status, confidence_level):
+        """Get follow-up recommendations"""
+        if confidence_level in ['Very Low', 'Low']:
+            return "Immediate re-assessment with verified measurements"
+        elif status in ["Severe Acute Malnutrition (SAM)", "Moderate Acute Malnutrition (MAM)"]:
+            return "Weekly monitoring until improvement observed"
+        elif status == "At Risk":
+            return "Monthly monitoring for 3 months"
+        else:
+            return "Routine growth monitoring as per schedule"
 
     def get_treatment_recommendation(self, status, patient_data, protocol_name=None):
         """
