@@ -6,6 +6,7 @@ use App\Models\Patient;
 use App\Models\Assessment;
 use App\Models\User;
 use App\Models\Barangay;
+use App\Services\MalnutritionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,21 +19,22 @@ class NutritionistController extends Controller
     public function dashboard()
     {
         $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
         
         $stats = [
-            'my_patients' => Patient::where('nutritionist_id', $nutritionist->user_id)->count(),
-            'pending_assessments' => Assessment::where('nutritionist_id', $nutritionist->user_id)
+            'my_patients' => Patient::where('nutritionist_id', $nutritionistId)->count(),
+            'pending_assessments' => Assessment::where('nutritionist_id', $nutritionistId)
                 ->whereNull('completed_at')
                 ->count(),
-            'completed_assessments' => Assessment::where('nutritionist_id', $nutritionist->user_id)
+            'completed_assessments' => Assessment::where('nutritionist_id', $nutritionistId)
                 ->whereNotNull('completed_at')
                 ->count(),
-            'recent_patients' => Patient::where('nutritionist_id', $nutritionist->user_id)
+            'recent_patients' => Patient::where('nutritionist_id', $nutritionistId)
                 ->with('parent')
                 ->latest()
                 ->take(5)
                 ->get(),
-            'recent_assessments' => Assessment::where('nutritionist_id', $nutritionist->user_id)
+            'recent_assessments' => Assessment::where('nutritionist_id', $nutritionistId)
                 ->with('patient')
                 ->latest()
                 ->take(5)
@@ -48,7 +50,8 @@ class NutritionistController extends Controller
     public function patients(Request $request)
     {
         $nutritionist = Auth::user();
-        $query = Patient::where('nutritionist_id', $nutritionist->user_id)
+        $nutritionistId = $nutritionist->user_id;
+        $query = Patient::where('nutritionist_id', $nutritionistId)
             ->with(['parent', 'barangay', 'assessments']);
 
         // Search functionality
@@ -80,6 +83,7 @@ class NutritionistController extends Controller
     public function storePatient(Request $request)
     {
         $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
         
         $request->validate([
             'parent_id' => 'required|exists:users,user_id',
@@ -97,7 +101,7 @@ class NutritionistController extends Controller
         try {
             $patient = Patient::create([
                 'parent_id' => $request->parent_id,
-                'nutritionist_id' => $nutritionist->user_id,
+                'nutritionist_id' => $nutritionistId,
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
                 'last_name' => $request->last_name,
@@ -139,7 +143,8 @@ class NutritionistController extends Controller
     public function getPatient($id)
     {
         $nutritionist = Auth::user();
-        $patient = Patient::where('nutritionist_id', $nutritionist->user_id)
+        $nutritionistId = $nutritionist->user_id;
+        $patient = Patient::where('nutritionist_id', $nutritionistId)
             ->where('patient_id', $id)
             ->with(['parent', 'barangay'])
             ->first();
@@ -163,7 +168,8 @@ class NutritionistController extends Controller
     public function updatePatient(Request $request, $id)
     {
         $nutritionist = Auth::user();
-        $patient = Patient::where('nutritionist_id', $nutritionist->user_id)
+        $nutritionistId = $nutritionist->user_id;
+        $patient = Patient::where('nutritionist_id', $nutritionistId)
             ->where('patient_id', $id)
             ->first();
 
@@ -231,7 +237,8 @@ class NutritionistController extends Controller
     public function deletePatient($id)
     {
         $nutritionist = Auth::user();
-        $patient = Patient::where('nutritionist_id', $nutritionist->user_id)
+        $nutritionistId = $nutritionist->user_id;
+        $patient = Patient::where('nutritionist_id', $nutritionistId)
             ->where('patient_id', $id)
             ->first();
 
@@ -272,7 +279,8 @@ class NutritionistController extends Controller
     public function assessments()
     {
         $nutritionist = Auth::user();
-        $assessments = Assessment::where('nutritionist_id', $nutritionist->user_id)
+        $nutritionistId = $nutritionist->user_id;
+        $assessments = Assessment::where('nutritionist_id', $nutritionistId)
             ->with('patient')
             ->paginate(15);
 
@@ -286,5 +294,131 @@ class NutritionistController extends Controller
     {
         $nutritionist = Auth::user();
         return view('nutritionist.profile', compact('nutritionist'));
+    }
+
+    // ========================================
+    // MALNUTRITION ASSESSMENT METHODS
+    // ========================================
+
+    /**
+     * Show assessment form for patient
+     */
+    public function showAssessmentForm($patientId)
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+        $patient = Patient::where('patient_id', $patientId)
+            ->where('nutritionist_id', $nutritionistId)
+            ->with(['parent', 'barangay'])
+            ->firstOrFail();
+
+        return view('nutritionist.assessment-form', compact('patient'));
+    }
+
+    /**
+     * Perform malnutrition assessment
+     */
+    public function performAssessment(Request $request, MalnutritionService $malnutritionService)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id',
+            'age_months' => 'required|integer|min:0|max:60',
+            'weight_kg' => 'required|numeric|min:1|max:50',
+            'height_cm' => 'required|numeric|min:30|max:150',
+            'gender' => 'required|in:male,female',
+        ]);
+
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+        $patient = Patient::where('patient_id', $request->patient_id)
+            ->where('nutritionist_id', $nutritionistId)
+            ->firstOrFail();
+
+        // Prepare child data for API
+        $childData = [
+            'age_months' => $request->age_months,
+            'weight_kg' => $request->weight_kg,
+            'height_cm' => $request->height_cm,
+            'gender' => strtolower($request->gender),
+            'muac_cm' => $request->muac_cm,
+            'has_edema' => $request->has('has_edema'),
+            'appetite' => $request->appetite ?? 'good',
+            'diarrhea_days' => $request->diarrhea_days ?? 0,
+            'fever_days' => $request->fever_days ?? 0,
+            'vomiting' => $request->has('vomiting'),
+        ];
+
+        // Prepare socioeconomic data
+        $socioData = [
+            'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
+            'household_size' => $request->household_size ?? 4,
+            'has_electricity' => $request->has('has_electricity'),
+            'has_clean_water' => $request->has('has_clean_water'),
+            'mother_education' => $request->mother_education ?? 'primary',
+            'father_present' => $request->has('father_present'),
+        ];
+
+        try {
+            // Perform assessment using API
+            $result = $malnutritionService->assessChild($childData, $socioData);
+            
+            // Store assessment in database
+            $assessment = Assessment::create([
+                'patient_id' => $patient->patient_id,
+                'nutritionist_id' => $nutritionistId,
+                'assessment_date' => now(),
+                'weight_kg' => $request->weight_kg,
+                'height_cm' => $request->height_cm,
+                'muac_cm' => $request->muac_cm,
+                'diagnosis' => $result['assessment']['primary_diagnosis'] ?? 'Unknown',
+                'treatment_plan' => json_encode($result['treatment_plan'] ?? []),
+                'notes' => $request->notes,
+                'completed_at' => now(),
+            ]);
+
+            return view('nutritionist.assessment-results', compact('result', 'patient', 'assessment', 'childData'));
+            
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Assessment failed: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Quick assessment (AJAX)
+     */
+    public function quickAssessment(Request $request, MalnutritionService $malnutritionService)
+    {
+        $request->validate([
+            'age_months' => 'required|integer|min:0|max:60',
+            'weight_kg' => 'required|numeric|min:1|max:50',
+            'height_cm' => 'required|numeric|min:30|max:150',
+            'gender' => 'required|in:male,female',
+        ]);
+
+        $childData = [
+            'age_months' => $request->age_months,
+            'weight_kg' => $request->weight_kg,
+            'height_cm' => $request->height_cm,
+            'gender' => strtolower($request->gender),
+            'muac_cm' => $request->muac_cm,
+            'has_edema' => $request->has('has_edema'),
+        ];
+
+        try {
+            $result = $malnutritionService->assessMalnutritionOnly($childData);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

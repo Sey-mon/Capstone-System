@@ -128,6 +128,12 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     // System Management routes
     Route::get('/system-management', [AdminController::class, 'systemManagement'])->name('system.management');
     
+    // API Management routes
+    Route::get('/api-management', [AdminController::class, 'apiManagement'])->name('api.management');
+    Route::get('/who-standards', [AdminController::class, 'whoStandards'])->name('who.standards');
+    Route::get('/treatment-protocols', [AdminController::class, 'treatmentProtocols'])->name('treatment.protocols');
+    Route::get('/api-status', [AdminController::class, 'apiStatus'])->name('api.status');
+    
     // Category CRUD routes
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
     Route::get('/categories/{id}', [AdminController::class, 'getCategory'])->name('categories.get');
@@ -162,6 +168,11 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     
     Route::get('/assessments', [NutritionistController::class, 'assessments'])->name('assessments');
     Route::get('/profile', [NutritionistController::class, 'profile'])->name('profile');
+    
+    // Assessment routes
+    Route::get('/patients/{patientId}/assess', [NutritionistController::class, 'showAssessmentForm'])->name('patients.assess');
+    Route::post('/assessment/perform', [NutritionistController::class, 'performAssessment'])->name('assessment.perform');
+    Route::post('/assessment/quick', [NutritionistController::class, 'quickAssessment'])->name('assessment.quick');
 });
 
 // Parent Routes (Protected by auth, verified email, and role middleware)
