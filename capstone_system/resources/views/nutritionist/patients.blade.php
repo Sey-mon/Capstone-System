@@ -80,6 +80,9 @@
                                     <td>{{ $patient->date_of_admission->format('M d, Y') }}</td>
                                     <td>
                                         <div class="action-buttons">
+                                            <a href="{{ route('nutritionist.patients.assess', $patient->patient_id) }}" class="btn btn-sm btn-success" title="Assess Patient">
+                                                <i class="fas fa-stethoscope"></i>
+                                            </a>
                                             <button class="btn btn-sm btn-info" onclick="viewPatient({{ $patient->patient_id }})" title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </button>

@@ -30,6 +30,11 @@ return [
             'text' => 'System Management',
         ],
         [
+            'route' => 'admin.api.management',
+            'icon' => 'fas fa-robot',
+            'text' => 'API Management',
+        ],
+        [
             'route' => 'admin.reports',
             'icon' => 'fas fa-chart-bar',
             'text' => 'Reports',

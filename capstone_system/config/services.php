@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'malnutrition_api' => [
+        'base_url' => env('MALNUTRITION_API_URL', 'http://127.0.0.1:8001'),
+        'api_key' => env('MALNUTRITION_API_KEY', 'malnutrition-api-key-2025'),
+        'timeout' => env('MALNUTRITION_API_TIMEOUT', 30),
+    ],
+
 ];
