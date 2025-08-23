@@ -1,0 +1,119 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: capstone_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: capstone_db
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - capstone_network
+    restart: unless-stopped
+
+  # Laravel Application
+  laravel_app:
+    build:
+      context: ./capstone_system
+      dockerfile: Dockerfile
+    container_name: capstone_laravel
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=mysql
+      - DB_DATABASE=capstone_db
+      - DB_USERNAME=laravel_user
+      - DB_PASSWORD=laravel_password
+    volumes:
+      - ./capstone_system:/var/www/html
+      - ./capstone_system/storage:/var/www/html/storage
+    depends_on:
+      - mysql
+    networks:
+      - capstone_network
+    restart: unless-stopped
+    command: >
+      sh -c "php artisan config:cache &&
+             php artisan route:cache &&
+             php artisan view:cache &&
+             php artisan migrate --force &&
+             php artisan serve --host=0.0.0.0 --port=8000"
+
+  # Groq Meal Plan API
+  groq_meal_api:
+    build:
+      context: ./Groq_Meal_Plan
+      dockerfile: Dockerfile
+    container_name: capstone_groq_meal
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=mysql
+      - DB_DATABASE=capstone_db
+      - DB_USERNAME=laravel_user
+      - DB_PASSWORD=laravel_password
+    volumes:
+      - ./Groq_Meal_Plan:/app
+    depends_on:
+      - mysql
+    networks:
+      - capstone_network
+    restart: unless-stopped
+    command: uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload
+
+  # Treatment Model API
+  treatment_model_api:
+    build:
+      context: ./Treatment_Model_Random_Forest
+      dockerfile: Dockerfile
+    container_name: capstone_treatment_model
+    ports:
+      - "8002:8000"
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=mysql
+      - DB_DATABASE=capstone_db
+      - DB_USERNAME=laravel_user
+      - DB_PASSWORD=laravel_password
+    volumes:
+      - ./Treatment_Model_Random_Forest:/app
+    depends_on:
+      - mysql
+    networks:
+      - capstone_network
+    restart: unless-stopped
+    command: uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: capstone_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./capstone_system/public:/var/www/html/public
+    depends_on:
+      - laravel_app
+      - groq_meal_api
+      - treatment_model_api
+    networks:
+      - capstone_network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  capstone_network:
+    driver: bridge

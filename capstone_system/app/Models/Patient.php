@@ -82,4 +82,36 @@ class Patient extends Model
     {
         return $this->hasMany(InventoryTransaction::class, 'patient_id', 'patient_id');
     }
+
+    /**
+     * Get the patient's age in months.
+     */
+    public function getAgeInMonths()
+    {
+        // If age_months is directly stored, return it
+        if ($this->age_months) {
+            return $this->age_months;
+        }
+
+        // If we have date_of_birth, calculate from that
+        if ($this->date_of_birth) {
+            return now()->diffInMonths($this->date_of_birth);
+        }
+
+        // Fallback: calculate from date_of_admission if available
+        if ($this->date_of_admission) {
+            // Assume the age was recorded at admission, so add months since admission
+            return $this->age_months + now()->diffInMonths($this->date_of_admission);
+        }
+
+        return $this->age_months ?? 0;
+    }
+
+    /**
+     * Get the patient's gender (alias for sex field).
+     */
+    public function getGenderAttribute()
+    {
+        return $this->sex;
+    }
 }

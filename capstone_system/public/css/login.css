@@ -1,3 +1,19 @@
+/* Auth Container for Forgot Password & Contact Admin */
+.auth-container {
+    background: #fff;
+    width: 600px;
+    min-height: 400px;
+    max-width: 90vw;
+    margin: 0 auto;
+    padding: 48px 56px;
+    border-radius: 16px;
+    box-shadow: 0 0 0 4px #e5f7ec, 0 8px 32px rgba(34, 197, 94, 0.10);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    position: relative;
+}
 /* Reset & Base Styles */
 * {
     margin: 0;

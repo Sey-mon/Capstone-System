@@ -1,0 +1,10 @@
+groq
+python-dotenv
+streamlit
+langchain
+langchain-groq
+fastapi
+uvicorn
+pydantic
+pdfplumber
+mysql-connector-python

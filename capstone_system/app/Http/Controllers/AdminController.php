@@ -1005,6 +1005,7 @@ class AdminController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role_id' => 'required|exists:roles,role_id',
             'contact_number' => 'nullable|string|max:15',
+            'is_active' => 'boolean',
         ]);
 
         try {
@@ -1018,6 +1019,7 @@ class AdminController extends Controller
                 'password' => Hash::make($request->password),
                 'role_id' => $request->role_id,
                 'contact_number' => $request->contact_number,
+                'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
             ]);
 
             // Log the action
@@ -1086,6 +1088,7 @@ class AdminController extends Controller
             'role_id' => 'required|exists:roles,role_id',
             'contact_number' => 'nullable|string|max:15',
             'password' => 'nullable|string|min:8|confirmed',
+            'is_active' => 'boolean',
         ]);
 
         try {
@@ -1100,6 +1103,7 @@ class AdminController extends Controller
                 'email' => $request->email,
                 'role_id' => $request->role_id,
                 'contact_number' => $request->contact_number,
+                'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $user->is_active,
             ];
 
             // Only update password if provided
@@ -1245,6 +1249,112 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch users: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Activate a user account
+     */
+    public function activateUser($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            // Prevent activating/deactivating the current authenticated user
+            if ($user->user_id === Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You cannot modify your own account status.'
+                ], 403);
+            }
+
+            if ($user->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is already active.'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            $user->update(['is_active' => true]);
+
+            // Log the action
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'ACTIVATE',
+                'table_name' => 'users',
+                'record_id' => $user->user_id,
+                'description' => "Activated user account: {$user->first_name} {$user->last_name}",
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User activated successfully.',
+                'user' => $user->load('role')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to activate user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Deactivate a user account
+     */
+    public function deactivateUser($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            // Prevent activating/deactivating the current authenticated user
+            if ($user->user_id === Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You cannot modify your own account status.'
+                ], 403);
+            }
+
+            if (!$user->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is already inactive.'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            $user->update(['is_active' => false]);
+
+            // Log the action
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'DEACTIVATE',
+                'table_name' => 'users',
+                'record_id' => $user->user_id,
+                'description' => "Deactivated user account: {$user->first_name} {$user->last_name}",
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User deactivated successfully.',
+                'user' => $user->load('role')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to deactivate user: ' . $e->getMessage()
             ], 500);
         }
     }

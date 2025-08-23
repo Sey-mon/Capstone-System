@@ -7,9 +7,11 @@ use App\Models\Assessment;
 use App\Models\User;
 use App\Models\Barangay;
 use App\Services\MalnutritionService;
+use App\Services\NutritionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class NutritionistController extends Controller
 {
@@ -276,13 +278,80 @@ class NutritionistController extends Controller
     /**
      * Show assessments
      */
-    public function assessments()
+    public function assessments(Request $request)
     {
         $nutritionist = Auth::user();
         $nutritionistId = $nutritionist->user_id;
-        $assessments = Assessment::where('nutritionist_id', $nutritionistId)
-            ->with('patient')
-            ->paginate(15);
+        
+        // Get only the latest assessment for each patient
+        $latestAssessmentIds = Assessment::where('nutritionist_id', $nutritionistId)
+            ->select('patient_id', DB::raw('MAX(assessment_id) as latest_assessment_id'))
+            ->groupBy('patient_id')
+            ->pluck('latest_assessment_id');
+
+        $query = Assessment::whereIn('assessment_id', $latestAssessmentIds)
+            ->with(['patient']);
+
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('patient', function($subQ) use ($search) {
+                    $subQ->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('contact_number', 'like', "%{$search}%");
+                })
+                ->orWhere('diagnosis', 'like', "%{$search}%")
+                ->orWhere('assessment_id', 'like', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($request->has('status') && !empty($request->status)) {
+            if ($request->status === 'completed') {
+                $query->whereNotNull('completed_at');
+            } elseif ($request->status === 'pending') {
+                $query->whereNull('completed_at');
+            }
+        }
+
+        // Date range filter
+        if ($request->has('date_from') && !empty($request->date_from)) {
+            $query->whereDate('assessment_date', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && !empty($request->date_to)) {
+            $query->whereDate('assessment_date', '<=', $request->date_to);
+        }
+
+        // Diagnosis filter
+        if ($request->has('diagnosis') && !empty($request->diagnosis)) {
+            $query->where('diagnosis', 'like', "%{$request->diagnosis}%");
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'assessment_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        // Pagination
+        $perPage = $request->get('per_page', 15);
+        $assessments = $query->paginate($perPage);
+
+        // If it's an AJAX request, return JSON
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'html' => view('nutritionist.partials.assessments-table', compact('assessments'))->render(),
+                'pagination' => [
+                    'current_page' => $assessments->currentPage(),
+                    'last_page' => $assessments->lastPage(),
+                    'per_page' => $assessments->perPage(),
+                    'total' => $assessments->total(),
+                    'from' => $assessments->firstItem(),
+                    'to' => $assessments->lastItem(),
+                ]
+            ]);
+        }
 
         return view('nutritionist.assessments', compact('assessments'));
     }
@@ -294,6 +363,78 @@ class NutritionistController extends Controller
     {
         $nutritionist = Auth::user();
         return view('nutritionist.profile', compact('nutritionist'));
+    }
+
+    /**
+     * Update nutritionist personal information
+     */
+    public function updatePersonalInfo(Request $request)
+    {
+        $nutritionist = Auth::user();
+        
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'contact_number' => 'nullable|string|max:20',
+            'birth_date' => 'nullable|date',
+            'sex' => 'nullable|in:male,female,other',
+            'address' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            User::where('user_id', $nutritionist->user_id)->update([
+                'first_name' => $request->first_name,
+                'middle_name' => $request->middle_name,
+                'last_name' => $request->last_name,
+                'contact_number' => $request->contact_number,
+                'birth_date' => $request->birth_date,
+                'sex' => $request->sex,
+                'address' => $request->address,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Personal information updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating personal information: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update nutritionist professional information
+     */
+    public function updateProfessionalInfo(Request $request)
+    {
+        $nutritionist = Auth::user();
+        
+        $request->validate([
+            'years_experience' => 'nullable|integer|min:0|max:50',
+            'qualifications' => 'nullable|string|max:2000',
+            'professional_experience' => 'nullable|string|max:2000',
+        ]);
+
+        try {
+            User::where('user_id', $nutritionist->user_id)->update([
+                'years_experience' => $request->years_experience,
+                'qualifications' => $request->qualifications,
+                'professional_experience' => $request->professional_experience,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Professional information updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating professional information: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     // ========================================
@@ -418,6 +559,300 @@ class NutritionistController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate PDF report for assessment
+     */
+    public function downloadAssessmentPDF($assessmentId)
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+
+        // Get assessment with patient data
+        $assessment = Assessment::with('patient')
+            ->where('assessment_id', $assessmentId)
+            ->where('nutritionist_id', $nutritionistId)
+            ->firstOrFail();
+
+        $patient = $assessment->patient;
+        
+        // Decode treatment plan
+        $treatmentPlan = json_decode($assessment->treatment_plan, true);
+        
+        // Prepare data for PDF
+        $data = [
+            'assessment' => $assessment,
+            'patient' => $patient,
+            'treatmentPlan' => $treatmentPlan,
+            'nutritionist' => $nutritionist
+        ];
+
+        // Generate PDF
+        $pdf = Pdf::loadView('nutritionist.assessment-pdf', $data);
+        $pdf->setPaper('A4', 'portrait');
+        
+        $filename = 'assessment_' . $patient->first_name . '_' . $patient->last_name . '_' . date('Y-m-d') . '.pdf';
+        
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Show meal plans page
+     */
+    public function mealPlans()
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+        
+        // Get patients assigned to this nutritionist
+        $patients = Patient::where('nutritionist_id', $nutritionistId)
+            ->with(['parent', 'barangay'])
+            ->get();
+
+        return view('nutritionist.meal-plans', compact('patients'));
+    }
+
+    /**
+     * Generate nutrition analysis for a patient
+     */
+    public function generateNutritionAnalysis(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id'
+        ]);
+
+        $nutritionist = Auth::user();
+        $patient = Patient::findOrFail($request->patient_id);
+
+        // Check if this patient is assigned to the authenticated nutritionist
+        if ($patient->nutritionist_id !== $nutritionist->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to access this patient.'
+            ], 403);
+        }
+
+        try {
+            $nutritionService = new NutritionService();
+            $analysis = $nutritionService->analyzeNutrition($request->patient_id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $analysis
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate nutrition analysis: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate meal plan for a patient
+     */
+    public function generateMealPlan(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id',
+            'available_foods' => 'nullable|string'
+        ]);
+
+        $nutritionist = Auth::user();
+        $patient = Patient::findOrFail($request->patient_id);
+
+        // Check if this patient is assigned to the authenticated nutritionist
+        if ($patient->nutritionist_id !== $nutritionist->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to access this patient.'
+            ], 403);
+        }
+
+        try {
+            $nutritionService = new NutritionService();
+            $mealPlan = $nutritionService->generateMealPlan(
+                $request->patient_id,
+                $request->available_foods
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $mealPlan
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate meal plan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate patient assessment using AI
+     */
+    public function generatePatientAssessment(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id'
+        ]);
+
+        $nutritionist = Auth::user();
+        $patient = Patient::findOrFail($request->patient_id);
+
+        // Check if this patient is assigned to the authenticated nutritionist
+        if ($patient->nutritionist_id !== $nutritionist->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to access this patient.'
+            ], 403);
+        }
+
+        try {
+            $nutritionService = new NutritionService();
+            $assessment = $nutritionService->generateAssessment($request->patient_id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $assessment
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate patient assessment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get foods data from nutrition API
+     */
+    public function getFoodsData()
+    {
+        try {
+            $nutritionService = new NutritionService();
+            $foods = $nutritionService->getFoodsData();
+
+            return response()->json([
+                'success' => true,
+                'data' => $foods
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve foods data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get meal plans for a specific patient
+     */
+    public function getPatientMealPlans(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id',
+            'most_recent' => 'nullable|boolean'
+        ]);
+
+        $nutritionist = Auth::user();
+        $patient = Patient::findOrFail($request->patient_id);
+
+        // Check if this patient is assigned to the authenticated nutritionist
+        if ($patient->nutritionist_id !== $nutritionist->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to access this patient.'
+            ], 403);
+        }
+
+        try {
+            $nutritionService = new NutritionService();
+            $mealPlans = $nutritionService->getMealPlansByChild(
+                $request->patient_id,
+                $request->boolean('most_recent', false)
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $mealPlans
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve meal plans: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get knowledge base data
+     */
+    public function getKnowledgeBase()
+    {
+        try {
+            $nutritionService = new NutritionService();
+            $knowledgeBase = $nutritionService->getKnowledgeBase();
+
+            return response()->json([
+                'success' => true,
+                'data' => $knowledgeBase
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve knowledge base: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get meal plan detail
+     */
+    public function getMealPlanDetail(Request $request)
+    {
+        $request->validate([
+            'plan_id' => 'required|integer'
+        ]);
+
+        try {
+            $nutritionService = new NutritionService();
+            $mealPlan = $nutritionService->getMealPlanDetail($request->plan_id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $mealPlan
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve meal plan detail: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test nutrition API connection
+     */
+    public function testNutritionAPI()
+    {
+        try {
+            $nutritionService = new NutritionService();
+            $isConnected = $nutritionService->testConnection();
+
+            return response()->json([
+                'success' => true,
+                'connected' => $isConnected,
+                'message' => $isConnected ? 'Nutrition API is connected' : 'Nutrition API is not responding'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'connected' => false,
+                'message' => 'Failed to test nutrition API connection: ' . $e->getMessage()
             ], 500);
         }
     }
