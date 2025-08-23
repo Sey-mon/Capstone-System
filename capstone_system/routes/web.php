@@ -167,12 +167,18 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     Route::delete('/patients/{id}', [NutritionistController::class, 'deletePatient'])->name('patients.delete');
     
     Route::get('/assessments', [NutritionistController::class, 'assessments'])->name('assessments');
+    Route::post('/assessments', [NutritionistController::class, 'assessments'])->name('assessments.ajax');
     Route::get('/profile', [NutritionistController::class, 'profile'])->name('profile');
+    
+    // Profile update routes
+    Route::put('/profile/personal', [NutritionistController::class, 'updatePersonalInfo'])->name('profile.update.personal');
+    Route::put('/profile/professional', [NutritionistController::class, 'updateProfessionalInfo'])->name('profile.update.professional');
     
     // Assessment routes
     Route::get('/patients/{patientId}/assess', [NutritionistController::class, 'showAssessmentForm'])->name('patients.assess');
     Route::post('/assessment/perform', [NutritionistController::class, 'performAssessment'])->name('assessment.perform');
     Route::post('/assessment/quick', [NutritionistController::class, 'quickAssessment'])->name('assessment.quick');
+    Route::get('/assessment/{assessmentId}/pdf', [NutritionistController::class, 'downloadAssessmentPDF'])->name('assessment.pdf');
 });
 
 // Parent Routes (Protected by auth, verified email, and role middleware)

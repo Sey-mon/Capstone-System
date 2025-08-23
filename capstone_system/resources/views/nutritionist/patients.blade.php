@@ -128,7 +128,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="patientModalTitle">Add Patient</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" onclick="closePatientModal()"></button>
                 </div>
                 <form id="patientForm">
                     <div class="modal-body">
@@ -298,7 +298,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary" onclick="closePatientModal()">Cancel</button>
                         <button type="submit" class="btn btn-primary" id="submitBtn">Save Patient</button>
                     </div>
                 </form>
@@ -312,13 +312,13 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Patient Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" onclick="closeViewPatientModal()"></button>
                 </div>
                 <div class="modal-body" id="patientDetails">
                     <!-- Patient details will be loaded here -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeViewPatientModal()">Close</button>
                 </div>
             </div>
         </div>
@@ -326,5 +326,136 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('js/nutritionist/nutritionist-patients.js') }}"></script>
+<script>
+// Patient Management Functions
+let isEditing = false;
+let currentPatientId = null;
+
+// Function to open the Add Patient modal
+function openAddPatientModal() {
+    isEditing = false;
+    currentPatientId = null;
+    document.getElementById('patientModalTitle').textContent = 'Add Patient';
+    document.getElementById('submitBtn').textContent = 'Save Patient';
+    document.getElementById('patientForm').reset();
+    document.getElementById('patient_id').value = '';
+    
+    const modal = document.getElementById('patientModal');
+    if (modal) {
+        if (typeof bootstrap !== 'undefined') {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } else {
+            // Fallback: show modal without Bootstrap
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // Add backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'modalBackdrop';
+            document.body.appendChild(backdrop);
+        }
+    }
+}
+
+// Function to close modal manually (fallback)
+function closePatientModal() {
+    const modal = document.getElementById('patientModal');
+    const backdrop = document.getElementById('modalBackdrop');
+    
+    if (modal) {
+        if (typeof bootstrap !== 'undefined') {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) {
+                bsModal.hide();
+            }
+        } else {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+            
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+}
+
+// Function to close view patient modal
+function closeViewPatientModal() {
+    const modal = document.getElementById('viewPatientModal');
+    const backdrop = document.getElementById('modalBackdrop');
+    
+    if (modal) {
+        if (typeof bootstrap !== 'undefined') {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) {
+                bsModal.hide();
+            }
+        } else {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+            
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+}
+
+// Check if Bootstrap is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap is not loaded! Modal functionality will not work.');
+    } else {
+        console.log('Bootstrap is loaded successfully.');
+    }
+    
+    // Initialize any existing modal functionality
+    const modal = document.getElementById('patientModal');
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('patientForm').reset();
+            isEditing = false;
+            currentPatientId = null;
+        });
+    }
+});
+
+// Add other patient management functions here as needed
+function editPatient(patientId) {
+    // This would be implemented to edit a patient
+    console.log('Edit patient:', patientId);
+}
+
+function viewPatient(patientId) {
+    // This would be implemented to view patient details
+    console.log('View patient:', patientId);
+}
+
+function deletePatient(patientId) {
+    // This would be implemented to delete a patient
+    if (confirm('Are you sure you want to delete this patient?')) {
+        console.log('Delete patient:', patientId);
+    }
+}
+
+// Make functions globally available
+window.openAddPatientModal = openAddPatientModal;
+window.closePatientModal = closePatientModal;
+window.closeViewPatientModal = closeViewPatientModal;
+window.editPatient = editPatient;
+window.viewPatient = viewPatient;
+window.deletePatient = deletePatient;
+
+// Debug logging
+console.log('Patient page functions loaded:', {
+    openAddPatientModal: typeof window.openAddPatientModal,
+    closePatientModal: typeof window.closePatientModal,
+    bootstrap: typeof bootstrap
+});
+</script>
 @endsection
