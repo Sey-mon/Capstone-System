@@ -41,4 +41,9 @@ return [
         'timeout' => env('MALNUTRITION_API_TIMEOUT', 30),
     ],
 
+    'nutrition_api' => [
+        'base_url' => env('NUTRITION_API_URL', 'http://localhost:8002'),
+        'timeout' => env('NUTRITION_API_TIMEOUT', 30),
+    ],
+
 ];

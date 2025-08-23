@@ -282,29 +282,13 @@
 </div>
 @endsection
 
-@section('scripts')
-<script>
-function downloadPDF() {
-    window.location.href = "{{ route('nutritionist.assessment.pdf', $assessment->assessment_id) }}";
-}
-
-function quickAssessment() {
-    window.location.href = "{{ route('nutritionist.patients.assess', $patient->patient_id) }}";
-}
-
-// Initialize Bootstrap tabs
-document.addEventListener('DOMContentLoaded', function() {
-    var triggerTabList = [].slice.call(document.querySelectorAll('#treatmentTabs button'))
-    triggerTabList.forEach(function (triggerEl) {
-        var tabTrigger = new bootstrap.Tab(triggerEl)
-        triggerEl.addEventListener('click', function (event) {
-            event.preventDefault()
-            tabTrigger.show()
-        })
-    })
-});
-</script>
-@endsection
+@push('scripts')
+    <script>
+        window.downloadPDFRoute = "{{ route('nutritionist.assessment.pdf', $assessment->assessment_id) }}";
+        window.quickAssessmentRoute = "{{ route('nutritionist.patients.assess', $patient->patient_id) }}";
+    </script>
+    <script src="{{ asset('js/nutritionist/assessment-results.js') }}"></script>
+@endpush
 
 @php
 function getZScoreClass($score) {

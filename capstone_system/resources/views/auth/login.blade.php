@@ -61,8 +61,8 @@
             <button type="submit" class="btn" id="loginBtn">Login</button>
 
             <div class="extra-links">
-                <a href="#">Forgot Password?</a> | 
-                <a href="#">Contact Admin</a>
+                <a href="{{ route('password.request') }}" style="color:#22c55e;">Forgot Password?</a> | 
+                <a href="{{ route('contact.admin') }}" style="color:#22c55e;">Contact Admin</a>
             </div>
             
             <div class="form-footer" style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">

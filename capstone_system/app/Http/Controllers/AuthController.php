@@ -17,6 +17,40 @@ use Carbon\Carbon;
 class AuthController extends Controller
 {
     /**
+     * Handle sending password reset link
+     */
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return back()->withErrors(['email' => 'No account found with that email.']);
+        }
+    // Generate token and send email
+    $token = app('auth.password.broker')->createToken($user);
+    $resetUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
+    Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($user, $resetUrl));
+    return back()->with('success', 'A password reset link has been sent to your email.');
+    }
+
+    /**
+     * Handle sending contact admin message
+     */
+    public function sendContactAdmin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'message' => 'required|string|max:1000',
+        ]);
+        // Send email to admin (replace with actual admin email)
+        $adminEmail = config('mail.from.address', 'admin@example.com');
+        Mail::raw('From: ' . $request->email . "\n\nMessage:\n" . $request->message, function ($message) use ($request, $adminEmail) {
+            $message->to($adminEmail)
+                ->subject('Contact Admin Message');
+        });
+        return back()->with('success', 'Your message has been sent to the admin.');
+    }
+    /**
      * Show the login form
      */
     public function showLoginForm()

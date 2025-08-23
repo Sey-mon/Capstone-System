@@ -12,6 +12,17 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
 // Authentication Routes
+// Forgot Password
+Route::get('/forgot-password', function() {
+    return view('auth.forgot-password');
+})->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+
+// Contact Admin
+Route::get('/contact-admin', function() {
+    return view('auth.contact-admin');
+})->name('contact.admin');
+Route::post('/contact-admin', [AuthController::class, 'sendContactAdmin'])->name('contact.admin.send');
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/', [AuthController::class, 'login'])->name('login.root.post'); // Handle POST to root
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -102,6 +113,8 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
     Route::post('/users/{id}/restore', [AdminController::class, 'restoreUser'])->name('users.restore');
+    Route::post('/users/{id}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
+    Route::post('/users/{id}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
     Route::get('/users-with-trashed', [AdminController::class, 'getUsersWithTrashed'])->name('users.with-trashed');
     
     // Nutritionist application routes
@@ -179,6 +192,17 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     Route::post('/assessment/perform', [NutritionistController::class, 'performAssessment'])->name('assessment.perform');
     Route::post('/assessment/quick', [NutritionistController::class, 'quickAssessment'])->name('assessment.quick');
     Route::get('/assessment/{assessmentId}/pdf', [NutritionistController::class, 'downloadAssessmentPDF'])->name('assessment.pdf');
+    
+    // Meal Plan and Nutrition routes
+    Route::get('/meal-plans', [NutritionistController::class, 'mealPlans'])->name('meal-plans');
+    Route::post('/nutrition/analysis', [NutritionistController::class, 'generateNutritionAnalysis'])->name('nutrition.analysis');
+    Route::post('/nutrition/meal-plan', [NutritionistController::class, 'generateMealPlan'])->name('nutrition.meal-plan');
+    Route::post('/nutrition/assessment', [NutritionistController::class, 'generatePatientAssessment'])->name('nutrition.assessment');
+    Route::get('/nutrition/foods', [NutritionistController::class, 'getFoodsData'])->name('nutrition.foods');
+    Route::post('/nutrition/patient-meal-plans', [NutritionistController::class, 'getPatientMealPlans'])->name('nutrition.patient-meal-plans');
+    Route::get('/nutrition/knowledge-base', [NutritionistController::class, 'getKnowledgeBase'])->name('nutrition.knowledge-base');
+    Route::post('/nutrition/meal-plan-detail', [NutritionistController::class, 'getMealPlanDetail'])->name('nutrition.meal-plan-detail');
+    Route::get('/nutrition/test-api', [NutritionistController::class, 'testNutritionAPI'])->name('nutrition.test-api');
 });
 
 // Parent Routes (Protected by auth, verified email, and role middleware)

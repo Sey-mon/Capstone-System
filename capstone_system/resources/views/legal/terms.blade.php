@@ -6,57 +6,7 @@
     <title>Terms and Conditions - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/register.css') }}">
-    <style>
-        .terms-container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 40px;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-        }
-        .terms-content {
-            line-height: 1.8;
-            color: #333;
-        }
-        .terms-content h1 {
-            color: #2e7d32;
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e8f5e8;
-        }
-        .terms-content h2 {
-            color: #2e7d32;
-            margin-top: 40px;
-            margin-bottom: 20px;
-            padding-top: 15px;
-        }
-        .terms-content p {
-            margin-bottom: 20px;
-            text-align: justify;
-        }
-        .terms-content ul {
-            margin-bottom: 25px;
-            padding-left: 25px;
-        }
-        .terms-content li {
-            margin-bottom: 12px;
-            padding-left: 5px;
-        }
-        .back-link {
-            text-align: center;
-            margin-top: 30px;
-        }
-        .back-link a {
-            color: #2e7d32;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .back-link a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/terms.css') }}">
 </head>
 <body>
     <div class="terms-container">

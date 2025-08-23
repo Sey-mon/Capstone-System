@@ -7,6 +7,7 @@ use App\Models\Assessment;
 use App\Models\User;
 use App\Models\Barangay;
 use App\Services\MalnutritionService;
+use App\Services\NutritionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -596,5 +597,263 @@ class NutritionistController extends Controller
         $filename = 'assessment_' . $patient->first_name . '_' . $patient->last_name . '_' . date('Y-m-d') . '.pdf';
         
         return $pdf->download($filename);
+    }
+
+    /**
+     * Show meal plans page
+     */
+    public function mealPlans()
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+        
+        // Get patients assigned to this nutritionist
+        $patients = Patient::where('nutritionist_id', $nutritionistId)
+            ->with(['parent', 'barangay'])
+            ->get();
+
+        return view('nutritionist.meal-plans', compact('patients'));
+    }
+
+    /**
+     * Generate nutrition analysis for a patient
+     */
+    public function generateNutritionAnalysis(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id'
+        ]);
+
+        $nutritionist = Auth::user();
+        $patient = Patient::findOrFail($request->patient_id);
+
+        // Check if this patient is assigned to the authenticated nutritionist
+        if ($patient->nutritionist_id !== $nutritionist->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to access this patient.'
+            ], 403);
+        }
+
+        try {
+            $nutritionService = new NutritionService();
+            $analysis = $nutritionService->analyzeNutrition($request->patient_id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $analysis
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate nutrition analysis: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate meal plan for a patient
+     */
+    public function generateMealPlan(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id',
+            'available_foods' => 'nullable|string'
+        ]);
+
+        $nutritionist = Auth::user();
+        $patient = Patient::findOrFail($request->patient_id);
+
+        // Check if this patient is assigned to the authenticated nutritionist
+        if ($patient->nutritionist_id !== $nutritionist->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to access this patient.'
+            ], 403);
+        }
+
+        try {
+            $nutritionService = new NutritionService();
+            $mealPlan = $nutritionService->generateMealPlan(
+                $request->patient_id,
+                $request->available_foods
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $mealPlan
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate meal plan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate patient assessment using AI
+     */
+    public function generatePatientAssessment(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id'
+        ]);
+
+        $nutritionist = Auth::user();
+        $patient = Patient::findOrFail($request->patient_id);
+
+        // Check if this patient is assigned to the authenticated nutritionist
+        if ($patient->nutritionist_id !== $nutritionist->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to access this patient.'
+            ], 403);
+        }
+
+        try {
+            $nutritionService = new NutritionService();
+            $assessment = $nutritionService->generateAssessment($request->patient_id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $assessment
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate patient assessment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get foods data from nutrition API
+     */
+    public function getFoodsData()
+    {
+        try {
+            $nutritionService = new NutritionService();
+            $foods = $nutritionService->getFoodsData();
+
+            return response()->json([
+                'success' => true,
+                'data' => $foods
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve foods data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get meal plans for a specific patient
+     */
+    public function getPatientMealPlans(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id',
+            'most_recent' => 'nullable|boolean'
+        ]);
+
+        $nutritionist = Auth::user();
+        $patient = Patient::findOrFail($request->patient_id);
+
+        // Check if this patient is assigned to the authenticated nutritionist
+        if ($patient->nutritionist_id !== $nutritionist->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to access this patient.'
+            ], 403);
+        }
+
+        try {
+            $nutritionService = new NutritionService();
+            $mealPlans = $nutritionService->getMealPlansByChild(
+                $request->patient_id,
+                $request->boolean('most_recent', false)
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $mealPlans
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve meal plans: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get knowledge base data
+     */
+    public function getKnowledgeBase()
+    {
+        try {
+            $nutritionService = new NutritionService();
+            $knowledgeBase = $nutritionService->getKnowledgeBase();
+
+            return response()->json([
+                'success' => true,
+                'data' => $knowledgeBase
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve knowledge base: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get meal plan detail
+     */
+    public function getMealPlanDetail(Request $request)
+    {
+        $request->validate([
+            'plan_id' => 'required|integer'
+        ]);
+
+        try {
+            $nutritionService = new NutritionService();
+            $mealPlan = $nutritionService->getMealPlanDetail($request->plan_id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $mealPlan
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve meal plan detail: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test nutrition API connection
+     */
+    public function testNutritionAPI()
+    {
+        try {
+            $nutritionService = new NutritionService();
+            $isConnected = $nutritionService->testConnection();
+
+            return response()->json([
+                'success' => true,
+                'connected' => $isConnected,
+                'message' => $isConnected ? 'Nutrition API is connected' : 'Nutrition API is not responding'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'connected' => false,
+                'message' => 'Failed to test nutrition API connection: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
