@@ -35,15 +35,15 @@ return [
         ],
     ],
 
-    'malnutrition_api' => [
-        'base_url' => env('MALNUTRITION_API_URL', 'http://127.0.0.1:8001'),
-        'api_key' => env('MALNUTRITION_API_KEY', 'malnutrition-api-key-2025'),
-        'timeout' => env('MALNUTRITION_API_TIMEOUT', 30),
+    'random_forest_api' => [
+        'base_url' => env('RANDOM_FOREST_API_URL', 'http://127.0.0.1:8001'),
+        'api_key' => env('RANDOM_FOREST_API_KEY', 'random-api-key-2025'),
+        'timeout' => env('RANDOM_FOREST_API_TIMEOUT', 30),
     ],
 
     'nutrition_api' => [
-        'base_url' => env('NUTRITION_API_URL', 'http://localhost:8002'),
-        'timeout' => env('NUTRITION_API_TIMEOUT', 30),
+        'base_url' => env('LLM_API_URL', 'http://127.0.0.1:8002'),
+        'timeout' => env('LLM_API_TIMEOUT', 30),
     ],
 
 ];
