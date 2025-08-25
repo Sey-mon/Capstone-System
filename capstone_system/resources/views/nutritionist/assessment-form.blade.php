@@ -12,7 +12,6 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/nutritionist/assessment-form.css') }}">
 @endpush
-@endpush
 
 @section('content')
 <div class="assessment-container">

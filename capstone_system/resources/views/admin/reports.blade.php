@@ -7,7 +7,8 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/admin-reports.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/reports-custom.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/modal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/report-content.css') }}">
 @endpush
 
 @section('navigation')
@@ -253,23 +254,25 @@
     </div>
 
     <!-- Report Modal -->
-    <div id="reportModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h3 id="reportModalTitle">Report Results</h3>
-                <span class="close" onclick="closeReportModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div id="reportModalContent">
-                    <!-- Report content will be loaded here -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="reportModalLabel">Report Results</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeReportModal()">Close</button>
-                <button class="btn btn-primary" onclick="downloadReport()">
-                    <i class="fas fa-download"></i>
-                    Download
-                </button>
+                <div class="modal-body">
+                    <div id="reportModalContent">
+                        <!-- Report content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="downloadReportBtn">
+                        <i class="fas fa-download"></i>
+                        Download PDF
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -277,6 +280,7 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ asset('js/admin/modal-bootstrap.js') }}"></script>
+    <script src="{{ asset('js/admin/report-content.js') }}"></script>
     <script src="{{ asset('js/admin/admin-reports-enhanced.js') }}"></script>
-    <script src="{{ asset('js/admin/reports-custom.js') }}"></script>
 @endpush

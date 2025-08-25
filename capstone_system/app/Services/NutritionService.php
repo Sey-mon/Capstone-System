@@ -13,7 +13,7 @@ class NutritionService
     public function __construct()
     {
         $this->baseUrl = config('services.nutrition_api.base_url');
-        $this->timeout = config('services.nutrition_api.timeout');
+        $this->timeout = config('services.nutrition_api.timeout', 30);
     }
 
     /**

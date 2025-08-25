@@ -16,7 +16,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminController extends Controller
 {
@@ -47,6 +49,91 @@ class AdminController extends Controller
         });
 
         return view('admin.dashboard', compact('stats'));
+    }
+
+    /**
+     * Get map data for admin dashboard
+     */
+    public function getMapData()
+    {
+        try {
+            // Get patients with barangay information
+            $patients = Patient::with(['barangay'])
+                ->whereHas('barangay', function($query) {
+                    $query->whereNotNull('latitude')
+                          ->whereNotNull('longitude');
+                })
+                ->take(50) // Limit for performance
+                ->get();
+
+            // Get recent assessments with patient and location data
+            $assessments = Assessment::with(['patient.barangay'])
+                ->whereHas('patient.barangay', function($query) {
+                    $query->whereNotNull('latitude')
+                          ->whereNotNull('longitude');
+                })
+                ->latest()
+                ->take(30) // Limit for performance
+                ->get();
+
+            $mapData = [
+                'patients' => $patients->map(function($patient) {
+                    return [
+                        'id' => $patient->patient_id,
+                        'name' => $patient->first_name . ' ' . $patient->last_name,
+                        'barangay' => $patient->barangay->name ?? 'Unknown',
+                        'lat' => (float) $patient->barangay->latitude,
+                        'lng' => (float) $patient->barangay->longitude,
+                        'status' => $patient->current_status ?? 'Active',
+                        'age_months' => $patient->age_months,
+                        'sex' => $patient->sex
+                    ];
+                }),
+                'assessments' => $assessments->map(function($assessment) {
+                    return [
+                        'id' => $assessment->assessment_id,
+                        'patient_name' => $assessment->patient ? 
+                            $assessment->patient->first_name . ' ' . $assessment->patient->last_name : 'Unknown',
+                        'lat' => $assessment->patient && $assessment->patient->barangay ? 
+                            (float) $assessment->patient->barangay->latitude : null,
+                        'lng' => $assessment->patient && $assessment->patient->barangay ? 
+                            (float) $assessment->patient->barangay->longitude : null,
+                        'date' => $assessment->created_at->format('Y-m-d'),
+                        'status' => $assessment->status ?? 'Completed'
+                    ];
+                })->filter(function($assessment) {
+                    return $assessment['lat'] !== null && $assessment['lng'] !== null;
+                }),
+                'barangays' => Barangay::whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->get()
+                    ->map(function($barangay) {
+                        $patientCount = Patient::where('barangay_id', $barangay->barangay_id)->count();
+                        return [
+                            'id' => $barangay->barangay_id,
+                            'name' => $barangay->name,
+                            'lat' => (float) $barangay->latitude,
+                            'lng' => (float) $barangay->longitude,
+                            'patient_count' => $patientCount,
+                            'activity_level' => $patientCount > 10 ? 'high' : ($patientCount > 5 ? 'medium' : 'low')
+                        ];
+                    })
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $mapData
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Map data error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading map data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -526,24 +613,88 @@ class AdminController extends Controller
      */
     public function generateAssessmentTrendsReport()
     {
-        $assessments = Assessment::with('patient')->get();
-        
-        $report_data = [
-            'total_assessments' => $assessments->count(),
-            'completed_assessments' => $assessments->whereNotNull('completed_at')->count(),
-            'pending_assessments' => $assessments->whereNull('completed_at')->count(),
-            'assessments_by_month' => $assessments->groupBy(function($assessment) {
-                return $assessment->created_at->format('Y-m');
-            })->map->count(),
-            'assessments_by_barangay' => $assessments->groupBy('patient.barangay.name')->map->count(),
-            'recent_assessments' => $assessments->latest()->take(10)->values(),
-        ];
+        try {
+            // Load assessments with nested relationships
+            $assessments = Assessment::with(['patient.barangay', 'nutritionist'])->get();
+            
+            // Calculate monthly trends
+            $monthlyData = $assessments->groupBy(function($assessment) {
+                return $assessment->created_at ? $assessment->created_at->format('Y-m') : 'Unknown';
+            })->map(function($group) {
+                return $group->count();
+            })->sortKeys();
+            
+            // Calculate trends with growth rate
+            $monthlyTrends = [];
+            $previousCount = 0;
+            foreach ($monthlyData as $month => $count) {
+                $growth = $previousCount > 0 ? round((($count - $previousCount) / $previousCount) * 100, 1) : 0;
+                $monthlyTrends[] = [
+                    'month' => $month,
+                    'count' => $count,
+                    'growth' => $growth
+                ];
+                $previousCount = $count;
+            }
+            
+            // Get assessments by barangay (safely)
+            $assessmentsByBarangay = [];
+            foreach ($assessments as $assessment) {
+                if ($assessment->patient && $assessment->patient->barangay) {
+                    $barangayName = $assessment->patient->barangay->name;
+                    $assessmentsByBarangay[$barangayName] = ($assessmentsByBarangay[$barangayName] ?? 0) + 1;
+                }
+            }
+            
+            // Get assessments by nutritionist
+            $assessmentsByNutritionist = [];
+            foreach ($assessments as $assessment) {
+                if ($assessment->nutritionist) {
+                    $nutritionistName = $assessment->nutritionist->name;
+                    $assessmentsByNutritionist[$nutritionistName] = ($assessmentsByNutritionist[$nutritionistName] ?? 0) + 1;
+                }
+            }
+            
+            $report_data = [
+                'total_assessments' => $assessments->count(),
+                'completed_assessments' => $assessments->whereNotNull('completed_at')->count(),
+                'pending_assessments' => $assessments->whereNull('completed_at')->count(),
+                'assessments_this_month' => $assessments->filter(function($assessment) {
+                    return $assessment->created_at && $assessment->created_at->isCurrentMonth();
+                })->count(),
+                'avg_assessments_per_day' => $assessments->count() > 0 ? 
+                    round($assessments->count() / max(1, now()->diffInDays($assessments->min('created_at') ?? now())), 1) : 0,
+                'monthly_trends' => $monthlyTrends,
+                'assessments_by_month' => $monthlyData,
+                'assessments_by_barangay' => $assessmentsByBarangay,
+                'assessments_by_nutritionist' => $assessmentsByNutritionist,
+                'assessment_outcomes' => [
+                    'completed' => $assessments->whereNotNull('completed_at')->count(),
+                    'pending' => $assessments->whereNull('completed_at')->count(),
+                ],
+                'recent_assessments' => $assessments->sortByDesc('created_at')->take(10)->map(function($assessment) {
+                    return [
+                        'id' => $assessment->assessment_id,
+                        'patient_name' => $assessment->patient ? 
+                            $assessment->patient->first_name . ' ' . $assessment->patient->last_name : 'N/A',
+                        'nutritionist_name' => $assessment->nutritionist ? $assessment->nutritionist->name : 'N/A',
+                        'created_at' => $assessment->created_at ? $assessment->created_at->format('Y-m-d H:i:s') : 'N/A',
+                    ];
+                })->values(),
+            ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $report_data,
-            'generated_at' => now()->format('Y-m-d H:i:s')
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $report_data,
+                'generated_at' => now()->format('Y-m-d H:i:s')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Assessment Trends Report Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating assessment trends report: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -1625,17 +1776,15 @@ class AdminController extends Controller
     {
         try {
             $apiStatus = $malnutritionService->checkApiHealth();
-            $protocols = $malnutritionService->getTreatmentProtocols();
             
-            return view('admin.api-management', compact('apiStatus', 'protocols'));
+            return view('admin.api-management', compact('apiStatus'));
         } catch (\Exception $e) {
             $apiStatus = [
                 'status' => 'error',
                 'message' => $e->getMessage()
             ];
-            $protocols = null;
             
-            return view('admin.api-management', compact('apiStatus', 'protocols'));
+            return view('admin.api-management', compact('apiStatus'));
         }
     }
 
@@ -1689,5 +1838,69 @@ class AdminController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Download User Activity Report as PDF
+     */
+    public function downloadUserActivityReport(Request $request)
+    {
+        $reportData = json_decode($request->input('report_data'), true);
+        $timestamp = now()->format('Y-m-d H:i:s');
+        
+        $pdf = Pdf::loadView('admin.reports.pdf.user-activity', [
+            'data' => $reportData,
+            'generated_at' => $timestamp
+        ]);
+        
+        return $pdf->download('user-activity-report-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Download Inventory Report as PDF
+     */
+    public function downloadInventoryReport(Request $request)
+    {
+        $reportData = json_decode($request->input('report_data'), true);
+        $timestamp = now()->format('Y-m-d H:i:s');
+        
+        $pdf = Pdf::loadView('admin.reports.pdf.inventory', [
+            'data' => $reportData,
+            'generated_at' => $timestamp
+        ]);
+        
+        return $pdf->download('inventory-report-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Download Assessment Trends Report as PDF
+     */
+    public function downloadAssessmentTrendsReport(Request $request)
+    {
+        $reportData = json_decode($request->input('report_data'), true);
+        $timestamp = now()->format('Y-m-d H:i:s');
+        
+        $pdf = Pdf::loadView('admin.reports.pdf.assessment-trends', [
+            'data' => $reportData,
+            'generated_at' => $timestamp
+        ]);
+        
+        return $pdf->download('assessment-trends-report-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Download Low Stock Report as PDF
+     */
+    public function downloadLowStockReport(Request $request)
+    {
+        $reportData = json_decode($request->input('report_data'), true);
+        $timestamp = now()->format('Y-m-d H:i:s');
+        
+        $pdf = Pdf::loadView('admin.reports.pdf.low-stock', [
+            'data' => $reportData,
+            'generated_at' => $timestamp
+        ]);
+        
+        return $pdf->download('low-stock-report-' . now()->format('Y-m-d') . '.pdf');
     }
 }

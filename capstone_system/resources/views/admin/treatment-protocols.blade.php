@@ -26,7 +26,7 @@
         </a>
     </div>
 
-    @if($protocols)
+    @if($protocols && isset($protocols['protocols']))
     <!-- Protocol Overview -->
     <div class="content-section">
         <div class="section-header">
@@ -42,7 +42,7 @@
                     </div>
                     <div class="summary-content">
                         <h3>Total Protocols</h3>
-                        <p class="summary-number">{{ count($protocols) }}</p>
+                        <p class="summary-number">{{ isset($protocols['protocols']['protocols']) ? count($protocols['protocols']['protocols']) : 0 }}</p>
                     </div>
                 </div>
                 
@@ -71,96 +71,53 @@
         <!-- Protocol Details -->
         <div class="protocol-details">
             <ul class="nav nav-tabs" id="protocolTabs" role="tablist">
-                @foreach($protocols as $index => $protocol)
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link {{ $index === 0 ? 'active' : '' }}" 
-                            id="protocol-{{ $index }}-tab" 
-                            data-bs-toggle="tab" 
-                            data-bs-target="#protocol-{{ $index }}" 
-                            type="button" 
-                            role="tab">
-                        {{ $protocol['name'] ?? "Protocol " . ($index + 1) }}
-                    </button>
-                </li>
-                @endforeach
+                @if(isset($protocols['protocols']['protocols']))
+                    @foreach($protocols['protocols']['protocols'] as $index => $protocolName)
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {{ $index === 0 ? 'active' : '' }}" 
+                                id="protocol-{{ $index }}-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#protocol-{{ $index }}" 
+                                type="button" 
+                                role="tab">
+                            {{ ucwords(str_replace('_', ' ', $protocolName)) }}
+                        </button>
+                    </li>
+                    @endforeach
+                @endif
             </ul>
             
             <div class="tab-content" id="protocolTabContent">
-                @foreach($protocols as $index => $protocol)
-                <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" 
-                     id="protocol-{{ $index }}" 
-                     role="tabpanel" 
-                     aria-labelledby="protocol-{{ $index }}-tab">
-                    
-                    <div class="protocol-content">
-                        <h4>{{ $protocol['name'] ?? "Protocol " . ($index + 1) }}</h4>
+                @if(isset($protocols['protocols']['protocols']))
+                    @foreach($protocols['protocols']['protocols'] as $index => $protocolName)
+                    <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" 
+                         id="protocol-{{ $index }}" 
+                         role="tabpanel" 
+                         aria-labelledby="protocol-{{ $index }}-tab">
                         
-                        @if(isset($protocol['description']))
-                        <div class="protocol-section">
-                            <h5>Description</h5>
-                            <p>{{ $protocol['description'] }}</p>
-                        </div>
-                        @endif
-                        
-                        @if(isset($protocol['criteria']))
-                        <div class="protocol-section">
-                            <h5>Application Criteria</h5>
-                            <ul>
-                                @if(is_array($protocol['criteria']))
-                                    @foreach($protocol['criteria'] as $criterion)
-                                    <li>{{ $criterion }}</li>
-                                    @endforeach
-                                @else
-                                    <li>{{ $protocol['criteria'] }}</li>
-                                @endif
-                            </ul>
-                        </div>
-                        @endif
-                        
-                        @if(isset($protocol['interventions']))
-                        <div class="protocol-section">
-                            <h5>Interventions</h5>
-                            @if(is_array($protocol['interventions']))
-                                <ul>
-                                    @foreach($protocol['interventions'] as $intervention)
-                                    <li>{{ is_array($intervention) ? json_encode($intervention) : $intervention }}</li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <p>{{ $protocol['interventions'] }}</p>
-                            @endif
-                        </div>
-                        @endif
-                        
-                        @if(isset($protocol['monitoring']))
-                        <div class="protocol-section">
-                            <h5>Monitoring Schedule</h5>
-                            @if(is_array($protocol['monitoring']))
-                                <ul>
-                                    @foreach($protocol['monitoring'] as $item)
-                                    <li>{{ is_array($item) ? json_encode($item) : $item }}</li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <p>{{ $protocol['monitoring'] }}</p>
-                            @endif
-                        </div>
-                        @endif
-                        
-                        <!-- Raw Protocol Data (Collapsible) -->
-                        <div class="protocol-section">
-                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#rawData{{ $index }}">
-                                <i class="fas fa-code"></i> View Raw Data
-                            </button>
-                            <div class="collapse mt-2" id="rawData{{ $index }}">
-                                <div class="raw-data">
-                                    <pre>{{ json_encode($protocol, JSON_PRETTY_PRINT) }}</pre>
+                        <div class="protocol-content">
+                            <h4>{{ ucwords(str_replace('_', ' ', $protocolName)) }}</h4>
+                            
+                            <div class="protocol-section">
+                                <h5>Protocol Information</h5>
+                                <p>This is the {{ $protocolName }} treatment protocol.</p>
+                            </div>
+                            
+                            <!-- Raw Protocol Data (Collapsible) -->
+                            <div class="protocol-section">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#rawData{{ $index }}">
+                                    <i class="fas fa-code"></i> View Full Protocol Data
+                                </button>
+                                <div class="collapse mt-2" id="rawData{{ $index }}">
+                                    <div class="raw-data">
+                                        <pre>{{ json_encode($protocols['protocols'], JSON_PRETTY_PRINT) }}</pre>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                @endforeach
+                    @endforeach
+                @endif
             </div>
         </div>
     </div>
@@ -215,4 +172,3 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/treatment-protocols.css') }}">
 @endpush
-@endsection

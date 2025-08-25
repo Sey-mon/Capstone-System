@@ -36,10 +36,7 @@ Route::get('/email/verify', function () {
 // Verification Gate - Paywall style for logged-in unverified users
 Route::get('/verify-to-continue', [AuthController::class, 'showVerificationGate'])->middleware('auth')->name('verification.gate');
 
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-    return redirect()->route('verification.success');
-})->middleware(['auth', 'signed'])->name('verification.verify');
+Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->middleware(['signed'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
@@ -102,6 +99,7 @@ Route::get('/privacy', function () {
 // Admin Routes (Protected by auth, verified email, and role middleware)
 Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard/map-data', [AdminController::class, 'getMapData'])->name('dashboard.map-data');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/patients', [AdminController::class, 'patients'])->name('patients');
     Route::get('/assessments', [AdminController::class, 'assessments'])->name('assessments');
@@ -164,6 +162,13 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::get('/reports/inventory', [AdminController::class, 'generateInventoryReport'])->name('reports.inventory');
     Route::get('/reports/assessment-trends', [AdminController::class, 'generateAssessmentTrendsReport'])->name('reports.assessment-trends');
     Route::get('/reports/low-stock', [AdminController::class, 'generateLowStockReport'])->name('reports.low-stock');
+    
+    // PDF Download routes
+    Route::post('/reports/user-activity/download', [AdminController::class, 'downloadUserActivityReport'])->name('reports.user-activity.download');
+    Route::post('/reports/inventory/download', [AdminController::class, 'downloadInventoryReport'])->name('reports.inventory.download');
+    Route::post('/reports/assessment-trends/download', [AdminController::class, 'downloadAssessmentTrendsReport'])->name('reports.assessment-trends.download');
+    Route::post('/reports/low-stock/download', [AdminController::class, 'downloadLowStockReport'])->name('reports.low-stock.download');
+    
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
 });

@@ -1,8 +1,21 @@
-"""
-Enhanced Treatment Plan Generator
-Generates realistic, personalized treatment plans based on Random Forest predictions
-and comprehensive patient assessment
-"""
+# """
+# Enhanced Treatment Plan Generator
+# Generates realistic, personalized    def generate_comprehensive_treatment_plan(self, patient_data: Dict, ml_result: Dict, 
+#                                            risk_assessment: Dict, who_assessment: Dict) -> Dict:
+#         """Generate a comprehensive, personalized treatment plan"""
+        
+#         # Determine primary diagnosis and severity
+#         primary_diagnosis = ml_result.get('prediction', 'Unknown')
+#         confidence = max(ml_result.get('probabilities', {}).values()) if ml_result.get('probabilities') else 0
+        
+#         # Patient characteristics - ensure proper types
+#         age_months = int(patient_data.get('age_months', 12))
+#         weight = float(patient_data.get('weight', 10))
+#         sex = patient_data.get('sex', 'unknown')
+#         has_edema = patient_data.get('edema', False)
+#         breastfeeding = patient_data.get('breastfeeding', 'No')ns based on Random Forest predictions
+# and comprehensive patient assessment
+# """
 
 import sys
 import os
@@ -79,9 +92,9 @@ class PersonalizedTreatmentPlanner:
         primary_diagnosis = ml_result.get('prediction', 'Unknown')
         confidence = max(ml_result.get('probabilities', {}).values()) if ml_result.get('probabilities') else 0
         
-        # Patient characteristics
-        age_months = patient_data.get('age_months', 12)
-        weight = patient_data.get('weight', 10)
+        # Patient characteristics - ensure proper types
+        age_months = int(patient_data.get('age_months', 12))
+        weight = float(patient_data.get('weight', 10))
         sex = patient_data.get('sex', 'unknown')
         has_edema = patient_data.get('edema', False)
         breastfeeding = patient_data.get('breastfeeding', 'No')
@@ -384,7 +397,7 @@ class PersonalizedTreatmentPlanner:
             "Warning signs requiring immediate medical attention"
         ]
         
-        age_months = patient_data.get('age_months', 12)
+        age_months = int(patient_data.get('age_months', 12))
         
         # Age-specific education
         if age_months <= 6:
@@ -531,6 +544,9 @@ class PersonalizedTreatmentPlanner:
     
     def _calculate_target_weight(self, age_months: int, current_weight: float) -> float:
         """Calculate realistic target weight based on age"""
+        
+        # Ensure age_months is an integer
+        age_months = int(age_months)
         
         # Simplified target weight calculation
         # This should ideally use WHO growth charts
