@@ -14,9 +14,9 @@ class MalnutritionService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.malnutrition_api.base_url');
-        $this->apiKey = config('services.malnutrition_api.api_key');
-        $this->timeout = config('services.malnutrition_api.timeout');
+        $this->baseUrl = config('services.random_forest_api.base_url');
+        $this->apiKey = config('services.random_forest_api.api_key');
+        $this->timeout = config('services.random_forest_api.timeout', 30);
     }
 
     /**

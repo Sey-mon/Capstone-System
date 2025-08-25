@@ -354,8 +354,8 @@ class AuthController extends Controller
             // so they can return to login page if needed
             Auth::logout();
             
-            // Redirect to email verification notice
-            return redirect()->route('verification.notice');
+            // Redirect to login page with success message
+            return redirect()->route('login')->with('success', 'Registration successful! Please check your email to verify your account before logging in.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -670,5 +670,42 @@ class AuthController extends Controller
         } else {
             return redirect()->route('dev.panel')->with('info', 'Email already verified for: ' . $email);
         }
+    }
+
+    /**
+     * Verify email address from verification link
+     */
+    public function verifyEmail(Request $request)
+    {
+        $user = User::findOrFail($request->route('id'));
+
+        // Check if the hash matches
+        if (! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+            return redirect()->route('login')->withErrors(['error' => 'Invalid verification link.']);
+        }
+
+        // Check if email is already verified
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('login')->with('success', 'Your email is already verified. You can now log in.');
+        }
+
+        // Mark email as verified
+        if ($user->markEmailAsVerified()) {
+            // Log the verification
+            AuditLog::create([
+                'user_id' => $user->user_id,
+                'action' => 'email_verified',
+                'description' => 'Email address verified successfully via verification link',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            // Temporarily log in user to show success page, then log them out
+            Auth::login($user);
+            
+            return redirect()->route('verification.success');
+        }
+
+        return redirect()->route('login')->withErrors(['error' => 'Failed to verify email. Please try again.']);
     }
 }

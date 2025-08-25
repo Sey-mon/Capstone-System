@@ -41,9 +41,9 @@
                     <i class="fas fa-procedures"></i>
                 </div>
             </div>
-            <div class="stat-value">{{ $protocols ? count($protocols) : 'N/A' }}</div>
+            <div class="stat-value">Available</div>
             <div class="stat-change">
-                <span>Available protocols</span>
+                <span>Click to view protocols</span>
             </div>
         </div>
 
@@ -133,12 +133,12 @@
         <div class="info-grid">
             <div class="info-card">
                 <h3>API Endpoint</h3>
-                <p class="code">{{ config('services.malnutrition_api.base_url') }}</p>
+                <p class="code">{{ config('services.random_forest_api.base_url') }}</p>
             </div>
             
             <div class="info-card">
                 <h3>Timeout Setting</h3>
-                <p>{{ config('services.malnutrition_api.timeout') }} seconds</p>
+                <p>{{ config('services.random_forest_api.timeout') }} seconds</p>
             </div>
             
             <div class="info-card">
@@ -153,25 +153,12 @@
             </div>
         </div>
     </div>
-
-    @if($protocols)
-    <!-- Recent API Activity -->
-    <div class="content-section">
-        <div class="section-header">
-            <h2>Treatment Protocols Overview</h2>
-            <p>Available treatment protocols in the system</p>
-        </div>
-
-        <div class="table-container">
-            <div class="protocols-preview">
-                <pre>{{ json_encode($protocols, JSON_PRETTY_PRINT) }}</pre>
-            </div>
-        </div>
-    </div>
-    @endif
 @endsection
 
-@section('scripts')
-<script src="{{ asset('js/api-management.js') }}"></script>
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/api-management.css') }}">
-@endsection
+@endpush
+
+@push('scripts')
+<script src="{{ asset('js/api-management.js') }}"></script>
+@endpush

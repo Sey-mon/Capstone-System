@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use App\Notifications\CustomVerifyEmail;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -212,7 +213,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Approve nutritionist verification.
      */
-    public function approveVerification(User $verifier = null): bool
+    public function approveVerification(?User $verifier = null): bool
     {
         $this->verification_status = 'verified';
         $this->account_status = 'active';
@@ -228,7 +229,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Reject nutritionist verification.
      */
-    public function rejectVerification(string $reason, User $verifier = null): bool
+    public function rejectVerification(string $reason, ?User $verifier = null): bool
     {
         $this->verification_status = 'rejected';
         $this->account_status = 'rejected';
@@ -275,5 +276,13 @@ class User extends Authenticatable implements MustVerifyEmail
             'rejected' => 'badge-danger',
             default => 'badge-secondary',
         };
+    }
+
+    /**
+     * Send the email verification notification using custom template.
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new CustomVerifyEmail);
     }
 }

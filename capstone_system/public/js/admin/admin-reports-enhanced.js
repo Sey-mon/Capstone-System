@@ -1,12 +1,8 @@
 /**
- * Admin Reports JavaScript
+ * Admin Reports JavaScript - Main Controller
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Reports page specific JavaScript
-    console.log('Reports page loaded');
-    
-    // Initialize charts if data is available
     initializeCharts();
 });
 
@@ -14,122 +10,32 @@ document.addEventListener('DOMContentLoaded', function() {
  * Generate and display report
  */
 function generateReport(reportType) {
-    // Show loading state
     const button = event.target;
     const originalText = button.innerHTML;
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     button.disabled = true;
     
     fetch(`/admin/reports/${reportType}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 showReportModal(reportType, data.data);
             } else {
-                showAlert('Error generating report', 'error');
+                showAlert('Error generating report: ' + (data.message || 'Unknown error'), 'error');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showAlert('Error generating report', 'error');
+            showAlert('Error generating report: ' + error.message, 'error');
         })
         .finally(() => {
-            // Restore button state
             button.innerHTML = originalText;
             button.disabled = false;
         });
-}
-
-/**
- * Show report modal with data
- */
-function showReportModal(reportType, data) {
-    const modal = document.getElementById('reportModal');
-    const title = document.getElementById('reportModalTitle');
-    const content = document.getElementById('reportModalContent');
-    
-    // Set title based on report type
-    const titles = {
-        'user-activity': 'User Activity Report',
-        'inventory': 'Inventory Report',
-        'assessment-trends': 'Assessment Trends Report',
-        'low-stock': 'Low Stock Alert Report'
-    };
-    
-    title.textContent = titles[reportType] || 'Report Results';
-    
-    // Generate content based on report type
-    content.innerHTML = generateReportContent(reportType, data);
-    
-    // Show modal
-    modal.style.display = 'block';
-    
-    // Store current report data for download
-    window.currentReportData = { type: reportType, data: data };
-}
-
-/**
- * Generate report content HTML
- */
-function generateReportContent(reportType, data) {
-    switch (reportType) {
-        case 'user-activity':
-            return generateUserActivityContent(data);
-        case 'inventory':
-            return generateInventoryContent(data);
-        case 'assessment-trends':
-            return generateAssessmentTrendsContent(data);
-        case 'low-stock':
-            return generateLowStockContent(data);
-        default:
-            return '<p>Report content not available</p>';
-    }
-}
-
-/**
- * Generate user activity report content
- */
-function generateUserActivityContent(data) {
-    return `
-        <div class="report-summary">
-            <div class="stat-grid">
-                <div class="stat-item">
-                    <div class="stat-label">Total Users</div>
-                    <div class="stat-value">${data.total_users}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Active Users (30 days)</div>
-                    <div class="stat-value">${data.active_users_30_days}</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="report-section">
-            <h4>Users by Role</h4>
-            <div class="data-grid">
-                ${Object.entries(data.users_by_role || {}).map(([role, count]) => `
-                    <div class="data-item">
-                        <span>${role}</span>
-                        <span class="data-value">${count}</span>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-        
-        <div class="report-section">
-            <h4>Recent Assessments</h4>
-            <div class="data-list">
-                ${(data.recent_assessments || []).map(assessment => `
-                    <div class="data-item">
-                        <span>Assessment #${assessment.id}</span>
-                        <span>Patient: ${assessment.patient?.first_name} ${assessment.patient?.last_name}</span>
-                        <span>By: ${assessment.user?.name}</span>
-                        <span class="data-date">${formatDate(assessment.created_at)}</span>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
 }
 
 /**
@@ -301,21 +207,48 @@ function downloadReport() {
     }
     
     const { type, data } = window.currentReportData;
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    const filename = `${type}-report-${timestamp}.json`;
     
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    // Create download URL for PDF
+    const downloadUrl = `/admin/reports/${type}/download`;
     
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Show loading state
+    const downloadBtn = document.querySelector('.modal-footer .btn-primary');
+    const originalText = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+    downloadBtn.disabled = true;
     
-    showAlert('Report downloaded successfully', 'success');
+    // Create a form to submit the report data for PDF generation
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = downloadUrl;
+    form.style.display = 'none';
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+    
+    // Add report data
+    const dataInput = document.createElement('input');
+    dataInput.type = 'hidden';
+    dataInput.name = 'report_data';
+    dataInput.value = JSON.stringify(data);
+    form.appendChild(dataInput);
+    
+    // Submit form
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    
+    // Restore button state after a delay
+    setTimeout(() => {
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+        showAlert('PDF download started', 'success');
+    }, 1000);
 }
 
 /**
