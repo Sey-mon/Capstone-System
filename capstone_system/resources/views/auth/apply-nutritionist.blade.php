@@ -21,6 +21,18 @@
             </div>
 
             <div class="wizard-content">
+                @if(session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <!-- Step Indicator -->
                 <div class="step-indicator">
                     <div class="step-progress" style="width: 0%"></div>
@@ -133,10 +145,10 @@
                             </div>
                             <div class="form-col">
                                 <div class="form-group">
-                                    <label class="form-label" for="date_of_birth">Date of Birth</label>
-                                    <input type="date" class="form-control" name="date_of_birth" id="date_of_birth" 
-                                           value="{{ old('date_of_birth') }}">
-                                    @error('date_of_birth')
+                                    <label class="form-label" for="birth_date">Date of Birth</label>
+                                    <input type="date" class="form-control" name="birth_date" id="birth_date" 
+                                           value="{{ old('birth_date') }}">
+                                    @error('birth_date')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -144,14 +156,14 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="gender">Gender</label>
-                            <select class="form-control form-select" name="gender" id="gender">
+                            <label class="form-label" for="sex">Gender</label>
+                            <select class="form-control form-select" name="sex" id="sex">
                                 <option value="">Select Gender</option>
-                                <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>Male</option>
-                                <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>Female</option>
-                                <option value="other" {{ old('gender') === 'other' ? 'selected' : '' }}>Other</option>
+                                <option value="male" {{ old('sex') === 'male' ? 'selected' : '' }}>Male</option>
+                                <option value="female" {{ old('sex') === 'female' ? 'selected' : '' }}>Female</option>
+                                <option value="other" {{ old('sex') === 'other' ? 'selected' : '' }}>Other</option>
                             </select>
-                            @error('gender')
+                            @error('sex')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
                         </div>
@@ -187,8 +199,6 @@
                                     @enderror
                                 </div>
                             </div>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="form-group">
@@ -202,11 +212,11 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="experience">Professional Experience *</label>
-                            <textarea class="form-control" name="experience" id="experience" 
+                            <label class="form-label" for="professional_experience">Professional Experience *</label>
+                            <textarea class="form-control" name="professional_experience" id="professional_experience" 
                                       placeholder="Please describe your work experience in nutrition, dietetics, or related fields. Include years of experience, previous positions, and areas of specialization..."
-                                      required>{{ old('experience') }}</textarea>
-                            @error('experience')
+                                      required>{{ old('professional_experience') }}</textarea>
+                            @error('professional_experience')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
                         </div>
@@ -227,9 +237,9 @@
                                 </div>
                                 <div class="upload-text">Drag and drop your document here</div>
                                 <div class="upload-subtext">or click to browse files</div>
-                                <input type="file" class="form-control" name="professional_id" id="professional_id" 
+                                <input type="file" class="form-control" name="professional_id_path" id="professional_id_path" 
                                        accept=".jpg,.jpeg,.png,.pdf" required style="display: none;">
-                                <button type="button" class="btn btn-outline" onclick="document.getElementById('professional_id').click();">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('professional_id_path').click();">
                                     <i class="fas fa-folder-open"></i> Browse Files
                                 </button>
                                 <div class="upload-requirements">
@@ -237,7 +247,7 @@
                                 </div>
                             </div>
                             <div class="file-info" id="fileInfo"></div>
-                            @error('professional_id')
+                            @error('professional_id_path')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
                         </div>

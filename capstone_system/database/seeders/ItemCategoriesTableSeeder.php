@@ -9,10 +9,26 @@ class ItemCategoriesTableSeeder extends Seeder
 {
     public function run()
     {
-        DB::table('item_categories')->insert([
-            ['category_name' => 'Vitamin'],
-            ['category_name' => 'Medicine'],
-            ['category_name' => 'Supplement']
-        ]);
+            $categories = [
+                'Vitamin',
+                'Medicine',
+                'Supplement',
+                'Food',
+                'Equipment',
+                'Medical Supply',
+                'Personal Care',
+                'Sanitation',
+                'Infant Formula',
+                'First Aid',
+                'Disinfectant',
+                'Protective Gear',
+                'Diagnostic Tool',
+                'Nutritional Product',
+                'Consumable',
+                'Other'
+            ];
+
+            $data = array_map(fn($name) => ['category_name' => $name], $categories);
+            DB::table('item_categories')->upsert($data, ['category_name'], ['category_name']);
     }
 }

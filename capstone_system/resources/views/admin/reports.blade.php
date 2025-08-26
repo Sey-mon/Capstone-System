@@ -96,10 +96,7 @@
                         <i class="fas fa-chart-line"></i>
                         Assessment Trends
                     </button>
-                    <button class="btn btn-warning" onclick="generateReport('low-stock')">
-                        <i class="fas fa-exclamation-circle"></i>
-                        Low Stock Alert
-                    </button>
+                        <!-- Low Stock Alert button removed -->
                 </div>
             </div>
         </div>
@@ -170,88 +167,9 @@
         </div>
     </div>
 
-    <!-- Inventory Overview -->
-    <div class="content-card">
-        <div class="card-header">
-            <h3 class="card-title">Inventory by Category</h3>
-        </div>
-        <div class="card-content">
-            @if(isset($reports['inventory_by_category']) && count($reports['inventory_by_category']) > 0)
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
-                    @foreach($reports['inventory_by_category'] as $category => $count)
-                        <div style="padding: 1rem; background: var(--bg-secondary); border-radius: 0.5rem; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: 600; color: var(--primary-color);">{{ $count }}</div>
-                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">{{ $category }}</div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                    <i class="fas fa-boxes" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                    <p>No inventory data available</p>
-                </div>
-            @endif
-        </div>
-    </div>
+    <!-- Inventory Overview card removed -->
 
-    <!-- System Health -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-        <!-- System Status -->
-        <div class="content-card">
-            <div class="card-header">
-                <h3 class="card-title">System Health</h3>
-            </div>
-            <div class="card-content">
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 0.5rem;">
-                        <span style="font-weight: 500;">Database Status</span>
-                        <span style="padding: 0.25rem 0.75rem; background: linear-gradient(135deg, var(--success-color), #16a34a); color: white; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">
-                            <i class="fas fa-check-circle"></i> Online
-                        </span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 0.5rem;">
-                        <span style="font-weight: 500;">Storage Usage</span>
-                        <span style="padding: 0.25rem 0.75rem; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">
-                            <i class="fas fa-hdd"></i> 45%
-                        </span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 0.5rem;">
-                        <span style="font-weight: 500;">Last Backup</span>
-                        <span style="padding: 0.25rem 0.75rem; background: linear-gradient(135deg, var(--success-color), #16a34a); color: white; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">
-                            <i class="fas fa-clock"></i> 2 hours ago
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="content-card">
-            <div class="card-header">
-                <h3 class="card-title">Admin Actions</h3>
-            </div>
-            <div class="card-content">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <button class="btn btn-primary">
-                        <i class="fas fa-download"></i>
-                        Backup Data
-                    </button>
-                    <button class="btn btn-secondary">
-                        <i class="fas fa-sync"></i>
-                        Sync Data
-                    </button>
-                    <button class="btn btn-warning">
-                        <i class="fas fa-broom"></i>
-                        Clear Cache
-                    </button>
-                    <button class="btn btn-success">
-                        <i class="fas fa-upload"></i>
-                        Import Data
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- System Health and Admin Actions cards removed -->
 
     <!-- Report Modal -->
     <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">

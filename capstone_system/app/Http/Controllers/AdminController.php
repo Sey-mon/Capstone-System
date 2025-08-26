@@ -35,7 +35,7 @@ class AdminController extends Controller
                 'total_assessments' => Assessment::count(),
                 'total_inventory_items' => InventoryItem::count(),
                 'pending_nutritionist_applications' => User::whereHas('role', function($query) {
-                    $query->where('role_name', 'Nutritionist');
+                        $query->where('role_name', 'Nutritionist');
                 })->where('is_active', false)->count(),
                 'recent_transactions' => InventoryTransaction::with(['user', 'inventoryItem'])
                     ->latest()
@@ -141,7 +141,23 @@ class AdminController extends Controller
      */
     public function users()
     {
-        $users = User::with('role')->paginate(15);
+        $query = User::with('role');
+        if (request('search')) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', "%$search%")
+                  ->orWhere('last_name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%")
+                  ->orWhere('contact_number', 'like', "%$search%") ;
+            });
+        }
+        if (request('role')) {
+            $query->where('role_id', request('role'));
+        }
+        if (request('status') !== null && request('status') !== '') {
+            $query->where('is_active', request('status'));
+        }
+        $users = $query->paginate(10)->appends(request()->query());
         $roles = Role::all();
         return view('admin.users', compact('users', 'roles'));
     }
@@ -154,7 +170,7 @@ class AdminController extends Controller
         $patients = Patient::with(['parent', 'nutritionist', 'barangay'])->paginate(15);
         $barangays = Barangay::all();
         $nutritionists = User::where('role_id', function($query) {
-            $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
+                $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
         })->get();
         $parents = User::where('role_id', function($query) {
             $query->select('role_id')->from('roles')->where('role_name', 'Parent');
@@ -530,7 +546,7 @@ class AdminController extends Controller
             'total_inventory_value' => InventoryItem::all()->sum(function($item) {
                 return $item->quantity * $item->unit_cost;
             }),
-            'assessment_trends' => $this->getAssessmentTrends(),
+            'assessment_trends' => $this->getAssessmentTrendsDashboard(),
             'inventory_by_category' => $this->getInventoryByCategory(),
             'recent_activities' => $this->getRecentActivities(),
         ];
@@ -593,7 +609,7 @@ class AdminController extends Controller
             'recent_transactions' => $transactions,
             'stock_levels' => $inventory_items->map(function($item) {
                 return [
-                    'name' => $item->name,
+                    'item_name' => $item->item_name,
                     'quantity' => $item->quantity,
                     'unit' => $item->unit,
                     'status' => $item->quantity < 10 ? 'Low' : ($item->quantity < 50 ? 'Medium' : 'Good')
@@ -727,7 +743,7 @@ class AdminController extends Controller
     /**
      * Get assessment trends for dashboard
      */
-    private function getAssessmentTrends()
+    private function getAssessmentTrendsDashboard()
     {
         $trends = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -1903,4 +1919,61 @@ class AdminController extends Controller
         
         return $pdf->download('low-stock-report-' . now()->format('Y-m-d') . '.pdf');
     }
+
+    /**
+     * Show all nutritionist applications for admin review
+     */
+    public function showNutritionists()
+    {
+        $nutritionists = \App\Models\User::whereHas('role', function($query) {
+            $query->where('role_name', 'Nutritionist');
+        })->get();
+        return view('admin.nutritionists', compact('nutritionists'));
+    }
+
+
+        /**
+     * API endpoint for Assessment Trends chart (Weekly, Monthly, Yearly)
+     */
+    public function getAssessmentTrends(Request $request)
+    {
+        $period = $request->query('period', 'monthly');
+        $query = \App\Models\Assessment::query();
+        $now = now();
+        $labels = [];
+        $data = [];
+
+        if ($period === 'weekly') {
+            // Last 7 days
+            for ($i = 6; $i >= 0; $i--) {
+                $date = $now->copy()->subDays($i);
+                $labels[] = $date->format('D');
+                $data[] = $query->whereDate('created_at', $date->format('Y-m-d'))->count();
+            }
+        } elseif ($period === 'yearly') {
+            // Last 12 months
+            for ($i = 11; $i >= 0; $i--) {
+                $date = $now->copy()->subMonths($i);
+                $labels[] = $date->format('M Y');
+                $data[] = $query->whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->count();
+            }
+        } else {
+            // Monthly (current week)
+            $startOfMonth = $now->copy()->startOfMonth();
+            $endOfMonth = $now->copy()->endOfMonth();
+            $daysInMonth = $endOfMonth->day;
+            for ($i = 1; $i <= $daysInMonth; $i++) {
+                $date = $startOfMonth->copy()->addDays($i - 1);
+                $labels[] = $date->format('j');
+                $data[] = $query->whereDate('created_at', $date->format('Y-m-d'))->count();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'labels' => $labels,
+            'data' => $data,
+        ]);
+    }
+
 }
