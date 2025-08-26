@@ -446,60 +446,79 @@ class AuthController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,NULL,user_id,deleted_at,NULL',
             'contact_number' => 'required|string|max:20',
+            'birth_date' => 'nullable|date',
+            'sex' => 'nullable|string|in:male,female,other',
+            'address' => 'nullable|string|max:255',
             'license_number' => 'required|string|max:255',
+            'years_experience' => 'nullable|integer|min:0|max:50',
             'qualifications' => 'required|string|max:1000',
-            'experience' => 'required|string|max:1000',
+            'professional_experience' => 'required|string|max:1000',
+            'professional_id_path' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()->all()]);
+            }
             return back()->withErrors($validator)->withInput();
         }
 
-        // Store application in session or database for admin review
-        // For now, we'll create a pending nutritionist account that needs admin activation
-        
-        // Create a temporary password
-        $tempPassword = 'temp_' . substr(md5(time() . $request->email), 0, 8);
-        
         // Get Nutritionist role ID
         $nutritionistRole = Role::where('role_name', 'Nutritionist')->first();
         if (!$nutritionistRole) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'errors' => ['Nutritionist role not found in system.']]);
+            }
             return back()->withErrors(['error' => 'Nutritionist role not found in system.'])->withInput();
         }
 
         try {
-            // Create the nutritionist user (inactive initially)
+            // Handle file upload
+            $professionalIdPath = null;
+            if ($request->hasFile('professional_id_path')) {
+                $file = $request->file('professional_id_path');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/professional_ids'), $filename);
+                $professionalIdPath = 'uploads/professional_ids/' . $filename;
+            }
+
             $user = User::create([
                 'role_id' => $nutritionistRole->role_id,
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
                 'last_name' => $request->last_name,
+                'birth_date' => $request->birth_date,
+                'sex' => $request->sex,
                 'email' => $request->email,
-                'password' => Hash::make($tempPassword),
+                'password' => Hash::make($request->password),
                 'contact_number' => $request->contact_number,
-                'is_active' => false, // This will need to be added to users table
+                'address' => $request->address,
+                'license_number' => $request->license_number,
+                'years_experience' => $request->years_experience,
+                'qualifications' => $request->qualifications,
+                'professional_experience' => $request->professional_experience,
+                'professional_id_path' => $professionalIdPath,
+                'is_active' => false,
             ]);
 
-            // Log the application
             AuditLog::create([
                 'user_id' => $user->user_id,
                 'action' => 'application_submitted',
-                'description' => "Nutritionist application submitted. License: {$request->license_number}, Qualifications: {$request->qualifications}, Experience: {$request->experience}",
+                'description' => "Nutritionist application submitted. License: {$request->license_number}, Qualifications: {$request->qualifications}, Experience: {$request->professional_experience}",
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
 
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => true]);
+            }
             return redirect()->route('login')->with('success', 'Your application has been submitted successfully! You will receive an email notification once your application is reviewed and approved by our admin team.');
 
         } catch (\Exception $e) {
-            // Check if it's a duplicate entry error
-            if (strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), 'users_email_unique') !== false) {
-                return back()->withErrors([
-                    'email' => 'This email address is already registered. Please use a different email address or contact support if you believe this is an error.'
-                ])->withInput();
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'errors' => ['Application submission failed. Please check your information and try again. If the problem persists, please contact support.']]);
             }
-            
-            // For other errors, show a generic message
             return back()->withErrors([
                 'error' => 'Application submission failed. Please check your information and try again. If the problem persists, please contact support.'
             ])->withInput();

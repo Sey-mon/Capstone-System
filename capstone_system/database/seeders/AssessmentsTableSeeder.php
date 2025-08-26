@@ -9,29 +9,28 @@ class AssessmentsTableSeeder extends Seeder
 {
     public function run()
     {
-        DB::table('assessments')->insert([
-            [
-                'patient_id' => 1,
-                'nutritionist_id' => 2,
+        $assessments = [];
+        // 50 patients, 3 types of assessment: improving, worsening, stable
+        $statuses = ['Ongoing', 'Recovered', 'Dropped Out'];
+        for ($i = 1; $i <= 15; $i++) {
+            $nutritionist_id = [2, 3, 4][($i - 1) % 3];
+            $base_weight = round(2.5 + rand(6, 60) * 0.3, 2);
+            $base_height = round(45 + rand(6, 60) * 1.5, 1);
+            $status = $statuses[$i % 3];
+            $notes = $status === 'Ongoing' ? 'Patient is showing improvement in weight and height. Continue current intervention.' : ($status === 'Recovered' ? 'Patient has recovered. Discharge planned.' : 'Patient dropped out of program.');
+            $treatment = $status === 'Ongoing' ? 'High-protein diet, regular monitoring' : ($status === 'Recovered' ? 'Continue healthy diet at home' : 'Follow-up if possible');
+            $assessments[] = [
+                'patient_id' => $i,
+                'nutritionist_id' => $nutritionist_id,
                 'assessment_date' => '2025-08-10',
-                'weight_kg' => 8.80,
-                'height_cm' => 75.5,
-                'notes' => 'Slight improvement in weight. Continue feeding program.',
-                'treatment' => 'Vitamin A supplement, high-protein diet',
-                'recovery_status' => 'Ongoing',
+                'weight_kg' => $base_weight,
+                'height_cm' => $base_height,
+                'notes' => $notes,
+                'treatment' => $treatment,
+                'recovery_status' => $status,
                 'created_at' => now()
-            ],
-            [
-                'patient_id' => 2,
-                'nutritionist_id' => 2,
-                'assessment_date' => '2025-08-12',
-                'weight_kg' => 10.50,
-                'height_cm' => 82.2,
-                'notes' => 'Maintaining normal growth.',
-                'treatment' => 'Continue current diet',
-                'recovery_status' => 'Ongoing',
-                'created_at' => now()
-            ]
-        ]);
+            ];
+        }
+        DB::table('assessments')->insert($assessments);
     }
 }

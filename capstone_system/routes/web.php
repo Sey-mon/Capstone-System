@@ -111,8 +111,9 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
     Route::post('/users/{id}/restore', [AdminController::class, 'restoreUser'])->name('users.restore');
-    Route::post('/users/{id}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
-    Route::post('/users/{id}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
+        // User activation/deactivation
+        Route::post('/users/{id}/activate', [AdminController::class, 'activateUser'])->name('admin.users.activate');
+        Route::post('/users/{id}/deactivate', [AdminController::class, 'deactivateUser'])->name('admin.users.deactivate');
     Route::get('/users-with-trashed', [AdminController::class, 'getUsersWithTrashed'])->name('users.with-trashed');
     
     // Nutritionist application routes
@@ -171,6 +172,15 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
+    // Secure route for admin to view nutritionist professional ID
+    Route::get('/nutritionist/{user}/professional-id', [\App\Http\Controllers\FileController::class, 'showProfessionalId'])
+        ->middleware(['auth'])
+        ->name('admin.nutritionist.professional_id');
+    
+    // Route to view all nutritionist applications
+    Route::get('/admin/nutritionists', [App\Http\Controllers\AdminController::class, 'showNutritionists'])
+        ->middleware(['auth'])
+        ->name('admin.nutritionists');
 });
 
 // Nutritionist Routes (Protected by auth, verified email, and role middleware)
@@ -241,3 +251,5 @@ Route::middleware('auth')->get('/dashboard', function () {
             return redirect()->route('login')->withErrors(['error' => 'Invalid user role.']);
     }
 })->name('dashboard');
+
+// Test route for nutritionist registration page

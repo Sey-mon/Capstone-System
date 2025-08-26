@@ -38,11 +38,35 @@
             </button>
         </div>
         <div class="card-content">
+            <div class="filter-bar" style="background:#54a854;border-radius:18px 18px 0 0;padding:1.5rem 2rem 1rem 2rem;margin-bottom:0;display:flex;flex-direction:column;">
+                <form method="GET" action="" id="userFilterForm" style="display:flex;gap:1rem;flex-wrap:wrap;padding:0.5rem 1rem 0.5rem 1rem;background:#54a854;border-radius:18px 18px 0 0;align-items:center;">
+                    <div style="flex:1;min-width:180px;">
+                        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by name, email, contact..." style="padding-left:2.2rem;" oninput="document.getElementById('userFilterForm').submit();">
+                    </div>
+                    <div style="flex:1;min-width:140px;">
+                        <select name="role" class="form-control" onchange="document.getElementById('userFilterForm').submit();">
+                            <option value="">All Roles</option>
+                            @foreach($roles as $role)
+                                <option value="{{ $role->role_id }}" @if(request('role') == $role->role_id) selected @endif>{{ $role->role_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div style="flex:1;min-width:140px;">
+                        <select name="status" class="form-control" onchange="document.getElementById('userFilterForm').submit();">
+                            <option value="">All Status</option>
+                            <option value="1" @if(request('status')==='1') selected @endif>Active</option>
+                            <option value="0" @if(request('status')==='0') selected @endif>Inactive</option>
+                        </select>
+                    </div>
+                    <div>
+                        <a href="{{ route('admin.users') }}" class="btn btn-outline-light">&#10006; Clear Filter</a>
+                    </div>
+                </form>
+            </div>
             <div class="users-table-container">
                 <table class="users-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
@@ -55,7 +79,6 @@
                     <tbody>
                         @foreach($users as $user)
                         <tr>
-                            <td class="user-id">#{{ $user->user_id }}</td>
                             <td>
                                 <div class="user-info">
                                     <div class="user-avatar">
@@ -338,8 +361,27 @@
         
         function toggleUserStatus(userId, activate, userName) {
             const action = activate ? 'activate' : 'deactivate';
+            const userUrlBase = document.getElementById('addUserForm')?.getAttribute('data-user-url-base');
             if (confirm(`Are you sure you want to ${action} ${userName}?`)) {
-                location.reload();
+                fetch(`${userUrlBase}/${userId}/${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message || `Failed to ${action} user`);
+                    }
+                })
+                .catch(error => {
+                    alert('An error occurred while updating user status');
+                });
             }
         }
 
