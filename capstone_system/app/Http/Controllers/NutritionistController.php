@@ -56,25 +56,94 @@ class NutritionistController extends Controller
         $query = Patient::where('nutritionist_id', $nutritionistId)
             ->with(['parent', 'barangay', 'assessments']);
 
-        // Search functionality
+                // Search functionality
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('contact_number', 'like', "%{$search}%")
-                  ->orWhereHas('parent', function($subQ) use ($search) {
-                      $subQ->where('first_name', 'like', "%{$search}%")
-                           ->orWhere('last_name', 'like', "%{$search}%");
-                  });
+                $q->whereHas('patient', function($subQ) use ($search) {
+                    $subQ->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('contact_number', 'like', "%{$search}%");
+                })
+                ->orWhere('treatment', 'like', "%{$search}%")
+                ->orWhere('assessment_id', 'like', "%{$search}%");
             });
         }
 
-        $patients = $query->paginate(15);
+        // Filter by barangay
+        if ($request->has('barangay') && !empty($request->barangay)) {
+            $query->where('barangay_id', $request->barangay);
+        }
+
+        // Filter by sex
+        if ($request->has('sex') && !empty($request->sex)) {
+            $query->where('sex', $request->sex);
+        }
+
+        // Filter by age range
+        if ($request->has('age_min') && !empty($request->age_min)) {
+            $query->where('age_months', '>=', $request->age_min);
+        }
+        if ($request->has('age_max') && !empty($request->age_max)) {
+            $query->where('age_months', '<=', $request->age_max);
+        }
+
+        // Sort functionality
+        $sortBy = $request->get('sort_by', 'first_name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        switch ($sortBy) {
+            case 'name':
+                $query->orderBy('first_name', $sortOrder)->orderBy('last_name', $sortOrder);
+                break;
+            case 'age':
+                $query->orderBy('age_months', $sortOrder);
+                break;
+            case 'date_admitted':
+                $query->orderBy('date_of_admission', $sortOrder);
+                break;
+            case 'barangay':
+                $query->join('barangays', 'patients.barangay_id', '=', 'barangays.barangay_id')
+                      ->orderBy('barangays.barangay_name', $sortOrder)
+                      ->select('patients.*');
+                break;
+            default:
+                $query->orderBy('first_name', $sortOrder);
+        }
+
+        // Pagination with filters
+        $perPage = $request->get('per_page', 15);
+        $patients = $query->paginate($perPage)->appends($request->query());
+        
         $barangays = Barangay::all();
         $parents = User::where('role_id', function($query) {
             $query->select('role_id')->from('roles')->where('role_name', 'Parent');
         })->get();
+
+        // If it's an AJAX request, return filtered data
+        if ($request->ajax()) {
+            // If requesting for assessment modal, return JSON
+            if ($request->has('ajax') && $request->ajax == '1') {
+                $allPatients = $query->get(['patient_id', 'first_name', 'last_name', 'age_months', 'sex', 'barangay_id']);
+                $patientsWithBarangay = $allPatients->map(function($patient) {
+                    return [
+                        'patient_id' => $patient->patient_id,
+                        'first_name' => $patient->first_name,
+                        'last_name' => $patient->last_name,
+                        'age_months' => $patient->age_months,
+                        'sex' => $patient->sex,
+                        'barangay' => $patient->barangay ? [
+                            'barangay_id' => $patient->barangay->barangay_id,
+                            'barangay_name' => $patient->barangay->barangay_name
+                        ] : null
+                    ];
+                });
+                
+                return response()->json(['patients' => $patientsWithBarangay]);
+            }
+            
+            return view('nutritionist.partials.patients-table', compact('patients'));
+        }
 
         return view('nutritionist.patients', compact('patients', 'barangays', 'parents'));
     }
@@ -301,7 +370,7 @@ class NutritionistController extends Controller
                          ->orWhere('last_name', 'like', "%{$search}%")
                          ->orWhere('contact_number', 'like', "%{$search}%");
                 })
-                ->orWhere('diagnosis', 'like', "%{$search}%")
+                ->orWhere('treatment', 'like', "%{$search}%")
                 ->orWhere('assessment_id', 'like', "%{$search}%");
             });
         }
@@ -325,7 +394,7 @@ class NutritionistController extends Controller
 
         // Diagnosis filter
         if ($request->has('diagnosis') && !empty($request->diagnosis)) {
-            $query->where('diagnosis', 'like', "%{$request->diagnosis}%");
+            $query->where('treatment', 'like', "%{$request->diagnosis}%");
         }
 
         // Sorting
@@ -442,6 +511,23 @@ class NutritionistController extends Controller
     // ========================================
 
     /**
+     * Show patient selection for creating new assessment
+     */
+    public function createAssessment()
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+        
+        $patients = Patient::where('nutritionist_id', $nutritionistId)
+            ->with(['parent', 'barangay'])
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
+            
+        return view('nutritionist.assessment-create', compact('patients'));
+    }
+
+    /**
      * Show assessment form for patient
      */
     public function showAssessmentForm($patientId)
@@ -452,6 +538,11 @@ class NutritionistController extends Controller
             ->where('nutritionist_id', $nutritionistId)
             ->with(['parent', 'barangay'])
             ->firstOrFail();
+
+        // If it's an AJAX request, return only the form content
+        if (request()->ajax()) {
+            return view('nutritionist.partials.assessment-form-content', compact('patient'))->render();
+        }
 
         return view('nutritionist.assessment-form', compact('patient'));
     }
@@ -481,7 +572,6 @@ class NutritionistController extends Controller
             'weight_kg' => $request->weight_kg,
             'height_cm' => $request->height_cm,
             'gender' => strtolower($request->gender),
-            'muac_cm' => $request->muac_cm,
             'has_edema' => $request->has('has_edema'),
             'appetite' => $request->appetite ?? 'good',
             'diarrhea_days' => $request->diarrhea_days ?? 0,
@@ -510,16 +600,35 @@ class NutritionistController extends Controller
                 'assessment_date' => now(),
                 'weight_kg' => $request->weight_kg,
                 'height_cm' => $request->height_cm,
-                'muac_cm' => $request->muac_cm,
-                'diagnosis' => $result['assessment']['primary_diagnosis'] ?? 'Unknown',
-                'treatment_plan' => json_encode($result['treatment_plan'] ?? []),
+                'treatment' => json_encode($result['treatment_plan'] ?? []),
                 'notes' => $request->notes,
                 'completed_at' => now(),
             ]);
 
+            // If it's an AJAX request, return JSON response
+            if ($request->ajax()) {
+                // Extract diagnosis from the result for the response
+                $diagnosisText = $result['assessment']['primary_diagnosis'] ?? 'Unknown';
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Assessment completed successfully!',
+                    'assessment_id' => $assessment->assessment_id,
+                    'diagnosis' => $diagnosisText
+                ]);
+            }
+
             return view('nutritionist.assessment-results', compact('result', 'patient', 'assessment', 'childData'));
             
         } catch (\Exception $e) {
+            // If it's an AJAX request, return JSON error
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Assessment failed: ' . $e->getMessage()
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => 'Assessment failed: ' . $e->getMessage()]);
@@ -527,39 +636,76 @@ class NutritionistController extends Controller
     }
 
     /**
-     * Quick assessment (AJAX)
+     * Get assessment details for viewing
      */
-    public function quickAssessment(Request $request, MalnutritionService $malnutritionService)
+    public function getAssessmentDetails($assessmentId)
     {
-        $request->validate([
-            'age_months' => 'required|integer|min:0|max:60',
-            'weight_kg' => 'required|numeric|min:1|max:50',
-            'height_cm' => 'required|numeric|min:30|max:150',
-            'gender' => 'required|in:male,female',
-        ]);
-
-        $childData = [
-            'age_months' => $request->age_months,
-            'weight_kg' => $request->weight_kg,
-            'height_cm' => $request->height_cm,
-            'gender' => strtolower($request->gender),
-            'muac_cm' => $request->muac_cm,
-            'has_edema' => $request->has('has_edema'),
-        ];
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
 
         try {
-            $result = $malnutritionService->assessMalnutritionOnly($childData);
-            
+            // Get assessment with related data
+            $assessment = Assessment::with(['patient.barangay', 'nutritionist'])
+                ->where('assessment_id', $assessmentId)
+                ->where('nutritionist_id', $nutritionistId)
+                ->firstOrFail();
+
+            // Calculate BMI if height and weight are available
+            $bmi = null;
+            if ($assessment->weight_kg && $assessment->height_cm) {
+                $heightInMeters = $assessment->height_cm / 100;
+                $bmi = round($assessment->weight_kg / ($heightInMeters * $heightInMeters), 2);
+            }
+
+            // Decode treatment plan if it exists
+            $treatmentPlan = null;
+            $diagnosis = 'Not specified';
+            if ($assessment->treatment) {
+                $treatmentData = json_decode($assessment->treatment, true);
+                if ($treatmentData) {
+                    $treatmentPlan = $treatmentData;
+                    // Extract diagnosis from treatment plan if available
+                    if (isset($treatmentData['patient_info']['diagnosis'])) {
+                        $diagnosis = $treatmentData['patient_info']['diagnosis'];
+                    }
+                }
+            }
+
+            // Prepare response data
+            $assessmentData = [
+                'assessment_id' => $assessment->assessment_id,
+                'assessment_date' => $assessment->assessment_date ? \Carbon\Carbon::parse($assessment->assessment_date)->format('M d, Y') : 'N/A',
+                'patient' => [
+                    'name' => $assessment->patient->first_name . ' ' . $assessment->patient->last_name,
+                    'age_months' => $assessment->patient->age_months,
+                    'sex' => $assessment->patient->sex,
+                    'barangay' => $assessment->patient->barangay->barangay_name ?? 'Unknown'
+                ],
+                'measurements' => [
+                    'weight_kg' => $assessment->weight_kg,
+                    'height_cm' => $assessment->height_cm,
+                    'bmi' => $bmi
+                ],
+                'diagnosis' => $diagnosis,
+                'recovery_status' => $assessment->recovery_status,
+                'treatment' => $assessment->treatment,
+                'treatment_plan' => $treatmentPlan,
+                'notes' => $assessment->notes,
+                'nutritionist' => $assessment->nutritionist->first_name . ' ' . $assessment->nutritionist->last_name,
+                'completed_at' => $assessment->completed_at ? $assessment->completed_at->format('M d, Y g:i A') : null,
+                'status' => $assessment->completed_at ? 'Completed' : 'Pending'
+            ];
+
             return response()->json([
                 'success' => true,
-                'data' => $result
+                'assessment' => $assessmentData
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Assessment not found or access denied.'
+            ], 404);
         }
     }
 
@@ -579,8 +725,8 @@ class NutritionistController extends Controller
 
         $patient = $assessment->patient;
         
-        // Decode treatment plan
-        $treatmentPlan = json_decode($assessment->treatment_plan, true);
+    // Decode treatment plan (from 'treatment' column)
+    $treatmentPlan = json_decode($assessment->treatment, true);
         
         // Prepare data for PDF
         $data = [

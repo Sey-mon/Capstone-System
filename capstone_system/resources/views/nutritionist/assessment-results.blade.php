@@ -270,10 +270,6 @@
             <i class="fas fa-magic"></i>
             <span>Auto-Fill from Records</span>
         </button>
-        <button onclick="quickAssessment()" class="btn-action primary">
-            <i class="fas fa-bolt"></i>
-            <span>Quick Assessment</span>
-        </button>
         <button onclick="downloadPDF()" class="btn-action success">
             <i class="fas fa-download"></i>
             <span>Download PDF Report</span>
@@ -285,7 +281,7 @@
 @push('scripts')
     <script>
         window.downloadPDFRoute = "{{ route('nutritionist.assessment.pdf', $assessment->assessment_id) }}";
-        window.quickAssessmentRoute = "{{ route('nutritionist.patients.assess', $patient->patient_id) }}";
+
     </script>
     <script src="{{ asset('js/nutritionist/assessment-results.js') }}"></script>
 @endpush

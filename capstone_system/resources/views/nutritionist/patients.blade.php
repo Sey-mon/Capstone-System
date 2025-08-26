@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'My Patients')
+@section('page-title', 'My Patients')
 
 @section('page-title', 'My Patients')
 @section('page-subtitle', 'Manage and monitor your assigned patients')
@@ -17,14 +17,56 @@
     <!-- Action Bar -->
     <div class="action-bar">
         <div class="action-left">
-            <form method="GET" action="{{ route('nutritionist.patients') }}" class="search-form">
-                <div class="search-wrapper">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search patients..." class="search-input">
-                    <button type="submit" class="search-btn">
-                        <i class="fas fa-search"></i>
-                    </button>
+            <div class="filters-wrapper">
+                <!-- Search Input -->
+                <div class="filter-group">
+                    <input type="text" id="searchInput" placeholder="Search patients..." class="form-control" value="{{ request('search') }}">
                 </div>
-            </form>
+                
+                <!-- Barangay Filter -->
+                <div class="filter-group">
+                    <select id="barangayFilter" class="form-select">
+                        <option value="">All Barangays</option>
+                        @foreach($barangays as $barangay)
+                            <option value="{{ $barangay->barangay_id }}" {{ request('barangay') == $barangay->barangay_id ? 'selected' : '' }}>
+                                {{ $barangay->barangay_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <!-- Sex Filter -->
+                <div class="filter-group">
+                    <select id="sexFilter" class="form-select">
+                        <option value="">All Genders</option>
+                        <option value="Male" {{ request('sex') == 'Male' ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ request('sex') == 'Female' ? 'selected' : '' }}>Female</option>
+                    </select>
+                </div>
+                
+                <!-- Age Range Filter -->
+                <div class="filter-group age-range">
+                    <input type="number" id="ageMin" placeholder="Min age (months)" class="form-control" value="{{ request('age_min') }}" min="0">
+                    <span class="range-separator">-</span>
+                    <input type="number" id="ageMax" placeholder="Max age (months)" class="form-control" value="{{ request('age_max') }}" min="0">
+                </div>
+                
+                <!-- Per Page Filter -->
+                <div class="filter-group">
+                    <select id="perPageFilter" class="form-select">
+                        <option value="15" {{ request('per_page') == '15' ? 'selected' : '' }}>15 per page</option>
+                        <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 per page</option>
+                        <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50 per page</option>
+                        <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100 per page</option>
+                    </select>
+                </div>
+                
+                <!-- Clear Filters Button -->
+                <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                    <i class="fas fa-times"></i>
+                    Clear
+                </button>
+            </div>
         </div>
         <div class="action-right">
             <button class="btn btn-primary" onclick="openAddPatientModal()">
@@ -34,91 +76,25 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
     <!-- Patients Table -->
     <div class="card">
         <div class="card-header">
             <h3>Patients List</h3>
+            <div class="results-info">
+                <span id="resultsCount">{{ $patients->total() }} patient(s) found</span>
+            </div>
         </div>
         <div class="card-body">
-            @if($patients->count() > 0)
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Patient Name</th>
-                                <th>Parent</th>
-                                <th>Contact</th>
-                                <th>Age</th>
-                                <th>Sex</th>
-                                <th>Barangay</th>
-                                <th>Date Admitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($patients as $patient)
-                                <tr>
-                                    <td>
-                                        <div class="user-info">
-                                            <strong>{{ $patient->first_name }} {{ $patient->last_name }}</strong>
-                                            @if($patient->middle_name)
-                                                <small class="text-muted">{{ $patient->middle_name }}</small>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @if($patient->parent)
-                                            {{ $patient->parent->first_name }} {{ $patient->parent->last_name }}
-                                        @else
-                                            <span class="text-muted">Not assigned</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $patient->contact_number }}</td>
-                                    <td>{{ $patient->age_months }} months</td>
-                                    <td>{{ $patient->sex }}</td>
-                                    <td>{{ $patient->barangay->barangay_name ?? 'Unknown' }}</td>
-                                    <td>{{ $patient->date_of_admission->format('M d, Y') }}</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <a href="{{ route('nutritionist.patients.assess', $patient->patient_id) }}" class="btn btn-sm btn-success" title="Assess Patient">
-                                                <i class="fas fa-stethoscope"></i>
-                                            </a>
-                                            <button class="btn btn-sm btn-info" onclick="viewPatient({{ $patient->patient_id }})" title="View Details">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-warning" onclick="editPatient({{ $patient->patient_id }})" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-danger" onclick="deletePatient({{ $patient->patient_id }})" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="pagination-wrapper">
-                    {{ $patients->appends(request()->query())->links() }}
-                </div>
-            @else
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-user-injured"></i>
-                    </div>
-                    <h3>No Patients Found</h3>
-                    <p>You haven't been assigned any patients yet or no patients match your search criteria.</p>
-                    @if(!request('search'))
-                        <button class="btn btn-primary" onclick="openAddPatientModal()">
-                            <i class="fas fa-plus"></i>
-                            Add Your First Patient
-                        </button>
-                    @endif
-                </div>
-            @endif
+            <div id="patientsTableContainer">
+                @include('nutritionist.partials.patients-table', ['patients' => $patients])
+            </div>
         </div>
     </div>
 

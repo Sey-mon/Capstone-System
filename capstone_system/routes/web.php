@@ -185,7 +185,7 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     Route::delete('/patients/{id}', [NutritionistController::class, 'deletePatient'])->name('patients.delete');
     
     Route::get('/assessments', [NutritionistController::class, 'assessments'])->name('assessments');
-    Route::post('/assessments', [NutritionistController::class, 'assessments'])->name('assessments.ajax');
+    Route::get('/assessments/create', [NutritionistController::class, 'createAssessment'])->name('assessments.create');
     Route::get('/profile', [NutritionistController::class, 'profile'])->name('profile');
     
     // Profile update routes
@@ -195,7 +195,7 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     // Assessment routes
     Route::get('/patients/{patientId}/assess', [NutritionistController::class, 'showAssessmentForm'])->name('patients.assess');
     Route::post('/assessment/perform', [NutritionistController::class, 'performAssessment'])->name('assessment.perform');
-    Route::post('/assessment/quick', [NutritionistController::class, 'quickAssessment'])->name('assessment.quick');
+    Route::get('/assessment/{assessmentId}', [NutritionistController::class, 'getAssessmentDetails'])->name('assessment.details');
     Route::get('/assessment/{assessmentId}/pdf', [NutritionistController::class, 'downloadAssessmentPDF'])->name('assessment.pdf');
     
     // Meal Plan and Nutrition routes
@@ -215,7 +215,13 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
     Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('dashboard');
     Route::get('/children', [ParentController::class, 'children'])->name('children');
     Route::get('/assessments', [ParentController::class, 'assessments'])->name('assessments');
+    Route::get('/meal-plans', [ParentController::class, 'mealPlans'])->name('meal-plans');
+    Route::post('/meal-plans/generate', [ParentController::class, 'generateMealPlan'])->name('meal-plans.generate');
+    Route::get('/test-api', [ParentController::class, 'testApi'])->name('test-api');
+    Route::post('/test-api', [ParentController::class, 'testApiPost'])->name('test-api');
     Route::get('/profile', [ParentController::class, 'profile'])->name('profile');
+    Route::get('/bind-child', [ParentController::class, 'showBindChildForm'])->name('showBindChildForm');
+    Route::post('/bind-child', [ParentController::class, 'bindChild'])->name('bindChild');
 });
 
 // Redirect authenticated users to their appropriate dashboard

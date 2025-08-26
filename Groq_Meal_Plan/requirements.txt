@@ -1,10 +1,28 @@
-groq
-python-dotenv
-streamlit
-langchain
-langchain-groq
-fastapi
-uvicorn
-pydantic
-pdfplumber
-mysql-connector-python
+# AI and Language Model Dependencies
+groq>=0.4.0
+langchain>=0.1.0
+langchain-groq>=0.1.0
+
+# FastAPI Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+
+# Database Connectivity
+mysql-connector-python>=8.2.0
+
+# Environment Configuration
+python-dotenv>=1.0.0
+
+# File Processing
+pdfplumber>=0.9.0
+
+# Web Interface (if using Streamlit for demos)
+streamlit>=1.28.0
+
+# HTTP Requests for API Integration
+requests>=2.31.0
+
+# Data Processing
+pandas>=1.5.0
+numpy>=1.24.0

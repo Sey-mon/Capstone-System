@@ -66,9 +66,20 @@
                 </div>
             </div>
             @if($treatmentPlan)
+
             <div class="section">
-                <h3 class="section-title">Treatment & Care Plan</h3>
-                
+                <h3 class="section-title">Complete Treatment & Care Plan</h3>
+                @if(isset($treatmentPlan['patient_info']))
+                <div class="experience-item">
+                    <div class="experience-title">Patient Info</div>
+                    <div class="experience-content">
+                        @foreach($treatmentPlan['patient_info'] as $key => $value)
+                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
                 @if(isset($treatmentPlan['immediate_actions']))
                 <div class="experience-item">
                     <div class="experience-title">Immediate Actions Required</div>
@@ -88,50 +99,109 @@
 
                 @if(isset($treatmentPlan['nutrition_plan']))
                 <div class="experience-item">
-                    <div class="experience-title">Nutritional Intervention Plan</div>
+                    <div class="experience-title">Nutrition Plan</div>
                     <div class="experience-content">
-                        @if(is_array($treatmentPlan['nutrition_plan']))
-                            @foreach($treatmentPlan['nutrition_plan'] as $key => $value)
+                        @foreach($treatmentPlan['nutrition_plan'] as $key => $value)
                             <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
-                            @endforeach
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                @if(isset($treatmentPlan['medical_interventions']))
+                <div class="experience-item">
+                    <div class="experience-title">Medical Interventions</div>
+                    <div class="experience-content">
+                        @foreach($treatmentPlan['medical_interventions'] as $key => $value)
+                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                @if(isset($treatmentPlan['monitoring_schedule']))
+                <div class="experience-item">
+                    <div class="experience-title">Monitoring Schedule</div>
+                    <div class="experience-content">
+                        @foreach($treatmentPlan['monitoring_schedule'] as $key => $value)
+                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                @if(isset($treatmentPlan['follow_up_plan']))
+                <div class="experience-item">
+                    <div class="experience-title">Follow-up Plan</div>
+                    <div class="experience-content">
+                        @foreach($treatmentPlan['follow_up_plan'] as $key => $value)
+                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                @if(isset($treatmentPlan['family_education']))
+                <div class="experience-item">
+                    <div class="experience-title">Family Education</div>
+                    <div class="experience-content">
+                        @if(is_array($treatmentPlan['family_education']))
+                            <ul>
+                                @foreach($treatmentPlan['family_education'] as $item)
+                                <li>{{ is_array($item) ? json_encode($item) : $item }}</li>
+                                @endforeach
+                            </ul>
                         @else
-                            <p>{{ $treatmentPlan['nutrition_plan'] }}</p>
+                            <p>{{ $treatmentPlan['family_education'] }}</p>
                         @endif
                     </div>
                 </div>
                 @endif
 
-                <div class="skills-grid">
-                    @if(isset($treatmentPlan['medical_interventions']))
-                    <div class="skill-category">
-                        <div class="skill-title">Medical Interventions</div>
-                        @if(is_array($treatmentPlan['medical_interventions']))
-                            @foreach($treatmentPlan['medical_interventions'] as $key => $value)
-                            <div class="skill-item">
-                                <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}
-                            </div>
-                            @endforeach
-                        @else
-                            <div class="skill-item">{{ $treatmentPlan['medical_interventions'] }}</div>
-                        @endif
+                @if(isset($treatmentPlan['success_criteria']))
+                <div class="experience-item">
+                    <div class="experience-title">Success Criteria</div>
+                    <div class="experience-content">
+                        @foreach($treatmentPlan['success_criteria'] as $key => $value)
+                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
+                        @endforeach
                     </div>
-                    @endif
-
-                    @if(isset($treatmentPlan['monitoring_schedule']))
-                    <div class="skill-category">
-                        <div class="skill-title">Monitoring Schedule</div>
-                        @if(is_array($treatmentPlan['monitoring_schedule']))
-                            @foreach($treatmentPlan['monitoring_schedule'] as $key => $value)
-                            <div class="skill-item">
-                                <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}
-                            </div>
-                            @endforeach
-                        @else
-                            <div class="skill-item">{{ $treatmentPlan['monitoring_schedule'] }}</div>
-                        @endif
-                    </div>
-                    @endif
                 </div>
+                @endif
+
+                @if(isset($treatmentPlan['discharge_criteria']))
+                <div class="experience-item">
+                    <div class="experience-title">Discharge Criteria</div>
+                    <div class="experience-content">
+                        @if(is_array($treatmentPlan['discharge_criteria']))
+                            <ul>
+                                @foreach($treatmentPlan['discharge_criteria'] as $item)
+                                <li>{{ is_array($item) ? json_encode($item) : $item }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <p>{{ $treatmentPlan['discharge_criteria'] }}</p>
+                        @endif
+                    </div>
+                </div>
+                @endif
+
+                @if(isset($treatmentPlan['emergency_signs']))
+                <div class="experience-item">
+                    <div class="experience-title">Emergency Warning Signs</div>
+                    <div class="experience-content">
+                        @if(is_array($treatmentPlan['emergency_signs']))
+                            <ul>
+                                @foreach($treatmentPlan['emergency_signs'] as $item)
+                                <li>{{ is_array($item) ? json_encode($item) : $item }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <p>{{ $treatmentPlan['emergency_signs'] }}</p>
+                        @endif
+                    </div>
+                </div>
+                @endif
             </div>
             @endif
 

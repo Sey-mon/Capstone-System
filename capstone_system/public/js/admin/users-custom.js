@@ -26,6 +26,7 @@ if (document.getElementById('addUserForm')) {
     document.getElementById('addUserForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
+        const addUserRoute = this.getAttribute('data-route');
         fetch(addUserRoute, {
             method: 'POST',
             headers: {
@@ -53,6 +54,7 @@ if (document.getElementById('addUserForm')) {
 
 // Edit User Function
 function editUser(userId) {
+    const userUrlBase = document.getElementById('addUserForm')?.getAttribute('data-user-url-base');
     fetch(`${userUrlBase}/${userId}`, {
         method: 'GET',
         headers: {
@@ -90,6 +92,7 @@ if (document.getElementById('editUserForm')) {
         e.preventDefault();
         const formData = new FormData(this);
         const userId = document.getElementById('edit_user_id').value;
+        const userUrlBase = document.getElementById('addUserForm')?.getAttribute('data-user-url-base');
         formData.append('_method', 'PUT');
         fetch(`${userUrlBase}/${userId}`, {
             method: 'POST',
@@ -127,6 +130,7 @@ function deleteUser(userId, userName) {
 if (document.getElementById('confirmDeleteUser')) {
     document.getElementById('confirmDeleteUser').addEventListener('click', function() {
         if (!currentUserId) return;
+        const userUrlBase = document.getElementById('addUserForm')?.getAttribute('data-user-url-base');
         fetch(`${userUrlBase}/${currentUserId}`, {
             method: 'DELETE',
             headers: {
@@ -155,6 +159,7 @@ if (document.getElementById('confirmDeleteUser')) {
 function toggleUserStatus(userId, activate, userName) {
     const action = activate ? 'activate' : 'deactivate';
     const actionText = activate ? 'activate' : 'deactivate';
+    const userUrlBase = document.getElementById('addUserForm')?.getAttribute('data-user-url-base');
     if (confirm(`Are you sure you want to ${actionText} ${userName}?`)) {
         fetch(`${userUrlBase}/${userId}/${action}`, {
             method: 'POST',
@@ -202,7 +207,3 @@ function showAlert(message, type) {
         document.body.removeChild(alert);
     }, 3000);
 }
-
-// Route variables for AJAX (set by Blade template)
-const addUserRoute = document.getElementById('addUserForm')?.getAttribute('data-route') || '{{ route("admin.users.store") }}';
-const userUrlBase = '{{ url('admin/users') }}';

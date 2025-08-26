@@ -1,5 +1,4 @@
 @if($assessments->count() > 0)
-    <div class="table-responsive">
         <table class="table">
             <thead>
                 <tr>
@@ -16,7 +15,7 @@
                         </a>
                     </th>
                     <th>
-                        <a href="#" class="sort-link" data-sort="diagnosis">
+                        <a href="#" class="sort-link" data-sort="treatment">
                             Diagnosis
                             <i class="fas fa-sort sort-icon"></i>
                         </a>
@@ -43,8 +42,17 @@
                         </td>
                         <td>{{ $assessment->assessment_date->format('M d, Y') }}</td>
                         <td>
-                            <span class="diagnosis-badge {{ getDiagnosisBadgeClass($assessment->diagnosis) }}">
-                                {{ $assessment->diagnosis }}
+                            @php
+                                $diagnosisDisplay = 'Not specified';
+                                if (isset($assessment) && $assessment->treatment) {
+                                    $treatmentData = json_decode($assessment->treatment, true);
+                                    if ($treatmentData && isset($treatmentData['patient_info']['diagnosis'])) {
+                                        $diagnosisDisplay = $treatmentData['patient_info']['diagnosis'];
+                                    }
+                                }
+                            @endphp
+                            <span class="diagnosis-badge {{ getDiagnosisBadgeClass($diagnosisDisplay) }}">
+                                {{ $diagnosisDisplay }}
                             </span>
                         </td>
                         <td>{{ $assessment->weight_kg }} kg</td>
@@ -69,9 +77,9 @@
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 @endif
-                                <a href="{{ route('nutritionist.patients.assess', $assessment->patient_id) }}" class="btn btn-sm btn-success" title="New Assessment">
+                                <button class="btn btn-sm btn-success" onclick="assessSpecificPatient({{ $assessment->patient_id }})" title="New Assessment">
                                     <i class="fas fa-redo"></i>
-                                </a>
+                                </button>
                                 <button class="btn btn-sm btn-secondary" onclick="printAssessment({{ $assessment->assessment_id }})" title="Print">
                                     <i class="fas fa-print"></i>
                                 </button>
@@ -108,7 +116,23 @@
                     @endif
 
                     {{-- Pagination Elements --}}
-                    @foreach ($assessments->getUrlRange(1, $assessments->lastPage()) as $page => $url)
+                    @php
+                        $start = max($assessments->currentPage() - 2, 1);
+                        $end = min($assessments->currentPage() + 2, $assessments->lastPage());
+                    @endphp
+                    
+                    @if($start > 1)
+                        <li class="page-item">
+                            <a class="page-link" href="#" data-page="1">1</a>
+                        </li>
+                        @if($start > 2)
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        @endif
+                    @endif
+                    
+                    @for($page = $start; $page <= $end; $page++)
                         @if ($page == $assessments->currentPage())
                             <li class="page-item active">
                                 <span class="page-link">{{ $page }}</span>
@@ -118,7 +142,18 @@
                                 <a class="page-link" href="#" data-page="{{ $page }}">{{ $page }}</a>
                             </li>
                         @endif
-                    @endforeach
+                    @endfor
+                    
+                    @if($end < $assessments->lastPage())
+                        @if($end < $assessments->lastPage() - 1)
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        @endif
+                        <li class="page-item">
+                            <a class="page-link" href="#" data-page="{{ $assessments->lastPage() }}">{{ $assessments->lastPage() }}</a>
+                        </li>
+                    @endif
 
                     {{-- Next Page Link --}}
                     @if ($assessments->hasMorePages())

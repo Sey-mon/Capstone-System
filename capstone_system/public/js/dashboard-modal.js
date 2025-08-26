@@ -39,13 +39,6 @@ window.modalFallbacks = {
 };
 
 // Global fallback functions for specific modals
-if (typeof window.openQuickAssessmentModal === 'undefined') {
-    window.openQuickAssessmentModal = function() {
-        console.log('Using fallback for Quick Assessment Modal');
-        window.modalFallbacks.openModal('quickAssessmentModal');
-    };
-}
-
 if (typeof window.openAddPatientModal === 'undefined') {
     window.openAddPatientModal = function() {
         console.log('Using fallback for Add Patient Modal');

@@ -15,7 +15,7 @@ def get_connection():
             host=os.getenv('DB_HOST', 'localhost'),
             user=os.getenv('DB_USER', 'root'),
             password=os.getenv('DB_PASSWORD', ''),
-            database=os.getenv('DB_NAME', 'capstone_db'),
+            database=os.getenv('DB_NAME', 'capstone_demo'),
             autocommit=True
         )
         

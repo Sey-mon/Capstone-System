@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+        
+        // Add auto logout middleware to web group
+        $middleware->web(append: [
+            \App\Http\Middleware\AutoLogout::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Handle CSRF token mismatch errors

@@ -88,7 +88,12 @@ return [
         [
             'route' => 'parent.assessments',
             'icon' => 'fas fa-clipboard-list',
-            'text' => 'Assessments',
+            'text' => 'Child Assessments',
+        ],
+        [
+            'route' => 'parent.meal-plans',
+            'icon' => 'fas fa-utensils',
+            'text' => 'Meal Plans',
         ],
         [
             'route' => 'parent.profile',

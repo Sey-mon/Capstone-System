@@ -289,5 +289,7 @@
     </div>
 @endsection
 
+
+@push('scripts')
 <script src="{{ asset('js/nutritionist/profile.js') }}"></script>
 @endpush

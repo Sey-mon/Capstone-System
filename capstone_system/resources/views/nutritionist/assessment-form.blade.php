@@ -31,9 +31,6 @@
                 <a href="{{ route('nutritionist.patients') }}" class="back-button">
                     <i class="fas fa-arrow-left"></i> Back
                 </a>
-                <button type="button" class="add-action-btn" onclick="quickAssessment()">
-                    <i class="fas fa-plus"></i> Quick Assessment
-                </button>
             </div>
             
             <div class="header-right-info">
@@ -74,7 +71,7 @@
             </div>
 
             <div class="form-body">
-                <form method="POST" action="{{ route('nutritionist.assessment.perform') }}" id="assessmentForm" data-quick-route="{{ route('nutritionist.assessment.quick') }}">
+                <form method="POST" action="{{ route('nutritionist.assessment.perform') }}" id="assessmentForm">
                     @csrf
                     <input type="hidden" name="patient_id" value="{{ $patient->patient_id }}">
 
@@ -333,24 +330,12 @@
                             data-edema="{{ $patient->edema ?? '' }}">
                         <i class="fas fa-sync-alt"></i> Auto-Fill from Patient Records
                     </button>
-                    <button type="button" class="btn btn-outline-primary" onclick="quickAssessment()">
-                        <i class="fas fa-bolt"></i> Quick Assessment
-                    </button>
                     <button type="submit" class="btn btn-primary" form="assessmentForm">
                         <i class="fas fa-clipboard-check"></i> Complete Assessment
                     </button>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Quick Assessment Results -->
-    <div id="quickResultsCard" class="quick-results-card" style="display: none;">
-        <h4>Quick Assessment Results</h4>
-        <div id="quickResults"></div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="hideQuickResults()">
-            <i class="fas fa-times"></i> Close
-        </button>
     </div>
 @endsection
 

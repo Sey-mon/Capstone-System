@@ -31,7 +31,7 @@
             <div class="sidebar-header">
                 <div class="logo">
                     <i class="fas fa-heartbeat"></i>
-                    <span class="logo-text">NutriCare</span>
+                    <span class="logo-text">SHaReS</span>
                 </div>
                 <button class="sidebar-toggle desktop-toggle" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
@@ -101,6 +101,80 @@
     </div>
     
     <script src="{{ asset('js/dashboard.js') }}"></script>
+    
+    <!-- Session Timeout Warning Script -->
+    <script>
+        let inactivityTimer;
+        let warningTimer;
+        let isWarningShown = false;
+        
+        // Session timeout in milliseconds (from Laravel config)
+        const SESSION_TIMEOUT = {{ config('session.lifetime') * 60 * 1000 }};
+        const WARNING_TIME = 5 * 60 * 1000; // Show warning 5 minutes before timeout
+        
+        function showTimeoutWarning() {
+            if (isWarningShown) return;
+            isWarningShown = true;
+            
+            if (confirm('Your session will expire in 5 minutes due to inactivity. Click OK to stay logged in or Cancel to logout now.')) {
+                // User wants to stay logged in, make a keep-alive request
+                fetch('{{ route('dashboard') }}', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                }).then(() => {
+                    isWarningShown = false;
+                    resetActivityTimer();
+                }).catch(() => {
+                    // If request fails, redirect to login
+                    window.location.href = '{{ route('login') }}';
+                });
+            } else {
+                // User chose to logout
+                window.location.href = '{{ route('logout') }}';
+            }
+        }
+        
+        function resetActivityTimer() {
+            clearTimeout(inactivityTimer);
+            clearTimeout(warningTimer);
+            
+            // Set warning timer (5 minutes before actual timeout)
+            warningTimer = setTimeout(showTimeoutWarning, SESSION_TIMEOUT - WARNING_TIME);
+            
+            // Set logout timer (full timeout)
+            inactivityTimer = setTimeout(() => {
+                alert('You have been logged out due to inactivity.');
+                window.location.href = '{{ route('login') }}';
+            }, SESSION_TIMEOUT);
+        }
+        
+        // Reset timer on user activity
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+            document.addEventListener(event, resetActivityTimer, true);
+        });
+        
+        // Start the timer when page loads
+        resetActivityTimer();
+        
+        // Handle AJAX errors for session expiry
+        document.addEventListener('DOMContentLoaded', function() {
+            // Intercept all AJAX requests to handle session expiry
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                return originalFetch.apply(this, args).then(response => {
+                    if (response.status === 401) {
+                        alert('Your session has expired. Please log in again.');
+                        window.location.href = '{{ route('login') }}';
+                    }
+                    return response;
+                });
+            };
+        });
+    </script>
+    
     @yield('scripts')
     @stack('scripts')
 </body>

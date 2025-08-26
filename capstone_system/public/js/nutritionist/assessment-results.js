@@ -1,13 +1,11 @@
 function downloadPDF() {
-    window.location.href = window.downloadPDFRoute;
-}
-
-function quickAssessment() {
-    window.location.href = window.quickAssessmentRoute;
+    const assessmentId = window.assessmentId;
+    if (assessmentId) {
+        window.location.href = window.downloadPDFRoute;
+    }
 }
 
 // Initialize Bootstrap tabs
-
 document.addEventListener('DOMContentLoaded', function() {
     var triggerTabList = [].slice.call(document.querySelectorAll('#treatmentTabs button'));
     triggerTabList.forEach(function (triggerEl) {

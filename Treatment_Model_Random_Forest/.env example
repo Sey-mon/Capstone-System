@@ -1,14 +1,14 @@
 # Database Configuration
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=capstone_db
+DB_NAME=capstone_demo
 DB_USER=root
 DB_PASSWORD=
 
 # Security Configuration
-SECRET_KEY=your-super-secret-key-here
+SECRET_KEY=malnutrition-api-key-2025
 
 # API Configuration
-API_HOST=0.0.0.0
-API_PORT=8000
+API_HOST=http://127.0.0.1
+API_PORT=8001
 DEBUG=True

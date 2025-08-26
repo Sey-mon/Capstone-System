@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from nutrition_ai import ChildNutritionAI
@@ -44,7 +43,7 @@ class AssessmentRequest(BaseModel):
 def nutrition_analysis(request: NutritionAnalysis):
     """Run nutrition analysis for a patient and return the result."""
     try:
-        patient_data = data_manager.get_patient_by_id(request.patient_id)
+        patient_data = data_manager.get_patient_by_id(str(request.patient_id))
         if not patient_data:
             raise HTTPException(status_code=404, detail="Patient not found")
 
@@ -53,12 +52,18 @@ def nutrition_analysis(request: NutritionAnalysis):
         # Get latest assessment for notes and treatment
         assessments = data_manager.get_nutritionist_notes_by_patient(request.patient_id)
         latest_assessment = assessments[0] if assessments else {}
+        # Safely convert patient_data.get('age_months') to int, defaulting to 0 if not valid
+        age_val = patient_data.get('age_months')
+        try:
+            age_in_months = int(age_val) if age_val is not None and str(age_val).isdigit() else 0
+        except Exception:
+            age_in_months = 0
         analysis_result = nutrition_ai.analyze_child_nutrition(
             patient_id=request.patient_id,
-            age_in_months=patient_data.get('age_months'),
-            allergies=patient_data.get('allergies'),
-            other_medical_problems=patient_data.get('other_medical_problems'),
-            parent_id=patient_data.get('parent_id'),
+            age_in_months=age_in_months,
+            allergies=str(patient_data.get('allergies')) if patient_data.get('allergies') is not None else "",
+            other_medical_problems=str(patient_data.get('other_medical_problems')) if patient_data.get('other_medical_problems') is not None else "",
+            parent_id=str(patient_data.get('parent_id')) if patient_data.get('parent_id') is not None else "",
             notes=latest_assessment.get('notes', ''),
             treatment=latest_assessment.get('treatment', ''),
             sex=patient_data.get('sex', ''),
@@ -101,38 +106,42 @@ def generate_meal_plan(request: MealPlanRequest):
     """Generate a meal plan for a patient using LangChain prompt template, using nutrition analysis for guidance, but only return the meal plan."""
     try:
         # Fetch patient data for context
-        patient_data = data_manager.get_patient_by_id(request.patient_id)
+        patient_data = data_manager.get_patient_by_id(str(request.patient_id))
         if not patient_data:
             raise HTTPException(status_code=404, detail="Patient not found")
-        # Extract all relevant info from patient and parent
+        # Extract all relevant info from patient
         name = data_manager.format_full_name(
             patient_data.get('first_name', ''),
             patient_data.get('middle_name', ''),
             patient_data.get('last_name', '')
         )
-        age_months = patient_data.get('age_months')
+        age_val = patient_data.get('age_months')
+        try:
+            age_in_months = int(age_val) if age_val is not None and str(age_val).isdigit() else 0
+        except Exception:
+            age_in_months = 0
         weight_kg = patient_data.get('weight_kg')
         height_cm = patient_data.get('height_cm')
         other_medical_problems = patient_data.get('other_medical_problems')
-        parent_id = patient_data.get('parent_id')
-        religion = data_manager.get_religion_by_parent(parent_id) if parent_id else None
+        religion = patient_data.get('religion', '')
+        allergies = str(patient_data.get('allergies')) if patient_data.get('allergies') is not None else ""
 
         # Nutrition analysis (LLM) for internal use only
-        if age_months is not None:
+        if age_in_months is not None:
             _ = nutrition_ai.analyze_child_nutrition(
                 patient_id=request.patient_id,
-                age_in_months=age_months,
-                allergies=patient_data.get('allergies'),
-                other_medical_problems=other_medical_problems,
-                parent_id=parent_id,
-                notes=None,
-                treatment=None,
+                age_in_months=age_in_months,
+                allergies=allergies,
+                other_medical_problems=str(other_medical_problems) if other_medical_problems is not None else "",
+                parent_id="",
+                notes="",
+                treatment="",
                 sex=patient_data.get('sex', ''),
                 weight_for_age=patient_data.get('weight_for_age', ''),
                 height_for_age=patient_data.get('height_for_age', ''),
                 bmi_for_age=patient_data.get('bmi_for_age', ''),
                 breastfeeding=patient_data.get('breastfeeding', ''),
-                religion=religion if religion else ''
+                religion=religion
             )
         # Generate meal plan (LangChain) with all context
         meal_plan_text = get_meal_plan_with_langchain(
@@ -185,7 +194,7 @@ def generate_assessment(request: AssessmentRequest):
     """Generate a comprehensive pediatric dietary assessment for a patient."""
     try:
         # Fetch patient data
-        patient_data = data_manager.get_patient_by_id(request.patient_id)
+        patient_data = data_manager.get_patient_by_id(str(request.patient_id))
         if not patient_data:
             raise HTTPException(status_code=404, detail="Patient not found")
         
@@ -211,7 +220,7 @@ def get_foods_data():
 @app.post("/get_children_by_parent")
 def get_children_by_parent(request: ChildrenByParentRequest):
     try:
-        children = data_manager.get_children_by_parent(request.parent_id)
+        children = data_manager.get_children_by_parent(str(request.parent_id))
         return {"children": children}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -220,7 +229,7 @@ def get_children_by_parent(request: ChildrenByParentRequest):
 def get_meal_plans_by_child(request: MealPlansByChildRequest):
     try:
         import json
-        plans = data_manager.get_meal_plans_by_patient(request.patient_id)
+        plans = data_manager.get_meal_plans_by_patient(str(request.patient_id))
         def parse_plan_details(plan):
             try:
                 details = plan.get('plan_details')

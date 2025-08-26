@@ -1,5 +1,4 @@
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 from langchain_groq import ChatGroq
 import os
 from dotenv import load_dotenv
@@ -160,9 +159,10 @@ def generate_patient_assessment(patient_id):
     meal_plan_notes = ""
     if latest_meal_plan:
         plan_id = latest_meal_plan.get('plan_id')
-        notes = data_manager.get_notes_for_meal_plan(plan_id)
-        if notes:
-            meal_plan_notes = "; ".join([note.get('notes', '') for note in notes])
+        if plan_id is not None:
+            notes = data_manager.get_notes_for_meal_plan(str(plan_id))
+            if notes:
+                meal_plan_notes = "; ".join([note.get('notes', '') for note in notes])
 
     # Get foods data for context
     foods_data = data_manager.get_foods_data()
@@ -172,9 +172,9 @@ def generate_patient_assessment(patient_id):
         sample_foods = foods_data[:10]
         food_list = []
         for food in sample_foods:
-            food_info = f"{food.get('food_name_and_description', '')} - {food.get('energy_kcal', 0)} kcal"
-            if food.get('nutrition_tags'):
-                food_info += f" ({food.get('nutrition_tags')})"
+            food_info = f"{getattr(food, 'food_name_and_description', '')} - {getattr(food, 'energy_kcal', 0)} kcal"
+            if getattr(food, 'nutrition_tags', None):
+                food_info += f" ({getattr(food, 'nutrition_tags')})"
             food_list.append(food_info)
         food_context = "AVAILABLE FOODS SAMPLE:\n" + "\n".join(food_list) + "\n"
 
@@ -284,27 +284,25 @@ IMPORTANT:
     }
 
     # Create LLM
+    from pydantic import SecretStr
     llm = ChatGroq(
-        groq_api_key=api_key,
-        model_name="meta-llama/llama-4-scout-17b-16e-instruct",
+        api_key=SecretStr(api_key),
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         temperature=0.3,
         max_tokens=4000
     )
 
-    # Create chain
-    chain = LLMChain(
-        llm=llm,
-        prompt=prompt_template
-    )
+    chain = prompt_template | llm
 
     try:
         # Generate assessment
-        result = chain.run(**template_vars)
-        
-        # Parse the result into structured sections
-        sections = parse_assessment_sections(result)
-        
-        return sections
+        result = chain.invoke(template_vars)
+        # If result is a BaseMessage, get its content
+        if hasattr(result, "content"):
+            if isinstance(result.content, list):
+                return " ".join(str(x) for x in result.content)
+            return result.content
+        return str(result)
     except Exception as e:
         return {
             "patient_profile_summary": f"Error generating assessment: {str(e)}",
@@ -382,9 +380,9 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     food_names = []
     all_nutrition_tags = set()
     for food in foods_data:
-        name = food.get('food_name_and_description')
-        kcal = food.get('energy_kcal')
-        tags = food.get('nutrition_tags')
+        name = getattr(food, 'food_name_and_description', None)
+        kcal = getattr(food, 'energy_kcal', None)
+        tags = getattr(food, 'nutrition_tags', None)
         if tags:
             # Split tags by comma or semicolon, strip whitespace
             for tag in re.split(r'[;,]', tags):
@@ -414,79 +412,18 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         # Custom prompt for structured output
         analysis_result = nutrition_ai.analyze_child_nutrition(
             patient_id=patient_id,
-            age_in_months=patient_data.get('age_months'),
-            allergies=patient_data.get('allergies'),
-            other_medical_problems=patient_data.get('other_medical_problems'),
-            parent_id=patient_data.get('parent_id'),
-            notes=latest_assessment.get('notes', ''),
-            treatment=latest_assessment.get('treatment', ''),
-            sex=patient_data.get('sex', ''),
-            weight_for_age=patient_data.get('weight_for_age', ''),
-            height_for_age=patient_data.get('height_for_age', ''),
-            bmi_for_age=patient_data.get('bmi_for_age', ''),
-            breastfeeding=patient_data.get('breastfeeding', ''),
-            religion=patient_data.get('religion', ''),
-            custom_prompt="""
-        Provide a comprehensive nutrition analysis in the following structured format:
-
-        ## NUTRITIONAL STATUS:
-        [Provide overall assessment based on growth indicators]
-
-        ## POTENTIAL CONCERNS:
-        [List any nutritional concerns or deficiencies identified]
-
-        ## DIETARY RESTRICTIONS:
-
-        ### Allergy-Related Restrictions:
-        [If allergies present: List specific foods to avoid and safety reminders]
-        [If no allergies: State "No known allergies"]
-
-        ### Religious Dietary Requirements:
-        [If religious restrictions apply: List specific dietary guidelines]
-        [If none: State "No religious dietary restrictions"]
-
-        ### Medical Condition Restrictions:
-        [If medical conditions present: List foods to avoid and foods that are beneficial]
-        [If none: State "No medical dietary restrictions"]
-
-        ## NUTRITIONAL RECOMMENDATIONS:
-
-        ### Growth-Specific Needs:
-        - **Height Development**: [If height-for-age is low, specify nutrients needed for linear growth]
-        - **Weight Management**: [If weight-for-age is concerning, specify appropriate interventions]
-
-        ### Age-Appropriate Guidelines:
-
-        **0-6 months:**
-        - **Primary Nutrition**: Exclusively breast milk or formula
-        - **Feeding Style**: Breastfeeding on demand; practice responsive feeding by responding to the infant's hunger cues
-
-        **6-12 months:**
-        - **Introduction of Solids**: Start introducing small amounts of pureed or mashed, nutrient-dense foods
-        - **Foods to Offer**: Iron-fortified infant cereals, fruits, vegetables, and lean proteins like finely mashed meat or fish
-        - **Breast Milk/Formula**: Continues as the primary source of nutrition
-        - **Feeding Environment**: Introduce solids in a calm setting, with the infant sitting upright and moderately hungry
-
-        **1-2 years:**
-        - **Solid Foods**: Increase variety in texture and consistency. Most children can eat the same foods as the family, with appropriate preparation
-        - **Whole Milk**: Begin offering whole cow's milk
-        - **Meal Schedule**: Aim for 3 meals and 1-2 snacks per day
-
-        **2-5 years:**
-        - **Diverse Diet**: Continue offering a variety of healthy foods from all food groups
-        - **Whole Grains**: Gradually increase the introduction of wholegrain foods
-        - **Milk**: Offer low-fat milk after age 2
-        - **Responsibility**: Maintain the division of responsibility: the caregiver provides healthy food, and the child decides how much to eat
-
-        ### Key Nutrients to Focus On:
-        [List specific vitamins, minerals, and macronutrients needed based on the child's current nutritional status]
-
-        ## FEEDING RECOMMENDATIONS:
-        [Provide practical, age-appropriate feeding advice and meal suggestions specific to this child's needs]
-
-        ## FOLLOW-UP RECOMMENDATIONS:
-        [Suggest monitoring schedule and when to reassess nutritional status]
-        """
+            age_in_months=int(patient_data.get('age_months', 0) or 0),
+            allergies=str(patient_data.get('allergies', 'None') or 'None'),
+            other_medical_problems=str(patient_data.get('other_medical_problems', 'None') or 'None'),
+            parent_id=str(patient_data.get('parent_id', 'Unknown') or 'Unknown'),
+            notes=str(latest_assessment.get('notes', '')),
+            treatment=str(latest_assessment.get('treatment', '')),
+            sex=str(patient_data.get('sex', 'Unknown') or 'Unknown'),
+            weight_for_age=str(patient_data.get('weight_for_age', 'Unknown') or 'Unknown'),
+            height_for_age=str(patient_data.get('height_for_age', 'Unknown') or 'Unknown'),
+            bmi_for_age=str(patient_data.get('bmi_for_age', 'Unknown') or 'Unknown'),
+            breastfeeding=str(patient_data.get('breastfeeding', 'Unknown') or 'Unknown'),
+            religion=str(patient_data.get('religion', 'Unknown') or 'Unknown')
         )
         nutrition_analysis = f"NUTRITION ANALYSIS FOR THIS CHILD (ID: {patient_id}):\n{analysis_result}"
     except Exception as e:
@@ -598,17 +535,20 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         "nutrition_tags": nutrition_tags_str
     }
 
+    from pydantic import SecretStr
     llm = ChatGroq(
-        groq_api_key=api_key,
-        model_name="meta-llama/llama-4-scout-17b-16e-instruct",
+        api_key=SecretStr(api_key),
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         temperature=0.3,
         max_tokens=4000
     )
 
-    chain = LLMChain(
-        llm=llm,
-        prompt=prompt_template
-    )
+    chain = prompt_template | llm
 
-    result = chain.run(**prompt_inputs)
-    return result
+    result = chain.invoke(prompt_inputs)
+    # If result is a BaseMessage, get its content
+    if hasattr(result, "content"):
+        if isinstance(result.content, list):
+            return " ".join(str(x) for x in result.content)
+        return result.content
+    return str(result)

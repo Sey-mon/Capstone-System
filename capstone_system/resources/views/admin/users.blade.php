@@ -7,6 +7,21 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/admin-users.css') }}">
+    <style>
+        .modal {
+            display: none !important;
+            position: fixed !important;
+            z-index: 9999 !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
+        }
+        .modal.show {
+            display: block !important;
+        }
+    </style>
 @endpush
 
 @section('navigation')
@@ -123,7 +138,7 @@
                 <h3>Add New User</h3>
                 <span class="close" onclick="closeModal('addUserModal')">&times;</span>
             </div>
-            <form id="addUserForm">
+            <form id="addUserForm" data-route="{{ route('admin.users.store') }}" data-user-url-base="{{ url('admin/users') }}">
                 @csrf
                 <div class="form-row">
                     <div class="form-group">
@@ -170,15 +185,7 @@
                         <input type="password" id="add_password_confirmation" name="password_confirmation" required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="add_is_active" name="is_active" checked>
-                            <span class="checkmark"></span>
-                            Account Active
-                        </label>
-                    </div>
-                </div>
+                <input type="hidden" name="is_active" value="1">
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Add User</button>
@@ -243,15 +250,7 @@
                         <input type="password" id="edit_password_confirmation" name="password_confirmation">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="edit_is_active" name="is_active">
-                            <span class="checkmark"></span>
-                            Account Active
-                        </label>
-                    </div>
-                </div>
+                <input type="hidden" id="edit_is_active" name="is_active" value="1">
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update User</button>
@@ -281,5 +280,205 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/admin/users-custom.js') }}"></script>
+    <script>
+        function openAddUserModal() {
+            const modal = document.getElementById('addUserModal');
+            modal.classList.add('show');
+        }
+        
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+        }
+        
+        function editUser(userId) {
+            // First fetch the user data
+            const userUrlBase = document.getElementById('addUserForm')?.getAttribute('data-user-url-base');
+            fetch(`${userUrlBase}/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    // Fill the form with user data
+                    document.getElementById('edit_user_id').value = user.user_id;
+                    document.getElementById('edit_first_name').value = user.first_name;
+                    document.getElementById('edit_middle_name').value = user.middle_name || '';
+                    document.getElementById('edit_last_name').value = user.last_name;
+                    document.getElementById('edit_email').value = user.email;
+                    document.getElementById('edit_contact_number').value = user.contact_number || '';
+                    document.getElementById('edit_role_id').value = user.role_id;
+                    document.getElementById('edit_is_active').value = user.is_active ? '1' : '0';
+                    document.getElementById('edit_password').value = '';
+                    document.getElementById('edit_password_confirmation').value = '';
+                    
+                    // Show the modal
+                    const modal = document.getElementById('editUserModal');
+                    modal.classList.add('show');
+                } else {
+                    alert('Failed to load user data');
+                }
+            })
+            .catch(error => {
+                alert('An error occurred while loading user data');
+            });
+        }
+        
+        function deleteUser(userId, userName) {
+            document.getElementById('deleteUserName').textContent = userName;
+            // Store the user ID in the confirm button for later use
+            document.getElementById('confirmDeleteUser').dataset.userId = userId;
+            const modal = document.getElementById('deleteUserModal');
+            modal.classList.add('show');
+        }
+        
+        function toggleUserStatus(userId, activate, userName) {
+            const action = activate ? 'activate' : 'deactivate';
+            if (confirm(`Are you sure you want to ${action} ${userName}?`)) {
+                location.reload();
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target.id);
+            }
+        }
+
+        // Handle add user form submission
+        document.getElementById('addUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const route = this.getAttribute('data-route');
+            
+            fetch(route, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('User created successfully!');
+                    closeModal('addUserModal');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to create user');
+                }
+            })
+            .catch(error => {
+                if (error.errors) {
+                    let errorMsg = 'Validation errors:\n';
+                    Object.keys(error.errors).forEach(key => {
+                        errorMsg += `${key}: ${error.errors[key].join(', ')}\n`;
+                    });
+                    alert(errorMsg);
+                } else {
+                    alert(error.message || 'An error occurred while creating the user');
+                }
+            });
+        });
+
+        // Handle edit user form submission
+        document.getElementById('editUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const userId = document.getElementById('edit_user_id').value;
+            const userUrlBase = document.getElementById('addUserForm')?.getAttribute('data-user-url-base');
+            formData.append('_method', 'PUT');
+            
+            fetch(`${userUrlBase}/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('User updated successfully!');
+                    closeModal('editUserModal');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to update user');
+                }
+            })
+            .catch(error => {
+                if (error.errors) {
+                    let errorMsg = 'Validation errors:\n';
+                    Object.keys(error.errors).forEach(key => {
+                        errorMsg += `${key}: ${error.errors[key].join(', ')}\n`;
+                    });
+                    alert(errorMsg);
+                } else {
+                    alert(error.message || 'An error occurred while updating the user');
+                }
+            });
+        });
+        
+        // Handle delete user confirmation
+        document.getElementById('confirmDeleteUser').addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const userUrlBase = document.getElementById('addUserForm')?.getAttribute('data-user-url-base');
+            
+            if (!userId) {
+                alert('Error: User ID not found');
+                return;
+            }
+            
+            fetch(`${userUrlBase}/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('User deleted successfully!');
+                    closeModal('deleteUserModal');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to delete user');
+                }
+            })
+            .catch(error => {
+                if (error.errors) {
+                    let errorMsg = 'Validation errors:\n';
+                    Object.keys(error.errors).forEach(key => {
+                        errorMsg += `${key}: ${error.errors[key].join(', ')}\n`;
+                    });
+                    alert(errorMsg);
+                } else {
+                    alert(error.message || 'An error occurred while deleting the user');
+                }
+            });
+        });
+    </script>
 @endpush
