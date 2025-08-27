@@ -7,6 +7,11 @@ from typing import List, Optional
 
 
 app = FastAPI(title="Nutritionist LLM API", description="API for LLM-powered nutrition functions", version="1.0")
+
+# Health check endpoint
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 nutrition_ai = ChildNutritionAI()
 
 class NutritionAnalysis(BaseModel):

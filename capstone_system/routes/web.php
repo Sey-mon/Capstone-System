@@ -144,7 +144,7 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::get('/api-management', [AdminController::class, 'apiManagement'])->name('api.management');
     Route::get('/who-standards', [AdminController::class, 'whoStandards'])->name('who.standards');
     Route::get('/treatment-protocols', [AdminController::class, 'treatmentProtocols'])->name('treatment.protocols');
-    Route::get('/api-status', [AdminController::class, 'apiStatus'])->name('api.status');
+    Route::get('/api-status', [App\Http\Controllers\AdminController::class, 'apiStatus'])->name('api.status');
     
     // Category CRUD routes
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');

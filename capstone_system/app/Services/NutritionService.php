@@ -19,6 +19,7 @@ class NutritionService
     /**
      * Perform nutrition analysis for a patient
      */
+    
     public function analyzeNutrition($patientId)
     {
         try {
@@ -55,6 +56,7 @@ class NutritionService
      */
     public function generateMealPlan($patientId, $availableFoods = null)
     {
+        Log::info('Nutrition API base URL', ['base_url' => $this->baseUrl]);
         try {
             $requestData = [
                 'patient_id' => $patientId

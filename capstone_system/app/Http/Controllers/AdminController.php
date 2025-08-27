@@ -258,7 +258,7 @@ class AdminController extends Controller
      */
     public function patients()
     {
-        $patients = Patient::with(['parent', 'nutritionist', 'barangay'])->paginate(15);
+    $patients = Patient::with(['parent', 'nutritionist', 'barangay'])->orderBy('created_at', 'desc')->paginate(15);
         $barangays = Barangay::all();
         $nutritionists = User::where('role_id', function($query) {
                 $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
@@ -684,12 +684,23 @@ class AdminController extends Controller
         $inventory_items = InventoryItem::with('category')->get();
         $transactions = InventoryTransaction::with('item', 'user')->latest()->take(50)->get();
         
+        $low_stock_items = $inventory_items->where('quantity', '<', 10)->map(function($item) {
+            return [
+                'item_name' => $item->item_name,
+                'category' => [
+                    'category_name' => $item->category ? $item->category->name : null
+                ],
+                'quantity' => $item->quantity,
+                'minimum_stock' => property_exists($item, 'minimum_stock') ? $item->minimum_stock : 10,
+                'unit' => $item->unit,
+                'unit_cost' => $item->unit_cost
+            ];
+        })->values()->all();
+
         $report_data = [
             'total_items' => $inventory_items->count(),
-            'total_value' => $inventory_items->sum(function($item) {
-                return $item->quantity * $item->unit_cost;
-            }),
-            'low_stock_items' => $inventory_items->where('quantity', '<', 10)->values(),
+            // 'total_value' removed
+            'low_stock_items' => $low_stock_items,
             'items_by_category' => $inventory_items->groupBy('category.name')->map->count(),
             'recent_transactions' => $transactions,
             'stock_levels' => $inventory_items->map(function($item) {

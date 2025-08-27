@@ -113,7 +113,13 @@
                     </div>
                     <div class="card-body">
                         <div class="meal-plan-content">
-                            <pre class="bg-light p-3 rounded">{{ session('meal_plan') }}</pre>
+                            @if(session('meal_plan_html'))
+                                <div class="modern-meal-plan-card">
+                                    {!! session('meal_plan_html') !!}
+                                </div>
+                            @else
+                                <pre class="modern-meal-plan-card">{{ session('meal_plan') }}</pre>
+                            @endif
                         </div>
                         <div class="mt-3">
                             <button onclick="printMealPlan()" class="btn btn-secondary">
@@ -133,15 +139,70 @@
 </div>
 
 <style>
-.meal-plan-content pre {
+.modern-meal-plan-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 2rem;
+    margin-bottom: 1rem;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-size: 15px;
+    color: #222;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.modern-meal-plan-card h3, .modern-meal-plan-card h4, .modern-meal-plan-card h5 {
+    color: #2d7a46;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+.modern-meal-plan-card ul {
+    padding-left: 1.2rem;
+    margin-bottom: 1rem;
+}
+.modern-meal-plan-card li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+.modern-meal-plan-card .section-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #555;
+    margin-top: 1.2rem;
+    margin-bottom: 0.7rem;
+    letter-spacing: 0.02em;
+}
+.modern-meal-plan-card .daily-total {
+    background: #f6f8fa;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    margin: 0.7rem 0;
+    font-weight: 500;
+    color: #2d7a46;
+    display: inline-block;
+}
+.modern-meal-plan-card .observation, .modern-meal-plan-card .red-flags {
+    background: #f9f9f9;
+    border-left: 4px solid #2d7a46;
+    padding: 0.7rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.97rem;
+}
+.modern-meal-plan-card strong {
+    color: #2d7a46;
+}
+.modern-meal-plan-card pre {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
     white-space: pre-wrap;
     word-wrap: break-word;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    border: 1px solid #ddd;
-    max-height: 400px;
-    overflow-y: auto;
+    margin: 0;
+    padding: 0;
 }
 </style>
 

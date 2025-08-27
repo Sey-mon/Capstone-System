@@ -158,7 +158,7 @@ yes<!DOCTYPE html>
     </div>
     @endif
 
-    @if(isset($data['low_stock_details']) && count($data['low_stock_details']) > 0)
+    @if(isset($data['low_stock_items']) && count($data['low_stock_items']) > 0)
     <div class="info-section">
         <h2>Low Stock Items</h2>
         <table>
@@ -171,15 +171,12 @@ yes<!DOCTYPE html>
                 </tr>
             </thead>
             <tbody>
-                @foreach($data['low_stock_details'] as $item)
+                @foreach($data['low_stock_items'] as $item)
                 <tr class="low-stock">
-                    <td>{{ is_string($item['name'] ?? null) ? $item['name'] : ($item['item_name'] ?? 'N/A') }}</td>
-                    <td>{{ $item['current_stock'] ?? 0 }}</td>
-                        <td>{{ is_scalar($item['current_stock'] ?? null) ? $item['current_stock'] : 'N/A' }}</td>
+                    <td>{{ $item['item_name'] ?? 'N/A' }}</td>
+                    <td>{{ $item['quantity'] ?? 0 }}</td>
                     <td>{{ $item['minimum_stock'] ?? 0 }}</td>
-                        <td>{{ is_scalar($item['minimum_stock'] ?? null) ? $item['minimum_stock'] : 'N/A' }}</td>
-                    <td>{{ $item['category'] ?? 'N/A' }}</td>
-                        <td>{{ is_scalar($item['category'] ?? null) ? $item['category'] : 'N/A' }}</td>
+                    <td>{{ $item['category']['category_name'] ?? 'N/A' }}</td>
                 </tr>
                 @endforeach
             </tbody>

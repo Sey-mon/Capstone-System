@@ -1,0 +1,64 @@
+/* Modern Assessment Card Styles */
+.modern-assessment-card {
+    background: #e9fbe7;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(33,136,56,0.10);
+    padding: 2rem 2.2rem;
+    margin-bottom: 2rem;
+    border: 2px solid #43ea7b;
+}
+.modern-assessment-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #218838;
+    margin-bottom: 0.5rem;
+}
+.modern-assessment-label {
+    font-weight: 500;
+    color: #218838;
+}
+.modern-badge-sam {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 2px;
+}
+.modern-badge-mam {
+    background: #fff3cd;
+    color: #856404;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 2px;
+}
+.modern-badge-normal {
+    background: #d4edda;
+    color: #155724;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 2px;
+}
+.modern-showall-btn {
+    background: none;
+    border: none;
+    color: #218838;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 0.5rem;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+.modern-showall-btn:hover {
+    color: #43ea7b;
+}

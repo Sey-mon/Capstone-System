@@ -167,26 +167,22 @@
         </div>
     </div>
 
-    <!-- Inventory Overview card removed -->
-
-    <!-- System Health and Admin Actions cards removed -->
-
     <!-- Report Modal -->
     <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title" id="reportModalLabel">Report Results</h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content" style="width: 800px; max-width: 95vw; border-radius: 1rem; box-shadow: 0 8px 32px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="background: linear-gradient(90deg, #38b6ff 0%, #6dd5ed 100%); border-top-left-radius: 1rem; border-top-right-radius: 1rem; color: #fff;">
+                    <h3 class="modal-title" id="reportModalLabel" style="font-weight: 600; letter-spacing: 1px;">Inventory Report</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1);"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="background: #f8f9fa; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
                     <div id="reportModalContent">
                         <!-- Report content will be loaded here -->
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="downloadReportBtn">
+                <div class="modal-footer" style="background: #f8f9fa; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 0.5rem;">Close</button>
+                    <button type="button" class="btn btn-primary" id="downloadReportBtn" style="border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(56,182,255,0.15);">
                         <i class="fas fa-download"></i>
                         Download PDF
                     </button>

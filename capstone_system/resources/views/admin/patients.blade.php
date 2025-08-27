@@ -211,6 +211,10 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        <!-- Pagination Links -->
+                        <div class="pagination-wrapper" style="margin-top: 20px; text-align: center;">
+                            {{ $patients->links() }}
+                        </div>
                     </div>
                 </div>
 

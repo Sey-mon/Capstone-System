@@ -108,6 +108,7 @@
                 </div>
             </a>
 
+            <input type="hidden" id="apiManagementStatusRoute" value="{{ route('admin.api.status') }}">
             <button onclick="checkApiStatus()" class="action-card clickable">
                 <div class="action-icon warning">
                     <i class="fas fa-heartbeat"></i>
