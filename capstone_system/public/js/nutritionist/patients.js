@@ -9,6 +9,70 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeModals();
     initializeSorting();
     initializePagination();
+    initializePatientFormSubmit();
+function initializePatientFormSubmit() {
+    const form = document.getElementById('patientForm');
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const patientId = document.getElementById('patient_id').value;
+        const url = patientId ? `/nutritionist/patients/${patientId}` : '/nutritionist/patients';
+        const method = patientId ? 'PUT' : 'POST';
+
+        // Get CSRF token from meta tag
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+        // Collect all form data into an object
+        const formDataObj = {};
+        new FormData(form).forEach((value, key) => {
+            formDataObj[key] = value;
+        });
+        // Checkbox handling
+        formDataObj['is_4ps_beneficiary'] = document.getElementById('is_4ps_beneficiary').checked ? 'on' : '';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(formDataObj)
+        })
+        .then(async response => {
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                showError('Failed to update patient.');
+                return;
+            }
+            if (response.status === 422 && data.errors) {
+                let errorMessages = Object.values(data.errors).map(arr => arr.join(' ')).join('\n');
+                showError(errorMessages);
+                return;
+            }
+            if (data.success) {
+                closePatientModal();
+                showSuccess('Patient data updated successfully!');
+                applyFilters();
+            } else {
+                showError(data.message || 'Failed to update patient.');
+            }
+// Show success notification (Bootstrap Toast or alert)
+function showSuccess(message) {
+    // If you use Bootstrap Toasts, you can trigger one here
+    // For now, use a simple alert
+    alert(message);
+}
+        })
+        .catch(() => {
+            showError('Failed to update patient.');
+        });
+    });
+}
 });
 
 function initializeFilters() {
@@ -281,11 +345,127 @@ function closeViewPatientModal() {
 }
 
 function editPatient(patientId) {
-    console.log('Edit patient:', patientId);
+    // Ensure all fields are enabled for editing
+    const fieldIds = [
+        'parent_id', 'barangay_id', 'first_name', 'middle_name', 'last_name', 'contact_number', 'age_months', 'sex',
+        'date_of_admission', 'total_household_adults', 'total_household_children', 'total_household_twins',
+        'is_4ps_beneficiary', 'weight_kg', 'height_cm', 'weight_for_age', 'height_for_age', 'bmi_for_age',
+        'breastfeeding', 'edema', 'other_medical_problems'
+    ];
+    fieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.disabled = false;
+            el.readOnly = false;
+        }
+    });
+    // Show loading overlay or spinner in modal
+    const modalTitle = document.getElementById('patientModalTitle');
+    if (modalTitle) modalTitle.textContent = 'Edit Patient';
+    const form = document.getElementById('patientForm');
+    if (form) form.reset();
+    document.getElementById('submitBtn').textContent = 'Update Patient';
+
+    // Fetch patient data
+    fetch(`/nutritionist/patients/${patientId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (!data.success || !data.patient) {
+                alert(data.message || 'Failed to load patient data for editing.');
+                return;
+            }
+            const patient = data.patient;
+            // Fill form fields
+            document.getElementById('patient_id').value = patient.patient_id ?? '';
+            document.getElementById('first_name').value = patient.first_name ?? '';
+            document.getElementById('middle_name').value = patient.middle_name ?? '';
+            document.getElementById('last_name').value = patient.last_name ?? '';
+            document.getElementById('contact_number').value = patient.contact_number ?? '';
+            document.getElementById('age_months').value = patient.age_months ?? '';
+            document.getElementById('sex').value = patient.sex ?? '';
+            document.getElementById('date_of_admission').value = patient.date_of_admission ? patient.date_of_admission.substring(0, 10) : '';
+            setSelectValue('barangay_id', patient.barangay_id);
+            setSelectValue('parent_id', patient.parent_id);
+            document.getElementById('total_household_adults').value = patient.total_household_adults ?? 0;
+            document.getElementById('total_household_children').value = patient.total_household_children ?? 0;
+            document.getElementById('total_household_twins').value = patient.total_household_twins ?? 0;
+            document.getElementById('is_4ps_beneficiary').checked = !!patient.is_4ps_beneficiary;
+            document.getElementById('weight_kg').value = patient.weight_kg ?? '';
+            document.getElementById('height_cm').value = patient.height_cm ?? '';
+            document.getElementById('weight_for_age').value = patient.weight_for_age ?? '';
+            document.getElementById('height_for_age').value = patient.height_for_age ?? '';
+            document.getElementById('bmi_for_age').value = patient.bmi_for_age ?? '';
+            document.getElementById('breastfeeding').value = patient.breastfeeding ?? '';
+            document.getElementById('edema').value = patient.edema ?? '';
+            document.getElementById('other_medical_problems').value = patient.other_medical_problems ?? '';
+        })
+        .catch(error => {
+            alert('Failed to load patient data for editing.');
+        });
+// Utility to set select value after options are loaded
+function setSelectValue(selectId, value) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    // If options are not loaded yet, wait and retry
+    if (!select.options.length) {
+        setTimeout(() => setSelectValue(selectId, value), 100);
+        return;
+    }
+    select.value = value ?? '';
+}
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('patientModal'));
+    modal.show();
 }
 
 function viewPatient(patientId) {
-    console.log('View patient:', patientId);
+    // Show loading indicator
+    const detailsDiv = document.getElementById('patientDetails');
+    if (detailsDiv) {
+        detailsDiv.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+    }
+
+    // Fetch patient details via AJAX
+    fetch(`/nutritionist/patients/${patientId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (!data.success || !data.patient) {
+                detailsDiv.innerHTML = `<div class='alert alert-danger'>${data.message || 'Failed to load patient details.'}</div>`;
+                return;
+            }
+            const patient = data.patient;
+            // Build details HTML
+            function show(val) {
+                return (val !== undefined && val !== null && val !== '') ? val : 'N/A';
+            }
+            let html = '<ul class="list-group">';
+            html += `<li class='list-group-item'><strong>Name:</strong> ${show(patient.first_name)} ${show(patient.middle_name)} ${show(patient.last_name)}</li>`;
+            html += `<li class='list-group-item'><strong>Age (months):</strong> ${show(patient.age_months)}</li>`;
+            html += `<li class='list-group-item'><strong>Sex:</strong> ${show(patient.sex)}</li>`;
+            html += `<li class='list-group-item'><strong>Contact Number:</strong> ${show(patient.contact_number)}</li>`;
+            html += `<li class='list-group-item'><strong>Date of Admission:</strong> ${show(patient.date_of_admission)}</li>`;
+            html += `<li class='list-group-item'><strong>Barangay:</strong> ${show(patient.barangay?.barangay_name)}</li>`;
+            html += `<li class='list-group-item'><strong>Parent:</strong> ${show(patient.parent?.first_name)} ${show(patient.parent?.last_name)}</li>`;
+            html += `<li class='list-group-item'><strong>Weight (kg):</strong> ${show(patient.weight_kg)}</li>`;
+            html += `<li class='list-group-item'><strong>Height (cm):</strong> ${show(patient.height_cm)}</li>`;
+            html += `<li class='list-group-item'><strong>Other Medical Problems:</strong> ${show(patient.other_medical_problems)}</li>`;
+            html += '</ul>';
+            detailsDiv.innerHTML = html;
+        })
+        .catch(error => {
+            detailsDiv.innerHTML = `<div class='alert alert-danger'>Failed to load patient details.</div>`;
+        });
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('viewPatientModal'));
+    modal.show();
 }
 
 function deletePatient(patientId) {

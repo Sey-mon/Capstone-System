@@ -48,7 +48,60 @@ class AdminController extends Controller
             ];
         });
 
-        return view('admin.dashboard', compact('stats'));
+    // Fetch barangays from DB with coordinates
+    $barangayList = Barangay::whereNotNull('latitude')->whereNotNull('longitude')->get();
+
+        // Get counts from assessments
+        $barangays = [];
+        foreach ($barangayList as $b) {
+            $sam = 0;
+            $mam = 0;
+            $normal = 0;
+            $unknown = 0;
+            $patients = Patient::where('barangay_id', $b->barangay_id)->pluck('patient_id');
+            foreach ($patients as $patientId) {
+                $latestAssessment = Assessment::where('patient_id', $patientId)
+                    ->orderByDesc('assessment_date')
+                    ->first();
+                if ($latestAssessment) {
+                    $diagnosis = null;
+                    if ($latestAssessment->treatment) {
+                        $treatment = json_decode($latestAssessment->treatment, true);
+                        if (isset($treatment['diagnosis'])) {
+                            // Normalize: lowercase, remove parentheses and their contents, trim spaces
+                            $diagnosis = strtolower($treatment['diagnosis']);
+                            $diagnosis = trim($diagnosis);
+                        }
+                    }
+                    if ($diagnosis) {
+                        // Use regex to match both full and short forms, with or without parentheses
+                        if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
+                            $sam++;
+                        } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
+                            $mam++;
+                        } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
+                            $normal++;
+                        } else {
+                            $unknown++;
+                        }
+                    } else {
+                        $unknown++;
+                    }
+                }
+            }
+            $barangays[] = [
+                'id' => $b->barangay_id,
+                'name' => $b->barangay_name,
+                'lat' => $b->latitude,
+                'lng' => $b->longitude,
+                'sam_count' => $sam,
+                'mam_count' => $mam,
+                'normal_count' => $normal,
+                'unknown_count' => $unknown
+            ];
+        }
+
+        return view('admin.dashboard', compact('stats', 'barangays'));
     }
 
     /**
@@ -75,6 +128,57 @@ class AdminController extends Controller
                 ->latest()
                 ->take(30) // Limit for performance
                 ->get();
+
+            $barangayList = Barangay::whereNotNull('latitude')->whereNotNull('longitude')->get();
+            $barangays = [];
+            foreach ($barangayList as $b) {
+                $sam = 0;
+                $mam = 0;
+                $normal = 0;
+                $unknown = 0;
+                $patients = Patient::where('barangay_id', $b->barangay_id)->pluck('patient_id');
+                foreach ($patients as $patientId) {
+                    $latestAssessment = Assessment::where('patient_id', $patientId)
+                        ->orderByDesc('assessment_date')
+                        ->first();
+                    if ($latestAssessment) {
+                        $diagnosis = null;
+                        if ($latestAssessment->treatment) {
+                            $treatment = json_decode($latestAssessment->treatment, true);
+                            if (isset($treatment['diagnosis'])) {
+                                $diagnosis = strtolower($treatment['diagnosis']);
+                                $diagnosis = trim($diagnosis);
+                            }
+                        }
+                        if ($diagnosis) {
+                            if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
+                                $sam++;
+                            } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
+                                $mam++;
+                            } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
+                                $normal++;
+                            } else {
+                                $unknown++;
+                            }
+                        } else {
+                            $unknown++;
+                        }
+                    }
+                }
+                $patientCount = count($patients);
+                $barangays[] = [
+                    'id' => $b->barangay_id,
+                    'name' => $b->barangay_name,
+                    'lat' => (float) $b->latitude,
+                    'lng' => (float) $b->longitude,
+                    'patient_count' => $patientCount,
+                    'sam_count' => $sam,
+                    'mam_count' => $mam,
+                    'normal_count' => $normal,
+                    'unknown_count' => $unknown,
+                    'activity_level' => $patientCount > 10 ? 'high' : ($patientCount > 5 ? 'medium' : 'low')
+                ];
+            }
 
             $mapData = [
                 'patients' => $patients->map(function($patient) {
@@ -104,20 +208,7 @@ class AdminController extends Controller
                 })->filter(function($assessment) {
                     return $assessment['lat'] !== null && $assessment['lng'] !== null;
                 }),
-                'barangays' => Barangay::whereNotNull('latitude')
-                    ->whereNotNull('longitude')
-                    ->get()
-                    ->map(function($barangay) {
-                        $patientCount = Patient::where('barangay_id', $barangay->barangay_id)->count();
-                        return [
-                            'id' => $barangay->barangay_id,
-                            'name' => $barangay->name,
-                            'lat' => (float) $barangay->latitude,
-                            'lng' => (float) $barangay->longitude,
-                            'patient_count' => $patientCount,
-                            'activity_level' => $patientCount > 10 ? 'high' : ($patientCount > 5 ? 'medium' : 'low')
-                        ];
-                    })
+                'barangays' => $barangays
             ];
 
             return response()->json([
@@ -1925,7 +2016,7 @@ class AdminController extends Controller
      */
     public function showNutritionists()
     {
-        $nutritionists = \App\Models\User::whereHas('role', function($query) {
+    $nutritionists = User::whereHas('role', function($query) {
             $query->where('role_name', 'Nutritionist');
         })->get();
         return view('admin.nutritionists', compact('nutritionists'));
@@ -1938,7 +2029,7 @@ class AdminController extends Controller
     public function getAssessmentTrends(Request $request)
     {
         $period = $request->query('period', 'monthly');
-        $query = \App\Models\Assessment::query();
+    $query = Assessment::query();
         $now = now();
         $labels = [];
         $data = [];
