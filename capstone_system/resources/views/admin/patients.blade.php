@@ -678,7 +678,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeViewPatientModal()">Close</button>
-                <button type="button" class="btn btn-primary" onclick="editPatientFromView()">Edit Patient</button>
             </div>
         </div>
     </div>
