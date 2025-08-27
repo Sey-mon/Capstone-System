@@ -258,7 +258,7 @@ class AdminController extends Controller
      */
     public function patients()
     {
-        $patients = Patient::with(['parent', 'nutritionist', 'barangay'])->paginate(15);
+    $patients = Patient::with(['parent', 'nutritionist', 'barangay'])->orderBy('created_at', 'desc')->paginate(15);
         $barangays = Barangay::all();
         $nutritionists = User::where('role_id', function($query) {
                 $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
@@ -333,19 +333,17 @@ class AdminController extends Controller
      */
     public function getPatient($id)
     {
-        try {
-            $patient = Patient::with(['parent', 'nutritionist', 'barangay'])->findOrFail($id);
-            
-            return response()->json([
-                'success' => true,
-                'patient' => $patient
-            ]);
-        } catch (\Exception $e) {
+        $patient = Patient::with(['parent', 'nutritionist', 'barangay'])->find($id);
+        if (!$patient) {
             return response()->json([
                 'success' => false,
                 'message' => 'Patient not found.'
             ], 404);
         }
+        return response()->json([
+            'success' => true,
+            'patient' => $patient
+        ]);
     }
 
     /**
@@ -353,59 +351,55 @@ class AdminController extends Controller
      */
     public function updatePatient(Request $request, $id)
     {
-        try {
-            $patient = Patient::findOrFail($id);
-
-            $request->validate([
-                'parent_id' => 'nullable|exists:users,user_id',
-                'nutritionist_id' => 'nullable|exists:users,user_id',
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
-                'barangay_id' => 'required|exists:barangays,barangay_id',
-                'contact_number' => 'required|string|max:20',
-                'age_months' => 'required|integer|min:0',
-                'sex' => 'required|in:Male,Female',
-                'date_of_admission' => 'required|date',
-                'weight_kg' => 'required|numeric|min:0',
-                'height_cm' => 'required|numeric|min:0',
-            ]);
-
-            $patient->update([
-                'parent_id' => $request->parent_id,
-                'nutritionist_id' => $request->nutritionist_id,
-                'first_name' => $request->first_name,
-                'middle_name' => $request->middle_name,
-                'last_name' => $request->last_name,
-                'barangay_id' => $request->barangay_id,
-                'contact_number' => $request->contact_number,
-                'age_months' => $request->age_months,
-                'sex' => $request->sex,
-                'date_of_admission' => $request->date_of_admission,
-                'total_household_adults' => $request->total_household_adults ?? 0,
-                'total_household_children' => $request->total_household_children ?? 0,
-                'total_household_twins' => $request->total_household_twins ?? 0,
-                'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
-                'weight_kg' => $request->weight_kg,
-                'height_cm' => $request->height_cm,
-                'weight_for_age' => $request->weight_for_age,
-                'height_for_age' => $request->height_for_age,
-                'bmi_for_age' => $request->bmi_for_age,
-                'breastfeeding' => $request->breastfeeding,
-                'other_medical_problems' => $request->other_medical_problems,
-                'edema' => $request->edema,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Patient updated successfully!',
-                'patient' => $patient->load(['parent', 'nutritionist', 'barangay'])
-            ]);
-        } catch (\Exception $e) {
+        $patient = Patient::find($id);
+        if (!$patient) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating patient: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Patient not found.'
+            ], 404);
         }
+        $request->validate([
+            'parent_id' => 'nullable|exists:users,user_id',
+            'nutritionist_id' => 'nullable|exists:users,user_id',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'barangay_id' => 'required|exists:barangays,barangay_id',
+            'contact_number' => 'required|string|max:20',
+            'age_months' => 'required|integer|min:0',
+            'sex' => 'required|in:Male,Female',
+            'date_of_admission' => 'required|date',
+            'weight_kg' => 'required|numeric|min:0',
+            'height_cm' => 'required|numeric|min:0',
+        ]);
+        $patient->update([
+            'parent_id' => $request->parent_id,
+            'nutritionist_id' => $request->nutritionist_id,
+            'first_name' => $request->first_name,
+            'middle_name' => $request->middle_name,
+            'last_name' => $request->last_name,
+            'barangay_id' => $request->barangay_id,
+            'contact_number' => $request->contact_number,
+            'age_months' => $request->age_months,
+            'sex' => $request->sex,
+            'date_of_admission' => $request->date_of_admission,
+            'total_household_adults' => $request->total_household_adults ?? 0,
+            'total_household_children' => $request->total_household_children ?? 0,
+            'total_household_twins' => $request->total_household_twins ?? 0,
+            'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
+            'weight_kg' => $request->weight_kg,
+            'height_cm' => $request->height_cm,
+            'weight_for_age' => $request->weight_for_age,
+            'height_for_age' => $request->height_for_age,
+            'bmi_for_age' => $request->bmi_for_age,
+            'breastfeeding' => $request->breastfeeding,
+            'other_medical_problems' => $request->other_medical_problems,
+            'edema' => $request->edema,
+        ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Patient updated successfully!',
+            'patient' => $patient->load(['parent', 'nutritionist', 'barangay'])
+        ]);
     }
 
     /**
@@ -690,12 +684,23 @@ class AdminController extends Controller
         $inventory_items = InventoryItem::with('category')->get();
         $transactions = InventoryTransaction::with('item', 'user')->latest()->take(50)->get();
         
+        $low_stock_items = $inventory_items->where('quantity', '<', 10)->map(function($item) {
+            return [
+                'item_name' => $item->item_name,
+                'category' => [
+                    'category_name' => $item->category ? $item->category->name : null
+                ],
+                'quantity' => $item->quantity,
+                'minimum_stock' => property_exists($item, 'minimum_stock') ? $item->minimum_stock : 10,
+                'unit' => $item->unit,
+                'unit_cost' => $item->unit_cost
+            ];
+        })->values()->all();
+
         $report_data = [
             'total_items' => $inventory_items->count(),
-            'total_value' => $inventory_items->sum(function($item) {
-                return $item->quantity * $item->unit_cost;
-            }),
-            'low_stock_items' => $inventory_items->where('quantity', '<', 10)->values(),
+            // 'total_value' removed
+            'low_stock_items' => $low_stock_items,
             'items_by_category' => $inventory_items->groupBy('category.name')->map->count(),
             'recent_transactions' => $transactions,
             'stock_levels' => $inventory_items->map(function($item) {

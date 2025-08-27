@@ -211,6 +211,10 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        <!-- Pagination Links -->
+                        <div class="pagination-wrapper" style="margin-top: 20px; text-align: center;">
+                            {{ $patients->links() }}
+                        </div>
                     </div>
                 </div>
 
@@ -678,7 +682,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeViewPatientModal()">Close</button>
-                <button type="button" class="btn btn-primary" onclick="editPatientFromView()">Edit Patient</button>
             </div>
         </div>
     </div>

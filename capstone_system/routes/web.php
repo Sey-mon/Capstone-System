@@ -99,7 +99,7 @@ Route::get('/privacy', function () {
 // Admin Routes (Protected by auth, verified email, and role middleware)
 Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    Route::get('/dashboard/map-data', [AdminController::class, 'getMapData'])->name('admin.dashboard.map-data');
+    Route::get('/dashboard/map-data', [AdminController::class, 'getMapData'])->name('dashboard.map-data');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/patients', [AdminController::class, 'patients'])->name('patients');
     Route::get('/assessments', [AdminController::class, 'assessments'])->name('assessments');
@@ -144,7 +144,7 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::get('/api-management', [AdminController::class, 'apiManagement'])->name('api.management');
     Route::get('/who-standards', [AdminController::class, 'whoStandards'])->name('who.standards');
     Route::get('/treatment-protocols', [AdminController::class, 'treatmentProtocols'])->name('treatment.protocols');
-    Route::get('/api-status', [AdminController::class, 'apiStatus'])->name('api.status');
+    Route::get('/api-status', [App\Http\Controllers\AdminController::class, 'apiStatus'])->name('api.status');
     
     // Category CRUD routes
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
@@ -228,7 +228,7 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
     Route::get('/meal-plans', [ParentController::class, 'mealPlans'])->name('meal-plans');
     Route::post('/meal-plans/generate', [ParentController::class, 'generateMealPlan'])->name('meal-plans.generate');
     Route::get('/test-api', [ParentController::class, 'testApi'])->name('test-api');
-    Route::post('/test-api', [ParentController::class, 'testApiPost'])->name('test-api');
+        Route::post('/test-api', [ParentController::class, 'testApiPost'])->name('test-api.post');
     Route::get('/profile', [ParentController::class, 'profile'])->name('profile');
     Route::get('/bind-child', [ParentController::class, 'showBindChildForm'])->name('showBindChildForm');
     Route::post('/bind-child', [ParentController::class, 'bindChild'])->name('bindChild');

@@ -56,7 +56,7 @@ function generateUserActivityContent(data) {
                 <table class="report-table">
                     <thead>
                         <tr>
-                            <th>Assessment ID</th>
+                            <!-- Assessment ID column removed -->
                             <th>Patient</th>
                             <th>Nutritionist</th>
                             <th>Date</th>
@@ -66,13 +66,12 @@ function generateUserActivityContent(data) {
                         ${(data.recent_assessments || []).length > 0 ? 
                             (data.recent_assessments || []).map(assessment => `
                                 <tr>
-                                    <td>#${assessment.id || 'N/A'}</td>
                                     <td>${assessment.patient?.first_name || 'N/A'} ${assessment.patient?.last_name || ''}</td>
                                     <td>${assessment.user?.name || 'N/A'}</td>
                                     <td>${formatDate(assessment.created_at)}</td>
                                 </tr>
                             `).join('') :
-                            '<tr><td colspan="4" class="empty-state">No recent assessments found</td></tr>'
+                            '<tr><td colspan="3" class="empty-state">No recent assessments found</td></tr>'
                         }
                     </tbody>
                 </table>
@@ -94,57 +93,92 @@ function generateInventoryContent(data) {
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Low Stock Items</div>
-                    <div class="stat-value">${data.low_stock_items || 0}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Total Value</div>
-                    <div class="stat-value">₱${formatCurrency(data.total_value || 0)}</div>
+                    <div class="stat-value">${Array.isArray(data.low_stock_items) ? data.low_stock_items.length : 0}</div>
                 </div>
             </div>
         </div>
-        
-        <div class="report-section">
-            <h4>Items by Category</h4>
-            <div class="data-grid">
-                ${Object.entries(data.items_by_category || {}).map(([category, count]) => `
-                    <div class="data-item">
-                        <span>${category}</span>
-                        <span class="data-value">${count}</span>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-        
-        ${(data.low_stock_details && data.low_stock_details.length > 0) ? `
+
         <div class="report-section">
             <h4>Low Stock Items</h4>
-            <div class="report-alert warning">
-                <strong>Warning:</strong> ${data.low_stock_details.length} items are running low on stock.
-            </div>
             <div class="table-container">
                 <table class="report-table">
                     <thead>
                         <tr>
                             <th>Item Name</th>
-                            <th>Current Stock</th>
+                            <th>Quantity</th>
                             <th>Minimum Stock</th>
-                            <th>Category</th>
+                            <th>Unit</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${data.low_stock_details.map(item => `
+                        ${Array.isArray(data.low_stock_items) ? data.low_stock_items.map(item => `
                             <tr>
-                                <td>${item.name || 'N/A'}</td>
-                                <td>${item.current_stock || 0}</td>
+                                <td>${item.item_name || 'N/A'}</td>
+                                <td>${item.quantity || 0}</td>
                                 <td>${item.minimum_stock || 0}</td>
-                                <td>${item.category || 'N/A'}</td>
+                                <td>${item.unit || 'N/A'}</td>
                             </tr>
-                        `).join('')}
+                        `).join('') : ''}
                     </tbody>
                 </table>
             </div>
         </div>
-        ` : ''}
+
+        <div class="report-section">
+            <h4>Stock Levels</h4>
+            <div class="table-container">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Array.isArray(data.stock_levels) ? data.stock_levels.map(item => `
+                            <tr>
+                                <td>${item.item_name || 'N/A'}</td>
+                                <td>${item.quantity || 0}</td>
+                                <td>${item.unit || 'N/A'}</td>
+                                <td>${item.status || 'N/A'}</td>
+                            </tr>
+                        `).join('') : ''}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h4>Recent Transactions</h4>
+            <div class="table-container">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Item Name</th>
+                            <th>Type</th>
+                            <th>Quantity</th>
+                            <th>User</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Array.isArray(data.recent_transactions) ? data.recent_transactions.map(tx => `
+                            <tr>
+                                <td>${tx.transaction_date ? formatDate(tx.transaction_date) : 'N/A'}</td>
+                                <td>${tx.item?.item_name || 'N/A'}</td>
+                                <td>${tx.transaction_type || 'N/A'}</td>
+                                <td>${tx.quantity || 0}</td>
+                                <td>${tx.user ? `${tx.user.first_name} ${tx.user.last_name}` : 'N/A'}</td>
+                                <td>${tx.remarks || ''}</td>
+                            </tr>
+                        `).join('') : ''}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     `;
 }
 
@@ -264,7 +298,7 @@ function generateLowStockContent(data) {
                     <tbody>
                         ${criticalItems.map(item => `
                             <tr style="background-color: #f8d7da;">
-                                <td><strong>${item.name || 'N/A'}</strong></td>
+                                <td><strong>${item.item_name || 'N/A'}</strong></td>
                                 <td><strong>${item.current_stock || 0}</strong></td>
                                 <td>${item.minimum_stock || 0}</td>
                                 <td>${item.category || 'N/A'}</td>
@@ -294,7 +328,7 @@ function generateLowStockContent(data) {
                     <tbody>
                         ${warningItems.map(item => `
                             <tr style="background-color: #fff3cd;">
-                                <td>${item.name || 'N/A'}</td>
+                                <td>${item.item_name || 'N/A'}</td>
                                 <td>${item.current_stock || 0}</td>
                                 <td>${item.minimum_stock || 0}</td>
                                 <td>${item.category || 'N/A'}</td>
@@ -325,7 +359,3 @@ function formatDate(dateString) {
 /**
  * Helper function to format currency
  */
-function formatCurrency(amount) {
-    if (typeof amount !== 'number') return '0.00';
-    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}

@@ -186,15 +186,25 @@
         @if(isset($children) && count($children) > 0)
             <ul class="modern-list">
                 @foreach($children as $child)
-                    <li class="modern-list-item" style="display: flex; align-items: center; justify-content: space-between;">
-                        <div>
-                            <strong style="color:#218838;font-size:1.1rem;">{{ $child->first_name }} {{ $child->last_name }}</strong><br>
-                            <span style="color:#555;">Age:</span> {{ $child->age }}<br>
-                            <span style="color:#555;">Nutritionist:</span> <span style="color:#218838;">{{ $child->nutritionist->first_name ?? 'Not assigned' }} {{ $child->nutritionist->last_name ?? '' }}</span><br>
-                            <span style="color:#555;">Assessments:</span> {{ $child->assessments->count() }}
+                    <li class="flex items-center bg-gray-50 rounded-2xl border border-gray-200 shadow-sm p-5 mb-4">
+                        <!-- Icon -->
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-green-400 flex items-center justify-center mr-5">
+                            <!-- Example SVG icon for medical/child -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10a4 4 0 118 0 4 4 0 01-8 0zm8 6a8 8 0 11-16 0 8 8 0 0116 0z" /></svg>
                         </div>
-                        <button type="button" class="modern-btn ms-3" data-bs-toggle="modal" data-bs-target="#childDetailsModal{{ $child->id }}">
-                            <i class="fas fa-info-circle me-1"></i> View Details
+                        <!-- Details -->
+                        <div class="flex-1">
+                            <div class="font-bold text-lg text-gray-800 mb-1">{{ $child->first_name }} {{ $child->last_name }}</div>
+                            <div class="space-y-1 text-sm text-gray-600 mb-1">
+                                <div>Age: <span class="text-gray-800">{{ $child->age }}{{ $child->age == 1 ? ' year' : ' years' }}</span></div>
+                                <div>Gender: <span class="text-gray-800">{{ $child->gender ?? 'N/A' }}</span></div>
+                                <div>Assessments: <span class="text-gray-800">{{ $child->assessments->count() }}</span></div>
+                                <div>Nutritionist: <span class="text-gray-800">{{ $child->nutritionist->first_name ?? 'Not assigned' }} {{ $child->nutritionist->last_name ?? '' }}</span></div>
+                            </div>
+                        </div>
+                        <button type="button" class="ml-6 px-4 py-2 bg-white border border-green-600 text-green-600 rounded hover:bg-green-50 transition" data-bs-toggle="modal" data-bs-target="#childDetailsModal{{ $child->id }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-green-600 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+                            View Details
                         </button>
                     </li>
                     <!-- Child Details Modal -->

@@ -277,9 +277,9 @@
         barangaysLayer = L.layerGroup().addTo(adminMap);
 
         const barangays = @json($barangays);
-        const samIcon = safeIcon('/img/markers/marker-red.svg', '#ef4444');
-        const mamIcon = safeIcon('/img/markers/marker-orange.svg', '#f59e0b');
-        const normalIcon = safeIcon('/img/markers/marker-blue.svg', '#3b82f6');
+    const samIcon = safeIcon("{{ asset('img/markers/marker-red.svg') }}", '#ef4444');
+    const mamIcon = safeIcon("{{ asset('img/markers/marker-orange.svg') }}", '#f59e0b');
+    const normalIcon = safeIcon("{{ asset('img/markers/marker-blue.svg') }}", '#3b82f6');
 
         barangays.forEach(function(barangay) {
             let icon = normalIcon;
@@ -307,7 +307,7 @@
         
         function loadMapData() {
             // Fetch geographic data from the server
-            fetch('/admin/dashboard/map-data')
+            fetch("{{ route('admin.dashboard.map-data') }}")
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -379,19 +379,19 @@
             if (data.patients) {
                 // Define custom icons for patient status
                 const samIcon = L.icon({
-                    iconUrl: '/img/markers/marker-red.svg',
+                    iconUrl: "{{ asset('img/markers/marker-red.svg') }}",
                     iconSize: [32, 32],
                     iconAnchor: [16, 32],
                     popupAnchor: [0, -32]
                 });
                 const mamIcon = L.icon({
-                    iconUrl: '/img/markers/marker-orange.svg',
+                    iconUrl: "{{ asset('img/markers/marker-orange.svg') }}",
                     iconSize: [32, 32],
                     iconAnchor: [16, 32],
                     popupAnchor: [0, -32]
                 });
                 const normalIcon = L.icon({
-                    iconUrl: '/img/markers/marker-blue.svg',
+                    iconUrl: "{{ asset('img/markers/marker-blue.svg') }}",
                     iconSize: [32, 32],
                     iconAnchor: [16, 32],
                     popupAnchor: [0, -32]

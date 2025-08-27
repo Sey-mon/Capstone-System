@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use App\Models\Assessment;
 use App\Models\User;
+use App\Models\MealPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -270,9 +271,19 @@ class ParentController extends Controller
                 if ($response->successful()) {
                     $responseData = $response->json();
                     $mealPlan = $responseData['meal_plan'] ?? $responseData['result'] ?? $response->body();
-                    
+                    $mealPlanHtml = $this->formatMealPlanHtml($mealPlan);
+
+                    // Save to meal_plans table
+                    $mealPlanRecord = MealPlan::create([
+                        'patient_id' => $child->patient_id,
+                        'plan_details' => $mealPlan,
+                        'notes' => null,
+                        'generated_at' => now(),
+                    ]);
+
                     return back()->with('success', 'Meal plan generated successfully!')
                                 ->with('meal_plan', $mealPlan)
+                                ->with('meal_plan_html', $mealPlanHtml)
                                 ->with('child_name', $child->first_name . ' ' . $child->last_name);
                 } else {
                     Log::error('LLM API Error', [
@@ -329,4 +340,25 @@ class ParentController extends Controller
                 return back()->withErrors(['error' => $e->getMessage()]);
             }
         }
+
+            /**
+     * Format meal plan text into HTML sections for better UI presentation.
+     */
+    private function formatMealPlanHtml($text)
+    {
+        // Section headings
+        $text = preg_replace('/COMPREHENSIVE NUTRITION PLAN:/i', '<h4>Comprehensive Nutrition Plan</h4>', $text);
+        $text = preg_replace('/ESTIMATED KCAL NEEDS:/i', '<h5>Estimated Kcal Needs</h5>', $text);
+        $text = preg_replace('/AGE-SPECIFIC FEEDING GUIDELINES:/i', '<h5>Age-Specific Feeding Guidelines</h5>', $text);
+        $text = preg_replace('/7-DAY MEAL PLAN:/i', '<h4>7-Day Meal Plan</h4>', $text);
+        $text = preg_replace('/DAY ([0-9]+):/i', '<h5>Day $1</h5><ul>', $text);
+        $text = preg_replace('/- \*\*(.*?)\*\*: (.*?)(\(~?\d+ kcal\))?/i', '<li><strong>$1:</strong> $2 <span class="text-muted">$3</span></li>', $text);
+        $text = preg_replace('/- ([^-].+)/', '<li>$1</li>', $text);
+        $text = preg_replace('/\*\*Daily Total\*\*: ~?(\d+ kcal)/i', '<div class="daily-total">Daily Total: $1</div></ul>', $text);
+        $text = preg_replace('/PARENT OBSERVATION TRACKING:/i', '<h5>Parent Observation Tracking</h5><div class="observation">', $text);
+        $text = preg_replace('/RED FLAGS & EMERGENCY PROTOCOLS:/i', '</div><h5>Red Flags & Emergency Protocols</h5><div class="red-flags">', $text);
+        $text = preg_replace('/FINAL VERIFICATION:/i', '</div><h5>Final Verification</h5>', $text);
+        $text = nl2br($text); // Convert newlines to <br>
+        return $text;
+    }
 }

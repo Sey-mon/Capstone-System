@@ -87,16 +87,21 @@ function savePatient() {
 function editPatient(patientId) {
     currentPatientId = patientId;
     
-    // Fetch patient data
     fetch(`/admin/patients/${patientId}`)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            populateEditForm(data.patient);
-            showEditPatientModal();
-        } else {
-            showEnhancedNotification('Error loading patient data', 'error');
+    .then(async response => {
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            showEnhancedNotification('Invalid server response. Please contact support.', 'error');
+            return null;
         }
+        if (!response.ok || !data.success) {
+            showEnhancedNotification(data && data.message ? data.message : 'Error loading patient data', 'error');
+            return null;
+        }
+        populateEditForm(data.patient);
+        showEditPatientModal();
     })
     .catch(error => {
         console.error('Error:', error);
@@ -158,15 +163,20 @@ function viewPatient(patientId) {
     document.getElementById('patientDetailsContent').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading patient details...</div>';
     showViewPatientModal();
     
-    // Fetch patient details
     fetch(`/admin/patients/${patientId}`)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            displayPatientDetails(data.patient);
-        } else {
-            document.getElementById('patientDetailsContent').innerHTML = '<div class="error-message">Error loading patient details</div>';
+    .then(async response => {
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            document.getElementById('patientDetailsContent').innerHTML = '<div class="error-message">Invalid server response. Please contact support.</div>';
+            return null;
         }
+        if (!response.ok || !data.success) {
+            document.getElementById('patientDetailsContent').innerHTML = `<div class="error-message">${data && data.message ? data.message : 'Error loading patient details'}</div>`;
+            return null;
+        }
+        displayPatientDetails(data.patient);
     })
     .catch(error => {
         console.error('Error:', error);
@@ -214,7 +224,18 @@ function populateEditForm(patient) {
     document.getElementById('edit_contact_number').value = patient.contact_number || '';
     document.getElementById('edit_age_months').value = patient.age_months || '';
     document.getElementById('edit_sex').value = patient.sex || '';
-    document.getElementById('edit_date_of_admission').value = patient.date_of_admission || '';
+    // Ensure date is in YYYY-MM-DD format for input type="date"
+    let admissionDate = '';
+    if (patient.date_of_admission) {
+        if (typeof patient.date_of_admission === 'string') {
+            // If already in YYYY-MM-DD or ISO format
+            admissionDate = patient.date_of_admission.substring(0, 10);
+        } else if (patient.date_of_admission instanceof Date) {
+            // If it's a Date object
+            admissionDate = patient.date_of_admission.toISOString().substring(0, 10);
+        }
+    }
+    document.getElementById('edit_date_of_admission').value = admissionDate;
     document.getElementById('edit_weight_kg').value = patient.weight_kg || '';
     document.getElementById('edit_height_cm').value = patient.height_cm || '';
     document.getElementById('edit_total_household_adults').value = patient.total_household_adults || 0;

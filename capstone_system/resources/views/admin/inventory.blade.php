@@ -356,14 +356,14 @@
 
     <!-- Stock Out Modal -->
     <div id="stockOutModal" class="modal-overlay">
-        <div class="modal-content">
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
                 <h3 class="modal-title">Stock Out</h3>
                 <button type="button" onclick="closeStockOutModal()" class="modal-close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="stockOutForm" onsubmit="processStockOut(event)">
+            <form id="stockOutForm" onsubmit="processStockOut(event)" style="max-height: 80vh; overflow-y: auto;">
                 <div class="form-group">
                     <label class="form-label">Item Name</label>
                     <input type="text" id="stockOutItemName" class="form-input" readonly style="background-color: var(--bg-tertiary);">
