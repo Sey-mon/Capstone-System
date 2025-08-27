@@ -352,8 +352,11 @@ class NutritionistController extends Controller
         $nutritionist = Auth::user();
         $nutritionistId = $nutritionist->user_id;
         
-        // Get only the latest assessment for each patient
-        $latestAssessmentIds = Assessment::where('nutritionist_id', $nutritionistId)
+        // Get only patients assigned to this nutritionist
+        $patientIds = Patient::where('nutritionist_id', $nutritionistId)->pluck('patient_id');
+
+        // Get only the latest assessment for each patient assigned to this nutritionist
+        $latestAssessmentIds = Assessment::whereIn('patient_id', $patientIds)
             ->select('patient_id', DB::raw('MAX(assessment_id) as latest_assessment_id'))
             ->groupBy('patient_id')
             ->pluck('latest_assessment_id');

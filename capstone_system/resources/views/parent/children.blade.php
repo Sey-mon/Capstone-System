@@ -1,3 +1,73 @@
+<!-- Patient Edit Modal -->
+<div class="modal fade" id="editPatientModal" tabindex="-1" aria-labelledby="editPatientModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPatientModalLabel">Edit Patient</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="patientForm">
+                    <input type="hidden" id="patient_id" name="patient_id">
+                    <div class="mb-3">
+                        <label for="parent_id" class="form-label">Parent</label>
+                        <select id="parent_id" name="parent_id" class="form-control" required>
+                            <!-- Populate with parent options -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" id="first_name" name="first_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="middle_name" class="form-label">Middle Name</label>
+                        <input type="text" id="middle_name" name="middle_name" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="barangay_id" class="form-label">Barangay</label>
+                        <select id="barangay_id" name="barangay_id" class="form-control" required>
+                            <!-- Populate with barangay options -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact_number" class="form-label">Contact Number</label>
+                        <input type="text" id="contact_number" name="contact_number" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="age_months" class="form-label">Age (months)</label>
+                        <input type="number" id="age_months" name="age_months" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sex" class="form-label">Sex</label>
+                        <select id="sex" name="sex" class="form-control" required>
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_of_admission" class="form-label">Date of Admission</label>
+                        <input type="date" id="date_of_admission" name="date_of_admission" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weight_kg" class="form-label">Weight (kg)</label>
+                        <input type="number" step="0.01" id="weight_kg" name="weight_kg" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="height_cm" class="form-label">Height (cm)</label>
+                        <input type="number" step="0.01" id="height_cm" name="height_cm" class="form-control" required>
+                    </div>
+                    <!-- Add other fields as needed -->
+                    <button type="submit" class="modern-btn w-100">Update Patient</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @extends('layouts.dashboard')
 
 @section('title', 'My Children')

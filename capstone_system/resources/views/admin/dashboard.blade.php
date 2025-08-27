@@ -209,39 +209,22 @@
         <div class="content-card">
             <div class="card-header">
                 <h3 class="card-title">Geographic Overview</h3>
-                <div class="map-controls">
-                    <button class="btn btn-sm btn-secondary" onclick="toggleMapLayer('barangays')">
-                        <i class="fas fa-map-marker-alt"></i>
-                        Barangays
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="toggleMapLayer('patients')">
-                        <i class="fas fa-user-injured"></i>
-                        Patients
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="toggleMapLayer('assessments')">
-                        <i class="fas fa-clipboard-list"></i>
-                        Assessments
-                    </button>
-                </div>
+                <!-- Removed Barangays, Patients, and Assessments buttons -->
             </div>
             <div class="card-content">
                 <div id="admin-map"></div>
                 <div class="map-legend mt-3">
                     <div class="legend-item">
                         <span class="legend-color" style="background-color: #ef4444;"></span>
-                        <span>High Activity Barangays</span>
+                        <span>SAM Patients</span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-color" style="background-color: #f59e0b;"></span>
-                        <span>Medium Activity Barangays</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background-color: #10b981;"></span>
-                        <span>Low Activity Barangays</span>
+                        <span>MAM Patients</span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-color" style="background-color: #3b82f6;"></span>
-                        <span>Patients</span>
+                        <span>Normal Patients</span>
                     </div>
                 </div>
             </div>
@@ -259,10 +242,10 @@
     
     <script>
         // Initialize the admin dashboard map
-        let adminMap;
-        let patientsLayer;
-        let assessmentsLayer;
-        let barangaysLayer;
+    let adminMap;
+    let patientsLayer;
+    let assessmentsLayer;
+    let barangaysLayer;
         
         document.addEventListener('DOMContentLoaded', function() {
             initializeAdminMap();
@@ -272,16 +255,62 @@
         function initializeAdminMap() {
             // Initialize map centered on San Pedro, Laguna
             adminMap = L.map('admin-map').setView([14.3589, 121.0576], 13);
-            
+
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(adminMap);
-            
+
             // Initialize layer groups
             patientsLayer = L.layerGroup().addTo(adminMap);
             assessmentsLayer = L.layerGroup().addTo(adminMap);
             barangaysLayer = L.layerGroup().addTo(adminMap);
+
+            // Add barangay markers with patient counts
+            const barangays = @json($barangays);
+            // Define custom icons for barangay markers by majority status
+            const samIcon = L.icon({
+                iconUrl: '/img/markers/marker-red.svg',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+            });
+            const mamIcon = L.icon({
+                iconUrl: '/img/markers/marker-orange.svg',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+            });
+            const normalIcon = L.icon({
+                iconUrl: '/img/markers/marker-blue.svg',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+            });
+
+            barangays.forEach(function(barangay) {
+                // Determine majority status for color
+                let icon = normalIcon;
+                if (barangay.sam_count > barangay.mam_count && barangay.sam_count > barangay.normal_count) {
+                    icon = samIcon;
+                } else if (barangay.mam_count > barangay.sam_count && barangay.mam_count > barangay.normal_count) {
+                    icon = mamIcon;
+                }
+                const marker = L.marker([barangay.lat, barangay.lng], { icon }).addTo(barangaysLayer);
+                marker.on('mouseover', function(e) {
+                    marker.bindPopup(
+                        `<div>
+                            <strong>${barangay.name}</strong><br>
+                            SAM: ${barangay.sam_count}<br>
+                            MAM: ${barangay.mam_count}<br>
+                            Normal: ${barangay.normal_count}
+                        </div>`
+                    ).openPopup();
+                });
+                marker.on('mouseout', function(e) {
+                    marker.closePopup();
+                });
+            });
         }
         
         function loadMapData() {
@@ -299,6 +328,18 @@
                     addSampleMarkers();
                 });
         }
+
+        // Fallback function for demo/sample markers
+        function addSampleMarkers() {
+            // Clear layers if they exist
+            if (patientsLayer) patientsLayer.clearLayers();
+            if (assessmentsLayer) assessmentsLayer.clearLayers();
+            if (barangaysLayer) barangaysLayer.clearLayers();
+
+            // Add a sample marker to the map for demonstration
+            const sampleMarker = L.marker([14.3589, 121.0576]).bindPopup('<strong>Sample Marker</strong><br>This is a demo marker.');
+            patientsLayer.addLayer(sampleMarker);
+        }
         
         function populateMapWithData(data) {
             // Clear existing layers
@@ -311,35 +352,70 @@
                 data.barangays.forEach(barangay => {
                     const color = barangay.activity_level === 'high' ? '#ef4444' : 
                                   barangay.activity_level === 'medium' ? '#f59e0b' : '#10b981';
-                    
+
+                    // Use barangay_name if name is missing or null
+                    const displayName = barangay.name || barangay.barangay_name || 'Unknown';
+
+                    // Show SAM, MAM, Normal counts if available, else fallback to patient_count
+                    let popupHtml = `<div class="map-popup">
+                        <h6>${displayName}</h6>`;
+                    if ('sam_count' in barangay && 'mam_count' in barangay && 'normal_count' in barangay) {
+                        popupHtml += `<p>SAM: ${barangay.sam_count}</p>
+                            <p>MAM: ${barangay.mam_count}</p>
+                            <p>Normal: ${barangay.normal_count}</p>`;
+                    }
+                    if ('patient_count' in barangay) {
+                        popupHtml += `<p>Patients: ${barangay.patient_count}</p>`;
+                    }
+                    if ('activity_level' in barangay) {
+                        popupHtml += `<p>Activity Level: ${barangay.activity_level.charAt(0).toUpperCase() + barangay.activity_level.slice(1)}</p>`;
+                    }
+                    popupHtml += `</div>`;
+
                     const marker = L.circleMarker([barangay.lat, barangay.lng], {
                         color: color,
                         fillColor: color,
                         fillOpacity: 0.3,
-                        radius: Math.max(10, barangay.patient_count * 2),
+                        radius: Math.max(10, ('patient_count' in barangay ? barangay.patient_count : 5) * 2),
                         weight: 2
-                    }).bindPopup(`
-                        <div class="map-popup">
-                            <h6>${barangay.name}</h6>
-                            <p>Patients: ${barangay.patient_count}</p>
-                            <p>Activity Level: ${barangay.activity_level.charAt(0).toUpperCase() + barangay.activity_level.slice(1)}</p>
-                        </div>
-                    `);
+                    }).bindPopup(popupHtml);
                     barangaysLayer.addLayer(marker);
                 });
             }
             
             // Add patient markers
             if (data.patients) {
+                // Define custom icons for patient status
+                const samIcon = L.icon({
+                    iconUrl: '/img/markers/marker-red.svg',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                });
+                const mamIcon = L.icon({
+                    iconUrl: '/img/markers/marker-orange.svg',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                });
+                const normalIcon = L.icon({
+                    iconUrl: '/img/markers/marker-blue.svg',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                });
+
                 data.patients.forEach(patient => {
-                    if (patient.lat && patient.lng) {
-                        const marker = L.circleMarker([patient.lat, patient.lng], {
-                            color: '#3b82f6',
-                            fillColor: '#3b82f6',
-                            fillOpacity: 0.8,
-                            radius: 6,
-                            weight: 2
-                        }).bindPopup(`
+                    if (patient.barangay_lat && patient.barangay_lng) {
+                        let icon;
+                        if (patient.status === 'SAM') {
+                            icon = samIcon;
+                        } else if (patient.status === 'MAM') {
+                            icon = mamIcon;
+                        } else {
+                            icon = normalIcon;
+                        }
+                        const marker = L.marker([patient.barangay_lat, patient.barangay_lng], { icon }).bindPopup(`
                             <div class="map-popup">
                                 <h6>${patient.name}</h6>
                                 <p>Barangay: ${patient.barangay}</p>
@@ -377,60 +453,5 @@
             }
         }
         
-        function addSampleMarkers() {
-            // Sample markers for demonstration (replace with actual data)
-            const sampleLocations = [
-                { lat: 14.5995, lng: 120.9842, type: 'patient', name: 'Sample Patient 1', barangay: 'Barangay 1' },
-                { lat: 14.6042, lng: 120.9822, type: 'patient', name: 'Sample Patient 2', barangay: 'Barangay 2' },
-                { lat: 14.5955, lng: 120.9892, type: 'assessment', name: 'Assessment 1', date: '2024-01-15' },
-                { lat: 14.6015, lng: 120.9862, type: 'assessment', name: 'Assessment 2', date: '2024-01-16' }
-            ];
-            
-            sampleLocations.forEach(location => {
-                const isPatient = location.type === 'patient';
-                const marker = L.circleMarker([location.lat, location.lng], {
-                    color: isPatient ? '#3b82f6' : '#10b981',
-                    fillColor: isPatient ? '#3b82f6' : '#10b981',
-                    fillOpacity: 0.7,
-                    radius: isPatient ? 8 : 6
-                }).bindPopup(`
-                    <div class="map-popup">
-                        <h6>${location.name}</h6>
-                        ${isPatient ? 
-                            `<p>Barangay: ${location.barangay}</p>` : 
-                            `<p>Date: ${location.date}</p>`
-                        }
-                    </div>
-                `);
-                
-                if (isPatient) {
-                    patientsLayer.addLayer(marker);
-                } else {
-                    assessmentsLayer.addLayer(marker);
-                }
-            });
-        }
-        
-        function toggleMapLayer(layerType) {
-            if (layerType === 'barangays') {
-                if (adminMap.hasLayer(barangaysLayer)) {
-                    adminMap.removeLayer(barangaysLayer);
-                } else {
-                    adminMap.addLayer(barangaysLayer);
-                }
-            } else if (layerType === 'patients') {
-                if (adminMap.hasLayer(patientsLayer)) {
-                    adminMap.removeLayer(patientsLayer);
-                } else {
-                    adminMap.addLayer(patientsLayer);
-                }
-            } else if (layerType === 'assessments') {
-                if (adminMap.hasLayer(assessmentsLayer)) {
-                    adminMap.removeLayer(assessmentsLayer);
-                } else {
-                    adminMap.addLayer(assessmentsLayer);
-                }
-            }
-        }
     </script>
 @endpush
