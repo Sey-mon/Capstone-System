@@ -401,7 +401,15 @@ class NutritionistWizard {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         })
-        .then(response => response.json())
+        .then(async response => {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                const text = await response.text();
+                throw new Error('Server returned HTML instead of JSON: ' + text);
+            }
+        })
         .then(data => {
             if (data.success) {
                 this.showSuccess();
@@ -411,7 +419,7 @@ class NutritionistWizard {
         })
         .catch(error => {
             console.error('Error:', error);
-            this.showErrors(['Network error. Please check your connection and try again.']);
+            this.showErrors(['Network error or invalid response. Please check your connection and try again.']);
         })
         .finally(() => {
             submitBtn.innerHTML = originalText;

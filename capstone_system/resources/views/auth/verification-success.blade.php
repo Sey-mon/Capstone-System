@@ -35,10 +35,6 @@
     </div>
 
     <div class="action-buttons">
-        <a href="{{ Auth::user()->role->role_name === 'Admin' ? route('admin.dashboard') : (Auth::user()->role->role_name === 'Nutritionist' ? route('nutritionist.dashboard') : route('parent.dashboard')) }}" 
-           class="btn btn-success btn-lg" style="text-decoration: none;">
-            📊 Go to Dashboard
-        </a>
         <a href="{{ route('login') }}" class="btn btn-outline-success btn-lg" style="text-decoration: none;">
             🔐 Login Page
         </a>

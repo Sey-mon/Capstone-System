@@ -2016,7 +2016,7 @@ class AdminController extends Controller
      */
     public function showNutritionists()
     {
-        $nutritionists = \App\Models\User::whereHas('role', function($query) {
+    $nutritionists = User::whereHas('role', function($query) {
             $query->where('role_name', 'Nutritionist');
         })->get();
         return view('admin.nutritionists', compact('nutritionists'));
@@ -2029,7 +2029,7 @@ class AdminController extends Controller
     public function getAssessmentTrends(Request $request)
     {
         $period = $request->query('period', 'monthly');
-        $query = \App\Models\Assessment::query();
+    $query = Assessment::query();
         $now = now();
         $labels = [];
         $data = [];

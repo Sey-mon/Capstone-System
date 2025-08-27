@@ -5,51 +5,38 @@
 @section('content')
 <div class="row justify-content-center">
     <div class="col-md-6">
-     /* Alert styling */
-.alert-success {
-    background: linear-gradient(135deg, #d4edda, #c3e6cb);
-    border: 2px solid #4CAF50;
-    border-radius: 10px;
-    color: #155724;
-}
+        <style>
+            .alert-success {
+                background: linear-gradient(135deg, #d4edda, #c3e6cb);
+                border: 2px solid #4CAF50;
+                border-radius: 10px;
+                color: #155724;
+            }
+            .alert-info {
+                background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+                border: 2px solid #17a2b8;
+                border-radius: 10px;
+                color: #0c5460;
+            }
+            .alert-danger {
+                background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+                border: 2px solid #dc3545;
+                border-radius: 10px;
+                color: #721c24;
+            }
+            .form-control {
+                border-radius: 15px;
+                padding: 12px 16px;
+                border: 2px solid #e9ecef;
+                transition: all 0.3s ease;
+            }
+            .form-control:focus {
+                border-color: #4CAF50;
+                box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+            }
+        </style>
 
-.alert-info {
-    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
-    border: 2px solid #17a2b8;
-    border-radius: 10px;
-    color: #0c5460;
-}
-
-.alert-danger {
-    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-    border: 2px solid #dc3545;
-    border-radius: 10px;
-    color: #721c24;
-}
-
-/* Form styling */
-.form-control {
-    border-radius: 15px;
-    padding: 12px 16px;
-    border: 2px solid #e9ecef;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    border-color: #4CAF50;
-    box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
-}
-
-.form-control.is-invalid {
-    border-color: #dc3545;
-}
-
-.invalid-feedback {
-    font-size: 0.875rem;
-    margin-top: 5px;
-}
-
-/* Button styling */lass="auth-card">
+        <div class="card">
             <div class="card-header text-center bg-success text-white">
                 <h4><i class="fas fa-envelope-check"></i> Verify Your Email</h4>
             </div>
@@ -144,13 +131,7 @@
                     </form>
                     
                     <!-- Development panel link -->
-                    @if(app()->environment(['local', 'development']))
-                        <div class="mt-3">
-                            <a href="{{ route('dev.panel') }}" class="btn btn-warning btn-sm">
-                                <i class="fas fa-tools"></i> Development Panel (Quick Verify)
-                            </a>
-                        </div>
-                    @endif
+                    {{-- Removed Development Panel (Quick Verify) button for production --}}
                 </div>
                 @endauth
 

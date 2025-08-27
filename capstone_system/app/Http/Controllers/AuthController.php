@@ -53,12 +53,13 @@ class AuthController extends Controller
     /**
      * Show the login form
      */
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
         if (Auth::check()) {
-            return $this->redirectToDashboard();
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
-        
         return view('auth.login');
     }
 
@@ -191,8 +192,14 @@ class AuthController extends Controller
         // First, check if email already exists to provide a friendly error message
         $existingUser = User::where('email', $request->email)->whereNull('deleted_at')->first();
         if ($existingUser) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['This email address is already registered. Please use a different email address or contact support if you believe this is an error.']
+                ]);
+            }
             return back()->withErrors([
-                'email' => 'This email address is already registered. Please use a different email address or try logging in if you already have an account.'
+                'email' => 'This email address is already registered. Please use a different email address or contact support if you believe this is an error.'
             ])->withInput();
         }
 
@@ -435,6 +442,12 @@ class AuthController extends Controller
         // First, check if email already exists to provide a friendly error message
         $existingUser = User::where('email', $request->email)->whereNull('deleted_at')->first();
         if ($existingUser) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['This email address is already registered. Please use a different email address or contact support if you believe this is an error.']
+                ]);
+            }
             return back()->withErrors([
                 'email' => 'This email address is already registered. Please use a different email address or contact support if you believe this is an error.'
             ])->withInput();
@@ -501,6 +514,9 @@ class AuthController extends Controller
                 'professional_id_path' => $professionalIdPath,
                 'is_active' => false,
             ]);
+
+            // Send email verification notification
+            $user->sendEmailVerificationNotification();
 
             AuditLog::create([
                 'user_id' => $user->user_id,
@@ -721,7 +737,8 @@ class AuthController extends Controller
 
             // Temporarily log in user to show success page, then log them out
             Auth::login($user);
-            
+            // Log out immediately after verification
+            Auth::logout();
             return redirect()->route('verification.success');
         }
 
