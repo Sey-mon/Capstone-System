@@ -99,7 +99,7 @@ Route::get('/privacy', function () {
 // Admin Routes (Protected by auth, verified email, and role middleware)
 Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    Route::get('/dashboard/map-data', [AdminController::class, 'getMapData'])->name('dashboard.map-data');
+    Route::get('/dashboard/map-data', [AdminController::class, 'getMapData'])->name('admin.dashboard.map-data');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/patients', [AdminController::class, 'patients'])->name('patients');
     Route::get('/assessments', [AdminController::class, 'assessments'])->name('assessments');
