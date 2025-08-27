@@ -237,81 +237,73 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
-    
+
     <script src="{{ asset('js/admin/admin-dashboard.js') }}"></script>
-    
+
     <script>
-        // Initialize the admin dashboard map
+    // Helper to use SVG or fallback to colored circle
+    function safeIcon(url, color) {
+        // Try to use SVG, fallback to colored divIcon
+        const img = new Image();
+        img.src = url;
+        img.onerror = function() {};
+        // Always use divIcon for reliability
+        return L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="background:${color};width:24px;height:24px;border-radius:50%;border:2px solid #fff;"></div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 24]
+        });
+    }
+
     let adminMap;
     let patientsLayer;
     let assessmentsLayer;
     let barangaysLayer;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeAdminMap();
-            loadMapData();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeAdminMap();
+        loadMapData();
+    });
+
+    function initializeAdminMap() {
+        adminMap = L.map('admin-map').setView([14.3589, 121.0576], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(adminMap);
+
+        patientsLayer = L.layerGroup().addTo(adminMap);
+        assessmentsLayer = L.layerGroup().addTo(adminMap);
+        barangaysLayer = L.layerGroup().addTo(adminMap);
+
+        const barangays = @json($barangays);
+        const samIcon = safeIcon('/img/markers/marker-red.svg', '#ef4444');
+        const mamIcon = safeIcon('/img/markers/marker-orange.svg', '#f59e0b');
+        const normalIcon = safeIcon('/img/markers/marker-blue.svg', '#3b82f6');
+
+        barangays.forEach(function(barangay) {
+            let icon = normalIcon;
+            if (barangay.sam_count > barangay.mam_count && barangay.sam_count > barangay.normal_count) {
+                icon = samIcon;
+            } else if (barangay.mam_count > barangay.sam_count && barangay.mam_count > barangay.normal_count) {
+                icon = mamIcon;
+            }
+            const marker = L.marker([barangay.lat, barangay.lng], { icon }).addTo(barangaysLayer);
+            marker.on('mouseover', function(e) {
+                marker.bindPopup(
+                    `<div>
+                        <strong>${barangay.name}</strong><br>
+                        SAM: ${barangay.sam_count}<br>
+                        MAM: ${barangay.mam_count}<br>
+                        Normal: ${barangay.normal_count}
+                    </div>`
+                ).openPopup();
+            });
+            marker.on('mouseout', function(e) {
+                marker.closePopup();
+            });
         });
-        
-        function initializeAdminMap() {
-            // Initialize map centered on San Pedro, Laguna
-            adminMap = L.map('admin-map').setView([14.3589, 121.0576], 13);
-
-            // Add OpenStreetMap tiles
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(adminMap);
-
-            // Initialize layer groups
-            patientsLayer = L.layerGroup().addTo(adminMap);
-            assessmentsLayer = L.layerGroup().addTo(adminMap);
-            barangaysLayer = L.layerGroup().addTo(adminMap);
-
-            // Add barangay markers with patient counts
-            const barangays = @json($barangays);
-            // Define custom icons for barangay markers by majority status
-            const samIcon = L.icon({
-                iconUrl: '/img/markers/marker-red.svg',
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32]
-            });
-            const mamIcon = L.icon({
-                iconUrl: '/img/markers/marker-orange.svg',
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32]
-            });
-            const normalIcon = L.icon({
-                iconUrl: '/img/markers/marker-blue.svg',
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32]
-            });
-
-            barangays.forEach(function(barangay) {
-                // Determine majority status for color
-                let icon = normalIcon;
-                if (barangay.sam_count > barangay.mam_count && barangay.sam_count > barangay.normal_count) {
-                    icon = samIcon;
-                } else if (barangay.mam_count > barangay.sam_count && barangay.mam_count > barangay.normal_count) {
-                    icon = mamIcon;
-                }
-                const marker = L.marker([barangay.lat, barangay.lng], { icon }).addTo(barangaysLayer);
-                marker.on('mouseover', function(e) {
-                    marker.bindPopup(
-                        `<div>
-                            <strong>${barangay.name}</strong><br>
-                            SAM: ${barangay.sam_count}<br>
-                            MAM: ${barangay.mam_count}<br>
-                            Normal: ${barangay.normal_count}
-                        </div>`
-                    ).openPopup();
-                });
-                marker.on('mouseout', function(e) {
-                    marker.closePopup();
-                });
-            });
-        }
+    }
         
         function loadMapData() {
             // Fetch geographic data from the server
