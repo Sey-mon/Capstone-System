@@ -74,14 +74,12 @@ venv.bak/
 .ipynb_checkpoints
 
 # Machine Learning models (optional - remove if you want to track models)
-*.pkl
 *.joblib
 *.h5
 *.model
 
 # Data files (optional - remove if you want to track data)
 *.xml
-*.xlsx
 *.xls
 
 # Logs
