@@ -398,7 +398,8 @@ class NutritionistWizard {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
             }
         })
         .then(async response => {
@@ -414,7 +415,26 @@ class NutritionistWizard {
             if (data.success) {
                 this.showSuccess();
             } else {
-                this.showErrors(data.errors || ['An error occurred. Please try again.']);
+                // Laravel validation errors are often an object: { field: [msg1, msg2] }
+                let errorMessages = [];
+                if (data.errors) {
+                    if (typeof data.errors === 'object') {
+                        for (const key in data.errors) {
+                            if (Array.isArray(data.errors[key])) {
+                                errorMessages = errorMessages.concat(data.errors[key]);
+                            } else {
+                                errorMessages.push(data.errors[key]);
+                            }
+                        }
+                    } else if (Array.isArray(data.errors)) {
+                        errorMessages = data.errors;
+                    } else {
+                        errorMessages = [data.errors];
+                    }
+                } else {
+                    errorMessages = ['An error occurred. Please try again.'];
+                }
+                this.showErrors(errorMessages);
             }
         })
         .catch(error => {
