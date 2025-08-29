@@ -24,6 +24,7 @@ Route::get('/contact-admin', function() {
 })->name('contact.admin');
 Route::post('/contact-admin', [AuthController::class, 'sendContactAdmin'])->name('contact.admin.send');
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login.get');
 Route::post('/', [AuthController::class, 'login'])->name('login.root.post'); // Handle POST to root
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

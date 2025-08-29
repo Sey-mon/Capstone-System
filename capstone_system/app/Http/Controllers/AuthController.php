@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
+use Carbon\Carbon; 
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -464,10 +465,15 @@ class AuthController extends Controller
             'address' => 'nullable|string|max:255',
             'license_number' => 'required|string|max:255',
             'years_experience' => 'nullable|integer|min:0|max:50',
-            'qualifications' => 'required|string|max:1000',
-            'professional_experience' => 'required|string|max:1000',
+            // Educational qualifications: allow short entries for real-world cases
+            'qualifications' => 'required|string|min:2|max:1000',
+            // Professional experience: at least 10 characters, but allow short entries for real-world cases
+            'professional_experience' => 'required|string|min:10|max:1000',
             'professional_id_path' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'password' => 'required|string|min:6|confirmed',
+        ], [
+            'qualifications.min' => 'Please provide at least your school, degree, or certification.',
+            'professional_experience.min' => 'Please briefly describe your work experience or position.',
         ]);
 
         if ($validator->fails()) {
@@ -532,11 +538,18 @@ class AuthController extends Controller
             return redirect()->route('login')->with('success', 'Your application has been submitted successfully! You will receive an email notification once your application is reviewed and approved by our admin team.');
 
         } catch (\Exception $e) {
+            Log::error('Nutritionist application error: ' . $e->getMessage(), ['exception' => $e]);
+            $errorMsg = $e->getMessage();
+            if (strpos($errorMsg, 'Duplicate entry') !== false && strpos($errorMsg, 'users_license_number_unique') !== false) {
+                $friendlyMsg = 'This license number is already registered. Please use a different license number or contact support if you believe this is an error.';
+            } else {
+                $friendlyMsg = 'Application submission failed. Error: ' . $errorMsg;
+            }
             if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'errors' => ['Application submission failed. Please check your information and try again. If the problem persists, please contact support.']]);
+                return response()->json(['success' => false, 'errors' => [$friendlyMsg]]);
             }
             return back()->withErrors([
-                'error' => 'Application submission failed. Please check your information and try again. If the problem persists, please contact support.'
+                'error' => $friendlyMsg
             ])->withInput();
         }
     }

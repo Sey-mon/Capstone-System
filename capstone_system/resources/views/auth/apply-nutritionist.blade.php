@@ -203,9 +203,16 @@
 
                         <div class="form-group">
                             <label class="form-label" for="qualifications">Educational Qualifications *</label>
-                            <textarea class="form-control" name="qualifications" id="qualifications" 
-                                      placeholder="Please list your educational background, degrees, certifications, and any relevant training in nutrition or dietetics..."
-                                      required>{{ old('qualifications') }}</textarea>
+                            <select class="form-control" name="qualifications" id="qualifications" required>
+                                <option value="">Select your highest qualification</option>
+                                <option value="BS Nutrition" {{ old('qualifications') == 'BS Nutrition' ? 'selected' : '' }}>BS Nutrition</option>
+                                <option value="BS Dietetics" {{ old('qualifications') == 'BS Dietetics' ? 'selected' : '' }}>BS Dietetics</option>
+                                <option value="BS Food Technology" {{ old('qualifications') == 'BS Food Technology' ? 'selected' : '' }}>BS Food Technology</option>
+                                <option value="MS Nutrition" {{ old('qualifications') == 'MS Nutrition' ? 'selected' : '' }}>MS Nutrition</option>
+                                <option value="PhD Nutrition" {{ old('qualifications') == 'PhD Nutrition' ? 'selected' : '' }}>PhD Nutrition</option>
+                                <option value="Other" {{ old('qualifications') == 'Other' ? 'selected' : '' }}>Other (please specify below)</option>
+                            </select>
+                            <input type="text" class="form-control" name="qualifications_other" id="qualifications_other" placeholder="If Other, please specify" style="margin-top: 0.5rem; display: none;" value="{{ old('qualifications_other') }}">
                             @error('qualifications')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
@@ -213,9 +220,8 @@
 
                         <div class="form-group">
                             <label class="form-label" for="professional_experience">Professional Experience *</label>
-                            <textarea class="form-control" name="professional_experience" id="professional_experience" 
-                                      placeholder="Please describe your work experience in nutrition, dietetics, or related fields. Include years of experience, previous positions, and areas of specialization..."
-                                      required>{{ old('professional_experience') }}</textarea>
+                            <input type="text" class="form-control" name="professional_experience" id="professional_experience" 
+                                   placeholder="e.g. Nutritionist at ABC Clinic, 3 years" required value="{{ old('professional_experience') }}">
                             @error('professional_experience')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
@@ -310,5 +316,25 @@
     </div>
 
     <script src="{{ asset('js/nutritionist-wizard.js') }}"></script>
+    <script>
+    // Show/hide 'Other' field for qualifications
+    document.addEventListener('DOMContentLoaded', function() {
+        var qualSelect = document.getElementById('qualifications');
+        var qualOther = document.getElementById('qualifications_other');
+        if (qualSelect && qualOther) {
+            qualSelect.addEventListener('change', function() {
+                if (this.value === 'Other') {
+                    qualOther.style.display = 'block';
+                } else {
+                    qualOther.style.display = 'none';
+                }
+            });
+            // On page load, show if 'Other' was selected
+            if (qualSelect.value === 'Other') {
+                qualOther.style.display = 'block';
+            }
+        }
+    });
+    </script>
 </body>
 </html>
