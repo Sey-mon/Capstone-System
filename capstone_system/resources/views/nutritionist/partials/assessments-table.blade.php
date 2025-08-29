@@ -80,7 +80,7 @@
                                 <button class="btn btn-sm btn-success" onclick="assessSpecificPatient({{ $assessment->patient_id }})" title="New Assessment">
                                     <i class="fas fa-redo"></i>
                                 </button>
-                                <button class="btn btn-sm btn-secondary" onclick="printAssessment({{ $assessment->assessment_id }})" title="Print">
+                                <button class="btn btn-sm btn-secondary" onclick="printAssessmentDetails({{ $assessment->assessment_id }})" title="Print">
                                     <i class="fas fa-print"></i>
                                 </button>
                             </div>

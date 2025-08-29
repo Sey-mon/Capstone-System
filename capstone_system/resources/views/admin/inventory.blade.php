@@ -237,8 +237,8 @@
     </div>
 
     <!-- Add/Edit Item Modal -->
-    <div id="itemModal" class="modal-overlay">
-        <div class="modal-content">
+        <div id="itemModal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 600px; width: 100%;">
             <div class="modal-header">
                 <h3 id="modalTitle" class="modal-title">Add New Item</h3>
                 <button onclick="closeModal()" class="modal-close">
@@ -294,8 +294,8 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="modal-overlay">
-        <div class="modal-content delete-modal-content">
+        <div id="deleteModal" class="modal-overlay">
+            <div class="modal-content delete-modal-content" style="max-width: 500px; width: 100%;">
             <div class="delete-icon">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
@@ -316,8 +316,8 @@
     </div>
 
     <!-- Stock In Modal -->
-    <div id="stockInModal" class="modal-overlay">
-        <div class="modal-content">
+        <div id="stockInModal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 500px; width: 100%;">
             <div class="modal-header">
                 <h3 class="modal-title">Stock In</h3>
                 <button type="button" onclick="closeStockInModal()" class="modal-close">
@@ -355,8 +355,8 @@
     </div>
 
     <!-- Stock Out Modal -->
-    <div id="stockOutModal" class="modal-overlay">
-        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+        <div id="stockOutModal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto; width: 100%;">
             <div class="modal-header">
                 <h3 class="modal-title">Stock Out</h3>
                 <button type="button" onclick="closeStockOutModal()" class="modal-close">
