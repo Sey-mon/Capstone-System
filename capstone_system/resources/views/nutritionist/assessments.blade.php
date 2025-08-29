@@ -92,7 +92,7 @@
 
     <!-- Assessment Details Modal -->
     <div class="modal fade" id="assessmentDetailsModal" tabindex="-1" aria-labelledby="assessmentDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog custom-modal-size">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="assessmentDetailsModalLabel">
@@ -122,7 +122,7 @@
 
     <!-- Patient Selection Modal -->
     <div class="modal fade" id="patientSelectionModal" tabindex="-1" aria-labelledby="patientSelectionModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog custom-modal-size">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="patientSelectionModalLabel">
@@ -154,7 +154,7 @@
 
     <!-- Assessment Form Modal -->
     <div class="modal fade" id="assessmentFormModal" tabindex="-1" aria-labelledby="assessmentFormModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+    <div class="modal-dialog custom-modal-size">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="assessmentFormModalLabel">
@@ -445,12 +445,6 @@ function loadAssessmentDetails(assessmentId) {
 function displayAssessmentDetails(assessment) {
     const content = document.getElementById('assessmentDetailsContent');
     
-    // Debug: Log the full assessment object
-    console.log('Full assessment object:', assessment);
-    console.log('treatment field:', assessment.treatment);
-    console.log('treatment_plan field:', assessment.treatment_plan);
-    console.log('typeof treatment_plan:', typeof assessment.treatment_plan);
-    
     // Parse treatment plan if it exists
     let treatmentPlan = null;
     if (assessment.treatment_plan) {
@@ -458,14 +452,12 @@ function displayAssessmentDetails(assessment) {
         if (typeof assessment.treatment_plan === 'string') {
             try {
                 treatmentPlan = JSON.parse(assessment.treatment_plan);
-                console.log('Parsed treatment plan from string:', treatmentPlan);
             } catch (e) {
                 console.error('Failed to parse treatment_plan string:', e);
                 treatmentPlan = null;
             }
         } else if (typeof assessment.treatment_plan === 'object') {
             treatmentPlan = assessment.treatment_plan;
-            console.log('Using treatment plan object directly:', treatmentPlan);
         }
     }
     
@@ -474,19 +466,15 @@ function displayAssessmentDetails(assessment) {
         if (typeof assessment.treatment === 'string') {
             try {
                 treatmentPlan = JSON.parse(assessment.treatment);
-                console.log('Parsed treatment plan from treatment field:', treatmentPlan);
             } catch (e) {
                 console.error('Failed to parse treatment string:', e);
                 treatmentPlan = null;
             }
         } else if (typeof assessment.treatment === 'object') {
             treatmentPlan = assessment.treatment;
-            console.log('Using treatment object directly:', treatmentPlan);
         }
     }
-    
-    console.log('Final treatment plan to use:', treatmentPlan);
-    
+
     content.innerHTML = `
         <div class="assessment-details">
             <!-- Patient Information -->
@@ -916,6 +904,8 @@ function printAssessmentDetails(assessmentId) {
     window.open(printUrl, '_blank');
 }
 
+
+
 // Patient search functionality
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('patientSearchInput');
@@ -936,11 +926,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-<script src="{{ asset('js/assessments.js') }}"></script>
-@endsection
 
-@push('styles')
-<link rel="stylesheet" href="{{ asset('css/assessments.css') }}">
+
 <style>
 /* Patient Selection Modal Styles */
 .patient-item {
@@ -1031,14 +1018,14 @@ document.addEventListener('DOMContentLoaded', function() {
     overflow-y: auto;
 }
 
-#assessmentDetailsModal .modal-dialog {
-    max-width: 90%;
+.custom-modal-size .modal-content {
+  max-width: 800px; /* Adjust this value as needed */
+  margin: auto; /* Center the content within the dialog */
+}
+.modal-dialog.custom-modal-wide {
+  max-width: 800px; /* Adjust this value as needed */
+  margin: auto; /* Center the content within the dialog */
 }
 
-@media (min-width: 1200px) {
-    #assessmentDetailsModal .modal-dialog {
-        max-width: 1000px;
-    }
-}
 </style>
-@endpush
+
