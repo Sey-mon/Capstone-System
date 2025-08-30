@@ -1,3 +1,15 @@
+/* Custom Modal Sizing and Centering for Nutritionist Patients Page */
+:root {
+    --modal-custom-width: 90vw;
+}
+.modal-dialog.custom-size {
+      width: 800px; /* Or your desired width */
+      max-width: 800px; /* Match width or set a higher maximum */
+}
+.modal-content.square-corners {
+    width: 700px; /* Or your desired width */
+    max-width: 700px; /* Match width or set a higher maximum */
+}
 /* ========================================
    NUTRITIONIST PATIENTS PAGE STYLES
    ======================================== */

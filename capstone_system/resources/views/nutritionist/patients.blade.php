@@ -9,9 +9,11 @@
     @include('partials.navigation')
 @endsection
 
+
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/nutritionist/patients.css') }}">
 @endpush
+
 
 @section('content')
     <!-- Action Bar -->
@@ -100,8 +102,8 @@
 
     <!-- Add/Edit Patient Modal -->
     <div class="modal fade" id="patientModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+    <div class="modal-dialog custom-size" style="--modal-custom-width: 70vw;">
+            <div class="modal-content square-corners">
                 <div class="modal-header">
                     <h5 class="modal-title" id="patientModalTitle">Add Patient</h5>
                     <button type="button" class="btn-close" onclick="closePatientModal()"></button>
@@ -284,8 +286,8 @@
 
     <!-- View Patient Modal -->
     <div class="modal fade" id="viewPatientModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+    <div class="modal-dialog custom-size" style="--modal-custom-width: 70vw;">
+            <div class="modal-content square-corners">
                 <div class="modal-header">
                     <h5 class="modal-title">Patient Details</h5>
                     <button type="button" class="btn-close" onclick="closeViewPatientModal()"></button>

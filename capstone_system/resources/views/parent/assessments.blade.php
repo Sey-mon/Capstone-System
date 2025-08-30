@@ -57,41 +57,53 @@
                         <div class="mb-2 text-gray-400">No child assessments yet.</div>
                     @endif
                     @if($child->assessments->count() > 1)
-                        <button class="modern-showall-btn" type="button" onclick="toggleOldAssessments('{{ $child->id }}')">
+                        <!-- Show All Assessments Button triggers modal -->
+                        <button class="modern-showall-btn" type="button" data-bs-toggle="modal" data-bs-target="#allAssessmentsModal{{ $child->id }}">
                             Show All Child Assessments
                         </button>
-                        <div id="old-assessments-{{ $child->id }}" class="d-none mt-2">
-                            <ul class="pl-2">
-                                @foreach($child->assessments->sortByDesc('created_at')->skip(1) as $assessment)
-                                    <li class="mb-3">
-                                        <span class="text-gray-500">Date:</span> {{ $assessment->created_at->format('M d, Y') }}<br>
-                                        <span class="text-gray-500">Diagnostic:</span>
-                                        @php
-                                            $diagnosis = null;
-                                            if (!empty($assessment->treatment)) {
-                                                $treatmentData = json_decode($assessment->treatment, true);
-                                                $diagnosis = $treatmentData['patient_info']['diagnosis'] ?? null;
-                                            }
-                                        @endphp
-                                        @if($diagnosis == 'Severe Acute Malnutrition (SAM)')
-                                            <span class="modern-badge-sam">Severe Acute Malnutrition (SAM)</span>
-                                        @elseif($diagnosis == 'Moderate Acute Malnutrition (MAM)')
-                                            <span class="modern-badge-mam">Moderate Acute Malnutrition (MAM)</span>
-                                        @elseif($diagnosis == 'Normal')
-                                            <span class="modern-badge-normal">Normal</span>
-                                        @elseif($diagnosis)
-                                            <span>{{ $diagnosis }}</span>
-                                        @else
-                                            <span>diagnostic</span>
-                                        @endif<br>
-                                        <span class="text-gray-500">Weight:</span> {{ $assessment->weight ?? 'N/A' }}<br>
-                                        <span class="text-gray-500">Height:</span> {{ $assessment->height ?? 'N/A' }}<br>
-                                        <span class="text-gray-500">Nutritionist:</span> {{ $assessment->nutritionist->first_name ?? 'N/A' }} {{ $assessment->nutritionist->last_name ?? '' }}<br>
-                                        <span class="text-gray-500">Remarks:</span> {{ $assessment->remarks ?? 'N/A' }}<br>
-                                        <hr>
-                                    </li>
-                                @endforeach
-                            </ul>
+                        <!-- Modal for all assessments -->
+                        <div class="modal fade" id="allAssessmentsModal{{ $child->id }}" tabindex="-1" aria-labelledby="allAssessmentsModalLabel{{ $child->id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="allAssessmentsModalLabel{{ $child->id }}">All Assessments for {{ $child->first_name }} {{ $child->last_name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <ul class="pl-2">
+                                            @foreach($child->assessments->sortByDesc('created_at') as $assessment)
+                                                <li class="mb-3">
+                                                    <span class="text-gray-500">Date:</span> {{ $assessment->created_at->format('M d, Y') }}<br>
+                                                    <span class="text-gray-500">Diagnostic:</span>
+                                                    @php
+                                                        $diagnosis = null;
+                                                        if (!empty($assessment->treatment)) {
+                                                            $treatmentData = json_decode($assessment->treatment, true);
+                                                            $diagnosis = $treatmentData['patient_info']['diagnosis'] ?? null;
+                                                        }
+                                                    @endphp
+                                                    @if($diagnosis == 'Severe Acute Malnutrition (SAM)')
+                                                        <span class="modern-badge-sam">Severe Acute Malnutrition (SAM)</span>
+                                                    @elseif($diagnosis == 'Moderate Acute Malnutrition (MAM)')
+                                                        <span class="modern-badge-mam">Moderate Acute Malnutrition (MAM)</span>
+                                                    @elseif($diagnosis == 'Normal')
+                                                        <span class="modern-badge-normal">Normal</span>
+                                                    @elseif($diagnosis)
+                                                        <span>{{ $diagnosis }}</span>
+                                                    @else
+                                                        <span>diagnostic</span>
+                                                    @endif<br>
+                                                    <span class="text-gray-500">Weight:</span> {{ $assessment->weight ?? 'N/A' }}<br>
+                                                    <span class="text-gray-500">Height:</span> {{ $assessment->height ?? 'N/A' }}<br>
+                                                    <span class="text-gray-500">Nutritionist:</span> {{ $assessment->nutritionist->first_name ?? 'N/A' }} {{ $assessment->nutritionist->last_name ?? '' }}<br>
+                                                    <span class="text-gray-500">Remarks:</span> {{ $assessment->remarks ?? 'N/A' }}<br>
+                                                    <hr>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -106,5 +118,13 @@
             <p class="text-gray-500">No child assessments found.</p>
         </div>
     @endif
-</div>
+
+<script>
+function toggleOldAssessments(childId) {
+    var el = document.getElementById('old-assessments-' + childId);
+    if (el) {
+        el.classList.toggle('d-none');
+    }
+}
+</script>
 @endsection

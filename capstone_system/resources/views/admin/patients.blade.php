@@ -319,7 +319,7 @@
 
         <!-- Add Patient Modal -->
     <div id="addPatientModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-large">
             <div class="modal-header">
                 <h4 class="modal-title">Add New Patient</h4>
                 <button class="modal-close" onclick="closeAddPatientModal()">
@@ -492,7 +492,7 @@
 
     <!-- Edit Patient Modal -->
     <div id="editPatientModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-large">
             <div class="modal-header">
                 <h4 class="modal-title">Edit Patient</h4>
                 <button class="modal-close" onclick="closeEditPatientModal()">

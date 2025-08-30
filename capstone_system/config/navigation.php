@@ -62,11 +62,11 @@ return [
             'icon' => 'fas fa-clipboard-list',
             'text' => 'Assessments',
         ],
-        [
-            'route' => 'nutritionist.meal-plans',
-            'icon' => 'fas fa-utensils',
-            'text' => 'Meal Plans',
-        ],
+        // [
+        //     'route' => 'nutritionist.meal-plans',
+        //     'icon' => 'fas fa-utensils',
+        //     'text' => 'Meal Plans',
+        // ],
         [
             'route' => 'nutritionist.profile',
             'icon' => 'fas fa-user-cog',

@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
             link.classList.remove('active');
             
             // Check if current path matches the link href
-            const linkPath = new URL(link.href).pathname;
+            const linkPath = new URL(link.href, window.location.origin).pathname;
             if (currentPath === linkPath || currentPath.startsWith(linkPath + '/')) {
                 link.classList.add('active');
             }
