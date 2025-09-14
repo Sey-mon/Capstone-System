@@ -51,17 +51,6 @@
                 <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
             </select>
             
-            <div class="action-buttons">
-                <button type="button" id="clearFilters" class="btn-action btn-clear" title="Clear Filters">
-                    <i class="fas fa-times"></i>
-                </button>
-                <button type="button" id="exportBtn" class="btn-action btn-export" title="Export">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button type="button" class="btn-action btn-primary" title="Assess Patient" onclick="openPatientSelectionModal()">
-                    <i class="fas fa-stethoscope"></i>
-                </button>
-            </div>
         </div>
     </div>
 
