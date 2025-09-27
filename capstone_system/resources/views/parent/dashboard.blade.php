@@ -5,7 +5,6 @@
 @section('page-title')
     <div class="page-header-modern">
         <div class="page-title-section">
-            <i class="fas fa-home page-icon"></i>
             <div>
                 <h1 class="page-title">Parent Dashboard</h1>
                 <p class="page-subtitle">Welcome back, {{ Auth::user()->first_name }}! Track your children's nutrition progress.</p>

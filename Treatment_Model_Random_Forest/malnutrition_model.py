@@ -1105,29 +1105,41 @@ class MalnutritionRandomForestModel:
     
     def save_model(self, filepath):
         """
-        Save the trained model
+        Save the trained model with better compatibility
         """
+        # Create a new WHO calculator instance to avoid pickle issues
         model_data = {
             'model': self.model,
             'label_encoders': self.label_encoders,
             'scaler': self.scaler,
             'feature_columns': self.feature_columns,
-            'who_calculator': self.who_calculator
+            'who_calculator': None  # Don't save the WHO calculator - recreate it on load
         }
         joblib.dump(model_data, filepath)
         print(f"Model saved to {filepath}")
-    
+
     def load_model(self, filepath):
         """
-        Load a trained model
+        Load a trained model with better error handling
         """
-        model_data = joblib.load(filepath)
-        self.model = model_data['model']
-        self.label_encoders = model_data['label_encoders']
-        self.scaler = model_data['scaler']
-        self.feature_columns = model_data['feature_columns']
-        self.who_calculator = model_data['who_calculator']
-        print(f"Model loaded from {filepath}")
+        try:
+            model_data = joblib.load(filepath)
+            self.model = model_data['model']
+            self.label_encoders = model_data['label_encoders']
+            self.scaler = model_data['scaler']
+            self.feature_columns = model_data['feature_columns']
+            
+            # Recreate WHO calculator instead of loading from pickle
+            if model_data.get('who_calculator') is None:
+                self.who_calculator = WHO_ZScoreCalculator()
+            else:
+                self.who_calculator = model_data['who_calculator']
+                
+            print(f"✅ Model loaded successfully from {filepath}")
+            
+        except Exception as e:
+            print(f"❌ Error loading model: {e}")
+            raise e
 
 def generate_sample_data(n_samples=1000):
     """
@@ -1240,12 +1252,32 @@ class MalnutritionAssessment:
     def __init__(self):
         """Initialize the assessment system"""
         self.who_calculator = WHO_ZScoreCalculator()
-        # Try to load the trained model
+        # Try to load the trained model with proper path handling
         try:
+            import os
+            
             self.model = MalnutritionRandomForestModel()
-            self.model.load_model('malnutrition_model.pkl')
-        except:
-            print("Warning: Pre-trained model not found. WHO assessment only.")
+            
+            # Get the directory where this script is located
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.join(script_dir, 'malnutrition_model.pkl')
+            
+            print(f"Looking for model at: {model_path}")
+            
+            if os.path.exists(model_path):
+                self.model.load_model(model_path)
+                print("✅ Pre-trained model loaded successfully!")
+            else:
+                # Try current working directory as fallback
+                fallback_path = 'malnutrition_model.pkl'
+                if os.path.exists(fallback_path):
+                    self.model.load_model(fallback_path)
+                    print(f"✅ Pre-trained model loaded from: {fallback_path}")
+                else:
+                    raise FileNotFoundError(f"Model not found at {model_path} or {fallback_path}")
+                    
+        except Exception as e:
+            print(f"⚠️ Warning: Pre-trained model not found ({e}). WHO assessment only.")
             self.model = None
     
     def assess_malnutrition(self, age_months, weight_kg, height_cm, gender, muac_cm=None, has_edema=False):

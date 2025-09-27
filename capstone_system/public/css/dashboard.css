@@ -1,3 +1,14 @@
+/* Center Parent Dashboard Header */
+.page-header-modern,
+.page-header-modern .page-title-section,
+.page-header-modern .page-title,
+.page-header-modern .page-subtitle {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
 /* Modern Dashboard CSS */
 
 * {
@@ -430,9 +441,8 @@ body {
 
 /* Top Header */
 .top-header {
-    background-color: var(--bg-primary);
-    border-bottom: 1px solid var(--border-light);
-    padding: 1rem 2rem;
+    background-color: transparent;
+    padding: 0.5rem 0.5rem;
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -524,13 +534,13 @@ body {
 .header-title h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: white;
     margin-bottom: 0.25rem;
 }
 
 .header-subtitle {
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: grey;    
 }
 
 .header-actions {
