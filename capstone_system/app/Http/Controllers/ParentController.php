@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class ParentController extends Controller
 {
@@ -360,5 +362,61 @@ class ParentController extends Controller
         $text = preg_replace('/FINAL VERIFICATION:/i', '</div><h5>Final Verification</h5>', $text);
         $text = nl2br($text); // Convert newlines to <br>
         return $text;
+    }
+
+    /**
+     * Update parent profile information
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
+            'contact_number' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+        ]);
+
+        // Update user using DB query
+        DB::table('users')
+            ->where('user_id', $user->user_id)
+            ->update([
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'email' => $validated['email'],
+                'contact_number' => $validated['contact_number'],
+                'address' => $validated['address'],
+                'updated_at' => now(),
+            ]);
+
+        return redirect()->route('parent.profile')->with('success', 'Profile updated successfully!');
+    }    /**
+     * Update parent password
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+        
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Check if current password is correct
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return redirect()->route('parent.profile')->withErrors(['current_password' => 'Current password is incorrect.']);
+        }
+
+        // Update the password using DB query
+        DB::table('users')
+            ->where('user_id', $user->user_id)
+            ->update([
+                'password' => Hash::make($validated['password']),
+                'updated_at' => now(),
+            ]);
+
+        return redirect()->route('parent.profile')->with('success', 'Password updated successfully!');
     }
 }

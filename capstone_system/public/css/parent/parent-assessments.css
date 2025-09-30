@@ -1,64 +1,621 @@
-/* Modern Assessment Card Styles */
-.modern-assessment-card {
-    background: #e9fbe7;
-    border-radius: 18px;
-    box-shadow: 0 2px 16px rgba(33,136,56,0.10);
-    padding: 2rem 2.2rem;
-    margin-bottom: 2rem;
-    border: 2px solid #43ea7b;
+/* ===== MODERN ASSESSMENT STYLES ===== */
+
+/* Container */
+.assessments-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
 }
-.modern-assessment-title {
+
+/* Header Section */
+.assessments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.header-content h1.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    background: linear-gradient(45deg, #ffffff, #e8f5e8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-description {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+    font-weight: 300;
+}
+
+.stats-summary {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    min-width: 120px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #fff;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+/* Grid Layout */
+.assessments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 2rem;
+}
+
+/* Assessment Cards */
+.assessment-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.assessment-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.child-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.child-avatar {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.child-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.25rem 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.child-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.view-history-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.view-history-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.view-history-btn i {
+    margin-right: 0.5rem;
+}
+
+/* Card Body */
+.card-body {
+    padding: 2rem;
+}
+
+.latest-assessment {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.assessment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.assessment-header h4 {
     font-size: 1.2rem;
     font-weight: 600;
-    color: #218838;
+    color: #333;
+    margin: 0;
+}
+
+.assessment-date {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Diagnosis Badges */
+.diagnosis-section {
+    margin: 1rem 0;
+}
+
+.diagnosis-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.diagnosis-badge.critical {
+    background: linear-gradient(135deg, #ff6b6b, #ff5252);
+    color: white;
+}
+
+.diagnosis-badge.warning {
+    background: linear-gradient(135deg, #ffa726, #ff9800);
+    color: white;
+}
+
+.diagnosis-badge.normal {
+    background: linear-gradient(135deg, #66bb6a, #4caf50);
+    color: white;
+}
+
+.diagnosis-badge.unknown {
+    background: linear-gradient(135deg, #bdbdbd, #9e9e9e);
+    color: white;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.metric {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.metric:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.metric-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.metric-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.metric-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #333;
+}
+
+/* Additional Info */
+.additional-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.info-item i {
+    color: #667eea;
+    width: 16px;
+    text-align: center;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #333;
+    min-width: 100px;
+}
+
+.info-value {
+    color: #666;
+    flex: 1;
+}
+
+/* No Assessment State */
+.no-assessment {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #666;
+}
+
+.no-assessment-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.no-assessment h4 {
+    font-size: 1.3rem;
+    font-weight: 600;
     margin-bottom: 0.5rem;
+    color: #333;
 }
-.modern-assessment-label {
-    font-weight: 500;
-    color: #218838;
+
+.no-assessment p {
+    color: #666;
+    font-size: 1rem;
 }
-.modern-badge-sam {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 6px 14px;
-    border-radius: 16px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    display: inline-block;
-    margin-bottom: 2px;
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
 }
-.modern-badge-mam {
-    background: #fff3cd;
-    color: #856404;
-    padding: 6px 14px;
-    border-radius: 16px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    display: inline-block;
-    margin-bottom: 2px;
+
+.empty-state-content {
+    text-align: center;
+    max-width: 400px;
 }
-.modern-badge-normal {
-    background: #d4edda;
-    color: #155724;
-    padding: 6px 14px;
-    border-radius: 16px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    display: inline-block;
-    margin-bottom: 2px;
+
+.empty-state-icon {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 3rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
 }
-.modern-showall-btn {
-    background: none;
+
+.empty-state h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.empty-state-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
     border: none;
-    color: #218838;
-    font-weight: 500;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
-    padding: 0;
-    margin-top: 0.5rem;
-    text-decoration: underline;
-    transition: color 0.2s;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
-.modern-showall-btn:hover {
-    color: #43ea7b;
+
+.empty-state-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state-btn i {
+    margin-right: 0.5rem;
+}
+
+/* Modal Styles */
+.assessment-modal .modal-dialog {
+    max-width: 1000px;
+}
+
+.assessment-modal .modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.assessment-modal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border: none;
+}
+
+.modal-title-section h5 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modal-subtitle {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1rem;
+    font-weight: 300;
+}
+
+.assessment-modal .btn-close {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    opacity: 1;
+}
+
+.assessment-modal .modal-body {
+    padding: 2rem;
+    background: #f8f9fa;
+}
+
+/* Timeline Styles */
+.assessment-timeline {
+    position: relative;
+}
+
+.timeline-item {
+    display: flex;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.timeline-item.latest .timeline-content {
+    background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+    border-left: 4px solid #4caf50;
+}
+
+.timeline-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 2rem;
+    position: relative;
+}
+
+.timeline-dot {
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.timeline-item.latest .timeline-dot {
+    background: linear-gradient(135deg, #66bb6a, #4caf50);
+    width: 20px;
+    height: 20px;
+}
+
+.timeline-line {
+    width: 2px;
+    height: 60px;
+    background: linear-gradient(to bottom, #e0e0e0, #f5f5f5);
+    margin-top: 0.5rem;
+}
+
+.timeline-content {
+    flex: 1;
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #e0e0e0;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.timeline-date {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.latest-badge {
+    background: linear-gradient(135deg, #66bb6a, #4caf50);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.timeline-diagnosis {
+    margin-bottom: 1rem;
+}
+
+.timeline-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.metric-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.metric-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.metric-item i {
+    color: #667eea;
+    width: 16px;
+    text-align: center;
+}
+
+.metric-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.metric-value {
+    color: #666;
+    margin-left: auto;
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .assessments-header {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+    }
+    
+    .stats-summary {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .assessments-container {
+        padding: 1rem;
+    }
+    
+    .assessments-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-pair {
+        grid-template-columns: 1fr;
+    }
+    
+    .assessment-modal .modal-dialog {
+        margin: 1rem;
+    }
 }

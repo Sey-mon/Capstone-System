@@ -15,7 +15,7 @@
 
 @section('content')
     <!-- Quick Stats -->
-    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+    <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-header">
                 <div class="stat-title">Total Items</div>
@@ -51,8 +51,8 @@
     <div class="content-card">
         <div class="card-header">
             <h3 class="card-title">Inventory Items</h3>
-            <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-primary" onclick="openAddModal()">
+            <div class="card-header-actions">
+                <button class="btn btn-primary btn-add-item">
                     <i class="fas fa-plus"></i>
                     Add Item
                 </button>
@@ -60,18 +60,17 @@
         </div>
         
         <!-- Real-time Filters -->
-        <div class="filter-section" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-light); background: var(--bg-tertiary);">
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: center;">
-                <div class="form-group" style="margin: 0;">
+        <div class="filter-section">
+            <div class="filter-grid">
+                <div class="form-group">
                     <input type="text" 
                            id="searchFilter" 
                            placeholder="Search items by name or category..." 
-                           class="form-input"
-                           style="margin: 0;">
+                           class="form-input">
                 </div>
                 
-                <div class="form-group" style="margin: 0;">
-                    <select id="categoryFilter" class="form-input" style="margin: 0;">
+                <div class="form-group">
+                    <select id="categoryFilter" class="form-input">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->category_name }}">{{ $category->category_name }}</option>
@@ -79,8 +78,8 @@
                     </select>
                 </div>
                 
-                <div class="form-group" style="margin: 0;">
-                    <select id="statusFilter" class="form-input" style="margin: 0;">
+                <div class="form-group">
+                    <select id="statusFilter" class="form-input">
                         <option value="">All Status</option>
                         <option value="in-stock">In Stock</option>
                         <option value="low-stock">Low Stock</option>
@@ -90,7 +89,7 @@
                     </select>
                 </div>
                 
-                <button onclick="clearFilters()" class="btn btn-secondary" style="height: fit-content;">
+                <button class="btn btn-secondary btn-clear-filters clear-btn">
                     <i class="fas fa-times"></i>
                     Clear
                 </button>
@@ -98,36 +97,34 @@
         </div>
         
         <div class="card-content">
-            <div style="overflow-x: auto;">
-                <table class="inventory-table" style="border-collapse: collapse;">
+            <div class="table-container">
+                <table class="inventory-table">
                     <thead>
-                        <tr style="border-bottom: 2px solid var(--border-light);">
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Item Name</th>
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Category</th>
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Quantity</th>
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Unit</th>
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Expiry Date</th>
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Status</th>
-                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Actions</th>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($items as $item)
-                        <tr style="border-bottom: 1px solid var(--border-light); transition: background-color var(--transition-fast);" 
-                            onmouseover="this.style.backgroundColor='var(--bg-tertiary)'" 
-                            onmouseout="this.style.backgroundColor='transparent'">
-                            <td style="padding: 1rem;">
-                                <div style="font-weight: 500;">{{ $item->item_name }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                        <tr>
+                            <td>
+                                <div class="item-name-main">{{ $item->item_name }}</div>
+                                <div class="item-name-sub">
                                     {{ $item->inventoryTransactions->count() }} transactions
                                 </div>
                             </td>
-                            <td style="padding: 1rem;">
-                                <span style="padding: 0.25rem 0.75rem; background: var(--bg-tertiary); border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">
+                            <td>
+                                <span class="category-badge">
                                     {{ $item->category->category_name ?? 'Uncategorized' }}
                                 </span>
                             </td>
-                            <td style="padding: 1rem;">
+                            <td>
                                 @php
                                     $quantityClass = 'high';
                                     if ($item->quantity <= 5) {
@@ -138,24 +135,24 @@
                                 @endphp
                                 <span class="quantity-display {{ $quantityClass }}">{{ $item->quantity }}</span>
                             </td>
-                            <td style="padding: 1rem; color: var(--text-secondary);">{{ $item->unit }}</td>
-                            <td style="padding: 1rem; color: var(--text-secondary);">
+                            <td>{{ $item->unit }}</td>
+                            <td>
                                 @if($item->expiry_date)
                                     @php
                                         $daysToExpiry = \Carbon\Carbon::now()->diffInDays($item->expiry_date, false);
-                                        $expiryStyle = '';
+                                        $expiryClass = '';
                                         if ($daysToExpiry < 0) {
-                                            $expiryStyle = 'color: var(--danger-color); font-weight: 600;';
+                                            $expiryClass = 'expiry-expired';
                                         } elseif ($daysToExpiry <= 30) {
-                                            $expiryStyle = 'color: var(--warning-color); font-weight: 600;';
+                                            $expiryClass = 'expiry-warning';
                                         }
                                     @endphp
-                                    <span style="{{ $expiryStyle }}">{{ $item->expiry_date ? $item->expiry_date->format('M d, Y') : 'N/A' }}</span>
+                                    <span class="{{ $expiryClass }}">{{ $item->expiry_date ? $item->expiry_date->format('M d, Y') : 'N/A' }}</span>
                                 @else
-                                    <span style="color: var(--text-muted);">No expiry</span>
+                                    <span class="expiry-none">No expiry</span>
                                 @endif
                             </td>
-                            <td style="padding: 1rem;">
+                            <td>
                                 @php
                                     $status = 'In Stock';
                                     $statusClass = 'in-stock';
@@ -183,27 +180,31 @@
                             <td class="actions-cell">
                                 <div class="action-buttons">
                                     <button class="action-btn stock-in" 
-                                            onclick="openStockInModal({{ $item->item_id }}, '{{ addslashes($item->item_name) }}')"
+                                            data-item-id="{{ $item->item_id }}"
+                                            data-item-name="{{ $item->item_name }}"
                                             title="Stock In">
                                         <i class="fas fa-plus"></i>
                                     </button>
                                     <button class="action-btn stock-out" 
-                                            onclick="openStockOutModal({{ $item->item_id }}, '{{ addslashes($item->item_name) }}', {{ $item->quantity }})"
+                                            data-item-id="{{ $item->item_id }}"
+                                            data-item-name="{{ $item->item_name }}"
+                                            data-quantity="{{ $item->quantity }}"
                                             title="Stock Out">
                                         <i class="fas fa-minus"></i>
                                     </button>
                                     <button class="action-btn edit" 
-                                            onclick="openEditModal({{ $item->item_id }})"
+                                            data-item-id="{{ $item->item_id }}"
                                             title="Edit Item">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="action-btn view" 
-                                            onclick="window.location.href='{{ route('admin.audit.logs') }}'"
+                                            data-audit-url="{{ route('admin.audit.logs') }}"
                                             title="View Activity Logs">
                                         <i class="fas fa-history"></i>
                                     </button>
                                     <button class="action-btn delete" 
-                                            onclick="confirmDelete({{ $item->item_id }}, '{{ addslashes($item->item_name) }}')"
+                                            data-item-id="{{ $item->item_id }}"
+                                            data-item-name="{{ $item->item_name }}"
                                             title="Delete Item">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -212,11 +213,11 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" style="padding: 3rem; text-align: center;">
-                                <div style="color: var(--text-secondary);">
-                                    <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            <td colspan="7" class="empty-state">
+                                <div>
+                                    <i class="fas fa-box-open empty-state-icon"></i>
                                     <p>No inventory items found.</p>
-                                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="openAddModal()">
+                                    <button class="btn btn-primary btn-add-item">
                                         <i class="fas fa-plus"></i>
                                         Add Your First Item
                                     </button>
@@ -229,7 +230,7 @@
             </div>
 
             @if(method_exists($items, 'links') && $items->hasPages())
-            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light);">
+            <div class="pagination-container">
                 {{ $items->links() }}
             </div>
             @endif
@@ -238,10 +239,10 @@
 
     <!-- Add/Edit Item Modal -->
         <div id="itemModal" class="modal-overlay">
-            <div class="modal-content" style="max-width: 600px; width: 100%;">
+            <div class="modal-content item-modal">
             <div class="modal-header">
                 <h3 id="modalTitle" class="modal-title">Add New Item</h3>
-                <button onclick="closeModal()" class="modal-close">
+                <button class="modal-close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -281,7 +282,7 @@
                 </div>
                 
                 <div class="modal-actions">
-                    <button type="button" onclick="closeModal()" class="btn btn-secondary">
+                    <button type="button" class="btn btn-secondary btn-cancel">
                         Cancel
                     </button>
                     <button type="submit" id="submitBtn" class="btn btn-primary">
@@ -295,7 +296,7 @@
 
     <!-- Delete Confirmation Modal -->
         <div id="deleteModal" class="modal-overlay">
-            <div class="modal-content delete-modal-content" style="max-width: 500px; width: 100%;">
+            <div class="modal-content delete-modal">
             <div class="delete-icon">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
@@ -303,11 +304,11 @@
             <p class="delete-message">Are you sure you want to delete <strong id="deleteItemName"></strong>?</p>
             <p class="delete-warning">This action cannot be undone.</p>
             
-            <div class="modal-actions" style="justify-content: center;">
-                <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary btn-cancel">
                     Cancel
                 </button>
-                <button type="button" onclick="deleteItem()" class="btn btn-danger">
+                <button type="button" class="btn btn-danger btn-delete-confirm">
                     <i class="fas fa-trash"></i>
                     Delete
                 </button>
@@ -317,17 +318,17 @@
 
     <!-- Stock In Modal -->
         <div id="stockInModal" class="modal-overlay">
-            <div class="modal-content" style="max-width: 500px; width: 100%;">
+            <div class="modal-content stock-in-modal">
             <div class="modal-header">
                 <h3 class="modal-title">Stock In</h3>
-                <button type="button" onclick="closeStockInModal()" class="modal-close">
+                <button type="button" class="modal-close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="stockInForm" onsubmit="processStockIn(event)">
+            <form id="stockInForm">
                 <div class="form-group">
                     <label class="form-label">Item Name</label>
-                    <input type="text" id="stockInItemName" class="form-input" readonly style="background-color: var(--bg-tertiary);">
+                    <input type="text" id="stockInItemName" class="form-input form-input-readonly" readonly>
                 </div>
                 
                 <div class="form-group">
@@ -342,7 +343,7 @@
                 </div>
                 
                 <div class="modal-actions">
-                    <button type="button" onclick="closeStockInModal()" class="btn btn-secondary">
+                    <button type="button" class="btn btn-secondary btn-cancel">
                         Cancel
                     </button>
                     <button type="submit" class="btn btn-success">
@@ -356,22 +357,22 @@
 
     <!-- Stock Out Modal -->
         <div id="stockOutModal" class="modal-overlay">
-            <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto; width: 100%;">
+            <div class="modal-content stock-out-modal">
             <div class="modal-header">
                 <h3 class="modal-title">Stock Out</h3>
-                <button type="button" onclick="closeStockOutModal()" class="modal-close">
+                <button type="button" class="modal-close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="stockOutForm" onsubmit="processStockOut(event)" style="max-height: 80vh; overflow-y: auto;">
+            <form id="stockOutForm" class="stock-out-form">
                 <div class="form-group">
                     <label class="form-label">Item Name</label>
-                    <input type="text" id="stockOutItemName" class="form-input" readonly style="background-color: var(--bg-tertiary);">
+                    <input type="text" id="stockOutItemName" class="form-input form-input-readonly" readonly>
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">Available Stock</label>
-                    <input type="text" id="stockOutAvailable" class="form-input" readonly style="background-color: var(--bg-tertiary);">
+                    <input type="text" id="stockOutAvailable" class="form-input form-input-readonly" readonly>
                 </div>
                 
                 <div class="form-group">
@@ -399,7 +400,7 @@
                 </div>
                 
                 <div class="modal-actions">
-                    <button type="button" onclick="closeStockOutModal()" class="btn btn-secondary">
+                    <button type="button" class="btn btn-secondary btn-cancel">
                         Cancel
                     </button>
                     <button type="submit" class="btn btn-warning">

@@ -67,27 +67,6 @@
         
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button class="mobile-menu-btn" id="mobileMenuBtn">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-                <div class="header-title">
-                    <h1>@yield('page-title', 'Dashboard')</h1>
-                    <p class="header-subtitle">@yield('page-subtitle', '')</p>
-                </div>
-                
-                <div class="header-actions">
-                    <div class="notifications">
-                        <button class="notification-btn">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-            
             <!-- Page Content -->
             <div class="page-content">
                 <!-- Floating Menu Button (shown when sidebar is hidden) -->

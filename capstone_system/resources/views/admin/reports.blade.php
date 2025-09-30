@@ -83,7 +83,7 @@
                 <h3 class="card-title">Quick Reports</h3>
             </div>
             <div class="card-content">
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="quick-reports-container">
                     <button class="btn btn-primary" onclick="generateReport('user-activity')">
                         <i class="fas fa-file-pdf"></i>
                         User Activity Report
@@ -121,8 +121,8 @@
                             </div>
                         </div>
                     @empty
-                        <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <div class="empty-activities-placeholder">
+                            <i class="fas fa-inbox empty-activities-icon"></i>
                             <p>No recent activities found</p>
                         </div>
                     @endforelse
@@ -135,7 +135,7 @@
     <div class="content-card">
         <div class="card-header">
             <h3 class="card-title">Assessment Trends</h3>
-            <div style="display: flex; gap: 0.5rem;">
+            <div class="chart-period-buttons">
                 <button class="btn btn-secondary" onclick="updateChartPeriod('weekly')">
                     <i class="fas fa-calendar-week"></i>
                     Weekly
@@ -151,15 +151,15 @@
             </div>
         </div>
         <div class="card-content">
-            <div id="assessment-chart" style="height: 300px;">
+            <div id="assessment-chart">
                 @if(isset($reports['assessment_trends']) && count($reports['assessment_trends']) > 0)
                     <canvas id="trendsChart"></canvas>
                 @else
-                    <div style="height: 300px; display: flex; align-items: center; justify-content: center; background: var(--bg-secondary); border-radius: 0.5rem; border: 2px dashed var(--border-medium);">
-                        <div style="text-align: center; color: var(--text-secondary);">
-                            <i class="fas fa-chart-area" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                            <p style="font-size: 1.125rem; margin-bottom: 0.5rem;">Charts Coming Soon</p>
-                            <p style="font-size: 0.875rem;">Interactive charts and graphs will be available here.</p>
+                    <div class="chart-placeholder">
+                        <div class="chart-placeholder-content">
+                            <i class="fas fa-chart-area chart-placeholder-icon"></i>
+                            <p class="chart-placeholder-title">Charts Coming Soon</p>
+                            <p class="chart-placeholder-subtitle">Interactive charts and graphs will be available here.</p>
                         </div>
                     </div>
                 @endif
@@ -170,19 +170,19 @@
     <!-- Report Modal -->
     <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content" style="width: 800px; max-width: 95vw; border-radius: 1rem; box-shadow: 0 8px 32px rgba(0,0,0,0.15);">
-                <div class="modal-header" style="background: linear-gradient(90deg, #38b6ff 0%, #6dd5ed 100%); border-top-left-radius: 1rem; border-top-right-radius: 1rem; color: #fff;">
-                    <h3 class="modal-title" id="reportModalLabel" style="font-weight: 600; letter-spacing: 1px;">Inventory Report</h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1);"></button>
+            <div class="modal-content report-modal">
+                <div class="modal-header report-modal-header">
+                    <h3 class="modal-title report-modal-title" id="reportModalLabel">Inventory Report</h3>
+                    <button type="button" class="btn-close report-modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" style="background: #f8f9fa; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                <div class="modal-body report-modal-body">
                     <div id="reportModalContent">
                         <!-- Report content will be loaded here -->
                     </div>
                 </div>
-                <div class="modal-footer" style="background: #f8f9fa; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 0.5rem;">Close</button>
-                    <button type="button" class="btn btn-primary" id="downloadReportBtn" style="border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(56,182,255,0.15);">
+                <div class="modal-footer report-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary modal-close-btn" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary modal-download-btn" id="downloadReportBtn">
                         <i class="fas fa-download"></i>
                         Download PDF
                     </button>

@@ -80,6 +80,171 @@ function setupEventListeners() {
     document.getElementById('filterGender').addEventListener('change', filterPatients);
     document.getElementById('filterAgeRange').addEventListener('change', filterPatients);
     document.getElementById('filterNutritionist').addEventListener('change', filterPatients);
+    
+    // Button event listeners
+    setupButtonEventListeners();
+}
+
+function setupButtonEventListeners() {
+    // Clear filters button
+    const clearFiltersBtn = document.querySelector('.btn-outline');
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearAllFilters();
+        });
+    }
+    
+    // Refresh button
+    const refreshBtn = document.querySelector('.btn-secondary');
+    if (refreshBtn && refreshBtn.textContent.includes('Refresh')) {
+        refreshBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.reload();
+        });
+    }
+    
+    // View toggle buttons
+    const tableViewBtn = document.querySelector('[data-view="table"]');
+    const gridViewBtn = document.querySelector('[data-view="grid"]');
+    
+    if (tableViewBtn) {
+        tableViewBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            switchView('table');
+        });
+    }
+    
+    if (gridViewBtn) {
+        gridViewBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            switchView('grid');
+        });
+    }
+    
+    // Add patient buttons
+    const addPatientBtns = document.querySelectorAll('.btn-primary');
+    addPatientBtns.forEach(btn => {
+        if (btn.textContent.includes('Add Patient') || btn.textContent.includes('Add First Patient')) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                showAddPatientModal();
+            });
+        }
+    });
+    
+    // Action buttons in table rows
+    setupActionButtons();
+    
+    // Modal close buttons and form buttons
+    setupModalEventListeners();
+}
+
+function setupActionButtons() {
+    // View patient buttons
+    const viewBtns = document.querySelectorAll('.btn-outline-primary, .btn-primary');
+    viewBtns.forEach(btn => {
+        if (btn.title === 'View Details' && btn.hasAttribute('data-patient-id')) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const patientId = parseInt(this.getAttribute('data-patient-id'));
+                viewPatient(patientId);
+            });
+        }
+    });
+    
+    // Edit patient buttons
+    const editBtns = document.querySelectorAll('.btn-outline-warning, .btn-warning');
+    editBtns.forEach(btn => {
+        if ((btn.title === 'Edit Patient' || btn.title === 'Edit') && btn.hasAttribute('data-patient-id')) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const patientId = parseInt(this.getAttribute('data-patient-id'));
+                editPatient(patientId);
+            });
+        }
+    });
+    
+    // Delete patient buttons
+    const deleteBtns = document.querySelectorAll('.btn-outline-danger, .btn-danger');
+    deleteBtns.forEach(btn => {
+        if ((btn.title === 'Delete Patient' || btn.title === 'Delete') && btn.hasAttribute('data-patient-id')) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const patientId = parseInt(this.getAttribute('data-patient-id'));
+                deletePatient(patientId);
+            });
+        }
+    });
+}
+
+function setupModalEventListeners() {
+    // Add patient modal
+    const addModalClose = document.querySelector('#addPatientModal .modal-close');
+    if (addModalClose) {
+        addModalClose.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeAddPatientModal();
+        });
+    }
+    
+    const addModalCancelBtn = document.querySelector('#addPatientModal .btn-secondary');
+    if (addModalCancelBtn) {
+        addModalCancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeAddPatientModal();
+        });
+    }
+    
+    const addModalSaveBtn = document.querySelector('#addPatientModal .btn-primary');
+    if (addModalSaveBtn && addModalSaveBtn.textContent.includes('Save')) {
+        addModalSaveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            savePatient();
+        });
+    }
+    
+    // Edit patient modal
+    const editModalClose = document.querySelector('#editPatientModal .modal-close');
+    if (editModalClose) {
+        editModalClose.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeEditPatientModal();
+        });
+    }
+    
+    const editModalCancelBtn = document.querySelector('#editPatientModal .btn-secondary');
+    if (editModalCancelBtn) {
+        editModalCancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeEditPatientModal();
+        });
+    }
+    
+    const editModalUpdateBtn = document.querySelector('#editPatientModal .btn-primary');
+    if (editModalUpdateBtn && editModalUpdateBtn.textContent.includes('Update')) {
+        editModalUpdateBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            updatePatient();
+        });
+    }
+    
+    // View patient modal
+    const viewModalClose = document.querySelector('#viewPatientModal .modal-close');
+    if (viewModalClose) {
+        viewModalClose.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeViewPatientModal();
+        });
+    }
+    
+    const viewModalCloseBtn = document.querySelector('#viewPatientModal .btn-secondary');
+    if (viewModalCloseBtn) {
+        viewModalCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeViewPatientModal();
+        });
+    }
 }
 
 function setupSorting() {
@@ -131,14 +296,14 @@ function filterPatients() {
             visible = false;
         }
 
-        // Show/hide elements
+        // Show/hide elements using CSS classes
         if (visible) {
-            patient.tableElement.style.display = '';
-            patient.gridElement.style.display = '';
+            patient.tableElement.classList.remove('patient-hidden');
+            patient.gridElement.classList.remove('patient-hidden');
             visibleCount++;
         } else {
-            patient.tableElement.style.display = 'none';
-            patient.gridElement.style.display = 'none';
+            patient.tableElement.classList.add('patient-hidden');
+            patient.gridElement.classList.add('patient-hidden');
         }
     });
 
@@ -178,7 +343,7 @@ function handleSort(column) {
 
 function sortPatients() {
     const visiblePatients = allPatients.filter(patient => 
-        patient.tableElement.style.display !== 'none'
+        !patient.tableElement.classList.contains('patient-hidden')
     );
 
     visiblePatients.sort((a, b) => {
@@ -257,9 +422,21 @@ function switchView(view) {
     });
     document.querySelector(`[data-view="${view}"]`).classList.add('active');
     
-    // Show/hide view containers
-    document.getElementById('tableView').style.display = view === 'table' ? 'block' : 'none';
-    document.getElementById('gridView').style.display = view === 'grid' ? 'block' : 'none';
+    // Show/hide view containers using CSS classes
+    const tableView = document.getElementById('tableView');
+    const gridView = document.getElementById('gridView');
+    
+    if (view === 'table') {
+        tableView.classList.add('active');
+        tableView.classList.remove('grid-view-hidden');
+        gridView.classList.remove('active');
+        gridView.classList.add('grid-view-hidden');
+    } else {
+        gridView.classList.add('active');
+        gridView.classList.remove('grid-view-hidden');
+        tableView.classList.remove('active');
+        tableView.classList.add('grid-view-hidden');
+    }
 }
 
 function clearAllFilters() {
@@ -277,8 +454,8 @@ function clearAllFilters() {
 
     // Show all patients
     allPatients.forEach(patient => {
-        patient.tableElement.style.display = '';
-        patient.gridElement.style.display = '';
+        patient.tableElement.classList.remove('patient-hidden');
+        patient.gridElement.classList.remove('patient-hidden');
     });
 
     // Update counts
@@ -301,7 +478,8 @@ function updatePatientCounts() {
     
     const filteredCountElement = document.getElementById('filteredCount');
     if (filteredCountElement) {
-        filteredCountElement.style.display = 'none';
+        filteredCountElement.classList.add('filtered-count-hidden');
+        filteredCountElement.classList.remove('filtered-count-visible');
     }
 }
 
@@ -309,11 +487,14 @@ function updateFilteredCounts(visible) {
     const total = allPatients.length;
     document.getElementById('totalPatients').textContent = total;
     
+    const filteredCountElement = document.getElementById('filteredCount');
     if (visible < total) {
         document.getElementById('visiblePatients').textContent = visible;
-        document.getElementById('filteredCount').style.display = 'inline';
+        filteredCountElement.classList.remove('filtered-count-hidden');
+        filteredCountElement.classList.add('filtered-count-visible');
     } else {
-        document.getElementById('filteredCount').style.display = 'none';
+        filteredCountElement.classList.add('filtered-count-hidden');
+        filteredCountElement.classList.remove('filtered-count-visible');
     }
 }
 
@@ -323,11 +504,11 @@ function toggleNoResults(show) {
     const gridView = document.getElementById('gridView');
     
     if (show) {
-        noResults.style.display = 'block';
-        tableView.style.display = 'none';
-        gridView.style.display = 'none';
+        noResults.classList.remove('no-results-hidden');
+        tableView.classList.add('grid-view-hidden');
+        gridView.classList.add('grid-view-hidden');
     } else {
-        noResults.style.display = 'none';
+        noResults.classList.add('no-results-hidden');
         switchView(currentView); // Restore current view
     }
 }

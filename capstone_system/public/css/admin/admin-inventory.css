@@ -778,6 +778,203 @@ table tr:hover .action-btn.delete {
 }
 
 /* Remove default browser tooltip to use custom one */
+
+/* ========================= 
+   INLINE STYLES EXTRACTED FROM BLADE FILE 
+   ========================= */
+
+/* Stats Grid */
+.stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin-bottom: 2rem;
+}
+
+/* Card Header Actions */
+.card-header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Filter Section Specific Styles */
+.filter-section {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-tertiary);
+}
+
+.filter-section .filter-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.filter-section .form-group {
+    margin: 0;
+}
+
+.filter-section .form-input {
+    margin: 0;
+}
+
+.filter-section .clear-btn {
+    height: fit-content;
+}
+
+/* Table Container */
+.table-container {
+    overflow-x: auto;
+}
+
+/* Inventory Table */
+.inventory-table {
+    border-collapse: collapse;
+}
+
+.inventory-table thead tr {
+    border-bottom: 2px solid var(--border-light);
+}
+
+.inventory-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.inventory-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background-color var(--transition-fast);
+}
+
+.inventory-table tbody tr:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.inventory-table td {
+    padding: 1rem;
+}
+
+/* Item Name Cell */
+.item-name-main {
+    font-weight: 500;
+}
+
+.item-name-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Category Badge */
+.category-badge {
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state .btn {
+    margin-top: 1rem;
+}
+
+/* Modal Specific Styles */
+.item-modal {
+    max-width: 600px;
+    width: 100%;
+}
+
+.delete-modal {
+    max-width: 500px;
+    width: 100%;
+}
+
+.stock-in-modal {
+    max-width: 500px;
+    width: 100%;
+}
+
+.stock-out-modal {
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.stock-out-form {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Delete Modal Specific */
+.delete-modal-content {
+    text-align: center;
+}
+
+.delete-icon {
+    font-size: 3rem;
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+}
+
+.delete-title {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.delete-message {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.delete-warning {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.delete-modal .modal-actions {
+    justify-content: center;
+}
+
+/* Readonly Input Styles */
+.form-input-readonly {
+    background-color: var(--bg-tertiary);
+}
+
+/* Pagination Container */
+.pagination-container {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-light);
+}
+
+/* Expiry Date Styles */
+.expiry-expired {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
+.expiry-warning {
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.expiry-none {
+    color: var(--text-muted);
+}
 .action-btn[title] {
     position: relative;
 }
