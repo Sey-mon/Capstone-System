@@ -48,58 +48,8 @@ class AdminController extends Controller
             ];
         });
 
-    // Fetch barangays from DB with coordinates
-    $barangayList = Barangay::whereNotNull('latitude')->whereNotNull('longitude')->get();
-
-        // Get counts from assessments
-        $barangays = [];
-        foreach ($barangayList as $b) {
-            $sam = 0;
-            $mam = 0;
-            $normal = 0;
-            $unknown = 0;
-            $patients = Patient::where('barangay_id', $b->barangay_id)->pluck('patient_id');
-            foreach ($patients as $patientId) {
-                $latestAssessment = Assessment::where('patient_id', $patientId)
-                    ->orderByDesc('assessment_date')
-                    ->first();
-                if ($latestAssessment) {
-                    $diagnosis = null;
-                    if ($latestAssessment->treatment) {
-                        $treatment = json_decode($latestAssessment->treatment, true);
-                        if (isset($treatment['diagnosis'])) {
-                            // Normalize: lowercase, remove parentheses and their contents, trim spaces
-                            $diagnosis = strtolower($treatment['diagnosis']);
-                            $diagnosis = trim($diagnosis);
-                        }
-                    }
-                    if ($diagnosis) {
-                        // Use regex to match both full and short forms, with or without parentheses
-                        if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
-                            $sam++;
-                        } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
-                            $mam++;
-                        } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
-                            $normal++;
-                        } else {
-                            $unknown++;
-                        }
-                    } else {
-                        $unknown++;
-                    }
-                }
-            }
-            $barangays[] = [
-                'id' => $b->barangay_id,
-                'name' => $b->barangay_name,
-                'lat' => $b->latitude,
-                'lng' => $b->longitude,
-                'sam_count' => $sam,
-                'mam_count' => $mam,
-                'normal_count' => $normal,
-                'unknown_count' => $unknown
-            ];
-        }
+        // Use the extracted method for barangay data processing
+        $barangays = $this->getBarangayPatientData();
 
         return view('admin.dashboard', compact('stats', 'barangays'));
     }
@@ -129,56 +79,8 @@ class AdminController extends Controller
                 ->take(30) // Limit for performance
                 ->get();
 
-            $barangayList = Barangay::whereNotNull('latitude')->whereNotNull('longitude')->get();
-            $barangays = [];
-            foreach ($barangayList as $b) {
-                $sam = 0;
-                $mam = 0;
-                $normal = 0;
-                $unknown = 0;
-                $patients = Patient::where('barangay_id', $b->barangay_id)->pluck('patient_id');
-                foreach ($patients as $patientId) {
-                    $latestAssessment = Assessment::where('patient_id', $patientId)
-                        ->orderByDesc('assessment_date')
-                        ->first();
-                    if ($latestAssessment) {
-                        $diagnosis = null;
-                        if ($latestAssessment->treatment) {
-                            $treatment = json_decode($latestAssessment->treatment, true);
-                            if (isset($treatment['diagnosis'])) {
-                                $diagnosis = strtolower($treatment['diagnosis']);
-                                $diagnosis = trim($diagnosis);
-                            }
-                        }
-                        if ($diagnosis) {
-                            if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
-                                $sam++;
-                            } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
-                                $mam++;
-                            } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
-                                $normal++;
-                            } else {
-                                $unknown++;
-                            }
-                        } else {
-                            $unknown++;
-                        }
-                    }
-                }
-                $patientCount = count($patients);
-                $barangays[] = [
-                    'id' => $b->barangay_id,
-                    'name' => $b->barangay_name,
-                    'lat' => (float) $b->latitude,
-                    'lng' => (float) $b->longitude,
-                    'patient_count' => $patientCount,
-                    'sam_count' => $sam,
-                    'mam_count' => $mam,
-                    'normal_count' => $normal,
-                    'unknown_count' => $unknown,
-                    'activity_level' => $patientCount > 10 ? 'high' : ($patientCount > 5 ? 'medium' : 'low')
-                ];
-            }
+            // Use the extracted method for barangay data processing
+            $barangays = $this->getBarangayPatientData(true, true);
 
             $mapData = [
                 'patients' => $patients->map(function($patient) {
@@ -275,19 +177,7 @@ class AdminController extends Controller
      */
     public function storePatient(Request $request)
     {
-        $request->validate([
-            'parent_id' => 'nullable|exists:users,user_id',
-            'nutritionist_id' => 'nullable|exists:users,user_id',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'barangay_id' => 'required|exists:barangays,barangay_id',
-            'contact_number' => 'required|string|max:20',
-            'age_months' => 'required|integer|min:0',
-            'sex' => 'required|in:Male,Female',
-            'date_of_admission' => 'required|date',
-            'weight_kg' => 'required|numeric|min:0',
-            'height_cm' => 'required|numeric|min:0',
-        ]);
+        $request->validate($this->getPatientValidationRules());
 
         try {
             $patient = Patient::create([
@@ -333,17 +223,7 @@ class AdminController extends Controller
      */
     public function getPatient($id)
     {
-        $patient = Patient::with(['parent', 'nutritionist', 'barangay'])->find($id);
-        if (!$patient) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Patient not found.'
-            ], 404);
-        }
-        return response()->json([
-            'success' => true,
-            'patient' => $patient
-        ]);
+        return $this->getRecord(Patient::class, $id, ['parent', 'nutritionist', 'barangay']);
     }
 
     /**
@@ -358,19 +238,7 @@ class AdminController extends Controller
                 'message' => 'Patient not found.'
             ], 404);
         }
-        $request->validate([
-            'parent_id' => 'nullable|exists:users,user_id',
-            'nutritionist_id' => 'nullable|exists:users,user_id',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'barangay_id' => 'required|exists:barangays,barangay_id',
-            'contact_number' => 'required|string|max:20',
-            'age_months' => 'required|integer|min:0',
-            'sex' => 'required|in:Male,Female',
-            'date_of_admission' => 'required|date',
-            'weight_kg' => 'required|numeric|min:0',
-            'height_cm' => 'required|numeric|min:0',
-        ]);
+        $request->validate($this->getPatientValidationRules(true));
         $patient->update([
             'parent_id' => $request->parent_id,
             'nutritionist_id' => $request->nutritionist_id,
@@ -461,13 +329,7 @@ class AdminController extends Controller
      */
     public function storeInventoryItem(Request $request)
     {
-        $request->validate([
-            'item_name' => 'required|string|max:255',
-            'category_id' => 'required|exists:item_categories,category_id',
-            'unit' => 'required|string|max:50',
-            'quantity' => 'required|integer|min:0',
-            'expiry_date' => 'nullable|date|after:today',
-        ]);
+        $request->validate($this->getInventoryValidationRules());
 
         try {
             DB::beginTransaction();
@@ -509,13 +371,7 @@ class AdminController extends Controller
      */
     public function updateInventoryItem(Request $request, $id)
     {
-        $request->validate([
-            'item_name' => 'required|string|max:255',
-            'category_id' => 'required|exists:item_categories,category_id',
-            'unit' => 'required|string|max:50',
-            'quantity' => 'required|integer|min:0',
-            'expiry_date' => 'nullable|date|after:today',
-        ]);
+        $request->validate($this->getInventoryValidationRules(true));
 
         try {
             DB::beginTransaction();
@@ -604,18 +460,7 @@ class AdminController extends Controller
      */
     public function getInventoryItem($id)
     {
-        try {
-            $item = InventoryItem::with('category')->findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'item' => $item
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Item not found.'
-            ], 404);
-        }
+        return $this->getRecord(InventoryItem::class, $id, ['category']);
     }
 
     /**
@@ -1123,18 +968,7 @@ class AdminController extends Controller
      */
     public function getCategory($id)
     {
-        try {
-            $category = ItemCategory::findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'category' => $category
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Category not found.'
-            ], 404);
-        }
+        return $this->getRecord(ItemCategory::class, $id);
     }
 
     /**
@@ -1142,18 +976,7 @@ class AdminController extends Controller
      */
     public function getBarangay($id)
     {
-        try {
-            $barangay = Barangay::findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'barangay' => $barangay
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Barangay not found.'
-            ], 404);
-        }
+        return $this->getRecord(Barangay::class, $id);
     }
 
     // ========== USER MANAGEMENT CRUD METHODS ==========
@@ -1219,18 +1042,7 @@ class AdminController extends Controller
      */
     public function getUser($id)
     {
-        try {
-            $user = User::with('role')->findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'user' => $user
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found.'
-            ], 404);
-        }
+        return $this->getRecord(User::class, $id, ['role']);
     }
 
     /**
@@ -1856,15 +1668,7 @@ class AdminController extends Controller
      */
     public function downloadUserActivityReport(Request $request)
     {
-        $reportData = json_decode($request->input('report_data'), true);
-        $timestamp = now()->format('Y-m-d H:i:s');
-        
-        $pdf = Pdf::loadView('admin.reports.pdf.user-activity', [
-            'data' => $reportData,
-            'generated_at' => $timestamp
-        ]);
-        
-        return $pdf->download('user-activity-report-' . now()->format('Y-m-d') . '.pdf');
+        return $this->downloadReport($request, 'admin.reports.pdf.user-activity', 'user-activity-report');
     }
 
     /**
@@ -1872,15 +1676,7 @@ class AdminController extends Controller
      */
     public function downloadInventoryReport(Request $request)
     {
-        $reportData = json_decode($request->input('report_data'), true);
-        $timestamp = now()->format('Y-m-d H:i:s');
-        
-        $pdf = Pdf::loadView('admin.reports.pdf.inventory', [
-            'data' => $reportData,
-            'generated_at' => $timestamp
-        ]);
-        
-        return $pdf->download('inventory-report-' . now()->format('Y-m-d') . '.pdf');
+        return $this->downloadReport($request, 'admin.reports.pdf.inventory', 'inventory-report');
     }
 
 
@@ -1890,15 +1686,7 @@ class AdminController extends Controller
      */
     public function downloadLowStockReport(Request $request)
     {
-        $reportData = json_decode($request->input('report_data'), true);
-        $timestamp = now()->format('Y-m-d H:i:s');
-        
-        $pdf = Pdf::loadView('admin.reports.pdf.low-stock', [
-            'data' => $reportData,
-            'generated_at' => $timestamp
-        ]);
-        
-        return $pdf->download('low-stock-report-' . now()->format('Y-m-d') . '.pdf');
+        return $this->downloadReport($request, 'admin.reports.pdf.low-stock', 'low-stock-report');
     }
 
     /**
@@ -2016,6 +1804,220 @@ class AdminController extends Controller
             'total_assessments' => array_sum($assessmentCounts),
             'total_recovered' => array_sum($recoveredCounts),
         ];
+    }
+
+    /**
+     * Get barangay data with patient counts and malnutrition diagnosis statistics
+     * 
+     * @param bool $includePatientCount Whether to include patient count (for map data)
+     * @param bool $includeActivityLevel Whether to include activity level calculation
+     * @return array
+     */
+    private function getBarangayPatientData($includePatientCount = false, $includeActivityLevel = false)
+    {
+        // Fetch barangays from DB with coordinates
+        $barangayList = Barangay::whereNotNull('latitude')->whereNotNull('longitude')->get();
+        $barangays = [];
+
+        foreach ($barangayList as $b) {
+            $sam = 0;
+            $mam = 0;
+            $normal = 0;
+            $unknown = 0;
+            $patients = Patient::where('barangay_id', $b->barangay_id)->pluck('patient_id');
+            
+            foreach ($patients as $patientId) {
+                $latestAssessment = Assessment::where('patient_id', $patientId)
+                    ->orderByDesc('assessment_date')
+                    ->first();
+                    
+                if ($latestAssessment) {
+                    $diagnosis = null;
+                    if ($latestAssessment->treatment) {
+                        $treatment = json_decode($latestAssessment->treatment, true);
+                        if (isset($treatment['diagnosis'])) {
+                            // Normalize: lowercase, remove parentheses and their contents, trim spaces
+                            $diagnosis = strtolower($treatment['diagnosis']);
+                            $diagnosis = trim($diagnosis);
+                        }
+                    }
+                    
+                    if ($diagnosis) {
+                        // Use regex to match both full and short forms, with or without parentheses
+                        if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
+                            $sam++;
+                        } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
+                            $mam++;
+                        } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
+                            $normal++;
+                        } else {
+                            $unknown++;
+                        }
+                    } else {
+                        $unknown++;
+                    }
+                }
+            }
+
+            $barangayData = [
+                'id' => $b->barangay_id,
+                'name' => $b->barangay_name,
+                'lat' => (float) $b->latitude,
+                'lng' => (float) $b->longitude,
+                'sam_count' => $sam,
+                'mam_count' => $mam,
+                'normal_count' => $normal,
+                'unknown_count' => $unknown
+            ];
+
+            // Add optional fields for map data
+            if ($includePatientCount) {
+                $patientCount = count($patients);
+                $barangayData['patient_count'] = $patientCount;
+                
+                if ($includeActivityLevel) {
+                    $barangayData['activity_level'] = $patientCount > 10 ? 'high' : ($patientCount > 5 ? 'medium' : 'low');
+                }
+            }
+
+            $barangays[] = $barangayData;
+        }
+
+        return $barangays;
+    }
+
+    /**
+     * Log activity to audit log
+     * 
+     * @param string $action
+     * @param string|null $tableName
+     * @param int|null $recordId
+     * @param string $description
+     * @param array|null $oldValues
+     * @param array|null $newValues
+     * @return void
+     */
+    private function logActivity($action, $tableName = null, $recordId = null, $description = '', $oldValues = null, $newValues = null)
+    {
+        $logData = [
+            'user_id' => Auth::id(),
+            'action' => $action,
+            'description' => $description,
+        ];
+
+        // Add optional fields if provided
+        if ($tableName) {
+            $logData['table_name'] = $tableName;
+        }
+        
+        if ($recordId) {
+            $logData['record_id'] = $recordId;
+        }
+        
+        if ($oldValues) {
+            $logData['old_values'] = is_array($oldValues) ? json_encode($oldValues) : $oldValues;
+        }
+        
+        if ($newValues) {
+            $logData['new_values'] = is_array($newValues) ? json_encode($newValues) : $newValues;
+        }
+
+        AuditLog::create($logData);
+    }
+
+    /**
+     * Get patient validation rules
+     * 
+     * @param bool $isUpdate
+     * @return array
+     */
+    private function getPatientValidationRules($isUpdate = false)
+    {
+        return [
+            'parent_id' => 'nullable|exists:users,user_id',
+            'nutritionist_id' => 'nullable|exists:users,user_id',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'barangay_id' => 'required|exists:barangays,barangay_id',
+            'contact_number' => 'required|string|max:20',
+            'age_months' => 'required|integer|min:0',
+            'sex' => 'required|in:Male,Female',
+            'date_of_admission' => 'required|date',
+            'weight_kg' => 'required|numeric|min:0',
+            'height_cm' => 'required|numeric|min:0',
+        ];
+    }
+
+    /**
+     * Get inventory item validation rules
+     * 
+     * @param bool $isUpdate
+     * @return array
+     */
+    private function getInventoryValidationRules($isUpdate = false)
+    {
+        return [
+            'item_name' => 'required|string|max:255',
+            'category_id' => 'required|exists:item_categories,category_id',
+            'unit' => 'required|string|max:50',
+            'quantity' => 'required|integer|min:0',
+            'expiry_date' => 'nullable|date|after:today',
+        ];
+    }
+
+    /**
+     * Generic method to get a record with relationships
+     * 
+     * @param string $modelClass
+     * @param int $id
+     * @param array $relationships
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function getRecord($modelClass, $id, $relationships = [])
+    {
+        try {
+            $query = $modelClass::query();
+            
+            if (!empty($relationships)) {
+                $query->with($relationships);
+            }
+            
+            $record = $query->findOrFail($id);
+            
+            $recordName = strtolower(class_basename($modelClass));
+            
+            return response()->json([
+                'success' => true,
+                $recordName => $record
+            ]);
+        } catch (\Exception $e) {
+            $recordName = strtolower(class_basename($modelClass));
+            return response()->json([
+                'success' => false,
+                'message' => ucfirst($recordName) . ' not found.'
+            ], 404);
+        }
+    }
+
+    /**
+     * Unified PDF download method
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param string $viewPath
+     * @param string $fileName
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    private function downloadReport(Request $request, $viewPath, $fileName)
+    {
+        $reportData = json_decode($request->input('report_data'), true);
+        $timestamp = now()->format('Y-m-d H:i:s');
+        
+        $pdf = Pdf::loadView($viewPath, [
+            'data' => $reportData,
+            'generated_at' => $timestamp
+        ]);
+        
+        return $pdf->download($fileName . '-' . now()->format('Y-m-d') . '.pdf');
     }
 
 }
