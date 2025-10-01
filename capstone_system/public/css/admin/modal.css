@@ -1,53 +1,55 @@
-/* Bootstrap Modal Customization - High Specificity */
+/* Modern Modal Styles - Bootstrap Override */
 #reportModal .modal-dialog,
 #reportModal .modal-dialog.modal-custom-wide,
 .modal#reportModal .modal-dialog {
-    max-width: 1600px !important;
-    width: 95% !important;
-    margin: 1.75rem auto !important;
+    max-width: 1400px !important;
+    width: 90% !important;
+    margin: 2rem auto !important;
 }
 
-/* Override Bootstrap modal-xl, modal-lg, etc. */
+/* Override Bootstrap modal sizes */
 #reportModal .modal-dialog.modal-xl,
 #reportModal .modal-dialog.modal-lg,
 #reportModal .modal-dialog.modal-sm {
-    max-width: 1600px !important;
-    width: 95% !important;
+    max-width: 1400px !important;
+    width: 90% !important;
 }
 
 .modal-content {
-    border-radius: 0.5rem !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
     border: none !important;
+    overflow: hidden !important;
 }
 
 .modal-header {
-    padding: 1.5rem !important;
-    border-bottom: 1px solid #e0e0e0 !important;
-    background-color: #f8f9fa !important;
-    border-radius: 0.5rem 0.5rem 0 0 !important;
+    padding: 2rem !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border-radius: 0 !important;
 }
 
 .modal-title {
     margin: 0 !important;
-    color: #333 !important;
-    font-size: 1.25rem !important;
-    font-weight: 600 !important;
+    color: #111827 !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
 }
 
 .btn-close {
-    font-size: 1.5rem !important;
+    font-size: 1.25rem !important;
     font-weight: bold !important;
-    color: #666 !important;
+    color: #6b7280 !important;
     border: none !important;
-    background: none !important;
-    padding: 0 !important;
-    width: 30px !important;
-    height: 30px !important;
+    background: #f3f4f6 !important;
+    padding: 0.5rem !important;
+    width: 36px !important;
+    height: 36px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border-radius: 50% !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
     transition: all 0.2s !important;
     opacity: 1 !important;
 }

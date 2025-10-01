@@ -352,80 +352,108 @@ class NutritionistController extends Controller
         $nutritionist = Auth::user();
         $nutritionistId = $nutritionist->user_id;
         
-        // Get only patients assigned to this nutritionist
-        $patientIds = Patient::where('nutritionist_id', $nutritionistId)->pluck('patient_id');
-
-        // Get only the latest assessment for each patient assigned to this nutritionist
-        $latestAssessmentIds = Assessment::whereIn('patient_id', $patientIds)
-            ->select('patient_id', DB::raw('MAX(assessment_id) as latest_assessment_id'))
-            ->groupBy('patient_id')
-            ->pluck('latest_assessment_id');
-
-        $query = Assessment::whereIn('assessment_id', $latestAssessmentIds)
-            ->with(['patient']);
+        // Get all patients assigned to this nutritionist with their latest assessment
+        $query = Patient::where('nutritionist_id', $nutritionistId)
+            ->with(['barangay', 'parent'])
+            ->with(['assessments' => function($q) {
+                $q->latest('assessment_date')->limit(1);
+            }]);
 
         // Search functionality
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->whereHas('patient', function($subQ) use ($search) {
-                    $subQ->where('first_name', 'like', "%{$search}%")
-                         ->orWhere('last_name', 'like', "%{$search}%")
-                         ->orWhere('contact_number', 'like', "%{$search}%");
-                })
-                ->orWhere('treatment', 'like', "%{$search}%")
-                ->orWhere('assessment_id', 'like', "%{$search}%");
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('contact_number', 'like', "%{$search}%")
+                  ->orWhereHas('assessments', function($subQ) use ($search) {
+                      $subQ->where('treatment', 'like', "%{$search}%")
+                           ->orWhere('assessment_id', 'like', "%{$search}%");
+                  });
             });
         }
 
         // Status filter
         if ($request->has('status') && !empty($request->status)) {
             if ($request->status === 'completed') {
-                $query->whereNotNull('completed_at');
+                $query->whereHas('assessments', function($q) {
+                    $q->whereNotNull('completed_at');
+                });
             } elseif ($request->status === 'pending') {
-                $query->whereNull('completed_at');
+                $query->where(function($q) {
+                    $q->whereDoesntHave('assessments')
+                      ->orWhereHas('assessments', function($subQ) {
+                          $subQ->whereNull('completed_at');
+                      });
+                });
             }
         }
 
         // Date range filter
         if ($request->has('date_from') && !empty($request->date_from)) {
-            $query->whereDate('assessment_date', '>=', $request->date_from);
+            $query->whereHas('assessments', function($q) use ($request) {
+                $q->whereDate('assessment_date', '>=', $request->date_from);
+            });
         }
         if ($request->has('date_to') && !empty($request->date_to)) {
-            $query->whereDate('assessment_date', '<=', $request->date_to);
+            $query->whereHas('assessments', function($q) use ($request) {
+                $q->whereDate('assessment_date', '<=', $request->date_to);
+            });
         }
 
         // Diagnosis filter
         if ($request->has('diagnosis') && !empty($request->diagnosis)) {
-            $query->where('treatment', 'like', "%{$request->diagnosis}%");
+            $query->whereHas('assessments', function($q) use ($request) {
+                $q->where('treatment', 'like', "%{$request->diagnosis}%");
+            });
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'assessment_date');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortBy = $request->get('sort_by', 'first_name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        switch ($sortBy) {
+            case 'assessment_date':
+                $query->leftJoin('assessments', function($join) {
+                    $join->on('patients.patient_id', '=', 'assessments.patient_id')
+                         ->whereRaw('assessments.assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)');
+                })->select('patients.*')->orderBy('assessments.assessment_date', $sortOrder);
+                break;
+            case 'patient_id':
+            case 'first_name':
+                $query->orderBy('first_name', $sortOrder)->orderBy('last_name', $sortOrder);
+                break;
+            default:
+                $query->orderBy($sortBy, $sortOrder);
+                break;
+        }
 
-        // Pagination
-        $perPage = $request->get('per_page', 15);
-        $assessments = $query->paginate($perPage);
+        // Pagination with validation
+        $perPage = min(max($request->get('per_page', 15), 10), 100); // Limit between 10 and 100
+        $patients = $query->paginate($perPage);
+        
+        // Append current query parameters to pagination links
+        $patients->appends($request->query());
 
         // If it's an AJAX request, return JSON
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'html' => view('nutritionist.partials.assessments-table', compact('assessments'))->render(),
+                'html' => view('nutritionist.partials.assessments-table', compact('patients'))->render(),
                 'pagination' => [
-                    'current_page' => $assessments->currentPage(),
-                    'last_page' => $assessments->lastPage(),
-                    'per_page' => $assessments->perPage(),
-                    'total' => $assessments->total(),
-                    'from' => $assessments->firstItem(),
-                    'to' => $assessments->lastItem(),
+                    'current_page' => $patients->currentPage(),
+                    'last_page' => $patients->lastPage(),
+                    'per_page' => $patients->perPage(),
+                    'total' => $patients->total(),
+                    'from' => $patients->firstItem(),
+                    'to' => $patients->lastItem(),
                 ]
             ]);
         }
 
-        return view('nutritionist.assessments', compact('assessments'));
+        // For backward compatibility, also pass as 'assessments' but it's actually patients with their latest assessments
+        $assessments = $patients;
+        return view('nutritionist.assessments', compact('patients', 'assessments'));
     }
 
     /**

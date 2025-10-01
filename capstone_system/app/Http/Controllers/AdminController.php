@@ -631,9 +631,10 @@ class AdminController extends Controller
             'total_inventory_value' => InventoryItem::all()->sum(function($item) {
                 return $item->quantity * $item->unit_cost;
             }),
-            'assessment_trends' => $this->getAssessmentTrendsDashboard(),
             'inventory_by_category' => $this->getInventoryByCategory(),
             'recent_activities' => $this->getRecentActivities(),
+            'patient_distribution' => $this->getPatientDistribution(),
+            'monthly_progress' => $this->getMonthlyProgress(),
         ];
 
         return view('admin.reports', compact('reports'));
@@ -720,94 +721,7 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Generate Assessment Trends Report
-     */
-    public function generateAssessmentTrendsReport()
-    {
-        try {
-            // Load assessments with nested relationships
-            $assessments = Assessment::with(['patient.barangay', 'nutritionist'])->get();
-            
-            // Calculate monthly trends
-            $monthlyData = $assessments->groupBy(function($assessment) {
-                return $assessment->created_at ? $assessment->created_at->format('Y-m') : 'Unknown';
-            })->map(function($group) {
-                return $group->count();
-            })->sortKeys();
-            
-            // Calculate trends with growth rate
-            $monthlyTrends = [];
-            $previousCount = 0;
-            foreach ($monthlyData as $month => $count) {
-                $growth = $previousCount > 0 ? round((($count - $previousCount) / $previousCount) * 100, 1) : 0;
-                $monthlyTrends[] = [
-                    'month' => $month,
-                    'count' => $count,
-                    'growth' => $growth
-                ];
-                $previousCount = $count;
-            }
-            
-            // Get assessments by barangay (safely)
-            $assessmentsByBarangay = [];
-            foreach ($assessments as $assessment) {
-                if ($assessment->patient && $assessment->patient->barangay) {
-                    $barangayName = $assessment->patient->barangay->name;
-                    $assessmentsByBarangay[$barangayName] = ($assessmentsByBarangay[$barangayName] ?? 0) + 1;
-                }
-            }
-            
-            // Get assessments by nutritionist
-            $assessmentsByNutritionist = [];
-            foreach ($assessments as $assessment) {
-                if ($assessment->nutritionist) {
-                    $nutritionistName = $assessment->nutritionist->name;
-                    $assessmentsByNutritionist[$nutritionistName] = ($assessmentsByNutritionist[$nutritionistName] ?? 0) + 1;
-                }
-            }
-            
-            $report_data = [
-                'total_assessments' => $assessments->count(),
-                'completed_assessments' => $assessments->whereNotNull('completed_at')->count(),
-                'pending_assessments' => $assessments->whereNull('completed_at')->count(),
-                'assessments_this_month' => $assessments->filter(function($assessment) {
-                    return $assessment->created_at && $assessment->created_at->isCurrentMonth();
-                })->count(),
-                'avg_assessments_per_day' => $assessments->count() > 0 ? 
-                    round($assessments->count() / max(1, now()->diffInDays($assessments->min('created_at') ?? now())), 1) : 0,
-                'monthly_trends' => $monthlyTrends,
-                'assessments_by_month' => $monthlyData,
-                'assessments_by_barangay' => $assessmentsByBarangay,
-                'assessments_by_nutritionist' => $assessmentsByNutritionist,
-                'assessment_outcomes' => [
-                    'completed' => $assessments->whereNotNull('completed_at')->count(),
-                    'pending' => $assessments->whereNull('completed_at')->count(),
-                ],
-                'recent_assessments' => $assessments->sortByDesc('created_at')->take(10)->map(function($assessment) {
-                    return [
-                        'id' => $assessment->assessment_id,
-                        'patient_name' => $assessment->patient ? 
-                            $assessment->patient->first_name . ' ' . $assessment->patient->last_name : 'N/A',
-                        'nutritionist_name' => $assessment->nutritionist ? $assessment->nutritionist->name : 'N/A',
-                        'created_at' => $assessment->created_at ? $assessment->created_at->format('Y-m-d H:i:s') : 'N/A',
-                    ];
-                })->values(),
-            ];
 
-            return response()->json([
-                'success' => true,
-                'data' => $report_data,
-                'generated_at' => now()->format('Y-m-d H:i:s')
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Assessment Trends Report Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error generating assessment trends report: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 
     /**
      * Generate Low Stock Alert Report
@@ -836,18 +750,7 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Get assessment trends for dashboard
-     */
-    private function getAssessmentTrendsDashboard()
-    {
-        $trends = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $trends[$date->format('M d')] = Assessment::whereDate('created_at', $date)->count();
-        }
-        return $trends;
-    }
+
 
     /**
      * Get inventory by category
@@ -1873,10 +1776,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Show inventory transactions
-     */
-
     // ========================================
     // API MANAGEMENT METHODS
     // ========================================
@@ -1984,21 +1883,7 @@ class AdminController extends Controller
         return $pdf->download('inventory-report-' . now()->format('Y-m-d') . '.pdf');
     }
 
-    /**
-     * Download Assessment Trends Report as PDF
-     */
-    public function downloadAssessmentTrendsReport(Request $request)
-    {
-        $reportData = json_decode($request->input('report_data'), true);
-        $timestamp = now()->format('Y-m-d H:i:s');
-        
-        $pdf = Pdf::loadView('admin.reports.pdf.assessment-trends', [
-            'data' => $reportData,
-            'generated_at' => $timestamp
-        ]);
-        
-        return $pdf->download('assessment-trends-report-' . now()->format('Y-m-d') . '.pdf');
-    }
+
 
     /**
      * Download Low Stock Report as PDF
@@ -2017,59 +1902,120 @@ class AdminController extends Controller
     }
 
     /**
-     * Show all nutritionist applications for admin review
+     * Get patient distribution data by nutrition status
      */
-    public function showNutritionists()
+    private function getPatientDistribution()
     {
-    $nutritionists = User::whereHas('role', function($query) {
-            $query->where('role_name', 'Nutritionist');
-        })->get();
-        return view('admin.nutritionists', compact('nutritionists'));
-    }
+        $patients = Patient::with('assessments')->get();
+        $distribution = [
+            'normal' => 0,
+            'underweight' => 0,
+            'malnourished' => 0,
+            'severe_malnourishment' => 0,
+        ];
 
-
-        /**
-     * API endpoint for Assessment Trends chart (Weekly, Monthly, Yearly)
-     */
-    public function getAssessmentTrends(Request $request)
-    {
-        $period = $request->query('period', 'monthly');
-    $query = Assessment::query();
-        $now = now();
-        $labels = [];
-        $data = [];
-
-        if ($period === 'weekly') {
-            // Last 7 days
-            for ($i = 6; $i >= 0; $i--) {
-                $date = $now->copy()->subDays($i);
-                $labels[] = $date->format('D');
-                $data[] = $query->whereDate('created_at', $date->format('Y-m-d'))->count();
-            }
-        } elseif ($period === 'yearly') {
-            // Last 12 months
-            for ($i = 11; $i >= 0; $i--) {
-                $date = $now->copy()->subMonths($i);
-                $labels[] = $date->format('M Y');
-                $data[] = $query->whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->count();
-            }
-        } else {
-            // Monthly (current week)
-            $startOfMonth = $now->copy()->startOfMonth();
-            $endOfMonth = $now->copy()->endOfMonth();
-            $daysInMonth = $endOfMonth->day;
-            for ($i = 1; $i <= $daysInMonth; $i++) {
-                $date = $startOfMonth->copy()->addDays($i - 1);
-                $labels[] = $date->format('j');
-                $data[] = $query->whereDate('created_at', $date->format('Y-m-d'))->count();
+        foreach ($patients as $patient) {
+            // Get the latest assessment for each patient
+            $latestAssessment = $patient->assessments()->latest()->first();
+            
+            if ($latestAssessment) {
+                // Calculate BMI if we have weight and height
+                if ($latestAssessment->weight_kg && $latestAssessment->height_cm) {
+                    $height_m = $latestAssessment->height_cm / 100;
+                    $bmi = $latestAssessment->weight_kg / ($height_m * $height_m);
+                    
+                    // Classify based on BMI (you can adjust these thresholds based on WHO standards)
+                    if ($bmi < 16) {
+                        $distribution['severe_malnourishment']++;
+                    } elseif ($bmi < 18.5) {
+                        $distribution['malnourished']++;
+                    } elseif ($bmi < 17) {
+                        $distribution['underweight']++;
+                    } else {
+                        $distribution['normal']++;
+                    }
+                } else {
+                    // If no weight/height data, check recovery status
+                    if ($latestAssessment->recovery_status === 'severe') {
+                        $distribution['severe_malnourishment']++;
+                    } elseif ($latestAssessment->recovery_status === 'moderate') {
+                        $distribution['malnourished']++;
+                    } elseif ($latestAssessment->recovery_status === 'mild') {
+                        $distribution['underweight']++;
+                    } else {
+                        $distribution['normal']++;
+                    }
+                }
+            } else {
+                // Patient with no assessments - classify based on initial data
+                if ($patient->weight_kg && $patient->height_cm) {
+                    $height_m = $patient->height_cm / 100;
+                    $bmi = $patient->weight_kg / ($height_m * $height_m);
+                    
+                    if ($bmi < 16) {
+                        $distribution['severe_malnourishment']++;
+                    } elseif ($bmi < 18.5) {
+                        $distribution['malnourished']++;
+                    } elseif ($bmi < 17) {
+                        $distribution['underweight']++;
+                    } else {
+                        $distribution['normal']++;
+                    }
+                } else {
+                    $distribution['normal']++;
+                }
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'labels' => $labels,
-            'data' => $data,
-        ]);
+        // Calculate percentages
+        $total = array_sum($distribution);
+        if ($total > 0) {
+            foreach ($distribution as $key => $count) {
+                $distribution[$key] = [
+                    'count' => $count,
+                    'percentage' => round(($count / $total) * 100, 1)
+                ];
+            }
+        }
+
+        return $distribution;
+    }
+
+    /**
+     * Get monthly progress data for the last 6 months
+     */
+    private function getMonthlyProgress()
+    {
+        $months = [];
+        $assessmentCounts = [];
+        $recoveredCounts = [];
+        
+        // Get last 6 months of data
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $months[] = $date->format('M Y');
+            
+            // Count assessments for this month
+            $monthlyAssessments = Assessment::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+            $assessmentCounts[] = $monthlyAssessments;
+            
+            // Count recovered patients (assessments with positive recovery status)
+            $recoveredCount = Assessment::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->where('recovery_status', 'recovered')
+                ->count();
+            $recoveredCounts[] = $recoveredCount;
+        }
+
+        return [
+            'months' => $months,
+            'assessments' => $assessmentCounts,
+            'recovered' => $recoveredCounts,
+            'total_assessments' => array_sum($assessmentCounts),
+            'total_recovered' => array_sum($recoveredCounts),
+        ];
     }
 
 }

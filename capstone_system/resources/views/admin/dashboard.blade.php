@@ -162,4 +162,43 @@
 
     <!-- Admin Dashboard JS -->
     <script src="{{ asset('js/admin/admin-dashboard.js') }}"></script>
+    
+    <!-- Modal backdrop cleanup for admin dashboard -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Clean up any existing modal backdrops on page load
+            if (typeof window.cleanupModalBackdrops === 'function') {
+                window.cleanupModalBackdrops();
+            }
+            
+            // Add keyboard shortcut (Ctrl+Alt+C) to cleanup modals
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.altKey && e.key === 'c') {
+                    e.preventDefault();
+                    if (typeof window.emergencyModalCleanup === 'function') {
+                        window.emergencyModalCleanup();
+                        // Show a brief notification
+                        const notification = document.createElement('div');
+                        notification.textContent = 'Modal backdrops cleaned up!';
+                        notification.style.cssText = `
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            background: #28a745;
+                            color: white;
+                            padding: 10px 15px;
+                            border-radius: 4px;
+                            z-index: 10000;
+                            font-size: 14px;
+                        `;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
+                    }
+                }
+            });
+            
+            console.log('🔧 Admin dashboard modal cleanup initialized');
+            console.log('💡 Press Ctrl+Alt+C to cleanup modal backdrops');
+        });
+    </script>
 @endpush

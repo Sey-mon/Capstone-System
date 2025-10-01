@@ -7,7 +7,6 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NutritionistController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\InventoryTransactionController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
@@ -162,13 +161,11 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
     Route::get('/reports/user-activity', [AdminController::class, 'generateUserActivityReport'])->name('reports.user-activity');
     Route::get('/reports/inventory', [AdminController::class, 'generateInventoryReport'])->name('reports.inventory');
-    Route::get('/reports/assessment-trends', [AdminController::class, 'generateAssessmentTrendsReport'])->name('reports.assessment-trends');
     Route::get('/reports/low-stock', [AdminController::class, 'generateLowStockReport'])->name('reports.low-stock');
     
     // PDF Download routes
     Route::post('/reports/user-activity/download', [AdminController::class, 'downloadUserActivityReport'])->name('reports.user-activity.download');
     Route::post('/reports/inventory/download', [AdminController::class, 'downloadInventoryReport'])->name('reports.inventory.download');
-    Route::post('/reports/assessment-trends/download', [AdminController::class, 'downloadAssessmentTrendsReport'])->name('reports.assessment-trends.download');
     Route::post('/reports/low-stock/download', [AdminController::class, 'downloadLowStockReport'])->name('reports.low-stock.download');
     
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
@@ -177,11 +174,6 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::get('/nutritionist/{user}/professional-id', [\App\Http\Controllers\FileController::class, 'showProfessionalId'])
         ->middleware(['auth'])
         ->name('admin.nutritionist.professional_id');
-    
-    // Route to view all nutritionist applications
-    Route::get('/admin/nutritionists', [App\Http\Controllers\AdminController::class, 'showNutritionists'])
-        ->middleware(['auth'])
-        ->name('admin.nutritionists');
 });
 
 // Nutritionist Routes (Protected by auth, verified email, and role middleware)

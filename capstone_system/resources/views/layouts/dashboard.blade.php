@@ -15,10 +15,13 @@
     @stack('styles')
     
     <link rel="stylesheet" href="{{ asset('css/dashboard-modal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/modal-backdrop-fix.css') }}">
     
     <!-- Ensure Bootstrap JS is loaded before any other scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Modal cleanup utility -->
+    <script src="{{ asset('js/modal-cleanup.js') }}"></script>
     <script src="{{ asset('js/dashboard-modal.js') }}"></script>
 </head>
 <body>

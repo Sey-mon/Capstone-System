@@ -1,185 +1,334 @@
-@if($assessments->count() > 0)
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>
-                        <a href="#" class="sort-link" data-sort="patient_id">
-                            Patient
-                            <i class="fas fa-sort sort-icon"></i>
-                        </a>
-                    </th>
-                    <th>
-                        <a href="#" class="sort-link" data-sort="assessment_date">
-                            Assessment Date
-                            <i class="fas fa-sort sort-icon"></i>
-                        </a>
-                    </th>
-                    <th>
-                        <a href="#" class="sort-link" data-sort="treatment">
-                            Diagnosis
-                            <i class="fas fa-sort sort-icon"></i>
-                        </a>
-                    </th>
-                    <th>Weight (kg)</th>
-                    <th>Height (cm)</th>
-                    <th>
-                        <a href="#" class="sort-link" data-sort="completed_at">
-                            Status
-                            <i class="fas fa-sort sort-icon"></i>
-                        </a>
-                    </th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($assessments as $assessment)
-                    <tr>
-                        <td>
-                            <div class="patient-info">
-                                <strong>{{ $assessment->patient->first_name }} {{ $assessment->patient->last_name }}</strong>
-                                <small class="d-block text-muted">{{ $assessment->patient->age_months }} months old</small>
-                            </div>
-                        </td>
-                        <td>{{ $assessment->assessment_date->format('M d, Y') }}</td>
-                        <td>
-                            @php
-                                $diagnosisDisplay = 'Not specified';
-                                if (isset($assessment) && $assessment->treatment) {
-                                    $treatmentData = json_decode($assessment->treatment, true);
-                                    if ($treatmentData && isset($treatmentData['patient_info']['diagnosis'])) {
-                                        $diagnosisDisplay = $treatmentData['patient_info']['diagnosis'];
-                                    }
-                                }
-                            @endphp
-                            <span class="diagnosis-badge {{ getDiagnosisBadgeClass($diagnosisDisplay) }}">
-                                {{ $diagnosisDisplay }}
+@if($patients->count() > 0)
+    <!-- Sort Controls -->
+    <div class="sort-controls">
+        <span class="sort-label">Sort by:</span>
+        <div class="sort-buttons">
+            <button class="sort-btn active" data-sort="first_name">
+                <i class="fas fa-user me-1"></i>
+                Name
+            </button>
+            <button class="sort-btn" data-sort="assessment_date">
+                <i class="fas fa-calendar me-1"></i>
+                Date
+            </button>
+            <button class="sort-btn" data-sort="treatment">
+                <i class="fas fa-stethoscope me-1"></i>
+                Diagnosis
+            </button>
+        </div>
+    </div>
+
+    <!-- Modern Card Grid -->
+    <div class="patients-grid">
+        @foreach($patients as $patient)
+            @php
+                $latestAssessment = $patient->assessments->first();
+                $diagnosisDisplay = 'Not specified';
+                
+                if ($latestAssessment && $latestAssessment->treatment) {
+                    $treatmentData = json_decode($latestAssessment->treatment, true);
+                    if ($treatmentData && isset($treatmentData['patient_info']['diagnosis'])) {
+                        $diagnosisDisplay = $treatmentData['patient_info']['diagnosis'];
+                    }
+                }
+            @endphp
+            
+            <div class="patient-card">
+                <!-- Patient Header -->
+                <div class="patient-card-header">
+                    <div class="patient-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="patient-basic-info">
+                        <h4 class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</h4>
+                        <p class="patient-details">
+                            <span class="detail-item">
+                                <i class="fas fa-birthday-cake me-1"></i>
+                                {{ $patient->age_months }} months
                             </span>
-                        </td>
-                        <td>{{ $assessment->weight_kg }} kg</td>
-                        <td>{{ $assessment->height_cm }} cm</td>
-                        <td>
-                            @if($assessment->completed_at)
-                                <span class="status-badge completed">
+                            <span class="detail-item">
+                                <i class="fas fa-{{ $patient->sex == 'Male' ? 'mars' : 'venus' }} me-1"></i>
+                                {{ $patient->sex }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="patient-status">
+                        @if($latestAssessment)
+                            @if($latestAssessment->completed_at)
+                                <span class="modern-status-badge completed">
                                     <i class="fas fa-check-circle"></i>
                                     Completed
                                 </span>
                             @else
-                                <span class="status-badge pending">
+                                <span class="modern-status-badge pending">
                                     <i class="fas fa-clock"></i>
                                     Pending
                                 </span>
                             @endif
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                @if($assessment->completed_at)
-                                    <button class="btn btn-sm btn-info" onclick="viewAssessment({{ $assessment->assessment_id }})" title="View Results">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                @endif
-                                <button class="btn btn-sm btn-success" onclick="assessSpecificPatient({{ $assessment->patient_id }})" title="New Assessment">
-                                    <i class="fas fa-redo"></i>
-                                </button>
-                                <button class="btn btn-sm btn-secondary" onclick="printAssessmentDetails({{ $assessment->assessment_id }})" title="Print">
-                                    <i class="fas fa-print"></i>
-                                </button>
+                        @else
+                            <span class="modern-status-badge no-assessment">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                No Assessment
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Assessment Info -->
+                <div class="patient-card-body">
+                    <div class="assessment-info">
+                        <div class="info-row">
+                            <div class="info-item">
+                                <span class="info-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Last Assessment
+                                </span>
+                                <span class="info-value">
+                                    @if($latestAssessment)
+                                        {{ $latestAssessment->assessment_date->format('M d, Y') }}
+                                    @else
+                                        <span class="no-data">No assessment</span>
+                                    @endif
+                                </span>
                             </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+                            <div class="info-item">
+                                <span class="info-label">
+                                    <i class="fas fa-stethoscope me-1"></i>
+                                    Diagnosis
+                                </span>
+                                <span class="info-value">
+                                    <span class="modern-diagnosis-badge {{ getDiagnosisBadgeClass($diagnosisDisplay) }}">
+                                        {{ $diagnosisDisplay }}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-item">
+                                <span class="info-label">
+                                    <i class="fas fa-weight me-1"></i>
+                                    Weight
+                                </span>
+                                <span class="info-value">
+                                    @if($latestAssessment)
+                                        <strong>{{ $latestAssessment->weight_kg }} kg</strong>
+                                    @else
+                                        <span class="no-data">-</span>
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">
+                                    <i class="fas fa-ruler-vertical me-1"></i>
+                                    Height
+                                </span>
+                                <span class="info-value">
+                                    @if($latestAssessment)
+                                        <strong>{{ $latestAssessment->height_cm }} cm</strong>
+                                    @else
+                                        <span class="no-data">-</span>
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Pagination Info -->
-    <div class="pagination-info">
-        <span class="text-muted">
-            Showing {{ $assessments->firstItem() ?? 0 }} to {{ $assessments->lastItem() ?? 0 }} 
-            of {{ $assessments->total() }} results
-        </span>
-    </div>
-
-    <!-- Pagination -->
-    <div class="pagination-wrapper">
-        @if ($assessments->hasPages())
-            <nav aria-label="Assessment pagination">
-                <ul class="pagination justify-content-center">
-                    {{-- Previous Page Link --}}
-                    @if ($assessments->onFirstPage())
-                        <li class="page-item disabled">
-                            <span class="page-link">‹</span>
-                        </li>
-                    @else
-                        <li class="page-item">
-                            <a class="page-link" href="#" data-page="{{ $assessments->currentPage() - 1 }}">‹</a>
-                        </li>
+                <!-- Action Buttons -->
+                <div class="patient-card-actions">
+                    @if($latestAssessment && $latestAssessment->completed_at)
+                        <button class="action-btn view-btn" onclick="viewAssessment({{ $latestAssessment->assessment_id }})" title="View Assessment Details">
+                            <i class="fas fa-eye me-1"></i>
+                            View Details
+                        </button>
                     @endif
-
-                    {{-- Pagination Elements --}}
-                    @php
-                        $start = max($assessments->currentPage() - 2, 1);
-                        $end = min($assessments->currentPage() + 2, $assessments->lastPage());
-                    @endphp
                     
-                    @if($start > 1)
-                        <li class="page-item">
-                            <a class="page-link" href="#" data-page="1">1</a>
-                        </li>
-                        @if($start > 2)
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
+                    <button class="action-btn assess-btn" onclick="assessSpecificPatient({{ $patient->patient_id }})" title="{{ $latestAssessment ? 'New Assessment' : 'First Assessment' }}">
+                        <i class="fas fa-{{ $latestAssessment ? 'redo' : 'plus' }} me-1"></i>
+                        {{ $latestAssessment ? 'New Assessment' : 'First Assessment' }}
+                    </button>
+                    
+                    @if($latestAssessment)
+                        <button class="action-btn print-btn" onclick="printAssessmentDetails({{ $latestAssessment->assessment_id }})" title="Print Assessment">
+                            <i class="fas fa-print me-1"></i>
+                            Print
+                        </button>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+    </div>
+
+    <!-- Enhanced Pagination Container -->
+    <div class="pagination-container">
+        <div class="pagination-info-extended">
+            <div class="total-results">
+                <i class="fas fa-users me-1"></i>
+                Total: {{ $patients->total() }} patients
+            </div>
+            <div class="showing-results">
+                Showing {{ $patients->firstItem() ?? 0 }} to {{ $patients->lastItem() ?? 0 }}
+            </div>
+            <div class="page-size-selector">
+                <label for="pageSizeSelect" class="me-2">Per page:</label>
+                <select id="pageSizeSelect" onchange="changePageSize(this.value)">
+                    <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10</option>
+                    <option value="15" {{ request('per_page') == '15' || !request('per_page') ? 'selected' : '' }}>15</option>
+                    <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25</option>
+                    <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
+                    <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
+                </select>
+            </div>
+        </div>
+
+        @if ($patients->hasPages())
+            <div class="pagination-wrapper">
+                <nav aria-label="Patient pagination" class="pagination-nav">
+                    <ul class="pagination">
+                        {{-- First Page --}}
+                        @if ($patients->currentPage() > 3)
+                            <li class="page-item">
+                                <a class="page-link" href="#" data-page="1" title="First page">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
                             </li>
                         @endif
-                    @endif
-                    
-                    @for($page = $start; $page <= $end; $page++)
-                        @if ($page == $assessments->currentPage())
-                            <li class="page-item active">
-                                <span class="page-link">{{ $page }}</span>
+
+                        {{-- Previous Page --}}
+                        @if ($patients->onFirstPage())
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    <i class="fas fa-angle-left"></i>
+                                </span>
                             </li>
                         @else
                             <li class="page-item">
-                                <a class="page-link" href="#" data-page="{{ $page }}">{{ $page }}</a>
+                                <a class="page-link" href="#" data-page="{{ $patients->currentPage() - 1 }}" title="Previous page">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
                             </li>
                         @endif
-                    @endfor
-                    
-                    @if($end < $assessments->lastPage())
-                        @if($end < $assessments->lastPage() - 1)
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                        @endif
-                        <li class="page-item">
-                            <a class="page-link" href="#" data-page="{{ $assessments->lastPage() }}">{{ $assessments->lastPage() }}</a>
-                        </li>
-                    @endif
 
-                    {{-- Next Page Link --}}
-                    @if ($assessments->hasMorePages())
-                        <li class="page-item">
-                            <a class="page-link" href="#" data-page="{{ $assessments->currentPage() + 1 }}">›</a>
-                        </li>
-                    @else
-                        <li class="page-item disabled">
-                            <span class="page-link">›</span>
-                        </li>
-                    @endif
-                </ul>
-            </nav>
+                        {{-- Page Numbers --}}
+                        @php
+                            $start = max($patients->currentPage() - 2, 1);
+                            $end = min($patients->currentPage() + 2, $patients->lastPage());
+                            
+                            // Ensure we always show 5 pages when possible
+                            if ($end - $start < 4) {
+                                if ($start == 1) {
+                                    $end = min($start + 4, $patients->lastPage());
+                                } else {
+                                    $start = max($end - 4, 1);
+                                }
+                            }
+                        @endphp
+                        
+                        @if($start > 1)
+                            <li class="page-item">
+                                <a class="page-link" href="#" data-page="1">1</a>
+                            </li>
+                            @if($start > 2)
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            @endif
+                        @endif
+                        
+                        @for($page = $start; $page <= $end; $page++)
+                            @if ($page == $patients->currentPage())
+                                <li class="page-item active">
+                                    <span class="page-link">{{ $page }}</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="#" data-page="{{ $page }}">{{ $page }}</a>
+                                </li>
+                            @endif
+                        @endfor
+                        
+                        @if($end < $patients->lastPage())
+                            @if($end < $patients->lastPage() - 1)
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            @endif
+                            <li class="page-item">
+                                <a class="page-link" href="#" data-page="{{ $patients->lastPage() }}">{{ $patients->lastPage() }}</a>
+                            </li>
+                        @endif
+
+                        {{-- Next Page --}}
+                        @if ($patients->hasMorePages())
+                            <li class="page-item">
+                                <a class="page-link" href="#" data-page="{{ $patients->currentPage() + 1 }}" title="Next page">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                        @else
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    <i class="fas fa-angle-right"></i>
+                                </span>
+                            </li>
+                        @endif
+
+                        {{-- Last Page --}}
+                        @if ($patients->currentPage() < $patients->lastPage() - 2)
+                            <li class="page-item">
+                                <a class="page-link" href="#" data-page="{{ $patients->lastPage() }}" title="Last page">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        @endif
+                    </ul>
+                </nav>
+            </div>
+        @endif
+
+        {{-- Quick Jump to Page --}}
+        @if ($patients->lastPage() > 10)
+            <div class="quick-jump mt-3">
+                <div class="input-group" style="max-width: 200px; margin: 0 auto;">
+                    <span class="input-group-text">Go to page:</span>
+                    <input type="number" class="form-control" id="jumpToPage" min="1" max="{{ $patients->lastPage() }}" placeholder="Page #">
+                    <button class="btn btn-outline-primary" onclick="jumpToPage()">Go</button>
+                </div>
+            </div>
         @endif
     </div>
 @else
-    <div class="empty-state">
-        <div class="empty-icon">
-            <i class="fas fa-clipboard-list"></i>
+    <div class="modern-empty-state">
+        <div class="empty-illustration">
+            <div class="empty-icon-circle">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="empty-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
         </div>
-        <h4>No Assessments Found</h4>
-        <p>{{ request('search') ? 'No assessments match your search criteria.' : 'You haven\'t performed any assessments yet.' }}</p>
-        <a href="{{ route('nutritionist.patients') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i>
-            Start Your First Assessment
-        </a>
+        <div class="empty-content">
+            <h3 class="empty-title">No Patients Found</h3>
+            <p class="empty-message">
+                {{ request('search') ? 'No patients match your search criteria. Try adjusting your filters.' : 'You don\'t have any assigned patients yet. Contact your administrator to get patients assigned to you.' }}
+            </p>
+            <div class="empty-actions">
+                <a href="{{ route('nutritionist.patients') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>
+                    View All Patients
+                </a>
+                @if(request('search') || request()->hasAny(['status', 'diagnosis', 'date_from', 'date_to']))
+                    <button class="btn btn-outline-secondary btn-lg ms-3" id="clearFiltersEmpty">
+                        <i class="fas fa-times me-2"></i>
+                        Clear Filters
+                    </button>
+                @endif
+            </div>
+        </div>
     </div>
 @endif
 
