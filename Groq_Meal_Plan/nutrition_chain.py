@@ -1,4 +1,5 @@
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSequence
 from langchain_groq import ChatGroq
 import os
 from dotenv import load_dotenv
@@ -8,41 +9,34 @@ import re
 
 load_dotenv()
 
+def create_nutrition_llm():
+    """Create a standardized ChatGroq instance for nutrition functions."""
+    api_key = os.getenv('GROQ_API_KEY')
+    if not api_key:
+        raise ValueError("GROQ_API_KEY not found in environment variables")
+    
+    return ChatGroq(
+        groq_api_key=api_key,
+        model_name="meta-llama/llama-4-scout-17b-16e-instruct",
+        temperature=0.1,
+        max_tokens=1500
+    )
+
 def get_relevant_pdf_chunks(query, k=4):
-    """Retrieve relevant PDF text using simple keyword matching."""
+    """Retrieve relevant PDF text using semantic similarity search."""
+    from embedding_utils import embedding_searcher
+    
     try:
-        # Get PDF text directly from knowledge base
-        knowledge_base = data_manager.get_knowledge_base()
-        if not knowledge_base:
-            return []
+        results = embedding_searcher.search_similar_chunks(query, k=k)
+        if results:
+            # Return the text chunks from semantic search, filtered by similarity threshold
+            return [chunk for chunk, score, metadata in results if score > 0.4]
         
-        query_keywords = query.lower().split()
-        scored_chunks = []
-        
-        for kb in knowledge_base.values():
-            ai_summary = kb.get('ai_summary', '')
-            if ai_summary:
-                # Simple scoring based on keyword matches
-                summary_lower = ai_summary.lower()
-                score = sum(1 for keyword in query_keywords if keyword in summary_lower)
-                
-                if score > 0:
-                    # Split into smaller chunks if needed
-                    if len(ai_summary) > 500:
-                        chunks = ai_summary.split('\n')
-                        for chunk in chunks:
-                            if chunk.strip():
-                                chunk_score = sum(1 for keyword in query_keywords if keyword in chunk.lower())
-                                if chunk_score > 0:
-                                    scored_chunks.append((chunk.strip(), chunk_score))
-                    else:
-                        scored_chunks.append((ai_summary, score))
-        
-        # Sort by score and return top k
-        scored_chunks.sort(key=lambda x: x[1], reverse=True)
-        return [chunk[0] for chunk in scored_chunks[:k]]
-        
+        # Return empty list if no results found
+        return []
     except Exception as e:
+        print(f"Error retrieving PDF chunks: {str(e)}")
+        print("Note: If no embeddings found, run 'python build_embeddings.py' to create them.")
         return []
 
 def clean_section_text(text):
@@ -65,6 +59,14 @@ def clean_section_text(text):
 
 def parse_assessment_sections(assessment_text):
     """Parse the assessment text into structured sections."""
+    # Handle AIMessage objects by extracting content
+    if hasattr(assessment_text, 'content'):
+        assessment_text = assessment_text.content
+    
+    # Ensure we have a string
+    if not isinstance(assessment_text, str):
+        assessment_text = str(assessment_text)
+    
     sections = {
         "patient_profile_summary": "",
         "nutritional_priorities": "",
@@ -159,10 +161,9 @@ def generate_patient_assessment(patient_id):
     meal_plan_notes = ""
     if latest_meal_plan:
         plan_id = latest_meal_plan.get('plan_id')
-        if plan_id is not None:
-            notes = data_manager.get_notes_for_meal_plan(str(plan_id))
-            if notes:
-                meal_plan_notes = "; ".join([note.get('notes', '') for note in notes])
+        notes = data_manager.get_notes_for_meal_plan(plan_id)
+        if notes:
+            meal_plan_notes = "; ".join([note.get('notes', '') for note in notes])
 
     # Get foods data for context
     foods_data = data_manager.get_foods_data()
@@ -172,18 +173,68 @@ def generate_patient_assessment(patient_id):
         sample_foods = foods_data[:10]
         food_list = []
         for food in sample_foods:
-            food_info = f"{getattr(food, 'food_name_and_description', '')} - {getattr(food, 'energy_kcal', 0)} kcal"
-            if getattr(food, 'nutrition_tags', None):
-                food_info += f" ({getattr(food, 'nutrition_tags')})"
+            food_info = f"{food.get('food_name_and_description', '')} - {food.get('energy_kcal', 0)} kcal"
+            if food.get('nutrition_tags'):
+                food_info += f" ({food.get('nutrition_tags')})"
             food_list.append(food_info)
         food_context = "AVAILABLE FOODS SAMPLE:\n" + "\n".join(food_list) + "\n"
 
-    # Get knowledge base context
-    query = f"child nutrition {patient_data.get('age_months', '')} months assessment dietary recommendations"
-    relevant_kb = get_relevant_pdf_chunks(query, k=3)
-    kb_context = ""
-    if relevant_kb:
-        kb_context = "NUTRITION KNOWLEDGE BASE:\n" + "\n---\n".join(relevant_kb) + "\n"
+    # Get knowledge base context using optimized search
+    from embedding_utils import embedding_searcher
+    
+    # Create targeted query based on patient characteristics
+    query_parts = []
+    age_months = patient_data.get('age_months', 0)
+    allergies = patient_data.get('allergies', '')
+    medical_problems = patient_data.get('other_medical_problems', '')
+    weight_status = patient_data.get('weight_for_age', '')
+    height_status = patient_data.get('height_for_age', '')
+    
+    # Age-specific query
+    if age_months <= 6:
+        query_parts.append("exclusive breastfeeding infant nutrition 0-6 months")
+    elif age_months <= 12:
+        query_parts.append("complementary feeding introduction 6-12 months iron rich foods")
+    elif age_months <= 24:
+        query_parts.append("toddler nutrition 12-24 months feeding practices")
+    else:
+        query_parts.append("young child nutrition 2-5 years dietary guidelines")
+    
+    query_parts.append("pediatric dietary assessment comprehensive evaluation")
+    
+    # Add condition-specific queries
+    if allergies and allergies.lower() not in ['none', 'no', 'n/a', 'not specified']:
+        query_parts.append(f"food allergies children {allergies} alternative foods")
+    
+    if medical_problems and medical_problems.lower() not in ['none', 'no', 'n/a', 'not specified']:
+        query_parts.append(f"child nutrition {medical_problems} dietary management")
+    
+    # Growth-related queries
+    if 'underweight' in weight_status.lower() or 'wasted' in weight_status.lower():
+        query_parts.append("underweight children nutrition dense foods weight gain")
+    elif 'overweight' in weight_status.lower():
+        query_parts.append("overweight children healthy eating weight management")
+        
+    if 'stunted' in height_status.lower() or 'short' in height_status.lower():
+        query_parts.append("stunting prevention linear growth nutrition")
+    
+    query = " ".join(query_parts)
+    
+    try:
+        kb_results = embedding_searcher.search_similar_chunks(query, k=4)
+        relevant_kb = []
+        for chunk, score, metadata in kb_results:
+            if score > 0.4:  # Filter by similarity threshold
+                source_info = f" (Source: {metadata.get('pdf_name', 'Unknown')})" if metadata.get('pdf_name') else ""
+                relevant_kb.append(f"{chunk.strip()}{source_info}")
+        
+        kb_context = ""
+        if relevant_kb:
+            kb_context = "NUTRITION KNOWLEDGE BASE:\n" + "\n---\n".join(relevant_kb) + "\n"
+    except Exception as e:
+        print(f"Error retrieving knowledge base context: {str(e)}")
+        print("Note: If no embeddings found, run 'python build_embeddings.py' to create them.")
+        kb_context = ""
 
     prompt_template = PromptTemplate(
         input_variables=[
@@ -283,26 +334,28 @@ IMPORTANT:
         "kb_context": kb_context
     }
 
-    # Create LLM
-    from pydantic import SecretStr
-    llm = ChatGroq(
-        api_key=SecretStr(api_key),
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
-        temperature=0.3,
-        max_tokens=4000
-    )
+    # Create LLM using shared factory function
+    llm = create_nutrition_llm()
 
+    # Create runnable sequence using modern LangChain pattern
     chain = prompt_template | llm
 
     try:
         # Generate assessment
         result = chain.invoke(template_vars)
-        # If result is a BaseMessage, get its content
-        if hasattr(result, "content"):
-            if isinstance(result.content, list):
-                return " ".join(str(x) for x in result.content)
-            return result.content
-        return str(result)
+        
+        # Handle AIMessage objects by extracting content
+        if hasattr(result, 'content'):
+            result = result.content
+        
+        # Ensure we have a string
+        if not isinstance(result, str):
+            result = str(result)
+        
+        # Parse the result into structured sections
+        sections = parse_assessment_sections(result)
+        
+        return sections
     except Exception as e:
         return {
             "patient_profile_summary": f"Error generating assessment: {str(e)}",
@@ -368,21 +421,77 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         parent_id = patient_data.get('parent_id')
         religion = data_manager.get_religion_by_parent(parent_id) if parent_id else ""
 
-    # Retrieve relevant PDF knowledge for this patient
-    query = f"child nutrition {patient_data.get('age_months', '')} months {patient_data.get('bmi_for_age', '')} {patient_data.get('allergies', '')} {patient_data.get('other_medical_problems', '')}"
-    relevant_pdf_chunks = get_relevant_pdf_chunks(query, k=4)
-    pdf_context = ""
-    if relevant_pdf_chunks:
-        pdf_context = "\nBACKGROUND KNOWLEDGE (for your reference only, do NOT mention or cite this in your response):\n" + "\n---\n".join(relevant_pdf_chunks)
+    # Retrieve relevant PDF knowledge for this patient with multiple targeted queries
+    age_months = patient_data.get('age_months', 0)
+    allergies = patient_data.get('allergies', '')
+    medical_problems = patient_data.get('other_medical_problems', '')
+    
+    # Create targeted nutrition queries for better context
+    nutrition_queries = []
+    
+    # Age-specific query
+    if age_months <= 6:
+        nutrition_queries.append("exclusive breastfeeding infant nutrition 0-6 months")
+    elif age_months <= 12:
+        nutrition_queries.append("complementary feeding introduction 6-12 months iron rich foods")
+    elif age_months <= 24:
+        nutrition_queries.append("toddler nutrition 12-24 months feeding practices meal planning")
+    else:
+        nutrition_queries.append("young child nutrition 2-5 years dietary guidelines")
+    
+    # Add specific queries for medical conditions
+    if allergies and allergies.lower() not in ['none', 'no', 'n/a', 'not specified']:
+        nutrition_queries.append(f"food allergies children {allergies} alternative foods")
+    
+    if medical_problems and medical_problems.lower() not in ['none', 'no', 'n/a', 'not specified']:
+        nutrition_queries.append(f"child nutrition {medical_problems} dietary management")
+    
+    # Growth-related queries based on patient data
+    weight_status = patient_data.get('weight_for_age', '')
+    height_status = patient_data.get('height_for_age', '')
+    
+    if 'underweight' in weight_status.lower() or 'wasted' in weight_status.lower():
+        nutrition_queries.append("underweight children nutrition dense foods weight gain")
+    elif 'overweight' in weight_status.lower():
+        nutrition_queries.append("overweight children healthy eating weight management")
+        
+    if 'stunted' in height_status.lower() or 'short' in height_status.lower():
+        nutrition_queries.append("stunting prevention linear growth nutrition")
+    
+    # Collect all relevant knowledge using unified embedding search
+    from embedding_utils import embedding_searcher
+    
+    # Combine all nutrition queries into a single comprehensive query
+    combined_query = " ".join(nutrition_queries)
+    
+    try:
+        # Use embedding searcher directly for better efficiency (only uses cached embeddings)
+        search_results = embedding_searcher.search_similar_chunks(combined_query, k=6)
+        unique_chunks = []
+        seen = set()
+        
+        for chunk, score, metadata in search_results:
+            if score > 0.4 and chunk not in seen:  # Filter by similarity threshold and remove duplicates
+                seen.add(chunk)
+                source_info = f" (Source: {metadata.get('pdf_name', 'Unknown')})" if metadata.get('pdf_name') else ""
+                unique_chunks.append(f"{chunk.strip()}{source_info}")
+        
+        pdf_context = ""
+        if unique_chunks:
+            pdf_context = f"\nEVIDENCE-BASED NUTRITION GUIDANCE (from WHO guidelines - for context only):\n" + "\n---\n".join(unique_chunks[:6])  # Limit to 6 most relevant chunks
+    except Exception as e:
+        print(f"Error retrieving nutrition guidance for meal planning: {str(e)}")
+        print("Note: If no embeddings found, run 'python build_embeddings.py' to create them.")
+        pdf_context = ""
 
     # Get all food names, energy, and nutrition_tags from the database
     foods_data = data_manager.get_foods_data()
     food_names = []
     all_nutrition_tags = set()
     for food in foods_data:
-        name = getattr(food, 'food_name_and_description', None)
-        kcal = getattr(food, 'energy_kcal', None)
-        tags = getattr(food, 'nutrition_tags', None)
+        name = food.get('food_name_and_description')
+        kcal = food.get('energy_kcal')
+        tags = food.get('nutrition_tags')
         if tags:
             # Split tags by comma or semicolon, strip whitespace
             for tag in re.split(r'[;,]', tags):
@@ -412,18 +521,80 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         # Custom prompt for structured output
         analysis_result = nutrition_ai.analyze_child_nutrition(
             patient_id=patient_id,
-            age_in_months=int(patient_data.get('age_months', 0) or 0),
-            allergies=str(patient_data.get('allergies', 'None') or 'None'),
-            other_medical_problems=str(patient_data.get('other_medical_problems', 'None') or 'None'),
-            parent_id=str(patient_data.get('parent_id', 'Unknown') or 'Unknown'),
-            notes=str(latest_assessment.get('notes', '')),
-            treatment=str(latest_assessment.get('treatment', '')),
-            sex=str(patient_data.get('sex', 'Unknown') or 'Unknown'),
-            weight_for_age=str(patient_data.get('weight_for_age', 'Unknown') or 'Unknown'),
-            height_for_age=str(patient_data.get('height_for_age', 'Unknown') or 'Unknown'),
-            bmi_for_age=str(patient_data.get('bmi_for_age', 'Unknown') or 'Unknown'),
-            breastfeeding=str(patient_data.get('breastfeeding', 'Unknown') or 'Unknown'),
-            religion=str(patient_data.get('religion', 'Unknown') or 'Unknown')
+            age_in_months=patient_data.get('age_months'),
+            allergies=patient_data.get('allergies'),
+            other_medical_problems=patient_data.get('other_medical_problems'),
+            parent_id=patient_data.get('parent_id'),
+            notes=latest_assessment.get('notes', ''),
+            treatment=latest_assessment.get('treatment', ''),
+            sex=patient_data.get('sex', ''),
+            weight_for_age=patient_data.get('weight_for_age', ''),
+            height_for_age=patient_data.get('height_for_age', ''),
+            bmi_for_age=patient_data.get('bmi_for_age', ''),
+            breastfeeding=patient_data.get('breastfeeding', ''),
+            religion=patient_data.get('religion', ''),
+            guidelines_context=pdf_context,
+            custom_prompt="""
+        Provide a comprehensive nutrition analysis in the following structured format:
+
+        ## NUTRITIONAL STATUS:
+        [Provide overall assessment based on growth indicators]
+
+        ## POTENTIAL CONCERNS:
+        [List any nutritional concerns or deficiencies identified]
+
+        ## DIETARY RESTRICTIONS:
+
+        ### Allergy-Related Restrictions:
+        [If allergies present: List specific foods to avoid and safety reminders]
+        [If no allergies: State "No known allergies"]
+
+        ### Religious Dietary Requirements:
+        [If religious restrictions apply: List specific dietary guidelines]
+        [If none: State "No religious dietary restrictions"]
+
+        ### Medical Condition Restrictions:
+        [If medical conditions present: List foods to avoid and foods that are beneficial]
+        [If none: State "No medical dietary restrictions"]
+
+        ## NUTRITIONAL RECOMMENDATIONS:
+
+        ### Growth-Specific Needs:
+        - **Height Development**: [If height-for-age is low, specify nutrients needed for linear growth]
+        - **Weight Management**: [If weight-for-age is concerning, specify appropriate interventions]
+
+        ### Age-Appropriate Guidelines:
+
+        **0-6 months:**
+        - **Primary Nutrition**: Exclusively breast milk or formula
+        - **Feeding Style**: Breastfeeding on demand; practice responsive feeding by responding to the infant's hunger cues
+
+        **6-12 months:**
+        - **Introduction of Solids**: Start introducing small amounts of pureed or mashed, nutrient-dense foods
+        - **Foods to Offer**: Iron-fortified infant cereals, fruits, vegetables, and lean proteins like finely mashed meat or fish
+        - **Breast Milk/Formula**: Continues as the primary source of nutrition
+        - **Feeding Environment**: Introduce solids in a calm setting, with the infant sitting upright and moderately hungry
+
+        **1-2 years:**
+        - **Solid Foods**: Increase variety in texture and consistency. Most children can eat the same foods as the family, with appropriate preparation
+        - **Whole Milk**: Begin offering whole cow's milk
+        - **Meal Schedule**: Aim for 3 meals and 1-2 snacks per day
+
+        **2-5 years:**
+        - **Diverse Diet**: Continue offering a variety of healthy foods from all food groups
+        - **Whole Grains**: Gradually increase the introduction of wholegrain foods
+        - **Milk**: Offer low-fat milk after age 2
+        - **Responsibility**: Maintain the division of responsibility: the caregiver provides healthy food, and the child decides how much to eat
+
+        ### Key Nutrients to Focus On:
+        [List specific vitamins, minerals, and macronutrients needed based on the child's current nutritional status]
+
+        ## FEEDING RECOMMENDATIONS:
+        [Provide practical, age-appropriate feeding advice and meal suggestions specific to this child's needs]
+
+        ## FOLLOW-UP RECOMMENDATIONS:
+        [Suggest monitoring schedule and when to reassess nutritional status]
+        """
         )
         nutrition_analysis = f"NUTRITION ANALYSIS FOR THIS CHILD (ID: {patient_id}):\n{analysis_result}"
     except Exception as e:
@@ -458,73 +629,82 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     age_years = age_months // 12
     age_months_remainder = age_months % 12
 
-    # Create the streamlined prompt
-    prompt_str = f"""You are a Pediatric Nutritionist specializing in Filipino cuisine for children 0-5 years.
-
-    ## PRIMARY CONSTRAINT
-    ONLY recommend foods from the database below. Never mention generic food groups or unlisted foods.
-
-    ## FOOD DATABASE
-    {food_list_str}
+    # Create the streamlined prompt - separate f-string variables from template variables
+    age_guidelines = get_age_specific_guidelines(age_months)
     
-    Based your response to {nutrition_analysis}
+    prompt_str = """You are a Pediatric Nutritionist specializing in Filipino cuisine for children 0-5 years.
 
-    ## CHILD PROFILE
-    - Age: {age_months} months
-    - Weight: {{weight_kg}} kg | Height: {{height_cm}} cm | BMI: {{bmi_for_age}}
-    - Allergies: {{allergies}} | Medical: {{other_medical_problems}} | Religion: {{religion}}
-    - Available Ingredients: {{available_ingredients}}
+## PRIMARY CONSTRAINT
+ONLY recommend foods from the database below. Never mention generic food groups or unlisted foods.
 
-    ## COMPREHENSIVE NUTRITION PLAN
+## FOOD DATABASE
+{food_list_str}
 
-    Based on {nutrition_analysis}, find fitted foods based on {{nutrition_tags}} and use it in suggesting foods.
+{pdf_context}
 
-    Give estimated kcal needed for the patient based on the prompt
+Base your response on {nutrition_analysis}
 
-    ### AGE-SPECIFIC FEEDING GUIDELINES
-    **Current Age Group ({age_months} months)**:
-    {get_age_specific_guidelines(age_months)}
+## CHILD PROFILE
+- Age: {age_months} months
+- Weight: {weight_kg} kg | Height: {height_cm} cm | BMI: {bmi_for_age}
+- Allergies: {allergies} | Medical: {other_medical_problems} | Religion: {religion}
+- Available Ingredients: {available_ingredients}
 
-    ### ALLERGY COMPLIANCE
-    **Allergies: {{allergies}}**
-    {allergy_section}
+## COMPREHENSIVE NUTRITION PLAN
 
-    ### RELIGIOUS DIETARY COMPLIANCE
-    **Religion: {{religion}}**
-    {religion_section}
+Based on {nutrition_analysis}, find fitted foods based on {nutrition_tags} and use it in suggesting foods.
 
-    ### 7-DAY MEAL PLAN
-    **CRITICAL: Provide complete details for ALL 7 days. No summaries or shortcuts.**
+Give estimated kcal needed for the patient based on the prompt
 
-    **Day 1-7: Format for each day:**
-    - **Breakfast**: [Specific dish] ([portion]) - [Nutrition benefit + kcal]
-    - **Lunch**: [Specific dish] ([portion]) - [Nutrition benefit + kcal]
-    - **Snack**: [Specific item] ([portion]) - [Purpose + kcal]
-    - **Dinner**: [Specific dish] ([portion]) - [Evening focus + kcal]
-    - **Daily Total**: [Sum all kcal from energy_kcal values]
+### AGE-SPECIFIC FEEDING GUIDELINES
+**Current Age Group ({age_months} months)**:
+{age_guidelines}
 
-    **Day 1**: Use available ingredients {{available_ingredients}}
-    **Days 2-7**: Vary using database foods, different themes daily
+### ALLERGY COMPLIANCE
+**Allergies: {allergies}**
+{allergy_section}
 
-    ### PARENT OBSERVATION TRACKING
-    **Daily**: Appetite (Good/Fair/Poor), Energy levels, Sleep quality, Bowel movements
-    **Weekly**: Weight check, Growth observations, Skill development
-    **Monthly**: Height measurement, Food preferences, Feeding independence
+### RELIGIOUS DIETARY COMPLIANCE
+**Religion: {religion}**
+{religion_section}
 
-    ### RED FLAGS & EMERGENCY PROTOCOLS
-    **Immediate Care**: Severe allergic reactions, Choking, Persistent vomiting, Dehydration, High fever with poor feeding
-    **Concerning Signs**: Weight loss, Growth stagnation, Feeding aversion, Digestive issues
-    **Emergency Protocol**: Call emergency services → Contact pediatrician → Nutritionist follow-up
+### 7-DAY MEAL PLAN
+**CRITICAL: Provide complete details for ALL 7 days. No summaries or shortcuts.**
 
-    {filipino_context}
+**Day 1-7: Format for each day:**
+- **Breakfast**: [Specific dish] ([portion]) - [Nutrition benefit + kcal]
+- **Lunch**: [Specific dish] ([portion]) - [Nutrition benefit + kcal]
+- **Snack**: [Specific item] ([portion]) - [Purpose + kcal]
+- **Dinner**: [Specific dish] ([portion]) - [Evening focus + kcal]
+- **Daily Total**: [Sum all kcal from energy_kcal values]
 
-    **FINAL VERIFICATION**: All recommendations use only database foods, respect allergies/religion, and are age-appropriate."""
+**Day 1**: Use available ingredients {available_ingredients}
+**Days 2-7**: Vary using database foods, different themes daily
+
+### PARENT OBSERVATION TRACKING
+**Daily**: Appetite (Good/Fair/Poor), Energy levels, Sleep quality, Bowel movements
+**Weekly**: Weight check, Growth observations, Skill development
+**Monthly**: Height measurement, Food preferences, Feeding independence
+
+### RED FLAGS & EMERGENCY PROTOCOLS
+**Immediate Care**: Severe allergic reactions, Choking, Persistent vomiting, Dehydration, High fever with poor feeding
+**Concerning Signs**: Weight loss, Growth stagnation, Feeding aversion, Digestive issues
+**Emergency Protocol**: Call emergency services → Contact pediatrician → Nutritionist follow-up
+
+{filipino_context}
+
+**FINAL VERIFICATION**: All recommendations use only database foods, respect allergies/religion, and are age-appropriate."""
+    
     prompt_template = PromptTemplate(
-        input_variables=["weight_kg", "height_cm", "bmi_for_age", "allergies", "other_medical_problems", "religion", "available_ingredients", "nutrition_tags"],
+        input_variables=["food_list_str", "pdf_context", "nutrition_analysis", "age_months", "weight_kg", "height_cm", "bmi_for_age", "allergies", "other_medical_problems", "religion", "available_ingredients", "nutrition_tags", "age_guidelines", "allergy_section", "religion_section", "filipino_context"],
         template=prompt_str
     )
 
     prompt_inputs = {
+        "food_list_str": food_list_str,
+        "pdf_context": pdf_context,
+        "nutrition_analysis": nutrition_analysis,
+        "age_months": age_months,
         "weight_kg": patient_data.get('weight_kg', 'Unknown'),
         "height_cm": patient_data.get('height_cm', 'Unknown'),
         "bmi_for_age": patient_data.get('bmi_for_age', 'Unknown'),
@@ -532,23 +712,26 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         "other_medical_problems": patient_data.get('other_medical_problems', 'None'),
         "religion": religion_val,
         "available_ingredients": available_ingredients if available_ingredients else "None specified",
-        "nutrition_tags": nutrition_tags_str
+        "nutrition_tags": nutrition_tags_str,
+        "age_guidelines": age_guidelines,
+        "allergy_section": allergy_section,
+        "religion_section": religion_section,
+        "filipino_context": filipino_context
     }
 
-    from pydantic import SecretStr
-    llm = ChatGroq(
-        api_key=SecretStr(api_key),
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
-        temperature=0.3,
-        max_tokens=4000
-    )
+    llm = create_nutrition_llm()
 
+    # Create runnable sequence using modern LangChain pattern
     chain = prompt_template | llm
 
     result = chain.invoke(prompt_inputs)
-    # If result is a BaseMessage, get its content
-    if hasattr(result, "content"):
-        if isinstance(result.content, list):
-            return " ".join(str(x) for x in result.content)
-        return result.content
-    return str(result)
+    
+    # Handle AIMessage objects by extracting content
+    if hasattr(result, 'content'):
+        result = result.content
+    
+    # Ensure we have a string
+    if not isinstance(result, str):
+        result = str(result)
+    
+    return result

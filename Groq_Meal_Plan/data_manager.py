@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import uuid
 import json
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class DataManager:
     def update_food(self, food_id, food_data):
@@ -60,7 +61,7 @@ class DataManager:
 
     def get_nutritionist_notes_by_patient(self, patient_id: int) -> List[Dict]:
         """Get all nutritionist notes for a given patient_id from assessments.notes."""
-        self.cursor.execute("SELECT assessment_id, nutritionist_id, patient_id, plan_id, assessment_date, notes, treatment, recovery_status, completed_at, created_at, updated_at FROM assessments WHERE patient_id = %s", (patient_id,))
+        self.cursor.execute("SELECT assessment_id, nutritionist_id, patient_id, assessment_date, weight_kg, height_cm, notes, treatment, recovery_status, completed_at, created_at, updated_at FROM assessments WHERE patient_id = %s", (patient_id,))
         return self.cursor.fetchall()
         
     """
@@ -205,20 +206,20 @@ class DataManager:
 
     # Nutritionist Notes Management
     def get_nutritionist_notes(self) -> Dict:
-        self.cursor.execute("SELECT assessment_id, nutritionist_id, patient_id, plan_id, assessment_date, notes, treatment, recovery_status, completed_at, created_at, updated_at FROM assessments")
+        self.cursor.execute("SELECT assessment_id, nutritionist_id, patient_id, assessment_date, weight_kg, height_cm, notes, treatment, recovery_status, completed_at, created_at, updated_at FROM assessments")
         rows = self.cursor.fetchall()
         return {str(row['assessment_id']): row for row in rows}
 
     def save_nutritionist_note(self, plan_id: str, patient_id: str, nutritionist_id: str, note: str) -> str:
         """
-        If an assessment exists for the given plan_id, patient_id, and nutritionist_id, append the note to the existing notes field.
-        Otherwise, insert a new assessment row.
+        Save nutritionist note for a patient. Since assessments table doesn't have plan_id,
+        we'll check for existing assessment by patient_id and nutritionist_id only.
         """
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        # Check for existing assessment
+        # Check for existing assessment (without plan_id since it doesn't exist in assessments table)
         self.cursor.execute(
-            "SELECT assessment_id, notes FROM assessments WHERE plan_id = %s AND patient_id = %s AND nutritionist_id = %s",
-            (plan_id, patient_id, nutritionist_id)
+            "SELECT assessment_id, notes FROM assessments WHERE patient_id = %s AND nutritionist_id = %s ORDER BY created_at DESC LIMIT 1",
+            (patient_id, nutritionist_id)
         )
         row = self.cursor.fetchone()
         if row:
@@ -235,18 +236,19 @@ class DataManager:
             self.conn.commit()
             return str(row['assessment_id'])
         else:
-            # Insert new row
+            # Insert new row (without plan_id since it doesn't exist in assessments table)
             sql = """
-                INSERT INTO assessments (plan_id, patient_id, nutritionist_id, notes, assessment_date, created_at)
+                INSERT INTO assessments (patient_id, nutritionist_id, notes, assessment_date, created_at, updated_at)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """
-            self.cursor.execute(sql, (plan_id, patient_id, nutritionist_id, note.strip(), now, now))
+            self.cursor.execute(sql, (patient_id, nutritionist_id, note.strip(), now, now, now))
             self.conn.commit()
             return str(self.cursor.lastrowid)
 
     def get_notes_for_meal_plan(self, plan_id: str) -> List[Dict]:
-        self.cursor.execute("SELECT assessment_id, nutritionist_id, patient_id, plan_id, notes, created_at FROM assessments WHERE plan_id = %s", (plan_id,))
-        return self.cursor.fetchall()
+        # Since assessments table doesn't have plan_id, we'll return empty list for now
+        # This function may need to be redesigned to link assessments to meal plans differently
+        return []
 
     # Knowledge Base Management
     def get_knowledge_base(self) -> Dict:
@@ -300,5 +302,23 @@ class DataManager:
         self.cursor.execute(sql, (kb_id,))
         self.conn.commit()
         return True
+
+    def chunk_pdf_text_with_overlap(self, text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
+        """Split PDF text into overlapping chunks using LangChain's RecursiveCharacterTextSplitter."""
+        if not text or not text.strip():
+            return []
+        
+        # Use LangChain's RecursiveCharacterTextSplitter for better chunking
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=overlap,
+            length_function=len,
+            separators=["\n\n", "\n", ". ", " ", ""]
+        )
+        
+        chunks = splitter.split_text(text.strip())
+        
+        # Remove any empty chunks
+        return [chunk for chunk in chunks if chunk.strip()]
 
 data_manager = DataManager()
