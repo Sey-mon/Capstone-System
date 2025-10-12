@@ -1,90 +1,131 @@
 import os
-import mysql.connector
-from mysql.connector import Error
 from dotenv import load_dotenv
+
+# Use the mysql.connector pooling module to provide a thread-safe connection pool
+try:
+    import mysql.connector
+    from mysql.connector import Error
+    from mysql.connector import pooling
+except Exception:
+    # Keep errors visible when importing in environments without mysql-connector
+    raise
 
 # Load environment variables
 load_dotenv()
 
-def get_connection():
-    """
-    Establish a connection to the MySQL database using environment variables
-    """
+# Create a module-level connection pool on first import
+_pool = None
+
+def _init_pool():
+    global _pool
+    if _pool is not None:
+        return _pool
+
+    db_config = {
+        'host': os.getenv('DB_HOST', 'localhost'),
+        'user': os.getenv('DB_USER', 'root'),
+        'password': os.getenv('DB_PASSWORD', ''),
+        'database': os.getenv('DB_NAME', 'capstone_demo'),
+        'autocommit': True,
+    }
+
+    pool_size = int(os.getenv('DB_POOL_SIZE', '10'))
+
     try:
-        connection = mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', ''),
-            database=os.getenv('DB_NAME', 'capstone_demo'),
-            autocommit=True
+        _pool = pooling.MySQLConnectionPool(
+            pool_name="capstone_pool",
+            pool_size=pool_size,
+            pool_reset_session=True,
+            **db_config
         )
-        
-        if connection.is_connected():
-            return connection
-        else:
-            raise Error("Failed to connect to database")
-            
+        return _pool
     except Error as e:
-        print(f"Error connecting to MySQL database: {e}")
-        raise e
+        print(f"Error creating MySQL connection pool: {e}")
+        raise
+
+def get_connection():
+    """Return a connection from the module-level pool."""
+    global _pool
+    if _pool is None:
+        _init_pool()
+    try:
+        conn = _pool.get_connection()
+        # Ensure connection is alive; attempt reconnect if needed
+        try:
+            conn.ping(reconnect=True, attempts=3, delay=1)
+        except Exception:
+            # If ping fails, try to close and get another connection
+            try:
+                conn.close()
+            except Exception:
+                pass
+            conn = _pool.get_connection()
+        return conn
+    except Error as e:
+        print(f"Error getting pooled connection: {e}")
+        raise
 
 def close_connection(connection):
-    """
-    Close the database connection
-    """
-    if connection and connection.is_connected():
-        connection.close()
+    """Close or release a pooled connection."""
+    try:
+        if connection:
+            connection.close()
+    except Exception:
+        pass
 
 def execute_query(query, params=None, fetch=False):
-    """
-    Execute a query with optional parameters
-    """
     connection = None
+    cursor = None
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
-        
         if params:
             cursor.execute(query, params)
         else:
             cursor.execute(query)
-        
+
         if fetch:
-            result = cursor.fetchall()
-            return result
+            return cursor.fetchall()
         else:
             connection.commit()
             return cursor.lastrowid
-            
     except Error as e:
         print(f"Error executing query: {e}")
-        raise e
+        raise
     finally:
-        if connection and connection.is_connected():
-            cursor.close()
-            connection.close()
+        try:
+            if cursor:
+                cursor.close()
+        except Exception:
+            pass
+        try:
+            if connection:
+                connection.close()
+        except Exception:
+            pass
 
 def execute_query_one(query, params=None):
-    """
-    Execute a query and return only the first result
-    """
     connection = None
+    cursor = None
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
-        
         if params:
             cursor.execute(query, params)
         else:
             cursor.execute(query)
-        
-        result = cursor.fetchone()
-        return result
-            
+        return cursor.fetchone()
     except Error as e:
         print(f"Error executing query: {e}")
-        raise e
+        raise
     finally:
-        if connection and connection.is_connected():
-            cursor.close()
-            connection.close()
+        try:
+            if cursor:
+                cursor.close()
+        except Exception:
+            pass
+        try:
+            if connection:
+                connection.close()
+        except Exception:
+            pass

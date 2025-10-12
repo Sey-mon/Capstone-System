@@ -6,7 +6,6 @@ from typing import Dict, List, Optional
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableSequence
 from langchain_groq import ChatGroq
-from pydantic import SecretStr
 
 # Load environment variables
 load_dotenv()
@@ -14,27 +13,32 @@ load_dotenv()
 class ChildNutritionAI:
     def analyze_child_nutrition(
         self,
-        patient_id: int = 0,
-        age_in_months: int = 0,
-        allergies: str = "",
-        other_medical_problems: str = "",
-        parent_id: str = "",
-        notes: str = "",
-        treatment: str = "",
-        sex: str = "",
-        weight_for_age: str = "",
-        height_for_age: str = "",
-        bmi_for_age: str = "",
-        breastfeeding: str = "",
-        religion: str = ""
+        patient_id: int = None,
+        age_in_months: int = None,
+        allergies: str = None,
+        other_medical_problems: str = None,
+        parent_id: str = None,
+        notes: str = None,
+        treatment: str = None,
+        sex: str = None,
+        weight_for_age: str = None,
+        height_for_age: str = None,
+        bmi_for_age: str = None,
+        breastfeeding: str = None,
+        religion: str = None,
+        guidelines_context: str = None,
+        custom_prompt: str = None
     ) -> str:
         """Analyze a child's nutrition profile and return a summary or recommendations. No name or location info is used. Patient ID is included for database association only."""
         try:
-            prompt_template = PromptTemplate(
-                input_variables=[
-                    "patient_id", "age_in_months", "allergies", "other_medical_problems", "parent_id", "notes", "treatment", "sex", "weight_for_age", "height_for_age", "bmi_for_age", "breastfeeding", "religion"
-                ],
-                template="""You are a pediatric nutrition expert. Analyze the following child's nutrition profile and provide a summary of their nutritional status, potential concerns, and general recommendations. Do NOT include or request any personal names or location information. Patient ID is included for database association only.
+            # Use custom prompt if provided, otherwise use default
+            if custom_prompt:
+                template = custom_prompt
+                # Extract input variables from template
+                import re
+                variables = re.findall(r'\{(\w+)\}', template)
+            else:
+                template = """You are a pediatric nutrition expert. Analyze the following child's nutrition profile and provide a summary of their nutritional status, potential concerns, and general recommendations. Do NOT include or request any personal names or location information. Patient ID is included for database association only.
 
 CHILD PROFILE:
 - Patient ID: {patient_id}
@@ -51,34 +55,47 @@ CHILD PROFILE:
 - Notes: {notes}
 - Treatment: {treatment}
 
-Give practical, parent-friendly advice and highlight any red flags or areas for improvement."""
+{guidelines_context}
+
+Based on the above information and relevant nutrition guidelines, provide practical, parent-friendly advice and highlight any red flags or areas for improvement."""
+                variables = [
+                    "patient_id", "age_in_months", "allergies", "other_medical_problems", "parent_id", "notes", "treatment", "sex", "weight_for_age", "height_for_age", "bmi_for_age", "breastfeeding", "religion", "guidelines_context"
+                ]
+            
+            prompt_template = PromptTemplate(
+                input_variables=variables,
+                template=template
             )
+            
+            # Create runnable sequence using modern LangChain pattern
             chain = prompt_template | self.llm
-            result = chain.invoke({
-                "patient_id": patient_id,
-                "age_in_months": age_in_months,
-                "allergies": allergies,
-                "other_medical_problems": other_medical_problems,
-                "parent_id": parent_id,
-                "notes": notes,
-                "treatment": treatment,
-                "sex": sex,
-                "weight_for_age": weight_for_age,
-                "height_for_age": height_for_age,
-                "bmi_for_age": bmi_for_age,
-                "breastfeeding": breastfeeding,
-                "religion": religion
-            })
-            # If result is a BaseMessage, get its content
-            if hasattr(result, "content"):
-                if isinstance(result.content, list):
-                    return " ".join(str(x) for x in result.content)
-                return result.content
-            return str(result)
+            
+            # Build input parameters dynamically based on what's available in the template
+            # Create mapping of all available parameters
+            all_params = {
+                "patient_id": patient_id or "",
+                "age_in_months": age_in_months or "",
+                "allergies": allergies or "",
+                "other_medical_problems": other_medical_problems or "",
+                "parent_id": parent_id or "",
+                "notes": notes or "",
+                "treatment": treatment or "",
+                "sex": sex or "",
+                "weight_for_age": weight_for_age or "",
+                "height_for_age": height_for_age or "",
+                "bmi_for_age": bmi_for_age or "",
+                "breastfeeding": breastfeeding or "",
+                "religion": religion or "",
+                "guidelines_context": guidelines_context or ""
+            }
+            
+            # Build input params with only variables needed by template
+            input_params = {var: all_params[var] for var in variables}
+            
+            result = chain.invoke(input_params)
+            return result
         except Exception as e:
             return f"Error analyzing child nutrition: {str(e)}"
-        return ""
-
     """
     Enhanced Nutrition AI for children (0-5 years) with BMI, allergies, and medical conditions
     """
@@ -87,13 +104,12 @@ Give practical, parent-friendly advice and highlight any red flags or areas for 
         self.api_key = os.getenv('GROQ_API_KEY')
         if not self.api_key:
             raise ValueError("GROQ_API_KEY not found in environment variables")
+        
         self.client = Groq(api_key=self.api_key)
-        # Initialize LangChain LLM
-        self.llm = ChatGroq(
-            api_key=SecretStr(self.api_key),
-            model="meta-llama/llama-4-scout-17b-16e-instruct",
-            temperature=0.3
-        )
+        
+        # Initialize LangChain LLM using shared factory function
+        from nutrition_chain import create_nutrition_llm
+        self.llm = create_nutrition_llm()
     
     def summarize_pdf_for_nutrition_knowledge(self, pdf_text: str, pdf_name: str) -> List[str]:
         """
@@ -111,7 +127,7 @@ Please analyze the following text and extract ONLY information that is relevant 
 - Health guidelines for toddlers and preschoolers
 - Food safety for young children
 - Feeding recommendations for infants and toddlers
-- Filipino/Asian nutrition practices for children
+- Filipino nutrition practices for children
 - Child development and nutrition
 
 TEXT TO ANALYZE:
@@ -128,19 +144,22 @@ INSTRUCTIONS:
 """
             )
             
-            # Create LangChain chain
-            # chain = LLMChain(
-            #     llm=self.llm,
-            #     prompt=prompt_template
-            # )
-            # Execute the chain
-            # response = chain.run(
-            #     pdf_name=pdf_name,
-            #     pdf_text=pdf_text
-            # )
-            # Replace with new LangChain API if needed
+            # Create runnable sequence using modern LangChain pattern
+            chain = prompt_template | self.llm
             
-            response = "NO_RELEVANT_CONTENT"  # Placeholder response
+            # Execute the chain
+            response = chain.invoke({
+                "pdf_name": pdf_name,
+                "pdf_text": pdf_text
+            })
+            
+            # Handle AIMessage objects by extracting content
+            if hasattr(response, 'content'):
+                response = response.content
+            
+            # Ensure we have a string
+            if not isinstance(response, str):
+                response = str(response)
             
             content = response.strip()
             
@@ -165,7 +184,7 @@ INSTRUCTIONS:
         self,
         patient_id: str,
         duration_days: int = 7,
-        parent_recipes: List[str] = []
+        parent_recipes: List[str] = None
     ) -> str:
         """Generate meal plan specifically for a patient based on their profile"""
         # Get patient data
@@ -206,16 +225,6 @@ INSTRUCTIONS:
             for recipe in filipino_foods.values():
                 filipino_recipes.append(f"- {recipe['name']}: {recipe['nutrition_facts']}")
             filipino_context = f"\n\nFilipino Food Options:\n" + "\n".join(filipino_recipes)
-
-        # Compose the final meal plan string (placeholder, replace with actual logic as needed)
-        meal_plan = (
-            f"Meal Plan for Patient ID: {patient_id}\n"
-            f"Duration: {duration_days} days\n"
-            f"{pdf_insights_context}"
-            f"{parent_recipes_context}"
-            f"{filipino_context}"
-        )
-        return meal_plan
 
 if __name__ == "__main__":
 

@@ -1,175 +1,167 @@
-# Parent Nutrition Management System
+# 🍎 AI-Powered Child Nutrition Management System
 
-A comprehensive nutrition management system with separate interfaces for parents and nutritionists, powered by Groq AI. The system now uses a **meal-based database** instead of individual food components.
+An advanced nutrition management system for children aged 0-5 years, powered by **Groq LLM**, **LangChain**, and **semantic search** capabilities. Features role-based FastAPI endpoints, embedding-based contextual guidance, and comprehensive nutrition analysis.
 
-## 🏗️ System Overview
+## 🏗️ System Architecture
 
-### **Two Separate Applications:**
-1. **Parent Interface** (`parent_ui.py`) - Manage children's meal plans and parent recipes
-2. **Nutritionist Interface** (`nutritionist_ui.py`) - Review plans, add notes, manage knowledge base
-3. **Admin Interface** (`admin_ui.py`) - Manage meal database, view logs, system administration
+### **Core Components:**
+1. **FastAPI Application** (`fastapi_app.py`) - Role-based REST API with comprehensive endpoints
+2. **AI Nutrition Engine** (`nutrition_ai.py`) - Modern LangChain-powered nutrition analysis
+3. **Embedding System** (`embedding_utils.py`) - FAISS + Sentence Transformers for contextual guidance
+4. **Data Management** (`data_manager.py`) - MySQL database layer with text chunking
+5. **Nutrition Chain** (`nutrition_chain.py`) - LangChain meal planning and assessment generation
 
 ### **Key Features:**
-- 👨‍👩‍👧‍👦 **For Parents**: Child meal plan management, parent recipe input
-- 👩‍⚕️ **For Nutritionists**: Client overview, meal plan notes, knowledge base management
-- 🛠️ **For Admins**: Meal database management, system logs, knowledge base oversight
-- 🧠 **AI-Powered**: Groq API for personalized meal recommendations
-- 🇵🇭 **Filipino-Focused**: Built-in Filipino nutrition knowledge and meal database
+- 🤖 **AI-Powered**: Groq LLM (Llama) with modern LangChain integration
+- 🔍 **Semantic Search**: FAISS + Sentence Transformers for contextual nutrition guidance
+- 📋 **Role-Based Access**: User, Parent, Nutritionist, and Admin endpoints
+- 📄 **PDF Processing**: Upload and process nutrition guidelines with AI summarization
+- 🇵🇭 **Filipino-Focused**: Built-in Filipino nutrition knowledge and cultural considerations
+- 🔐 **Privacy-First**: Medical data only, no personal identifiers in AI processing
+- 📊 **Evidence-Based**: WHO nutrition guidelines integration via PDF knowledge base
 
-## 📋 Setup Instructions
+## 📋 Quick Start
 
-### 1. Install Dependencies
+### 1. **Environment Setup**
 ```bash
+# Clone and navigate to directory
+cd C:\xampp\htdocs\Capstone-System\Groq_Meal_Plan
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Create .env file
+echo "GROQ_API_KEY=your_actual_groq_api_key_here" > .env
 ```
 
-### 2. Environment Setup
-Your `.env` file should contain:
-```
-GROQ_API_KEY=your_actual_api_key_here
+### 2. **Database Setup**
+```sql
+-- Ensure MySQL tables exist: patients, users, meal_plans, assessments, knowledge_base, etc.
+-- Run your existing database schema setup
 ```
 
-### 3. Database Setup
+### 3. **Build Knowledge Base Embeddings**
+```python
+# In Python shell or script
+from embedding_utils import embedding_searcher
+from data_manager import data_manager
+
+# Upload PDF documents via /upload_pdf endpoint first, then:
+result = embedding_searcher.build_embeddings_from_knowledge_base()
+print("Embeddings built:", result)
+```
+
+### 4. **Start FastAPI Server**
 ```bash
-# Create the new meals table
-mysql -u your_username -p your_database < create_meals_table.sql
-
-# Optional: Migrate existing food data to meals
-python migrate_to_meals.py
+# Development server
+uvicorn fastapi_app:app --reload --port 8000
 ```
 
-### 4. Run Applications
-```bash
-# For Parents
-streamlit run parent_ui.py --server.port 8501
+## 🛠️ API Endpoints
 
-# For Nutritionists (different port)  
-streamlit run nutritionist_ui.py --server.port 8502
+### **👤 User Role Endpoints**
+- `POST /get_foods_data` - Get all available foods from database
 
-# For Admins (different port)
-streamlit run admin_ui.py --server.port 8503
+### **👨‍👩‍👧‍👦 Parent Role Endpoints**
+- `POST /generate_meal_plan` - AI-generated meal plans with contextual guidance
+- `POST /get_children_by_parent` - Get children for specific parent
+- `POST /get_meal_plans_by_child` - Get meal plan history for child
+- `POST /get_meal_plan_detail` - Get specific meal plan details
 
-# Or use the launcher
-launch.bat
-```
+### **👩‍⚕️ Nutritionist Role Endpoints**
+- `POST /nutrition/analysis` - Comprehensive nutrition analysis with evidence-based guidance
+- `POST /assessment` - Generate structured pediatric dietary assessments
+
+### **🛠️ Admin Role Endpoints**
+- `POST /upload_pdf` - Upload and process nutrition PDFs with AI summarization
+- `POST /process_embeddings` - Build/rebuild FAISS embeddings from knowledge base
+- `POST /embedding_status` - Check embedding system status
+- `POST /get_knowledge_base` - Retrieve all knowledge base documents
+
+## 🧠 AI & Machine Learning Features
+
+### **Semantic Search System**
+- **Model**: `sentence-transformers/all-MiniLM-L6-v2`
+- **Vector Store**: FAISS with cosine similarity
+- **Chunking**: LangChain RecursiveCharacterTextSplitter
+- **Context**: Top-K retrieval for contextual nutrition guidance
+
+### **AI-Powered Features**
+1. **Nutrition Analysis**: Personalized assessment based on growth metrics, allergies, medical conditions
+2. **Meal Planning**: 7-day culturally appropriate meal plans with available ingredients
+3. **PDF Summarization**: Extract 0-5 year nutrition content from uploaded guidelines
+4. **Contextual Guidance**: Evidence-based recommendations from knowledge base
 
 ## 📁 Project Structure
 
-### **Core Applications:**
-- **`parent_ui.py`** - Parent interface for meal planning
-- **`nutritionist_ui.py`** - Nutritionist interface for client management
-- **`admin_ui.py`** - Admin interface for system management
-- **`nutrition_ai.py`** - Core AI logic with Groq
-- **`nutrition_chain.py`** - LangChain-based meal plan generation
-- **`data_manager.py`** - Database operations for meals and users
-
-### **Database Tools:**
-- **`create_meals_table.sql`** - SQL script to create the new meals table
-- **`migrate_to_meals.py`** - Migration script from old food tables to meals
-- **`meal_data_parser.py`** - Tool to convert meal text to SQL INSERT statements
-
-### **Configuration:**
-- **`launch.bat`** - Easy launcher script
-- **`requirements.txt`** - Dependencies
-- **`.env`** - API keys
-
-## 🍽️ New Meal Database Structure
-
-The system now uses a comprehensive **meals table** instead of separate food tables:
-
-```sql
-Table: meals
-- meal_id (Primary Key)
-- meal_name, description, course, keywords
-- prep_time_minutes, cook_time_minutes, servings
-- ingredients (JSON), instructions, image_url
-- Nutrition data: calories_kcal, protein_g, carbohydrates_g, fat_g, etc.
-- timestamps: created_at, updated_at
+```
+Groq_Meal_Plan/
+├── fastapi_app.py           # Main FastAPI application with role-based endpoints
+├── nutrition_ai.py          # Core AI nutrition analysis (modern LangChain)
+├── nutrition_chain.py       # LangChain meal planning & assessment generation
+├── embedding_utils.py       # FAISS + Sentence Transformers semantic search
+├── data_manager.py          # MySQL database operations with chunking
+├── db.py                    # Database connection utilities
+├── requirements.txt         # All dependencies with versions
+├── .env                     # Environment variables (GROQ_API_KEY)
+├── README.md               # This file
+└── embeddings_cache/       # FAISS index and chunks cache (auto-created)
+    ├── faiss_index.idx
+    ├── chunks.pkl
+    ├── metadata.pkl
+    └── kb_hash.txt
 ```
 
-### **Benefits of Meal-Based System:**
-- **Complete meal information** in one place
-- **Recipe instructions** and ingredient lists
-- **Course categorization** (Main Course, Soup, Dessert, etc.)
-- **Preparation and cooking times**
-- **Comprehensive nutrition data per serving**
-- **Better AI meal recommendations**
+## 🔧 Core Dependencies
 
-## 🎯 Features by User Type
+### **AI & Language Models**
+- `groq>=0.4.0` - Groq LLM API client
+- `langchain>=0.1.0` - Classic LangChain framework
+- `langchain-core>=0.1.0` - Modern LangChain core components
+- `langchain-groq>=0.1.0` - Groq integration for LangChain
+- `langchain-text-splitters>=0.1.0` - Advanced text chunking
 
-### **Parents Can:**
-- View all their children's meal plans
-- Generate new meal plans based on child's BMI, allergies, conditions
-- Input parent recipes (simple text area format)
-- View historical meal plans (6 months)
-- See nutritionist notes on their meal plans
+### **Machine Learning**
+- `sentence-transformers>=5.1.0` - Embedding model for semantic search
+- `faiss-cpu>=1.12.0` - Vector similarity search engine
+- `numpy>=1.24.0` - Numerical computing
 
-### **Nutritionists Can:**
-- View all parents and their meal plans
-- Add notes to any meal plan (simple note-taking, no approval workflow)
-- Upload and manage Filipino nutrition knowledge
-- Browse comprehensive meal database with nutrition facts
-- Review parent-uploaded recipes with professional notes
+### **Web Framework**
+- `fastapi>=0.104.0` - Modern async web framework
+- `uvicorn[standard]>=0.24.0` - ASGI server
+- `pydantic>=2.5.0` - Data validation
+- `python-multipart>=0.0.6` - File upload support
 
-### **Admins Can:**
-- Manage the complete meal database
-- View and edit meal details, nutrition information
-- Monitor system logs and user activities
-- Manage knowledge base uploads
-- Oversee meal plan generation and notes
+### **Data Processing**
+- `mysql-connector-python>=8.2.0` - MySQL database connectivity
+- `pdfplumber>=0.9.0` - PDF text extraction
+- `pandas>=1.5.0` - Data manipulation
 
-## 📊 Data Flow
+##  Semantic Search Features
 
-1. **Admin** manages meal database with complete Filipino dishes and nutrition data
-2. **Parent** generates meal plan → AI considers child's BMI, allergies, medical conditions
-3. **System** uses meal database + Filipino nutrition knowledge for recommendations
-4. **Nutritionist** reviews and adds notes to meal plans
-5. **Parent** can view updated meal plans with nutritionist notes
+### **Contextual Guidance System**
+The system provides evidence-based nutrition guidance using semantic search:
 
-## 🔄 Migration from Food Tables
+1. **Query Building**: Automatically creates targeted queries based on:
+   - Child's age (0-6 months, 6-12 months, 1-2 years, 2-5 years)
+   - Growth status (underweight, overweight, stunted)
+   - Medical conditions and allergies
+   - Cultural/religious considerations
 
-If you have existing food data, use the migration tools:
+2. **Top-K Retrieval**: Returns most relevant nutrition guidance chunks
+3. **Source Attribution**: Tracks which documents provide each recommendation
+4. **Similarity Filtering**: Only includes high-confidence matches (>0.4 similarity)
 
-```bash
-# Backup existing food tables and migrate to meals
-python migrate_to_meals.py
+### **Knowledge Base Management**
+- Upload WHO nutrition guidelines, research papers, cultural nutrition guides
+- AI automatically extracts 0-5 year relevant content
+- Semantic chunking with overlap for better context
+- Cached embeddings for fast retrieval
 
-# Add new meals using the parser tool
-python meal_data_parser.py
-```
+## 📄 License
 
-## 🍽️ Adding New Meals
-
-Use the meal data parser to easily add new meals:
-
-```
-Meal Name: Chicken Tinola
-Description: Traditional Filipino soup with chicken and vegetables
-Course: Main Course
-Keywords: soup, chicken, ginger, healthy, Filipino
-Prep Time: 15
-Cook Time: 45
-Servings: 4
-Ingredients: chicken, ginger, onion, garlic, sayote, malunggay leaves
-Instructions: Saute aromatics, add chicken, simmer with vegetables
-Calories: 250
-Protein: 28
-Carbohydrates: 8
-Fat: 12
-Fiber: 2
-Sodium: 890
-Calcium: 45
-Iron: 2.1
-Vitamin C: 15
-```
+This project is part of a capstone system for child nutrition management in the Philippines.
 
 ---
 
-## Data Sources
-
-Meal and nutrition information in this system is based on:
-- Philippine Food Composition Tables from [FNRI DOST](https://i.fnri.dost.gov.ph/)
-- Traditional Filipino recipes and cooking methods
-- WHO nutrition guidelines for children 0-5 years
-
-**Start with any interface based on your role!** 👨‍👩‍👧‍👦 or 👩‍⚕️ or 🛠️
+**🚀 Ready to revolutionize child nutrition with AI! Start by setting up your environment and uploading your first nutrition guideline PDF.**
