@@ -173,28 +173,96 @@ class EmbeddingSearcher:
     def check_embeddings_status(self):
         """Check if embeddings are available and provide status information."""
         cache_files_exist = all(os.path.exists(f) for f in [self.index_file, self.chunks_file, self.metadata_file])
-        
+
         if not cache_files_exist:
             return {
                 "status": "no_cache",
                 "message": "No cached embeddings found. Run build_embeddings_from_knowledge_base() to create them.",
-                "chunks_count": 0
+                "chunks_count": 0,
+                "per_pdf": {}
             }
-        
-        # Try to load and check
-        if self.index is None:
+
+        # Ensure cache is loaded
+        if self.index is None or len(self.chunks) == 0 or len(self.chunk_metadata) == 0:
             loaded = self._load_embeddings()
             if not loaded:
                 return {
                     "status": "cache_invalid",
                     "message": "Cached embeddings are invalid or outdated. Run build_embeddings_from_knowledge_base() to rebuild.",
-                    "chunks_count": 0
+                    "chunks_count": 0,
+                    "per_pdf": {}
                 }
-        
+
+        # Build per-PDF coverage: for each KB entry that has pdf_text, compute expected chunks
+        knowledge_base = data_manager.get_knowledge_base()
+        per_pdf = {}
+
+        # Count embedded chunks per kb_id from metadata
+        embedded_counts = {}
+        for md in self.chunk_metadata:
+            kb = md.get('kb_id')
+            # normalize key to str for consistent mapping
+            key = str(kb)
+            embedded_counts[key] = embedded_counts.get(key, 0) + 1
+
+        for kb_id, entry in knowledge_base.items():
+            pdf_text = entry.get('pdf_text', '')
+            pdf_name = entry.get('pdf_name', '')
+            if not pdf_text:
+                # No PDF text present in KB entry
+                per_pdf[str(kb_id)] = {
+                    'pdf_name': pdf_name,
+                    'status': 'no_pdf_text',
+                    'expected_chunks': 0,
+                    'embedded_chunks': embedded_counts.get(str(kb_id), 0),
+                    'missing_chunks': 0
+                }
+                continue
+
+            # Chunk the pdf_text using the same chunking method used when creating embeddings
+            try:
+                expected_chunks_list = data_manager.chunk_pdf_text_with_overlap(pdf_text)
+                expected_count = sum(1 for c in expected_chunks_list if c.strip())
+            except Exception:
+                # If chunking fails, mark unknown
+                expected_count = None
+
+            embedded = embedded_counts.get(str(kb_id), 0)
+            missing = None
+            status = 'unknown'
+            if expected_count is None:
+                status = 'chunking_failed'
+            else:
+                if embedded == 0:
+                    status = 'not_embedded'
+                elif embedded >= expected_count:
+                    status = 'complete'
+                    missing = 0
+                else:
+                    status = 'partial'
+                    missing = expected_count - embedded
+
+            per_pdf[str(kb_id)] = {
+                'pdf_name': pdf_name,
+                'status': status,
+                'expected_chunks': expected_count,
+                'embedded_chunks': embedded,
+                'missing_chunks': missing
+            }
+
+        total_chunks = len(self.chunks)
+        overall_status = 'ready'
+        # If any KB has not_embedded or partial, mark overall as partial
+        for info in per_pdf.values():
+            if info.get('status') in ('not_embedded', 'partial', 'chunking_failed'):
+                overall_status = 'partial'
+                break
+
         return {
-            "status": "ready",
-            "message": f"Embeddings ready with {len(self.chunks)} chunks.",
-            "chunks_count": len(self.chunks)
+            'status': overall_status,
+            'message': f'Embeddings cache loaded with {total_chunks} chunks.',
+            'chunks_count': total_chunks,
+            'per_pdf': per_pdf
         }
     
     def search_similar_chunks(self, query: str, k: int = 4) -> List[Tuple[str, float, dict]]:
@@ -231,6 +299,116 @@ class EmbeddingSearcher:
                 ))
         
         return results
+
+    def reembed_missing_pdfs(self, batch_size: int = 128) -> dict:
+        """Detect PDFs that are not fully embedded and embed only the missing ones.
+
+        This function will:
+        - Load current cache (index, chunks, metadata)
+        - Determine which KB entries are missing or partial
+        - For each missing/partial KB, re-chunk and embed the entire PDF text and append to index
+        - Save updated index, chunks, and metadata
+
+        Returns a summary dict with counts and per-kb results.
+        """
+        # Ensure KB is loaded
+        self._load_embeddings()
+
+        knowledge_base = data_manager.get_knowledge_base()
+        if not knowledge_base:
+            return {'status': 'no_kb', 'message': 'No knowledge base entries found', 'updated': False}
+
+        # Count embedded chunks by kb_id
+        embedded_counts = {}
+        for md in self.chunk_metadata:
+            kb = md.get('kb_id')
+            key = str(kb)
+            embedded_counts[key] = embedded_counts.get(key, 0) + 1
+
+        to_process = []  # list of (kb_id, pdf_text, pdf_name)
+        per_kb = {}
+        for kb_id, entry in knowledge_base.items():
+            pdf_text = entry.get('pdf_text', '')
+            pdf_name = entry.get('pdf_name', '')
+            if not pdf_text or not pdf_text.strip():
+                per_kb[str(kb_id)] = {'status': 'no_pdf_text', 'expected': 0, 'embedded': embedded_counts.get(str(kb_id), 0)}
+                continue
+
+            expected_chunks = len([c for c in data_manager.chunk_pdf_text_with_overlap(pdf_text) if c.strip()])
+            embedded = embedded_counts.get(str(kb_id), 0)
+            if embedded >= expected_chunks and expected_chunks > 0:
+                per_kb[str(kb_id)] = {'status': 'complete', 'expected': expected_chunks, 'embedded': embedded}
+                continue
+
+            # Not embedded or partial
+            per_kb[str(kb_id)] = {'status': 'to_process', 'expected': expected_chunks, 'embedded': embedded}
+            to_process.append((kb_id, pdf_text, pdf_name))
+
+        if not to_process:
+            return {'status': 'all_embedded', 'message': 'All knowledge base PDFs are already embedded', 'per_kb': per_kb, 'updated': False}
+
+        # Prepare lists for new embeddings
+        new_chunks = []
+        new_metadata = []
+
+        for kb_id, pdf_text, pdf_name in to_process:
+            chunks = data_manager.chunk_pdf_text_with_overlap(pdf_text)
+            for chunk in chunks:
+                if chunk.strip():
+                    new_chunks.append(chunk.strip())
+                    new_metadata.append({
+                        'kb_id': int(kb_id),
+                        'pdf_name': pdf_name,
+                        'ai_summary': knowledge_base.get(kb_id, {}).get('ai_summary', '')
+                    })
+
+        if not new_chunks:
+            return {'status': 'no_new_chunks', 'message': 'No new chunks to embed', 'per_kb': per_kb, 'updated': False}
+
+        # Create embeddings for new chunks in batches
+        embeddings = []
+        for i in range(0, len(new_chunks), batch_size):
+            batch = new_chunks[i:i + batch_size]
+            batch_embeddings = self.model.encode(batch, show_progress_bar=True)
+            embeddings.extend(batch_embeddings)
+
+        import numpy as _np
+        new_embeddings = _np.array(embeddings).astype('float32')
+        # normalize
+        faiss.normalize_L2(new_embeddings)
+
+        # If index not present, create a new index
+        if self.index is None:
+            dim = new_embeddings.shape[1]
+            self.index = faiss.IndexFlatIP(dim)
+            # If previously had chunks, ensure they are included (shouldn't happen if index None)
+
+        # Append new embeddings to index
+        try:
+            self.index.add(new_embeddings)
+        except Exception as e:
+            return {'status': 'error_adding_index', 'message': str(e)}
+
+        # Append new chunks and metadata
+        self.chunks.extend(new_chunks)
+        self.chunk_metadata.extend(new_metadata)
+
+        # Save updated cache (will write kb_hash too)
+        try:
+            self._save_embeddings()
+        except Exception as e:
+            return {'status': 'error_saving', 'message': str(e)}
+
+        # Recompute per_kb embedded counts for return
+        updated_embedded_counts = {}
+        for md in self.chunk_metadata:
+            key = str(md.get('kb_id'))
+            updated_embedded_counts[key] = updated_embedded_counts.get(key, 0) + 1
+
+        for kb in per_kb.keys():
+            per_kb[kb]['embedded_after'] = updated_embedded_counts.get(kb, 0)
+
+        return {'status': 'success', 'message': f'Embedded {len(new_chunks)} new chunks for {len(to_process)} documents', 'per_kb': per_kb, 'updated': True}
 
 
 def get_contextual_nutrition_guidance(patient_data: dict, context_type: str = "general", k: int = 4) -> str:

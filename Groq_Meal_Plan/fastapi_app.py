@@ -531,6 +531,27 @@ def get_embedding_status(request: EmbeddingStatusRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error checking embedding status: {str(e)}")
 
+
+class ReembedRequest(BaseModel):
+    batch_size: Optional[int] = 128
+
+
+@app.post("/reembed_missing")
+def reembed_missing(request: ReembedRequest):
+    """Re-embed only PDFs that are not yet fully embedded. Returns per-PDF report or a message if all embedded."""
+    try:
+        from embedding_utils import embedding_searcher
+
+        result = embedding_searcher.reembed_missing_pdfs(batch_size=request.batch_size)
+
+        # If all embedded, return a friendly message
+        if result.get('status') == 'all_embedded':
+            return {"status": "all_embedded", "message": "All knowledge base PDFs are already embedded"}
+
+        return {"status": result.get('status'), "message": result.get('message'), "per_kb": result.get('per_kb')}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error re-embedding missing PDFs: {str(e)}")
+
 @app.post("/get_knowledge_base")
 def get_knowledge_base(request: KnowledgeBaseRequest):
     try:
@@ -589,36 +610,42 @@ async def upload_pdf(
         # Validate file type
         if not file.filename.lower().endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
-        
+
         # Read PDF content
         pdf_content = await file.read()
-        
+
         # Extract text from PDF using pdfplumber
         try:
             with pdfplumber.open(BytesIO(pdf_content)) as pdf:
                 all_text = "\n".join(page.extract_text() or "" for page in pdf.pages)
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Failed to extract text from PDF: {str(e)}")
-        
+
         # Check if PDF has extractable text
         if not all_text or not all_text.strip():
             raise HTTPException(status_code=400, detail="PDF does not contain extractable text")
-        
+
+        # Check for duplicate by pdf_text (hash for efficiency)
+        import hashlib
+        new_pdf_hash = hashlib.sha256(all_text.strip().encode('utf-8')).hexdigest()
+        knowledge_base = data_manager.get_knowledge_base()
+        for entry in knowledge_base.values():
+            existing_text = entry.get('pdf_text', '')
+            if existing_text and hashlib.sha256(existing_text.strip().encode('utf-8')).hexdigest() == new_pdf_hash:
+                raise HTTPException(status_code=400, detail="PDF already exists in the knowledge base")
+
         # Generate AI summary using nutrition AI
         try:
             nutrition_ai_instance = ChildNutritionAI()
             ai_summary = nutrition_ai_instance.summarize_pdf_for_nutrition_knowledge(all_text, file.filename)
-            
-             # Convert list to string if needed
+            # Convert list to string if needed
             if isinstance(ai_summary, list):
                 ai_summary_text = "\n".join(ai_summary) if ai_summary else "No relevant nutrition content found for 0-5 year olds."
-
             else:
                 ai_summary_text = str(ai_summary) if ai_summary else "No relevant nutrition content found for 0-5 year olds."
-                
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to generate AI summary: {str(e)}")
-        
+
         # Save to knowledge base
         try:
             kb_id = data_manager.save_knowledge_base(
@@ -630,12 +657,11 @@ async def upload_pdf(
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to save to knowledge base: {str(e)}")
-        
+
         # Get the saved entry to return
         try:
             knowledge_base = data_manager.get_knowledge_base()
             saved_entry = knowledge_base.get(kb_id)
-            
             if not saved_entry:
                 # Fallback response if we can't retrieve the saved entry
                 saved_entry = {
@@ -655,7 +681,7 @@ async def upload_pdf(
                 'uploaded_by_id': uploaded_by_id,
                 'message': 'PDF uploaded successfully but could not retrieve full details'
             }
-        
+
         return {
             "status": "success",
             "message": f"PDF '{file.filename}' uploaded and processed successfully",
@@ -668,7 +694,7 @@ async def upload_pdf(
                 "uploaded_by_id": uploaded_by_id
             }
         }
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions as-is
         raise
