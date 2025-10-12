@@ -151,169 +151,6 @@ function deleteItem() {
     });
 }
 
-// Notification function
-function showNotification(message, type = 'info') {
-    // Remove existing notifications
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
-
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 1.5rem;
-        border-radius: 0.5rem;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 0.3s ease;
-    `;
-
-    // Set background color based on type
-    const colors = {
-        'success': 'var(--success-color)',
-        'error': 'var(--danger-color)',
-        'warning': 'var(--warning-color)',
-        'info': 'var(--primary-color)'
-    };
-    notification.style.backgroundColor = colors[type] || colors['info'];
-
-    // Add icon
-    const icons = {
-        'success': 'fa-check-circle',
-        'error': 'fa-exclamation-circle',
-        'warning': 'fa-exclamation-triangle',
-        'info': 'fa-info-circle'
-    };
-    const icon = icons[type] || icons['info'];
-    notification.innerHTML = `<i class="fas ${icon}" style="margin-right: 0.5rem;"></i>${message}`;
-
-    document.body.appendChild(notification);
-
-    // Animate in
-    setTimeout(() => {
-        notification.style.opacity = '1';
-        notification.style.transform = 'translateX(0)';
-    }, 100);
-
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => notification.remove(), 300);
-    }, 5000);
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Set up real-time filtering
-    setupRealTimeFilters();
-    
-    // Form submission
-    const itemForm = document.getElementById('itemForm');
-    if (itemForm) {
-        itemForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const submitButton = document.getElementById('submitBtn');
-            const originalText = submitButton.innerHTML;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            submitButton.disabled = true;
-
-            const formData = new FormData(this);
-            const method = isEditMode ? 'PUT' : 'POST';
-            const url = isEditMode ? `/admin/inventory/${currentItemId}` : '/admin/inventory';
-
-            // Convert FormData to JSON for PUT request
-            const data = {};
-            formData.forEach((value, key) => {
-                if (key !== 'itemId') {
-                    data[key] = value;
-                }
-            });
-
-            fetch(url, {
-                method: method,
-                headers: {
-                    'X-CSRF-TOKEN': csrfTokenValue,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    closeModal();
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showNotification(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('An error occurred while saving the item', 'error');
-            })
-            .finally(() => {
-                submitButton.innerHTML = originalText;
-                submitButton.disabled = false;
-            });
-        });
-    }
-
-    // Close modals when clicking outside
-    const itemModal = document.getElementById('itemModal');
-    if (itemModal) {
-        itemModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-    }
-
-    const deleteModal = document.getElementById('deleteModal');
-    if (deleteModal) {
-        deleteModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDeleteModal();
-            }
-        });
-    }
-
-    const stockInModal = document.getElementById('stockInModal');
-    if (stockInModal) {
-        stockInModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeStockInModal();
-            }
-        });
-    }
-
-    const stockOutModal = document.getElementById('stockOutModal');
-    if (stockOutModal) {
-        stockOutModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeStockOutModal();
-            }
-        });
-    }
-
-    // Set minimum date for expiry date to tomorrow
-    const expiryDateInput = document.getElementById('expiryDate');
-    if (expiryDateInput) {
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const minDate = tomorrow.toISOString().split('T')[0];
-        expiryDateInput.setAttribute('min', minDate);
-    }
-});
-
 // Stock In Modal Functions
 function openStockInModal(itemId, itemName) {
     currentStockItemId = itemId;
@@ -459,20 +296,62 @@ function processStockOut(event) {
     });
 }
 
-// Make functions globally available
-window.openAddModal = openAddModal;
-window.openEditModal = openEditModal;
-window.closeModal = closeModal;
-window.confirmDelete = confirmDelete;
-window.closeDeleteModal = closeDeleteModal;
-window.deleteItem = deleteItem;
-window.openStockInModal = openStockInModal;
-window.closeStockInModal = closeStockInModal;
-window.processStockIn = processStockIn;
-window.openStockOutModal = openStockOutModal;
-window.closeStockOutModal = closeStockOutModal;
-window.processStockOut = processStockOut;
-window.clearFilters = clearFilters;
+// Notification function
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+    `;
+
+    // Set background color based on type
+    const colors = {
+        'success': 'var(--success-color)',
+        'error': 'var(--danger-color)',
+        'warning': 'var(--warning-color)',
+        'info': 'var(--primary-color)'
+    };
+    notification.style.backgroundColor = colors[type] || colors['info'];
+
+    // Add icon
+    const icons = {
+        'success': 'fa-check-circle',
+        'error': 'fa-exclamation-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle'
+    };
+    const icon = icons[type] || icons['info'];
+    notification.innerHTML = `<i class="fas ${icon}" style="margin-right: 0.5rem;"></i>${message}`;
+
+    document.body.appendChild(notification);
+
+    // Animate in
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
 
 // Real-time filtering functionality
 function setupRealTimeFilters() {
@@ -688,9 +567,268 @@ function clearFilters() {
         }
     });
     
-    // Remove filter info
+    // Remove filter results info
     const existingInfo = document.querySelector('.filter-results-info');
     if (existingInfo) {
         existingInfo.remove();
     }
+    
+    // Remove "no results" row
+    const existingNoResults = document.querySelector('.no-filter-results');
+    if (existingNoResults) {
+        existingNoResults.remove();
+    }
+    
+    // Reset filter section appearance
+    const searchFilter2 = document.getElementById('searchFilter');
+    if (searchFilter2) {
+        searchFilter2.style.borderColor = 'var(--border-light)';
+        searchFilter2.style.boxShadow = 'none';
+    }
 }
+
+// Setup event listeners for buttons (replacing onclick handlers)
+function setupEventListeners() {
+    // Add Item buttons
+    document.querySelectorAll('.btn-add-item').forEach(btn => {
+        btn.addEventListener('click', openAddModal);
+    });
+    
+    // Clear Filters button
+    document.querySelectorAll('.btn-clear-filters').forEach(btn => {
+        btn.addEventListener('click', clearFilters);
+    });
+    
+    // Stock In buttons
+    document.querySelectorAll('.action-btn.stock-in').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const itemName = this.dataset.itemName;
+            openStockInModal(itemId, itemName);
+        });
+    });
+    
+    // Stock Out buttons
+    document.querySelectorAll('.action-btn.stock-out').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const itemName = this.dataset.itemName;
+            const quantity = this.dataset.quantity;
+            openStockOutModal(itemId, itemName, quantity);
+        });
+    });
+    
+    // Edit buttons
+    document.querySelectorAll('.action-btn.edit').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            openEditModal(itemId);
+        });
+    });
+    
+    // View buttons (redirect to audit logs)
+    document.querySelectorAll('.action-btn.view').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const auditUrl = this.dataset.auditUrl;
+            window.location.href = auditUrl;
+        });
+    });
+    
+    // Delete buttons
+    document.querySelectorAll('.action-btn.delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const itemName = this.dataset.itemName;
+            confirmDelete(itemId, itemName);
+        });
+    });
+    
+    // Modal close buttons
+    document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal-overlay');
+            if (modal.id === 'itemModal') {
+                closeModal();
+            } else if (modal.id === 'deleteModal') {
+                closeDeleteModal();
+            } else if (modal.id === 'stockInModal') {
+                closeStockInModal();
+            } else if (modal.id === 'stockOutModal') {
+                closeStockOutModal();
+            }
+        });
+    });
+    
+    // Modal cancel buttons
+    document.querySelectorAll('.btn-cancel').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal-overlay');
+            if (modal.id === 'itemModal') {
+                closeModal();
+            } else if (modal.id === 'deleteModal') {
+                closeDeleteModal();
+            } else if (modal.id === 'stockInModal') {
+                closeStockInModal();
+            } else if (modal.id === 'stockOutModal') {
+                closeStockOutModal();
+            }
+        });
+    });
+    
+    // Delete confirmation button
+    document.querySelectorAll('.btn-delete-confirm').forEach(btn => {
+        btn.addEventListener('click', deleteItem);
+    });
+    
+    // Row hover events (replacing onmouseover/onmouseout)
+    document.querySelectorAll('.inventory-table tbody tr').forEach(row => {
+        if (!row.querySelector('td[colspan]')) {
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = 'var(--bg-tertiary)';
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = 'transparent';
+            });
+        }
+    });
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up real-time filtering
+    setupRealTimeFilters();
+    
+    // Setup event listeners for buttons
+    setupEventListeners();
+    
+    // Form submission
+    const itemForm = document.getElementById('itemForm');
+    if (itemForm) {
+        itemForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submitBtn');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            submitButton.disabled = true;
+
+            const formData = new FormData(this);
+            const method = isEditMode ? 'PUT' : 'POST';
+            const url = isEditMode ? `/admin/inventory/${currentItemId}` : '/admin/inventory';
+
+            // Convert FormData to JSON for PUT request
+            const data = {};
+            formData.forEach((value, key) => {
+                if (key !== 'itemId') {
+                    data[key] = value;
+                }
+            });
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'X-CSRF-TOKEN': csrfTokenValue,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    closeModal();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while saving the item', 'error');
+            })
+            .finally(() => {
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            });
+        });
+    }
+
+    // Close modals when clicking outside
+    const itemModal = document.getElementById('itemModal');
+    if (itemModal) {
+        itemModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    }
+
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+    }
+
+    const stockInModal = document.getElementById('stockInModal');
+    if (stockInModal) {
+        stockInModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeStockInModal();
+            }
+        });
+    }
+
+    const stockOutModal = document.getElementById('stockOutModal');
+    if (stockOutModal) {
+        stockOutModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeStockOutModal();
+            }
+        });
+    }
+
+    // Setup form event listeners for stock in/out forms
+    const stockInForm = document.getElementById('stockInForm');
+    if (stockInForm) {
+        stockInForm.addEventListener('submit', function(e) {
+            processStockIn(e);
+        });
+    }
+
+    const stockOutForm = document.getElementById('stockOutForm');
+    if (stockOutForm) {
+        stockOutForm.addEventListener('submit', function(e) {
+            processStockOut(e);
+        });
+    }
+
+    // Set minimum date for expiry date to tomorrow
+    const expiryDateInput = document.getElementById('expiryDate');
+    if (expiryDateInput) {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const minDate = tomorrow.toISOString().split('T')[0];
+        expiryDateInput.setAttribute('min', minDate);
+    }
+});
+
+// Make functions globally available
+window.openAddModal = openAddModal;
+window.openEditModal = openEditModal;
+window.closeModal = closeModal;
+window.confirmDelete = confirmDelete;
+window.closeDeleteModal = closeDeleteModal;
+window.deleteItem = deleteItem;
+window.openStockInModal = openStockInModal;
+window.closeStockInModal = closeStockInModal;
+window.processStockIn = processStockIn;
+window.openStockOutModal = openStockOutModal;
+window.closeStockOutModal = closeStockOutModal;
+window.processStockOut = processStockOut;
+window.clearFilters = clearFilters;

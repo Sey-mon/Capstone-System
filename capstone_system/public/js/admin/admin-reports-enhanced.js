@@ -4,13 +4,43 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
+    initializeEventListeners();
 });
+
+/**
+ * Initialize event listeners for report buttons and chart controls
+ */
+function initializeEventListeners() {
+    // Report generation buttons
+    document.querySelectorAll('[data-report-type]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const reportType = this.getAttribute('data-report-type');
+            generateReport(reportType, this);
+        });
+    });
+
+
+
+    // Distribution view toggle buttons
+    document.querySelectorAll('.toggle-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const view = this.getAttribute('data-view');
+            toggleDistributionView(view);
+        });
+    });
+}
 
 /**
  * Generate and display report
  */
-function generateReport(reportType) {
-    const button = event.target;
+function generateReport(reportType, button) {
+    if (!button) {
+        console.error('Button element is required');
+        return;
+    }
+    
     const originalText = button.innerHTML;
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     button.disabled = true;
@@ -251,22 +281,7 @@ function downloadReport() {
     }, 1000);
 }
 
-/**
- * Update chart period
- */
-function updateChartPeriod(period) {
-    // Update button states
-    document.querySelectorAll('.card-header button').forEach(btn => {
-        btn.classList.remove('btn-primary');
-        btn.classList.add('btn-secondary');
-    });
-    
-    event.target.classList.remove('btn-secondary');
-    event.target.classList.add('btn-primary');
-    
-    // TODO: Update chart data based on period
-    console.log('Updating chart for period:', period);
-}
+
 
 /**
  * Initialize charts
@@ -274,42 +289,12 @@ function updateChartPeriod(period) {
 function initializeCharts() {
     // Check if Chart.js is available and if we have data
     if (typeof Chart !== 'undefined') {
-        initTrendsChart();
+        initMonthlyProgressChart();
+        initPatientDistributionChart();
     }
 }
 
-/**
- * Initialize trends chart
- */
-function initTrendsChart() {
-    const canvas = document.getElementById('trendsChart');
-    if (!canvas) return;
-    
-    // Sample data - replace with actual data from backend
-    const ctx = canvas.getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Assessments',
-                data: [12, 19, 3, 5, 2, 3, 7],
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
+
 
 /**
  * Format date for display
@@ -350,5 +335,177 @@ window.onclick = function(event) {
     const modal = document.getElementById('reportModal');
     if (event.target === modal) {
         closeReportModal();
+    }
+}
+
+/**
+ * Initialize monthly progress chart
+ */
+function initMonthlyProgressChart() {
+    const canvas = document.getElementById('monthlyProgressChart');
+    if (!canvas) return;
+    
+    // Get data from PHP (passed via data attributes or global variables)
+    const monthlyData = window.monthlyProgressData || {
+        months: ['May 2025', 'Jun 2025', 'Jul 2025', 'Aug 2025', 'Sep 2025', 'Oct 2025'],
+        assessments: [0, 0, 0, 0, 0, 0],
+        recovered: [0, 0, 0, 0, 0, 0]
+    };
+    
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: monthlyData.months,
+            datasets: [{
+                label: 'Assessments',
+                data: monthlyData.assessments,
+                borderColor: 'rgb(79, 70, 229)',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Recovered',
+                data: monthlyData.recovered,
+                borderColor: 'rgb(16, 185, 129)',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 6,
+                    hoverRadius: 8
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Initialize patient distribution pie chart
+ */
+function initPatientDistributionChart() {
+    const canvas = document.getElementById('patientDistributionChart');
+    if (!canvas) return;
+    
+    // Get data from PHP (passed via global variables)
+    const distributionData = window.patientDistributionData || {
+        normal: { count: 0, percentage: 0 },
+        underweight: { count: 0, percentage: 0 },
+        malnourished: { count: 0, percentage: 0 },
+        severe_malnourishment: { count: 0, percentage: 0 }
+    };
+    
+    const ctx = canvas.getContext('2d');
+    window.patientDistributionPieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Normal Weight', 'Underweight', 'Malnourished', 'Severe Malnourishment'],
+            datasets: [{
+                data: [
+                    distributionData.normal.count,
+                    distributionData.underweight.count,
+                    distributionData.malnourished.count,
+                    distributionData.severe_malnourishment.count
+                ],
+                backgroundColor: [
+                    '#10b981',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#991b1b'
+                ],
+                borderColor: [
+                    '#059669',
+                    '#f97316',
+                    '#dc2626',
+                    '#7f1d1d'
+                ],
+                borderWidth: 2,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false // We'll use custom legend
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return `${label}: ${value} patients (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            cutout: '50%',
+            animation: {
+                animateRotate: true,
+                duration: 1000
+            }
+        }
+    });
+}
+
+/**
+ * Toggle between distribution views (bars/pie chart)
+ */
+function toggleDistributionView(view) {
+    // Update button states
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-view="${view}"]`).classList.add('active');
+    
+    // Update view visibility
+    document.querySelectorAll('.distribution-view').forEach(viewEl => {
+        viewEl.classList.remove('active');
+    });
+    
+    if (view === 'bars') {
+        document.getElementById('barsView').classList.add('active');
+    } else if (view === 'pie') {
+        document.getElementById('pieView').classList.add('active');
+        
+        // Ensure pie chart is rendered when view becomes visible
+        if (window.patientDistributionPieChart) {
+            setTimeout(() => {
+                window.patientDistributionPieChart.resize();
+            }, 100);
+        }
     }
 }

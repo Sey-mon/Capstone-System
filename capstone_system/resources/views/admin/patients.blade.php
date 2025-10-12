@@ -20,11 +20,11 @@
             <div class="filters-header">
                 <h4><i class="fas fa-filter"></i> Filters & Search</h4>
                 <div class="header-actions">
-                    <button class="btn btn-sm btn-outline" onclick="clearAllFilters()">
+                    <button class="btn btn-sm btn-outline">
                         <i class="fas fa-times"></i>
                         Clear All
                     </button>
-                    <button class="btn btn-sm btn-secondary" onclick="window.location.reload()">
+                    <button class="btn btn-sm btn-secondary">
                         <i class="fas fa-sync"></i>
                         Refresh
                     </button>
@@ -86,18 +86,18 @@
         <div class="results-summary">
             <div class="summary-stats">
                 <span class="total-count">Total: <strong id="totalPatients">{{ $patients->count() }}</strong> patients</span>
-                <span class="filtered-count" id="filteredCount" style="display: none;">Showing: <strong id="visiblePatients">0</strong> patients</span>
+                <span class="filtered-count filtered-count-hidden" id="filteredCount">Showing: <strong id="visiblePatients">0</strong> patients</span>
             </div>
             <div class="view-options">
                 <div class="view-toggle">
-                    <button class="btn btn-sm view-btn active" data-view="table" onclick="switchView('table')">
+                    <button class="btn btn-sm view-btn active" data-view="table">
                         <i class="fas fa-table"></i> Table
                     </button>
-                    <button class="btn btn-sm view-btn" data-view="grid" onclick="switchView('grid')">
+                    <button class="btn btn-sm view-btn" data-view="grid">
                         <i class="fas fa-th-large"></i> Grid
                     </button>
                 </div>
-                <button class="btn btn-primary" onclick="showAddPatientModal()">
+                <button class="btn btn-primary">
                     <i class="fas fa-plus"></i>
                     Add Patient
                 </button>
@@ -196,13 +196,13 @@
                                         <td class="contact-cell">{{ $patient->contact_number }}</td>
                                         <td class="actions-cell">
                                             <div class="action-buttons">
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewPatient({{ $patient->patient_id }})" title="View Details">
+                                                <button class="btn btn-sm btn-outline-primary" data-patient-id="{{ $patient->patient_id }}" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-warning" onclick="editPatient({{ $patient->patient_id }})" title="Edit Patient">
+                                                <button class="btn btn-sm btn-outline-warning" data-patient-id="{{ $patient->patient_id }}" title="Edit Patient">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deletePatient({{ $patient->patient_id }})" title="Delete Patient">
+                                                <button class="btn btn-sm btn-outline-danger" data-patient-id="{{ $patient->patient_id }}" title="Delete Patient">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -212,14 +212,14 @@
                             </tbody>
                         </table>
                         <!-- Pagination Links -->
-                        <div class="pagination-wrapper" style="margin-top: 20px; text-align: center;">
+                        <div class="pagination-wrapper">
                             {{ $patients->links() }}
                         </div>
                     </div>
                 </div>
 
                 <!-- Grid View -->
-                <div id="gridView" class="view-container" style="display: none;">
+                <div id="gridView" class="view-container grid-view-hidden">
                     <div class="patients-grid" id="patientsGrid">
                         @foreach($patients as $patient)
                             <div class="patient-card" 
@@ -272,13 +272,13 @@
                                 </div>
                                 <div class="card-footer">
                                     <div class="action-buttons">
-                                        <button class="btn btn-sm btn-primary" onclick="viewPatient({{ $patient->patient_id }})" title="View Details">
+                                        <button class="btn btn-sm btn-primary" data-patient-id="{{ $patient->patient_id }}" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-warning" onclick="editPatient({{ $patient->patient_id }})" title="Edit">
+                                        <button class="btn btn-sm btn-warning" data-patient-id="{{ $patient->patient_id }}" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deletePatient({{ $patient->patient_id }})" title="Delete">
+                                        <button class="btn btn-sm btn-danger" data-patient-id="{{ $patient->patient_id }}" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -289,7 +289,7 @@
                 </div>
 
                 <!-- No Results Message -->
-                <div id="noResults" class="no-results" style="display: none;">
+                <div id="noResults" class="no-results no-results-hidden">
                     <div class="no-results-icon">
                         <i class="fas fa-search"></i>
                     </div>
@@ -305,7 +305,7 @@
                     <p class="empty-state-description">
                         No patients have been registered yet. Click "Add Patient" to register the first patient.
                     </p>
-                    <button class="btn btn-primary" onclick="showAddPatientModal()">
+                    <button class="btn btn-primary">
                         <i class="fas fa-plus"></i>
                         Add First Patient
                     </button>
@@ -322,7 +322,7 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h4 class="modal-title">Add New Patient</h4>
-                <button class="modal-close" onclick="closeAddPatientModal()">
+                <button class="modal-close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -484,8 +484,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeAddPatientModal()">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="savePatient()">Save Patient</button>
+                <button type="button" class="btn btn-secondary">Cancel</button>
+                <button type="button" class="btn btn-primary">Save Patient</button>
             </div>
         </div>
     </div>
@@ -495,7 +495,7 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h4 class="modal-title">Edit Patient</h4>
-                <button class="modal-close" onclick="closeEditPatientModal()">
+                <button class="modal-close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -660,8 +660,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeEditPatientModal()">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="updatePatient()">Update Patient</button>
+                <button type="button" class="btn btn-secondary">Cancel</button>
+                <button type="button" class="btn btn-primary">Update Patient</button>
             </div>
         </div>
     </div>
@@ -671,7 +671,7 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h4 class="modal-title">Patient Details</h4>
-                <button class="modal-close" onclick="closeViewPatientModal()">
+                <button class="modal-close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -681,7 +681,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeViewPatientModal()">Close</button>
+                <button type="button" class="btn btn-secondary">Close</button>
             </div>
         </div>
     </div>

@@ -1,3 +1,38 @@
+/* Font optimization for LCP performance */
+@font-face {
+    font-family: 'Inter';
+    font-display: swap; /* Ensures text is visible during font load */
+    src: local('Inter');
+}
+
+/* Center Parent Dashboard Header - Optimized for LCP */
+.page-header-modern,
+.page-header-modern .page-title-section,
+.page-header-modern .page-title,
+.page-header-modern .page-subtitle {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    /* Performance optimizations */
+    will-change: transform;
+    contain: layout;
+}
+
+/* Specific optimization for LCP element */
+.page-subtitle,
+p.page-subtitle {
+    font-size: 0.875rem;
+    color: grey;
+    /* Critical LCP optimizations */
+    contain: layout style;
+    will-change: auto;
+    font-display: swap;
+    /* Ensure text is readable during font load */
+    text-rendering: optimizeSpeed;
+}
+
 /* Modern Dashboard CSS */
 
 * {
@@ -78,6 +113,8 @@ body {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
     line-height: 1.6;
+    /* Performance optimization for text rendering */
+    font-display: swap;
 }
 
 /* Dashboard Layout */
@@ -111,7 +148,7 @@ body {
     pointer-events: all;
 }
 
-/* Sidebar Styles */
+/* Sidebar Styles - Optimized for LCP */
 .sidebar {
     width: var(--sidebar-width);
     background-color: var(--bg-primary);
@@ -126,6 +163,8 @@ body {
     transition: transform var(--transition-medium), width var(--transition-medium);
     box-shadow: var(--shadow-lg);
     transform: translateX(0);
+    /* Performance optimizations */
+    contain: layout style;
 }
 
 .sidebar.collapsed {
@@ -409,7 +448,7 @@ body {
     transition: all var(--transition-medium);
 }
 
-/* Main Content */
+/* Main Content - Optimized for LCP */
 .main-content {
     flex: 1;
     margin-left: var(--sidebar-width);
@@ -421,6 +460,8 @@ body {
     width: calc(100% - var(--sidebar-width));
     max-width: 100%;
     overflow-x: hidden;
+    /* Performance optimizations */
+    contain: layout;
 }
 
 .sidebar.collapsed + .main-content {
@@ -430,9 +471,8 @@ body {
 
 /* Top Header */
 .top-header {
-    background-color: var(--bg-primary);
-    border-bottom: 1px solid var(--border-light);
-    padding: 1rem 2rem;
+    background-color: transparent;
+    padding: 0.5rem 0.5rem;
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -524,13 +564,17 @@ body {
 .header-title h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: white;
     margin-bottom: 0.25rem;
 }
 
 .header-subtitle {
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: grey;
+    /* Performance optimizations for LCP */
+    contain: layout style;
+    will-change: auto;
+    font-display: swap;
 }
 
 .header-actions {
@@ -573,10 +617,13 @@ body {
     justify-content: center;
 }
 
-/* Page Content */
+/* Page Content - Optimized for LCP */
 .page-content {
     flex: 1;
     padding: 2rem;
+    /* Performance optimizations */
+    contain: layout;
+    will-change: transform;
 }
 
 /* Stats Grid */
@@ -984,7 +1031,7 @@ body {
     }
 }
 
-/* Animations */
+/* Animations - Optimized for LCP */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -996,8 +1043,16 @@ body {
     }
 }
 
+/* Remove expensive animations on initial load for better LCP */
 .fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: none; /* Defer animation to after page load */
+}
+
+/* Only apply animations if user doesn't prefer reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+    .fade-in.loaded {
+        animation: fadeIn 0.3s ease-out;
+    }
 }
 
 /* Custom Scrollbar */
@@ -1769,5 +1824,26 @@ body {
     
     .user-info {
         font-size: 0.75rem;
+    }
+}
+
+/* Critical loading performance optimizations */
+.critical-content {
+    /* Prioritize critical content rendering */
+    contain: layout style;
+    will-change: auto;
+}
+
+/* Defer non-critical visual effects */
+.non-critical {
+    /* These elements can load after LCP */
+    will-change: auto;
+    contain: layout;
+}
+
+/* Optimize font loading for better LCP */
+@supports (font-display: swap) {
+    * {
+        font-display: swap;
     }
 }

@@ -203,3 +203,35 @@ body {
         margin: 0 auto;
     }
 }
+
+/* Contact Admin Specific Styles */
+.contact-subtitle {
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+/* Textarea Styles */
+.form-group textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    transition: 0.3s ease;
+}
+
+.form-group textarea:focus {
+    border-color: #66bb6a;
+    outline: none;
+    box-shadow: 0 0 5px rgba(102, 187, 106, 0.3);
+}
+
+.form-group textarea::placeholder {
+    color: #999;
+}

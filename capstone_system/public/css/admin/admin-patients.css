@@ -574,11 +574,12 @@
 }
 
 .view-container {
+    display: none;
     transition: all 0.3s ease;
 }
 
 .view-container.active {
-    display: block;
+    display: block !important;
 }
 
 /* ========== RESPONSIVE DESIGN ========== */
@@ -1033,4 +1034,30 @@
     .form-section {
         padding: 1rem;
     }
+}
+
+/* ========== UTILITY CLASSES ========== */
+.filtered-count-hidden {
+    display: none !important;
+}
+
+.grid-view-hidden {
+    display: none !important;
+}
+
+.no-results-hidden {
+    display: none !important;
+}
+
+.pagination-wrapper {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.patient-hidden {
+    display: none !important;
+}
+
+.filtered-count-visible {
+    display: inline !important;
 }

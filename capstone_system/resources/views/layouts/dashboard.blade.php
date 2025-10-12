@@ -15,10 +15,13 @@
     @stack('styles')
     
     <link rel="stylesheet" href="{{ asset('css/dashboard-modal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/modal-backdrop-fix.css') }}">
     
     <!-- Ensure Bootstrap JS is loaded before any other scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Modal cleanup utility -->
+    <script src="{{ asset('js/modal-cleanup.js') }}"></script>
     <script src="{{ asset('js/dashboard-modal.js') }}"></script>
 </head>
 <body>
@@ -67,27 +70,6 @@
         
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button class="mobile-menu-btn" id="mobileMenuBtn">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-                <div class="header-title">
-                    <h1>@yield('page-title', 'Dashboard')</h1>
-                    <p class="header-subtitle">@yield('page-subtitle', '')</p>
-                </div>
-                
-                <div class="header-actions">
-                    <div class="notifications">
-                        <button class="notification-btn">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-            
             <!-- Page Content -->
             <div class="page-content">
                 <!-- Floating Menu Button (shown when sidebar is hidden) -->

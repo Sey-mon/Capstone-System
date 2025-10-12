@@ -48,58 +48,8 @@ class AdminController extends Controller
             ];
         });
 
-    // Fetch barangays from DB with coordinates
-    $barangayList = Barangay::whereNotNull('latitude')->whereNotNull('longitude')->get();
-
-        // Get counts from assessments
-        $barangays = [];
-        foreach ($barangayList as $b) {
-            $sam = 0;
-            $mam = 0;
-            $normal = 0;
-            $unknown = 0;
-            $patients = Patient::where('barangay_id', $b->barangay_id)->pluck('patient_id');
-            foreach ($patients as $patientId) {
-                $latestAssessment = Assessment::where('patient_id', $patientId)
-                    ->orderByDesc('assessment_date')
-                    ->first();
-                if ($latestAssessment) {
-                    $diagnosis = null;
-                    if ($latestAssessment->treatment) {
-                        $treatment = json_decode($latestAssessment->treatment, true);
-                        if (isset($treatment['diagnosis'])) {
-                            // Normalize: lowercase, remove parentheses and their contents, trim spaces
-                            $diagnosis = strtolower($treatment['diagnosis']);
-                            $diagnosis = trim($diagnosis);
-                        }
-                    }
-                    if ($diagnosis) {
-                        // Use regex to match both full and short forms, with or without parentheses
-                        if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
-                            $sam++;
-                        } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
-                            $mam++;
-                        } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
-                            $normal++;
-                        } else {
-                            $unknown++;
-                        }
-                    } else {
-                        $unknown++;
-                    }
-                }
-            }
-            $barangays[] = [
-                'id' => $b->barangay_id,
-                'name' => $b->barangay_name,
-                'lat' => $b->latitude,
-                'lng' => $b->longitude,
-                'sam_count' => $sam,
-                'mam_count' => $mam,
-                'normal_count' => $normal,
-                'unknown_count' => $unknown
-            ];
-        }
+        // Use the extracted method for barangay data processing
+        $barangays = $this->getBarangayPatientData();
 
         return view('admin.dashboard', compact('stats', 'barangays'));
     }
@@ -129,56 +79,8 @@ class AdminController extends Controller
                 ->take(30) // Limit for performance
                 ->get();
 
-            $barangayList = Barangay::whereNotNull('latitude')->whereNotNull('longitude')->get();
-            $barangays = [];
-            foreach ($barangayList as $b) {
-                $sam = 0;
-                $mam = 0;
-                $normal = 0;
-                $unknown = 0;
-                $patients = Patient::where('barangay_id', $b->barangay_id)->pluck('patient_id');
-                foreach ($patients as $patientId) {
-                    $latestAssessment = Assessment::where('patient_id', $patientId)
-                        ->orderByDesc('assessment_date')
-                        ->first();
-                    if ($latestAssessment) {
-                        $diagnosis = null;
-                        if ($latestAssessment->treatment) {
-                            $treatment = json_decode($latestAssessment->treatment, true);
-                            if (isset($treatment['diagnosis'])) {
-                                $diagnosis = strtolower($treatment['diagnosis']);
-                                $diagnosis = trim($diagnosis);
-                            }
-                        }
-                        if ($diagnosis) {
-                            if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
-                                $sam++;
-                            } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
-                                $mam++;
-                            } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
-                                $normal++;
-                            } else {
-                                $unknown++;
-                            }
-                        } else {
-                            $unknown++;
-                        }
-                    }
-                }
-                $patientCount = count($patients);
-                $barangays[] = [
-                    'id' => $b->barangay_id,
-                    'name' => $b->barangay_name,
-                    'lat' => (float) $b->latitude,
-                    'lng' => (float) $b->longitude,
-                    'patient_count' => $patientCount,
-                    'sam_count' => $sam,
-                    'mam_count' => $mam,
-                    'normal_count' => $normal,
-                    'unknown_count' => $unknown,
-                    'activity_level' => $patientCount > 10 ? 'high' : ($patientCount > 5 ? 'medium' : 'low')
-                ];
-            }
+            // Use the extracted method for barangay data processing
+            $barangays = $this->getBarangayPatientData(true, true);
 
             $mapData = [
                 'patients' => $patients->map(function($patient) {
@@ -275,19 +177,7 @@ class AdminController extends Controller
      */
     public function storePatient(Request $request)
     {
-        $request->validate([
-            'parent_id' => 'nullable|exists:users,user_id',
-            'nutritionist_id' => 'nullable|exists:users,user_id',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'barangay_id' => 'required|exists:barangays,barangay_id',
-            'contact_number' => 'required|string|max:20',
-            'age_months' => 'required|integer|min:0',
-            'sex' => 'required|in:Male,Female',
-            'date_of_admission' => 'required|date',
-            'weight_kg' => 'required|numeric|min:0',
-            'height_cm' => 'required|numeric|min:0',
-        ]);
+        $request->validate($this->getPatientValidationRules());
 
         try {
             $patient = Patient::create([
@@ -333,17 +223,7 @@ class AdminController extends Controller
      */
     public function getPatient($id)
     {
-        $patient = Patient::with(['parent', 'nutritionist', 'barangay'])->find($id);
-        if (!$patient) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Patient not found.'
-            ], 404);
-        }
-        return response()->json([
-            'success' => true,
-            'patient' => $patient
-        ]);
+        return $this->getRecord(Patient::class, $id, ['parent', 'nutritionist', 'barangay']);
     }
 
     /**
@@ -358,19 +238,7 @@ class AdminController extends Controller
                 'message' => 'Patient not found.'
             ], 404);
         }
-        $request->validate([
-            'parent_id' => 'nullable|exists:users,user_id',
-            'nutritionist_id' => 'nullable|exists:users,user_id',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'barangay_id' => 'required|exists:barangays,barangay_id',
-            'contact_number' => 'required|string|max:20',
-            'age_months' => 'required|integer|min:0',
-            'sex' => 'required|in:Male,Female',
-            'date_of_admission' => 'required|date',
-            'weight_kg' => 'required|numeric|min:0',
-            'height_cm' => 'required|numeric|min:0',
-        ]);
+        $request->validate($this->getPatientValidationRules(true));
         $patient->update([
             'parent_id' => $request->parent_id,
             'nutritionist_id' => $request->nutritionist_id,
@@ -461,13 +329,7 @@ class AdminController extends Controller
      */
     public function storeInventoryItem(Request $request)
     {
-        $request->validate([
-            'item_name' => 'required|string|max:255',
-            'category_id' => 'required|exists:item_categories,category_id',
-            'unit' => 'required|string|max:50',
-            'quantity' => 'required|integer|min:0',
-            'expiry_date' => 'nullable|date|after:today',
-        ]);
+        $request->validate($this->getInventoryValidationRules());
 
         try {
             DB::beginTransaction();
@@ -509,13 +371,7 @@ class AdminController extends Controller
      */
     public function updateInventoryItem(Request $request, $id)
     {
-        $request->validate([
-            'item_name' => 'required|string|max:255',
-            'category_id' => 'required|exists:item_categories,category_id',
-            'unit' => 'required|string|max:50',
-            'quantity' => 'required|integer|min:0',
-            'expiry_date' => 'nullable|date|after:today',
-        ]);
+        $request->validate($this->getInventoryValidationRules(true));
 
         try {
             DB::beginTransaction();
@@ -604,18 +460,7 @@ class AdminController extends Controller
      */
     public function getInventoryItem($id)
     {
-        try {
-            $item = InventoryItem::with('category')->findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'item' => $item
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Item not found.'
-            ], 404);
-        }
+        return $this->getRecord(InventoryItem::class, $id, ['category']);
     }
 
     /**
@@ -631,9 +476,10 @@ class AdminController extends Controller
             'total_inventory_value' => InventoryItem::all()->sum(function($item) {
                 return $item->quantity * $item->unit_cost;
             }),
-            'assessment_trends' => $this->getAssessmentTrendsDashboard(),
             'inventory_by_category' => $this->getInventoryByCategory(),
             'recent_activities' => $this->getRecentActivities(),
+            'patient_distribution' => $this->getPatientDistribution(),
+            'monthly_progress' => $this->getMonthlyProgress(),
         ];
 
         return view('admin.reports', compact('reports'));
@@ -720,94 +566,7 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Generate Assessment Trends Report
-     */
-    public function generateAssessmentTrendsReport()
-    {
-        try {
-            // Load assessments with nested relationships
-            $assessments = Assessment::with(['patient.barangay', 'nutritionist'])->get();
-            
-            // Calculate monthly trends
-            $monthlyData = $assessments->groupBy(function($assessment) {
-                return $assessment->created_at ? $assessment->created_at->format('Y-m') : 'Unknown';
-            })->map(function($group) {
-                return $group->count();
-            })->sortKeys();
-            
-            // Calculate trends with growth rate
-            $monthlyTrends = [];
-            $previousCount = 0;
-            foreach ($monthlyData as $month => $count) {
-                $growth = $previousCount > 0 ? round((($count - $previousCount) / $previousCount) * 100, 1) : 0;
-                $monthlyTrends[] = [
-                    'month' => $month,
-                    'count' => $count,
-                    'growth' => $growth
-                ];
-                $previousCount = $count;
-            }
-            
-            // Get assessments by barangay (safely)
-            $assessmentsByBarangay = [];
-            foreach ($assessments as $assessment) {
-                if ($assessment->patient && $assessment->patient->barangay) {
-                    $barangayName = $assessment->patient->barangay->name;
-                    $assessmentsByBarangay[$barangayName] = ($assessmentsByBarangay[$barangayName] ?? 0) + 1;
-                }
-            }
-            
-            // Get assessments by nutritionist
-            $assessmentsByNutritionist = [];
-            foreach ($assessments as $assessment) {
-                if ($assessment->nutritionist) {
-                    $nutritionistName = $assessment->nutritionist->name;
-                    $assessmentsByNutritionist[$nutritionistName] = ($assessmentsByNutritionist[$nutritionistName] ?? 0) + 1;
-                }
-            }
-            
-            $report_data = [
-                'total_assessments' => $assessments->count(),
-                'completed_assessments' => $assessments->whereNotNull('completed_at')->count(),
-                'pending_assessments' => $assessments->whereNull('completed_at')->count(),
-                'assessments_this_month' => $assessments->filter(function($assessment) {
-                    return $assessment->created_at && $assessment->created_at->isCurrentMonth();
-                })->count(),
-                'avg_assessments_per_day' => $assessments->count() > 0 ? 
-                    round($assessments->count() / max(1, now()->diffInDays($assessments->min('created_at') ?? now())), 1) : 0,
-                'monthly_trends' => $monthlyTrends,
-                'assessments_by_month' => $monthlyData,
-                'assessments_by_barangay' => $assessmentsByBarangay,
-                'assessments_by_nutritionist' => $assessmentsByNutritionist,
-                'assessment_outcomes' => [
-                    'completed' => $assessments->whereNotNull('completed_at')->count(),
-                    'pending' => $assessments->whereNull('completed_at')->count(),
-                ],
-                'recent_assessments' => $assessments->sortByDesc('created_at')->take(10)->map(function($assessment) {
-                    return [
-                        'id' => $assessment->assessment_id,
-                        'patient_name' => $assessment->patient ? 
-                            $assessment->patient->first_name . ' ' . $assessment->patient->last_name : 'N/A',
-                        'nutritionist_name' => $assessment->nutritionist ? $assessment->nutritionist->name : 'N/A',
-                        'created_at' => $assessment->created_at ? $assessment->created_at->format('Y-m-d H:i:s') : 'N/A',
-                    ];
-                })->values(),
-            ];
 
-            return response()->json([
-                'success' => true,
-                'data' => $report_data,
-                'generated_at' => now()->format('Y-m-d H:i:s')
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Assessment Trends Report Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error generating assessment trends report: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 
     /**
      * Generate Low Stock Alert Report
@@ -836,18 +595,7 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Get assessment trends for dashboard
-     */
-    private function getAssessmentTrendsDashboard()
-    {
-        $trends = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $trends[$date->format('M d')] = Assessment::whereDate('created_at', $date)->count();
-        }
-        return $trends;
-    }
+
 
     /**
      * Get inventory by category
@@ -1220,18 +968,7 @@ class AdminController extends Controller
      */
     public function getCategory($id)
     {
-        try {
-            $category = ItemCategory::findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'category' => $category
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Category not found.'
-            ], 404);
-        }
+        return $this->getRecord(ItemCategory::class, $id);
     }
 
     /**
@@ -1239,18 +976,7 @@ class AdminController extends Controller
      */
     public function getBarangay($id)
     {
-        try {
-            $barangay = Barangay::findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'barangay' => $barangay
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Barangay not found.'
-            ], 404);
-        }
+        return $this->getRecord(Barangay::class, $id);
     }
 
     // ========== USER MANAGEMENT CRUD METHODS ==========
@@ -1316,18 +1042,7 @@ class AdminController extends Controller
      */
     public function getUser($id)
     {
-        try {
-            $user = User::with('role')->findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'user' => $user
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found.'
-            ], 404);
-        }
+        return $this->getRecord(User::class, $id, ['role']);
     }
 
     /**
@@ -1873,10 +1588,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Show inventory transactions
-     */
-
     // ========================================
     // API MANAGEMENT METHODS
     // ========================================
@@ -1957,15 +1668,7 @@ class AdminController extends Controller
      */
     public function downloadUserActivityReport(Request $request)
     {
-        $reportData = json_decode($request->input('report_data'), true);
-        $timestamp = now()->format('Y-m-d H:i:s');
-        
-        $pdf = Pdf::loadView('admin.reports.pdf.user-activity', [
-            'data' => $reportData,
-            'generated_at' => $timestamp
-        ]);
-        
-        return $pdf->download('user-activity-report-' . now()->format('Y-m-d') . '.pdf');
+        return $this->downloadReport($request, 'admin.reports.pdf.user-activity', 'user-activity-report');
     }
 
     /**
@@ -1973,103 +1676,348 @@ class AdminController extends Controller
      */
     public function downloadInventoryReport(Request $request)
     {
-        $reportData = json_decode($request->input('report_data'), true);
-        $timestamp = now()->format('Y-m-d H:i:s');
-        
-        $pdf = Pdf::loadView('admin.reports.pdf.inventory', [
-            'data' => $reportData,
-            'generated_at' => $timestamp
-        ]);
-        
-        return $pdf->download('inventory-report-' . now()->format('Y-m-d') . '.pdf');
+        return $this->downloadReport($request, 'admin.reports.pdf.inventory', 'inventory-report');
     }
 
-    /**
-     * Download Assessment Trends Report as PDF
-     */
-    public function downloadAssessmentTrendsReport(Request $request)
-    {
-        $reportData = json_decode($request->input('report_data'), true);
-        $timestamp = now()->format('Y-m-d H:i:s');
-        
-        $pdf = Pdf::loadView('admin.reports.pdf.assessment-trends', [
-            'data' => $reportData,
-            'generated_at' => $timestamp
-        ]);
-        
-        return $pdf->download('assessment-trends-report-' . now()->format('Y-m-d') . '.pdf');
-    }
+
 
     /**
      * Download Low Stock Report as PDF
      */
     public function downloadLowStockReport(Request $request)
     {
+        return $this->downloadReport($request, 'admin.reports.pdf.low-stock', 'low-stock-report');
+    }
+
+    /**
+     * Get patient distribution data by nutrition status
+     */
+    private function getPatientDistribution()
+    {
+        $patients = Patient::with('assessments')->get();
+        $distribution = [
+            'normal' => 0,
+            'underweight' => 0,
+            'malnourished' => 0,
+            'severe_malnourishment' => 0,
+        ];
+
+        foreach ($patients as $patient) {
+            // Get the latest assessment for each patient
+            $latestAssessment = $patient->assessments()->latest()->first();
+            
+            if ($latestAssessment) {
+                // Calculate BMI if we have weight and height
+                if ($latestAssessment->weight_kg && $latestAssessment->height_cm) {
+                    $height_m = $latestAssessment->height_cm / 100;
+                    $bmi = $latestAssessment->weight_kg / ($height_m * $height_m);
+                    
+                    // Classify based on BMI (you can adjust these thresholds based on WHO standards)
+                    if ($bmi < 16) {
+                        $distribution['severe_malnourishment']++;
+                    } elseif ($bmi < 18.5) {
+                        $distribution['malnourished']++;
+                    } elseif ($bmi < 17) {
+                        $distribution['underweight']++;
+                    } else {
+                        $distribution['normal']++;
+                    }
+                } else {
+                    // If no weight/height data, check recovery status
+                    if ($latestAssessment->recovery_status === 'severe') {
+                        $distribution['severe_malnourishment']++;
+                    } elseif ($latestAssessment->recovery_status === 'moderate') {
+                        $distribution['malnourished']++;
+                    } elseif ($latestAssessment->recovery_status === 'mild') {
+                        $distribution['underweight']++;
+                    } else {
+                        $distribution['normal']++;
+                    }
+                }
+            } else {
+                // Patient with no assessments - classify based on initial data
+                if ($patient->weight_kg && $patient->height_cm) {
+                    $height_m = $patient->height_cm / 100;
+                    $bmi = $patient->weight_kg / ($height_m * $height_m);
+                    
+                    if ($bmi < 16) {
+                        $distribution['severe_malnourishment']++;
+                    } elseif ($bmi < 18.5) {
+                        $distribution['malnourished']++;
+                    } elseif ($bmi < 17) {
+                        $distribution['underweight']++;
+                    } else {
+                        $distribution['normal']++;
+                    }
+                } else {
+                    $distribution['normal']++;
+                }
+            }
+        }
+
+        // Calculate percentages
+        $total = array_sum($distribution);
+        if ($total > 0) {
+            foreach ($distribution as $key => $count) {
+                $distribution[$key] = [
+                    'count' => $count,
+                    'percentage' => round(($count / $total) * 100, 1)
+                ];
+            }
+        }
+
+        return $distribution;
+    }
+
+    /**
+     * Get monthly progress data for the last 6 months
+     */
+    private function getMonthlyProgress()
+    {
+        $months = [];
+        $assessmentCounts = [];
+        $recoveredCounts = [];
+        
+        // Get last 6 months of data
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $months[] = $date->format('M Y');
+            
+            // Count assessments for this month
+            $monthlyAssessments = Assessment::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+            $assessmentCounts[] = $monthlyAssessments;
+            
+            // Count recovered patients (assessments with positive recovery status)
+            $recoveredCount = Assessment::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->where('recovery_status', 'recovered')
+                ->count();
+            $recoveredCounts[] = $recoveredCount;
+        }
+
+        return [
+            'months' => $months,
+            'assessments' => $assessmentCounts,
+            'recovered' => $recoveredCounts,
+            'total_assessments' => array_sum($assessmentCounts),
+            'total_recovered' => array_sum($recoveredCounts),
+        ];
+    }
+
+    /**
+     * Get barangay data with patient counts and malnutrition diagnosis statistics
+     * 
+     * @param bool $includePatientCount Whether to include patient count (for map data)
+     * @param bool $includeActivityLevel Whether to include activity level calculation
+     * @return array
+     */
+    private function getBarangayPatientData($includePatientCount = false, $includeActivityLevel = false)
+    {
+        // Fetch barangays from DB with coordinates
+        $barangayList = Barangay::whereNotNull('latitude')->whereNotNull('longitude')->get();
+        $barangays = [];
+
+        foreach ($barangayList as $b) {
+            $sam = 0;
+            $mam = 0;
+            $normal = 0;
+            $unknown = 0;
+            $patients = Patient::where('barangay_id', $b->barangay_id)->pluck('patient_id');
+            
+            foreach ($patients as $patientId) {
+                $latestAssessment = Assessment::where('patient_id', $patientId)
+                    ->orderByDesc('assessment_date')
+                    ->first();
+                    
+                if ($latestAssessment) {
+                    $diagnosis = null;
+                    if ($latestAssessment->treatment) {
+                        $treatment = json_decode($latestAssessment->treatment, true);
+                        if (isset($treatment['diagnosis'])) {
+                            // Normalize: lowercase, remove parentheses and their contents, trim spaces
+                            $diagnosis = strtolower($treatment['diagnosis']);
+                            $diagnosis = trim($diagnosis);
+                        }
+                    }
+                    
+                    if ($diagnosis) {
+                        // Use regex to match both full and short forms, with or without parentheses
+                        if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
+                            $sam++;
+                        } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
+                            $mam++;
+                        } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
+                            $normal++;
+                        } else {
+                            $unknown++;
+                        }
+                    } else {
+                        $unknown++;
+                    }
+                }
+            }
+
+            $barangayData = [
+                'id' => $b->barangay_id,
+                'name' => $b->barangay_name,
+                'lat' => (float) $b->latitude,
+                'lng' => (float) $b->longitude,
+                'sam_count' => $sam,
+                'mam_count' => $mam,
+                'normal_count' => $normal,
+                'unknown_count' => $unknown
+            ];
+
+            // Add optional fields for map data
+            if ($includePatientCount) {
+                $patientCount = count($patients);
+                $barangayData['patient_count'] = $patientCount;
+                
+                if ($includeActivityLevel) {
+                    $barangayData['activity_level'] = $patientCount > 10 ? 'high' : ($patientCount > 5 ? 'medium' : 'low');
+                }
+            }
+
+            $barangays[] = $barangayData;
+        }
+
+        return $barangays;
+    }
+
+    /**
+     * Log activity to audit log
+     * 
+     * @param string $action
+     * @param string|null $tableName
+     * @param int|null $recordId
+     * @param string $description
+     * @param array|null $oldValues
+     * @param array|null $newValues
+     * @return void
+     */
+    private function logActivity($action, $tableName = null, $recordId = null, $description = '', $oldValues = null, $newValues = null)
+    {
+        $logData = [
+            'user_id' => Auth::id(),
+            'action' => $action,
+            'description' => $description,
+        ];
+
+        // Add optional fields if provided
+        if ($tableName) {
+            $logData['table_name'] = $tableName;
+        }
+        
+        if ($recordId) {
+            $logData['record_id'] = $recordId;
+        }
+        
+        if ($oldValues) {
+            $logData['old_values'] = is_array($oldValues) ? json_encode($oldValues) : $oldValues;
+        }
+        
+        if ($newValues) {
+            $logData['new_values'] = is_array($newValues) ? json_encode($newValues) : $newValues;
+        }
+
+        AuditLog::create($logData);
+    }
+
+    /**
+     * Get patient validation rules
+     * 
+     * @param bool $isUpdate
+     * @return array
+     */
+    private function getPatientValidationRules($isUpdate = false)
+    {
+        return [
+            'parent_id' => 'nullable|exists:users,user_id',
+            'nutritionist_id' => 'nullable|exists:users,user_id',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'barangay_id' => 'required|exists:barangays,barangay_id',
+            'contact_number' => 'required|string|max:20',
+            'age_months' => 'required|integer|min:0',
+            'sex' => 'required|in:Male,Female',
+            'date_of_admission' => 'required|date',
+            'weight_kg' => 'required|numeric|min:0',
+            'height_cm' => 'required|numeric|min:0',
+        ];
+    }
+
+    /**
+     * Get inventory item validation rules
+     * 
+     * @param bool $isUpdate
+     * @return array
+     */
+    private function getInventoryValidationRules($isUpdate = false)
+    {
+        return [
+            'item_name' => 'required|string|max:255',
+            'category_id' => 'required|exists:item_categories,category_id',
+            'unit' => 'required|string|max:50',
+            'quantity' => 'required|integer|min:0',
+            'expiry_date' => 'nullable|date|after:today',
+        ];
+    }
+
+    /**
+     * Generic method to get a record with relationships
+     * 
+     * @param string $modelClass
+     * @param int $id
+     * @param array $relationships
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function getRecord($modelClass, $id, $relationships = [])
+    {
+        try {
+            $query = $modelClass::query();
+            
+            if (!empty($relationships)) {
+                $query->with($relationships);
+            }
+            
+            $record = $query->findOrFail($id);
+            
+            $recordName = strtolower(class_basename($modelClass));
+            
+            return response()->json([
+                'success' => true,
+                $recordName => $record
+            ]);
+        } catch (\Exception $e) {
+            $recordName = strtolower(class_basename($modelClass));
+            return response()->json([
+                'success' => false,
+                'message' => ucfirst($recordName) . ' not found.'
+            ], 404);
+        }
+    }
+
+    /**
+     * Unified PDF download method
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param string $viewPath
+     * @param string $fileName
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    private function downloadReport(Request $request, $viewPath, $fileName)
+    {
         $reportData = json_decode($request->input('report_data'), true);
         $timestamp = now()->format('Y-m-d H:i:s');
         
-        $pdf = Pdf::loadView('admin.reports.pdf.low-stock', [
+        $pdf = Pdf::loadView($viewPath, [
             'data' => $reportData,
             'generated_at' => $timestamp
         ]);
         
-        return $pdf->download('low-stock-report-' . now()->format('Y-m-d') . '.pdf');
-    }
-
-    /**
-     * Show all nutritionist applications for admin review
-     */
-    public function showNutritionists()
-    {
-    $nutritionists = User::whereHas('role', function($query) {
-            $query->where('role_name', 'Nutritionist');
-        })->get();
-        return view('admin.nutritionists', compact('nutritionists'));
-    }
-
-
-        /**
-     * API endpoint for Assessment Trends chart (Weekly, Monthly, Yearly)
-     */
-    public function getAssessmentTrends(Request $request)
-    {
-        $period = $request->query('period', 'monthly');
-    $query = Assessment::query();
-        $now = now();
-        $labels = [];
-        $data = [];
-
-        if ($period === 'weekly') {
-            // Last 7 days
-            for ($i = 6; $i >= 0; $i--) {
-                $date = $now->copy()->subDays($i);
-                $labels[] = $date->format('D');
-                $data[] = $query->whereDate('created_at', $date->format('Y-m-d'))->count();
-            }
-        } elseif ($period === 'yearly') {
-            // Last 12 months
-            for ($i = 11; $i >= 0; $i--) {
-                $date = $now->copy()->subMonths($i);
-                $labels[] = $date->format('M Y');
-                $data[] = $query->whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->count();
-            }
-        } else {
-            // Monthly (current week)
-            $startOfMonth = $now->copy()->startOfMonth();
-            $endOfMonth = $now->copy()->endOfMonth();
-            $daysInMonth = $endOfMonth->day;
-            for ($i = 1; $i <= $daysInMonth; $i++) {
-                $date = $startOfMonth->copy()->addDays($i - 1);
-                $labels[] = $date->format('j');
-                $data[] = $query->whereDate('created_at', $date->format('Y-m-d'))->count();
-            }
-        }
-
-        return response()->json([
-            'success' => true,
-            'labels' => $labels,
-            'data' => $data,
-        ]);
+        return $pdf->download($fileName . '-' . now()->format('Y-m-d') . '.pdf');
     }
 
 }

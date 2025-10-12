@@ -1,0 +1,97 @@
+/**
+ * Admin Dashboard CSS
+ * Styles for the admin dashboard page
+ */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+    align-items: start;
+}
+
+.dashboard-grid .content-card {
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-grid .card-content {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 420px;
+}
+
+.map-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.map-popup {
+    font-family: inherit;
+    font-size: 0.875rem;
+}
+
+.map-popup h6 {
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.map-popup p {
+    margin: 0.25rem 0;
+    color: var(--text-secondary);
+}
+
+/* Custom leaflet popup styling */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+    margin: 12px 16px;
+    line-height: 1.4;
+}
+
+#admin-map {
+    height: 320px !important;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-grid .content-card {
+        height: auto;
+    }
+    
+    .map-controls {
+        flex-wrap: wrap;
+    }
+}
