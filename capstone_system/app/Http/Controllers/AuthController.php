@@ -80,8 +80,8 @@ class AuthController extends Controller
 
         $credentials = $request->only('email', 'password');
 
-        // First check if user exists and is not soft deleted
-        $user = User::where('email', $credentials['email'])->whereNull('deleted_at')->first();
+        // First check if user exists using encryption-aware method
+        $user = User::findByEmail($credentials['email']);
         
         if (!$user) {
             return back()->withErrors([
@@ -89,16 +89,17 @@ class AuthController extends Controller
             ])->withInput();
         }
 
-        if (Auth::attempt($credentials, $request->filled('remember'))) {
-            $user = Auth::user();
-            
+        // Check password manually since we're using encrypted emails
+        if (Hash::check($credentials['password'], $user->password)) {
             // Check if user is active
             if (!$user->is_active) {
-                Auth::logout();
                 return back()->withErrors([
                     'email' => 'Your account is pending approval. Please wait for admin activation.',
                 ])->withInput();
             }
+
+            // Log the user in manually
+            Auth::login($user, $request->filled('remember'));
 
             $request->session()->regenerate();
             
@@ -190,9 +191,8 @@ class AuthController extends Controller
      */
     public function registerParent(Request $request)
     {
-        // First, check if email already exists to provide a friendly error message
-        $existingUser = User::where('email', $request->email)->whereNull('deleted_at')->first();
-        if ($existingUser) {
+        // First, check if email already exists using our encryption-aware method
+        if (User::emailExists($request->email)) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -226,7 +226,7 @@ class AuthController extends Controller
             'birth_date' => 'required|date|before:today|after:' . now()->subYears(120)->format('Y-m-d'),
             'sex' => 'required|in:Male,Female,Other',
             'address' => 'required|string|max:1000',
-            'email' => 'required|string|email|max:255|unique:users,email,NULL,user_id,deleted_at,NULL',
+            'email' => 'required|string|email|max:255',
             'password' => [
                 'required',
                 'string',

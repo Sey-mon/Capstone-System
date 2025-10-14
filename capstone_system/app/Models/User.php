@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use App\Notifications\CustomVerifyEmail;
+use App\Services\DataEncryptionService;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -16,6 +17,17 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable, SoftDeletes, MustVerifyEmailTrait;
 
     protected $primaryKey = 'user_id';
+
+    /**
+     * Fields that should be encrypted when storing in database
+     * 
+     * @var array
+     */
+    protected $encrypted = [
+        'email',
+        'contact_number', 
+        'address'
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -128,6 +140,91 @@ class User extends Authenticatable implements MustVerifyEmail
     public function verifier()
     {
         return $this->belongsTo(User::class, 'verified_by', 'user_id');
+    }
+
+    // ========== ENCRYPTION METHODS ==========
+
+    /**
+     * Get the encryption service instance
+     */
+    private function getEncryptionService()
+    {
+        return app(DataEncryptionService::class);
+    }
+
+    /**
+     * Override getAttribute to decrypt encrypted fields when accessing
+     */
+    public function getAttribute($key)
+    {
+        $value = parent::getAttribute($key);
+        
+        // If this field should be encrypted and has a value, decrypt it
+        if (in_array($key, $this->encrypted) && !empty($value)) {
+            $decrypted = $this->getEncryptionService()->decryptUserData($value);
+            return $decrypted !== null ? $decrypted : $value;
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Override setAttribute to encrypt fields before storing
+     */
+    public function setAttribute($key, $value)
+    {
+        // If this field should be encrypted and has a value, encrypt it
+        if (in_array($key, $this->encrypted) && !empty($value)) {
+            // Only encrypt if not already encrypted
+            if (!$this->getEncryptionService()->isEncrypted($value)) {
+                $encrypted = $this->getEncryptionService()->encryptUserData($value);
+                $value = $encrypted !== null ? $encrypted : $value;
+            }
+        }
+        
+        return parent::setAttribute($key, $value);
+    }
+
+    /**
+     * Find user by encrypted email
+     */
+    public static function findByEmail($email)
+    {
+        $encryptionService = app(DataEncryptionService::class);
+        
+        // First try to find by plaintext email (for backward compatibility)
+        $user = static::where('email', $email)->whereNull('deleted_at')->first();
+        
+        if (!$user) {
+            // If not found, search through encrypted emails
+            $allUsers = static::whereNotNull('email')->whereNull('deleted_at')->get();
+            
+            foreach ($allUsers as $potentialUser) {
+                $decryptedEmail = $encryptionService->decryptUserData($potentialUser->getRawOriginal('email'));
+                if ($decryptedEmail && strtolower($decryptedEmail) === strtolower($email)) {
+                    return $potentialUser;
+                }
+            }
+            return null; // Not found
+        }
+        
+        return $user;
+    }
+
+    /**
+     * Get the raw (encrypted) value of an attribute
+     */
+    public function getRawEncrypted($key)
+    {
+        return parent::getAttribute($key);
+    }
+
+    /**
+     * Check if email already exists (handles both encrypted and plain)
+     */
+    public static function emailExists($email)
+    {
+        return static::findByEmail($email) !== null;
     }
 
     /**
