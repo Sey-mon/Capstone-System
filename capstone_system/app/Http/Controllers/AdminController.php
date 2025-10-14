@@ -11,7 +11,6 @@ use App\Models\ItemCategory;
 use App\Models\Barangay;
 use App\Models\AuditLog;
 use App\Models\Role;
-use App\Services\MalnutritionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -1588,80 +1587,7 @@ class AdminController extends Controller
         }
     }
 
-    // ========================================
-    // API MANAGEMENT METHODS
-    // ========================================
 
-    /**
-     * Show API management dashboard
-     */
-    public function apiManagement(MalnutritionService $malnutritionService)
-    {
-        try {
-            $apiStatus = $malnutritionService->checkApiHealth();
-            
-            return view('admin.api-management', compact('apiStatus'));
-        } catch (\Exception $e) {
-            $apiStatus = [
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ];
-            
-            return view('admin.api-management', compact('apiStatus'));
-        }
-    }
-
-    /**
-     * Show WHO standards reference data
-     */
-    public function whoStandards(MalnutritionService $malnutritionService)
-    {
-        try {
-            // Get sample data for both genders and indicators
-            $maleWfa = $malnutritionService->getWhoStandards('male', 'wfa');
-            $femaleWfa = $malnutritionService->getWhoStandards('female', 'wfa');
-            $maleLhfa = $malnutritionService->getWhoStandards('male', 'lhfa');
-            $femaleLhfa = $malnutritionService->getWhoStandards('female', 'lhfa');
-
-            return view('admin.who-standards', compact(
-                'maleWfa', 'femaleWfa', 'maleLhfa', 'femaleLhfa'
-            ));
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Show treatment protocols
-     */
-    public function treatmentProtocols(MalnutritionService $malnutritionService)
-    {
-        try {
-            $protocols = $malnutritionService->getTreatmentProtocols();
-            return view('admin.treatment-protocols', compact('protocols'));
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Check API status
-     */
-    public function apiStatus(MalnutritionService $malnutritionService)
-    {
-        try {
-            $status = $malnutritionService->checkApiHealth();
-            return response()->json([
-                'success' => true,
-                'data' => $status
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
 
     /**
      * Download User Activity Report as PDF

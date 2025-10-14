@@ -5,7 +5,7 @@
     max-width: 1400px;
     margin: 0 auto;
     padding: 2rem;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
     min-height: 100vh;
 }
 
@@ -16,10 +16,10 @@
     align-items: flex-start;
     margin-bottom: 3rem;
     padding: 2rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     border-radius: 20px;
     color: white;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
 }
 
 .header-content h1.page-title {
@@ -90,7 +90,7 @@
 }
 
 .card-header {
-    background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     padding: 2rem;
     display: flex;
     justify-content: space-between;
@@ -183,7 +183,7 @@
 }
 
 .assessment-date {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 15px;
@@ -253,7 +253,7 @@
 .metric-icon {
     width: 45px;
     height: 45px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -298,7 +298,7 @@
 }
 
 .info-item i {
-    color: #667eea;
+    color: #10b981;
     width: 16px;
     text-align: center;
 }
@@ -324,14 +324,14 @@
 .no-assessment-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1.5rem;
     font-size: 2rem;
-    color: white;
+    color: #059669;
 }
 
 .no-assessment h4 {
@@ -362,7 +362,7 @@
 .empty-state-icon {
     width: 120px;
     height: 120px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -370,7 +370,7 @@
     margin: 0 auto 2rem;
     font-size: 3rem;
     color: white;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
 }
 
 .empty-state h3 {
@@ -388,7 +388,7 @@
 }
 
 .empty-state-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -397,12 +397,12 @@
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
 }
 
 .empty-state-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
 }
 
 .empty-state-btn i {
@@ -422,7 +422,7 @@
 }
 
 .assessment-modal .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
     padding: 2rem;
     border: none;
@@ -469,8 +469,8 @@
 }
 
 .timeline-item.latest .timeline-content {
-    background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
-    border-left: 4px solid #4caf50;
+    background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+    border-left: 4px solid #10b981;
 }
 
 .timeline-marker {
@@ -484,7 +484,7 @@
 .timeline-dot {
     width: 16px;
     height: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     border-radius: 50%;
     border: 3px solid white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -492,7 +492,7 @@
 }
 
 .timeline-item.latest .timeline-dot {
-    background: linear-gradient(135deg, #66bb6a, #4caf50);
+    background: linear-gradient(135deg, #10b981, #059669);
     width: 20px;
     height: 20px;
 }
@@ -528,7 +528,7 @@
 }
 
 .latest-badge {
-    background: linear-gradient(135deg, #66bb6a, #4caf50);
+    background: linear-gradient(135deg, #10b981, #059669);
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 12px;
@@ -562,7 +562,7 @@
 }
 
 .metric-item i {
-    color: #667eea;
+    color: #22d3ee;
     width: 16px;
     text-align: center;
 }

@@ -5,11 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use App\Models\Assessment;
 use App\Models\User;
-use App\Models\MealPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
@@ -229,140 +226,9 @@ class ParentController extends Controller
             return view('parent.meal-plans', compact('children'));
         }
 
-        /**
-         * Generate meal plan for a child
-         */
-        public function generateMealPlan(Request $request)
-        {
-            $validated = $request->validate([
-                'patient_id' => 'required|exists:patients,patient_id',
-                'available_foods' => 'required|string',
-            ]);
 
-            $parent = Auth::user();
-            
-            // Verify this child belongs to the authenticated parent
-            $child = Patient::where('patient_id', $validated['patient_id'])
-                ->where('parent_id', $parent->user_id)
-                ->firstOrFail();
 
-            try {
-                // Prepare the data exactly as your FastAPI expects
-                $requestData = [
-                    'patient_id' => (int) $validated['patient_id'],
-                    'available_foods' => $validated['available_foods'] // Keep as string, not array
-                ];
 
-                Log::info('Sending request to LLM API', [
-                    'url' => env('LLM_API_URL') . '/generate_meal_plan',
-                    'data' => $requestData
-                ]);
-
-                $response = Http::timeout(30)
-                    ->withHeaders([
-                        'Content-Type' => 'application/json',
-                        'Accept' => 'application/json'
-                    ])
-                    ->post(env('LLM_API_URL') . '/generate_meal_plan', $requestData);
-
-                Log::info('LLM API Response', [
-                    'status' => $response->status(),
-                    'body' => $response->body()
-                ]);
-
-                if ($response->successful()) {
-                    $responseData = $response->json();
-                    $mealPlan = $responseData['meal_plan'] ?? $responseData['result'] ?? $response->body();
-                    $mealPlanHtml = $this->formatMealPlanHtml($mealPlan);
-
-                    // Save to meal_plans table
-                    $mealPlanRecord = MealPlan::create([
-                        'patient_id' => $child->patient_id,
-                        'plan_details' => $mealPlan,
-                        'notes' => null,
-                        'generated_at' => now(),
-                    ]);
-
-                    return back()->with('success', 'Meal plan generated successfully!')
-                                ->with('meal_plan', $mealPlan)
-                                ->with('meal_plan_html', $mealPlanHtml)
-                                ->with('child_name', $child->first_name . ' ' . $child->last_name);
-                } else {
-                    Log::error('LLM API Error', [
-                        'status' => $response->status(),
-                        'body' => $response->body(),
-                        'headers' => $response->headers()
-                    ]);
-                    
-                    return back()->withErrors(['api_error' => 'Failed to generate meal plan. API returned status: ' . $response->status()]);
-                }
-            } catch (\Exception $e) {
-                Log::error('Meal Plan Generation Error', [
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                
-                return back()->withErrors(['api_error' => 'Unable to connect to meal plan service: ' . $e->getMessage()]);
-            }
-        }
-
-        /**
-         * Test API endpoint
-         */
-        public function testApi()
-        {
-            return view('parent.test-api');
-        }
-
-        /**
-         * Test API POST
-         */
-        public function testApiPost(Request $request)
-        {
-            try {
-                $requestData = [
-                    'patient_id' => (int) $request->patient_id,
-                    'available_foods' => $request->available_foods // Keep as string
-                ];
-
-                $response = Http::timeout(30)
-                    ->withHeaders([
-                        'Content-Type' => 'application/json',
-                        'Accept' => 'application/json'
-                    ])
-                    ->post(env('LLM_API_URL') . '/generate_meal_plan', $requestData);
-
-                $result = "Status: " . $response->status() . "\n";
-                $result .= "Headers: " . json_encode($response->headers(), JSON_PRETTY_PRINT) . "\n";
-                $result .= "Body: " . $response->body();
-                
-                return back()->with('test_result', $result);
-                
-            } catch (\Exception $e) {
-                return back()->withErrors(['error' => $e->getMessage()]);
-            }
-        }
-
-            /**
-     * Format meal plan text into HTML sections for better UI presentation.
-     */
-    private function formatMealPlanHtml($text)
-    {
-        // Section headings
-        $text = preg_replace('/COMPREHENSIVE NUTRITION PLAN:/i', '<h4>Comprehensive Nutrition Plan</h4>', $text);
-        $text = preg_replace('/ESTIMATED KCAL NEEDS:/i', '<h5>Estimated Kcal Needs</h5>', $text);
-        $text = preg_replace('/AGE-SPECIFIC FEEDING GUIDELINES:/i', '<h5>Age-Specific Feeding Guidelines</h5>', $text);
-        $text = preg_replace('/7-DAY MEAL PLAN:/i', '<h4>7-Day Meal Plan</h4>', $text);
-        $text = preg_replace('/DAY ([0-9]+):/i', '<h5>Day $1</h5><ul>', $text);
-        $text = preg_replace('/- \*\*(.*?)\*\*: (.*?)(\(~?\d+ kcal\))?/i', '<li><strong>$1:</strong> $2 <span class="text-muted">$3</span></li>', $text);
-        $text = preg_replace('/- ([^-].+)/', '<li>$1</li>', $text);
-        $text = preg_replace('/\*\*Daily Total\*\*: ~?(\d+ kcal)/i', '<div class="daily-total">Daily Total: $1</div></ul>', $text);
-        $text = preg_replace('/PARENT OBSERVATION TRACKING:/i', '<h5>Parent Observation Tracking</h5><div class="observation">', $text);
-        $text = preg_replace('/RED FLAGS & EMERGENCY PROTOCOLS:/i', '</div><h5>Red Flags & Emergency Protocols</h5><div class="red-flags">', $text);
-        $text = preg_replace('/FINAL VERIFICATION:/i', '</div><h5>Final Verification</h5>', $text);
-        $text = nl2br($text); // Convert newlines to <br>
-        return $text;
-    }
 
     /**
      * Update parent profile information

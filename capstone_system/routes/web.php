@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NutritionistController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\ApiController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
@@ -141,10 +142,10 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::get('/system-management', [AdminController::class, 'systemManagement'])->name('system.management');
     
     // API Management routes
-    Route::get('/api-management', [AdminController::class, 'apiManagement'])->name('api.management');
-    Route::get('/who-standards', [AdminController::class, 'whoStandards'])->name('who.standards');
-    Route::get('/treatment-protocols', [AdminController::class, 'treatmentProtocols'])->name('treatment.protocols');
-    Route::get('/api-status', [App\Http\Controllers\AdminController::class, 'apiStatus'])->name('api.status');
+    Route::get('/api-management', [ApiController::class, 'apiManagement'])->name('api.management');
+    Route::get('/who-standards', [ApiController::class, 'whoStandards'])->name('who.standards');
+    Route::get('/treatment-protocols', [ApiController::class, 'treatmentProtocols'])->name('treatment.protocols');
+    Route::get('/api-status', [ApiController::class, 'apiStatus'])->name('api.status');
     
     // Category CRUD routes
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
@@ -197,20 +198,20 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     
     // Assessment routes
     Route::get('/patients/{patientId}/assess', [NutritionistController::class, 'showAssessmentForm'])->name('patients.assess');
-    Route::post('/assessment/perform', [NutritionistController::class, 'performAssessment'])->name('assessment.perform');
+    Route::post('/assessment/perform', [ApiController::class, 'performAssessment'])->name('assessment.perform');
     Route::get('/assessment/{assessmentId}', [NutritionistController::class, 'getAssessmentDetails'])->name('assessment.details');
     Route::get('/assessment/{assessmentId}/pdf', [NutritionistController::class, 'downloadAssessmentPDF'])->name('assessment.pdf');
     
     // Meal Plan and Nutrition routes
     Route::get('/meal-plans', [NutritionistController::class, 'mealPlans'])->name('meal-plans');
-    Route::post('/nutrition/analysis', [NutritionistController::class, 'generateNutritionAnalysis'])->name('nutrition.analysis');
-    Route::post('/nutrition/meal-plan', [NutritionistController::class, 'generateMealPlan'])->name('nutrition.meal-plan');
-    Route::post('/nutrition/assessment', [NutritionistController::class, 'generatePatientAssessment'])->name('nutrition.assessment');
-    Route::get('/nutrition/foods', [NutritionistController::class, 'getFoodsData'])->name('nutrition.foods');
-    Route::post('/nutrition/patient-meal-plans', [NutritionistController::class, 'getPatientMealPlans'])->name('nutrition.patient-meal-plans');
-    Route::get('/nutrition/knowledge-base', [NutritionistController::class, 'getKnowledgeBase'])->name('nutrition.knowledge-base');
-    Route::post('/nutrition/meal-plan-detail', [NutritionistController::class, 'getMealPlanDetail'])->name('nutrition.meal-plan-detail');
-    Route::get('/nutrition/test-api', [NutritionistController::class, 'testNutritionAPI'])->name('nutrition.test-api');
+    Route::post('/nutrition/analysis', [ApiController::class, 'generateNutritionAnalysis'])->name('nutrition.analysis');
+    Route::post('/nutrition/meal-plan', [ApiController::class, 'generateNutritionistMealPlan'])->name('nutrition.meal-plan');
+    Route::post('/nutrition/assessment', [ApiController::class, 'generatePatientAssessment'])->name('nutrition.assessment');
+    Route::get('/nutrition/foods', [ApiController::class, 'getFoodsData'])->name('nutrition.foods');
+    Route::post('/nutrition/patient-meal-plans', [ApiController::class, 'getPatientMealPlans'])->name('nutrition.patient-meal-plans');
+    Route::get('/nutrition/knowledge-base', [ApiController::class, 'getKnowledgeBase'])->name('nutrition.knowledge-base');
+    Route::post('/nutrition/meal-plan-detail', [ApiController::class, 'getMealPlanDetail'])->name('nutrition.meal-plan-detail');
+    Route::get('/nutrition/test-api', [ApiController::class, 'testNutritionAPI'])->name('nutrition.test-api');
 });
 
 // Parent Routes (Protected by auth, verified email, and role middleware)
@@ -219,9 +220,9 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
     Route::get('/children', [ParentController::class, 'children'])->name('children');
     Route::get('/assessments', [ParentController::class, 'assessments'])->name('assessments');
     Route::get('/meal-plans', [ParentController::class, 'mealPlans'])->name('meal-plans');
-    Route::post('/meal-plans/generate', [ParentController::class, 'generateMealPlan'])->name('meal-plans.generate');
-    Route::get('/test-api', [ParentController::class, 'testApi'])->name('test-api');
-        Route::post('/test-api', [ParentController::class, 'testApiPost'])->name('test-api.post');
+    Route::post('/meal-plans/generate', [ApiController::class, 'generateParentMealPlan'])->name('meal-plans.generate');
+    Route::get('/test-api', [ApiController::class, 'testApi'])->name('test-api');
+        Route::post('/test-api', [ApiController::class, 'testApiPost'])->name('test-api.post');
     Route::get('/profile', [ParentController::class, 'profile'])->name('profile');
     Route::put('/profile', [ParentController::class, 'updateProfile'])->name('profile.update');
     Route::put('/password', [ParentController::class, 'updatePassword'])->name('password.update');
