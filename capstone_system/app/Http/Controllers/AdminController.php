@@ -33,6 +33,11 @@ class AdminController extends Controller
                 'total_patients' => Patient::count(),
                 'total_assessments' => Assessment::count(),
                 'total_inventory_items' => InventoryItem::count(),
+                'total_knowledge_articles' => \App\Models\KnowledgeBase::count(),
+                'new_articles_this_month' => \App\Models\KnowledgeBase::whereMonth('added_at', now()->month)
+                    ->whereYear('added_at', now()->year)
+                    ->count(),
+                'total_kb_categories' => 1, // Placeholder for future categories feature
                 'pending_nutritionist_applications' => User::whereHas('role', function($query) {
                         $query->where('role_name', 'Nutritionist');
                 })->where('is_active', false)->count(),
@@ -1945,5 +1950,4 @@ class AdminController extends Controller
         
         return $pdf->download($fileName . '-' . now()->format('Y-m-d') . '.pdf');
     }
-
 }

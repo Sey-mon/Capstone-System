@@ -140,6 +140,20 @@ class AssessmentRequest(BaseModel):
     child_data: ChildData
     socioeconomic_data: Optional[SocioeconomicData] = None
 
+class MealPlanRequest(BaseModel):
+    """Request for meal plan generation"""
+    child_data: ChildData
+    nutritional_requirements: Optional[Dict[str, Any]] = None
+    dietary_restrictions: Optional[List[str]] = None
+    available_foods: Optional[List[str]] = None
+    budget_range: Optional[str] = "medium"  # low, medium, high
+    
+    @validator('budget_range')
+    def validate_budget_range(cls, v):
+        if v.lower() not in ['low', 'medium', 'high']:
+            raise ValueError('Budget range must be low, medium, or high')
+        return v.lower()
+
 class Token(BaseModel):
     """JWT Token response"""
     access_token: str

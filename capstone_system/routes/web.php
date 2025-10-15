@@ -8,6 +8,7 @@ use App\Http\Controllers\NutritionistController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\LLMController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
@@ -170,6 +171,24 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::post('/reports/low-stock/download', [AdminController::class, 'downloadLowStockReport'])->name('reports.low-stock.download');
     
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
+
+    // LLM Knowledge Base routes
+    Route::prefix('llm')->name('llm.')->group(function () {
+        Route::get('/', [LLMController::class, 'index'])->name('index');
+        Route::get('/create', [LLMController::class, 'create'])->name('create');
+        Route::post('/', [LLMController::class, 'store'])->name('store');
+        Route::get('/{id}', [LLMController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [LLMController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [LLMController::class, 'update'])->name('update');
+        Route::delete('/{id}', [LLMController::class, 'destroy'])->name('destroy');
+        
+        // LLM-specific API endpoints
+        Route::get('/api/training-data', [LLMController::class, 'getTrainingData'])->name('training-data');
+        Route::get('/api/export', [LLMController::class, 'exportTrainingData'])->name('export');
+        Route::get('/api/stats', [LLMController::class, 'getStats'])->name('stats');
+        Route::get('/api/search', [LLMController::class, 'search'])->name('search');
+        Route::post('/api/bulk-import', [LLMController::class, 'bulkImport'])->name('bulk-import');
+    });
 
     // Secure route for admin to view nutritionist professional ID
     Route::get('/nutritionist/{user}/professional-id', [\App\Http\Controllers\FileController::class, 'showProfessionalId'])
