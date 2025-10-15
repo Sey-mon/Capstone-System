@@ -118,8 +118,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="parent_id" class="form-label">Parent *</label>
-                                        <select id="parent_id" name="parent_id" class="form-select" required>
+                                        <label for="parent_id" class="form-label">Parent</label>
+                                        <select id="parent_id" name="parent_id" class="form-select" >
                                             <option value="">Select Parent</option>
                                             @foreach($parents as $parent)
                                                 <option value="{{ $parent->user_id }}">{{ $parent->first_name }} {{ $parent->last_name }}</option>
