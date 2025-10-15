@@ -23,7 +23,7 @@ class AuthController extends Controller
     public function sendResetLinkEmail(Request $request)
     {
         $request->validate(['email' => 'required|email']);
-        $user = User::where('email', $request->email)->first();
+        $user = User::findByEmail($request->email);
         if (!$user) {
             return back()->withErrors(['email' => 'No account found with that email.']);
         }
@@ -223,9 +223,18 @@ class AuthController extends Controller
                 'max:255',
                 'regex:/^[a-zA-Z\s\-\.]+$/'
             ],
+            'suffix' => [
+                'nullable',
+                'string',
+                'in:Jr.,Sr.,II,III,IV,V'
+            ],
             'birth_date' => 'required|date|before:today|after:' . now()->subYears(120)->format('Y-m-d'),
             'sex' => 'required|in:Male,Female,Other',
-            'address' => 'required|string|max:1000',
+            'house_street' => 'required|string|max:500',
+            'barangay' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'province' => 'required|string|max:255',
+            'address' => 'nullable|string|max:1000', // Combined address (auto-generated)
             'email' => 'required|string|email|max:255',
             'password' => [
                 'required',
@@ -237,7 +246,7 @@ class AuthController extends Controller
             'contact_number' => [
                 'required',
                 'string',
-                'regex:/^09\d{2}-\d{3}-\d{4}$/' // Philippine phone format
+                'regex:/^09\d{9}$/' // Updated to match new format: 09XXXXXXXXX (11 digits, no dashes)
             ],
             'child_first_name' => [
                 'nullable',
@@ -257,10 +266,16 @@ class AuthController extends Controller
             'first_name.regex' => 'First name can only contain letters, spaces, hyphens, and periods.',
             'middle_name.regex' => 'Middle name can only contain letters, spaces, hyphens, and periods.',
             'last_name.regex' => 'Last name can only contain letters, spaces, hyphens, and periods.',
+            'suffix.in' => 'Please select a valid suffix from the dropdown.',
+            'house_street.required' => 'House/Street address is required.',
+            'house_street.max' => 'House/Street address must not exceed 500 characters.',
+            'barangay.required' => 'Please select your barangay.',
+            'city.required' => 'City is required.',
+            'province.required' => 'Province is required.',
             'child_first_name.regex' => 'Child\'s first name can only contain letters, spaces, hyphens, and periods.',
             'child_last_name.regex' => 'Child\'s last name can only contain letters, spaces, hyphens, and periods.',
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).',
-            'contact_number.regex' => 'Contact number must be in the format 09XX-XXX-XXXX.',
+            'contact_number.regex' => 'Contact number must be an 11-digit Philippine mobile number starting with 09.',
             'birth_date.before' => 'Birth date must be in the past.',
             'birth_date.after' => 'Please enter a valid birth date.',
             'child_age_months.min' => 'Child age must be at least 0 months.',
@@ -280,15 +295,25 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
-            // Create the parent user
+            // Combine address components into complete address for storage
+            $addressComponents = array_filter([
+                $request->house_street,
+                $request->barangay,
+                $request->city,
+                $request->province
+            ]);
+            $completeAddress = implode(', ', $addressComponents);
+
+            // Create the parent user (using existing table structure)
             $user = User::create([
                 'role_id' => $parentRole->role_id,
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
                 'last_name' => $request->last_name,
+                'suffix' => $request->suffix,
                 'birth_date' => $request->birth_date,
                 'sex' => $request->sex,
-                'address' => $request->address,
+                'address' => $completeAddress, // Store combined address for now
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'contact_number' => $request->contact_number,
@@ -362,8 +387,11 @@ class AuthController extends Controller
             // so they can return to login page if needed
             Auth::logout();
             
+            // Create secure success message without personal information
+            $successMessage = 'Account created successfully! Please check your email to verify your account before logging in.';
+            
             // Redirect to login page with success message
-            return redirect()->route('login')->with('success', 'Registration successful! Please check your email to verify your account before logging in.');
+            return redirect()->route('login')->with('success', $successMessage);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -441,7 +469,7 @@ class AuthController extends Controller
     public function applyNutritionist(Request $request)
     {
         // First, check if email already exists to provide a friendly error message
-        $existingUser = User::where('email', $request->email)->whereNull('deleted_at')->first();
+        $existingUser = User::findByEmail($request->email);
         if ($existingUser) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -625,12 +653,17 @@ class AuthController extends Controller
     public function resendVerification(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email'
-        ], [
-            'email.exists' => 'No account found with this email address.'
+            'email' => 'required|email'
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        // Use the User model's findByEmail method to handle encrypted emails
+        $user = User::findByEmail($request->email);
+        
+        if (!$user) {
+            return back()->withErrors([
+                'email' => 'No account found with this email address.'
+            ]);
+        }
         
         // Check if already verified
         if ($user->email_verified_at !== null) {
@@ -650,7 +683,7 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
             
-            return back()->with('success', 'Verification email sent to ' . $request->email . '! Please check your inbox.');
+            return back()->with('success', 'Verification email has been sent! Please check your inbox.');
             
         } catch (\Exception $e) {
             // Log failure
@@ -692,7 +725,7 @@ class AuthController extends Controller
             abort(404);
         }
 
-        $user = User::where('email', $email)->first();
+        $user = User::findByEmail($email);
         
         if (!$user) {
             return redirect()->route('dev.panel')->withErrors([
@@ -727,8 +760,11 @@ class AuthController extends Controller
     {
         $user = User::findOrFail($request->route('id'));
 
+        // Get the actual email for verification (handle encrypted emails)
+        $emailForVerification = $user->getEmailForVerification();
+        
         // Check if the hash matches
-        if (! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+        if (! hash_equals((string) $request->route('hash'), sha1($emailForVerification))) {
             return redirect()->route('login')->withErrors(['error' => 'Invalid verification link.']);
         }
 
@@ -748,11 +784,18 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // Temporarily log in user to show success page, then log them out
-            Auth::login($user);
-            // Log out immediately after verification
-            Auth::logout();
-            return redirect()->route('verification.success');
+            // Get decrypted email for display
+            $encryptionService = app(\App\Services\DataEncryptionService::class);
+            $displayEmail = $encryptionService->isEncrypted($user->email) 
+                ? $encryptionService->decryptUserData($user->email) 
+                : $user->email;
+
+            // Pass user data to success page via session
+            return redirect()->route('verification.success')->with([
+                'verified_email' => $displayEmail,
+                'user_name' => $user->getFullNameAttribute(),
+                'verified_at' => now()->format('F j, Y \a\t g:i A')
+            ]);
         }
 
         return redirect()->route('login')->withErrors(['error' => 'Failed to verify email. Please try again.']);

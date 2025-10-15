@@ -14,7 +14,9 @@ use App\Services\DataEncryptionService;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, MustVerifyEmailTrait;
+    use HasFactory, Notifiable, SoftDeletes, MustVerifyEmailTrait {
+        MustVerifyEmailTrait::sendEmailVerificationNotification as originalSendEmailVerificationNotification;
+    }
 
     protected $primaryKey = 'user_id';
 
@@ -39,6 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'first_name',
         'middle_name',
         'last_name',
+        'suffix',
         'birth_date',
         'sex',
         'email',
@@ -377,9 +380,28 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Send the email verification notification using custom template.
+     * Override the default Laravel method to use our custom notification.
      */
     public function sendEmailVerificationNotification()
     {
-    $this->notify(new CustomVerifyEmail($this));
+        $this->notify(new CustomVerifyEmail());
     }
+
+    /**
+     * Get the email address that should be used for verification.
+     * This method handles encrypted emails properly.
+     */
+    public function getEmailForVerification()
+    {
+        // Get the decrypted email for verification
+        $encryptionService = $this->getEncryptionService();
+        
+        if ($encryptionService->isEncrypted($this->email)) {
+            return $encryptionService->decryptUserData($this->email);
+        }
+        
+        return $this->email;
+    }
+
+
 }

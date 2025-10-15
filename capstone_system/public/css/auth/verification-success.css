@@ -1,0 +1,290 @@
+/* Body and HTML setup */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 50%, #ffffff 100%);
+    overflow-x: hidden;
+}
+
+/* Verification Success Wrapper */
+.verification-success-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2vh 2vw;
+    box-sizing: border-box;
+}
+
+.verification-success-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 0.2vw solid rgba(76, 175, 80, 0.3);
+    border-radius: 1.5vw;
+    box-shadow: 0 1vw 2.5vw rgba(76, 175, 80, 0.15);
+    overflow: hidden;
+    width: 90vw;
+    max-width: 700px;
+    min-height: 70vh;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    padding: 3vh 4vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.success-title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: #2e7d32;
+    font-weight: 700;
+    margin-bottom: 2vh;
+}
+
+.success-subtitle {
+    font-size: clamp(1.1rem, 2.8vw, 1.4rem);
+    line-height: 1.6;
+    margin-bottom: 3vh;
+    color: #616161;
+}
+
+.success-animation {
+    margin: 2vh 0 3vh 0;
+}
+
+.checkmark {
+    width: clamp(60px, 12vw, 100px);
+    height: clamp(60px, 12vw, 100px);
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    box-shadow: 0 0.5vw 2vw rgba(76, 175, 80, 0.3);
+    animation: checkmark-bounce 0.6s ease-in-out;
+}
+
+@keyframes checkmark-bounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.checkmark-circle {
+    width: clamp(60px, 12vw, 100px);
+    height: clamp(60px, 12vw, 100px);
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 0.3vw solid #4CAF50;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.checkmark-stem {
+    position: absolute;
+    width: clamp(15px, 3vw, 25px);
+    height: clamp(2.5px, 0.5vw, 4px);
+    background-color: white;
+    left: clamp(21px, 4.2vw, 35px);
+    top: clamp(28px, 5.7vw, 47px);
+    transform: rotate(45deg);
+    animation: checkmark-stem 0.3s ease-in-out 0.3s both;
+}
+
+.checkmark-kick {
+    position: absolute;
+    width: clamp(9px, 1.8vw, 15px);
+    height: clamp(2.5px, 0.5vw, 4px);
+    background-color: white;
+    left: clamp(17px, 3.5vw, 29px);
+    top: clamp(32px, 6.3vw, 52px);
+    transform: rotate(-45deg);
+    animation: checkmark-kick 0.3s ease-in-out 0.4s both;
+}
+
+@keyframes checkmark-stem {
+    0% { width: 0; }
+    100% { width: clamp(15px, 3vw, 25px); }
+}
+
+@keyframes checkmark-kick {
+    0% { width: 0; }
+    100% { width: clamp(9px, 1.8vw, 15px); }
+}
+
+.success-info {
+    margin: 3vh 0;
+}
+
+.verified-email-box {
+    background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+    border: 0.2vw solid #4CAF50;
+    border-radius: 1vw;
+    padding: 2.5vh 3vw;
+    margin-bottom: 2.5vh;
+    box-shadow: 0 0.5vw 1.5vw rgba(76, 175, 80, 0.1);
+}
+
+.verified-email-box h5 {
+    color: #2e7d32;
+    margin-bottom: 1.5vh;
+    font-weight: 600;
+    font-size: clamp(1.2rem, 2.8vw, 1.5rem);
+}
+
+.email-display {
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 1vh;
+}
+
+.next-steps {
+    background: rgba(255, 255, 255, 0.9);
+    border: 0.15vw solid #e0e0e0;
+    border-radius: 1vw;
+    padding: 2.5vh 3vw;
+    text-align: left;
+    box-shadow: 0 0.3vw 0.8vw rgba(0,0,0,0.05);
+}
+
+.next-steps h5 {
+    color: #2e7d32;
+    margin-bottom: 2vh;
+    text-align: center;
+    font-weight: 600;
+    font-size: clamp(1.2rem, 2.8vw, 1.5rem);
+}
+
+.next-steps-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.next-steps-list li {
+    padding: 1.2vh 0;
+    border-bottom: 0.1vw solid #e8f5e9;
+    color: #424242;
+    font-weight: 500;
+    font-size: clamp(1rem, 2.2vw, 1.2rem);
+}
+
+.next-steps-list li:before {
+    content: "✓ ";
+    color: #4CAF50;
+    font-weight: bold;
+    margin-right: 1vw;
+    font-size: clamp(1rem, 2.4vw, 1.3rem);
+}
+
+.next-steps-list li:last-child {
+    border-bottom: none;
+}
+
+.action-buttons {
+    margin-top: 3vh;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 1.5vh 3vw;
+    border-radius: 0.8vw;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 0.5vw 1.5vw rgba(76, 175, 80, 0.2);
+    margin: 0 1vw;
+    font-size: clamp(1rem, 2.2vw, 1.2rem);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #45a049, #3d8b40);
+    transform: translateY(-0.3vh);
+    box-shadow: 0 0.6vw 2vw rgba(76, 175, 80, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline-success {
+    background-color: transparent;
+    color: #4CAF50;
+    border: 0.2vw solid #4CAF50;
+    padding: 1.5vh 3vw;
+    border-radius: 0.8vw;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin: 0 1vw;
+    font-size: clamp(1rem, 2.2vw, 1.2rem);
+}
+
+.btn-outline-success:hover {
+    background-color: #4CAF50;
+    color: white;
+    transform: translateY(-0.3vh);
+    box-shadow: 0 0.6vw 2vw rgba(76, 175, 80, 0.3);
+    text-decoration: none;
+}
+
+.btn-lg {
+    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+    padding: 1.5vh 3vw;
+}
+
+/* Responsive Media Queries */
+@media (max-width: 768px) {
+    .verification-success-card {
+        width: 95vw;
+        min-height: 80vh;
+        border-radius: 2vw;
+    }
+    
+    .content-wrapper {
+        padding: 2vh 3vw;
+    }
+    
+    .action-buttons .btn {
+        display: block;
+        margin: 1vh 0;
+        width: 100%;
+    }
+    
+    .success-info {
+        margin: 2vh 0;
+    }
+    
+    .verified-email-box,
+    .next-steps {
+        margin-bottom: 2vh;
+        padding: 2vh 2.5vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .verification-success-wrapper {
+        padding: 1vh 1vw;
+    }
+    
+    .verification-success-card {
+        width: 98vw;
+        border-radius: 3vw;
+    }
+    
+    .success-title {
+        font-size: clamp(1.5rem, 6vw, 2rem);
+    }
+    
+    .success-subtitle {
+        font-size: clamp(1rem, 3.5vw, 1.2rem);
+    }
+}

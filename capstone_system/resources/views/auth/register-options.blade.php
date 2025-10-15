@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{ asset('css/register.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/register-option.css') }}">
 </head>
 <body>
     <div class="register-container">
@@ -19,7 +19,7 @@
                 <div class="benefits">
                     <p>✅ Instant access</p>
                     <p>✅ Track children's health</p>
-                    <p>✅ Connect with nutritionists</p>
+                    <p>✅ Connect with nutritionists</p>I. 
                     <p>✅ Schedule assessments</p>
                 </div>
                 <span class="btn primary">Create Account Now</span>

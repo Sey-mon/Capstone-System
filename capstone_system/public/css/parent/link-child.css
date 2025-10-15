@@ -1,0 +1,380 @@
+/* Link Child Page Styles */
+
+.link-child-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    border: 1px solid #e3f2fd;
+}
+
+.card-icon {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-icon i {
+    font-size: 3rem;
+    color: #4CAF50;
+    background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+    padding: 1.5rem;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2E7D32;
+    margin-bottom: 0.5rem;
+}
+
+.card-description {
+    text-align: center;
+    color: #666;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+/* Form Styles */
+.link-child-form {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-label i {
+    color: #4CAF50;
+    margin-right: 0.5rem;
+}
+
+.form-control {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-help {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 2rem;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #388E3C, #4CAF50);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    color: white;
+}
+
+/* QR Scanner Section */
+.qr-scanner-section {
+    margin: 2rem 0;
+}
+
+.divider {
+    text-align: center;
+    position: relative;
+    margin: 2rem 0;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #dee2e6;
+}
+
+.divider span {
+    background: white;
+    padding: 0 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.qr-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border: 2px dashed #4CAF50;
+    border-radius: 12px;
+    background: #f8fff9;
+}
+
+.qr-icon {
+    flex-shrink: 0;
+}
+
+.qr-icon i {
+    font-size: 2rem;
+    color: #4CAF50;
+}
+
+.qr-content {
+    flex-grow: 1;
+}
+
+.qr-content h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2E7D32;
+    font-size: 1.1rem;
+}
+
+.qr-content p {
+    margin: 0 0 1rem 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.btn-outline-success {
+    border: 2px solid #4CAF50;
+    color: #4CAF50;
+    border-radius: 8px;
+}
+
+.btn-outline-success:hover {
+    background: #4CAF50;
+    color: white;
+}
+
+/* Help Section */
+.help-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.help-section h5 {
+    color: #495057;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.help-section h5 i {
+    color: #17a2b8;
+    margin-right: 0.5rem;
+}
+
+.help-list {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.help-list li {
+    color: #666;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+/* Linked Children Section */
+.linked-children-section {
+    margin-top: 2rem;
+}
+
+.section-title {
+    color: #2E7D32;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.section-title i {
+    color: #4CAF50;
+    margin-right: 0.5rem;
+}
+
+.children-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.child-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.child-card.linked {
+    border-color: #4CAF50;
+    background: linear-gradient(135deg, #f8fff9, #ffffff);
+}
+
+.child-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.child-avatar {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.child-details {
+    flex-grow: 1;
+}
+
+.child-name {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2E7D32;
+}
+
+.child-meta {
+    margin: 0;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.age {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.status {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status.linked {
+    color: #4CAF50;
+}
+
+.status i {
+    margin-right: 0.3rem;
+}
+
+.child-actions {
+    text-align: right;
+}
+
+/* QR Scanner Modal */
+.qr-scanner-placeholder {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.qr-scanner-placeholder i {
+    font-size: 3rem;
+    color: #4CAF50;
+    margin-bottom: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .link-child-card {
+        padding: 1.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-lg {
+        width: 100%;
+    }
+    
+    .qr-option {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .child-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .child-actions {
+        text-align: center;
+    }
+}
+
+/* Animation for success states */
+.child-card.linked {
+    animation: linkedPulse 2s ease-in-out;
+}
+
+@keyframes linkedPulse {
+    0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+}

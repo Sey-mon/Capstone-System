@@ -1,0 +1,242 @@
+/* Email verification specific styles */
+.email-verification-notice {
+    padding: 20px;
+    background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+    border-radius: 10px;
+    border: 2px solid #4CAF50;
+    margin: 20px 0;
+}
+
+/* Button styling */
+.btn-success {
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #388E3C, #4CAF50);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-outline-success {
+    border: 2px solid #4CAF50;
+    color: #4CAF50;
+    background: transparent;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-success:hover {
+    background: #4CAF50;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+/* Alert styling */
+.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border: 2px solid #4CAF50;
+    border-radius: 10px;
+    color: #155724;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    border: 2px solid #17a2b8;
+    border-radius: 10px;
+    color: #0c5460;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border: 2px solid #dc3545;
+    border-radius: 10px;
+    color: #721c24;
+}
+
+/* Form styling */
+.form-control {
+    border-radius: 15px;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+/* Auth card styling */
+.auth-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(76, 175, 80, 0.1);
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.1);
+}
+
+.auth-card .card-header {
+    border-radius: 15px 15px 0 0 !important;
+    background: linear-gradient(135deg, #4CAF50, #66BB6A) !important;
+    border: none;
+    padding: 20px;
+}
+
+.auth-card .card-body {
+    padding: 30px;
+}
+
+/* Floating Alert Messages */
+.alert-floating {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+    border-radius: 0.8vw;
+    box-shadow: 0 0.5vw 1vw rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* Body and HTML setup */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 50%, #ffffff 100%);
+    overflow-x: hidden;
+}
+
+/* Email Verification Wrapper */
+.email-verification-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2vh 2vw;
+    box-sizing: border-box;
+}
+
+.email-verification-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 0.2vw solid rgba(76, 175, 80, 0.3);
+    border-radius: 1.5vw;
+    box-shadow: 0 1vw 2.5vw rgba(76, 175, 80, 0.15);
+    overflow: hidden;
+    width: 90vw;
+    max-width: 600px;
+    min-height: 60vh;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Email Verification Card Header */
+.email-verification-card .card-header {
+    padding: 2vh 3vw;
+    border-radius: 1.5vw 1.5vw 0 0;
+}
+
+.email-verification-card .card-header h4 {
+    margin: 0;
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-weight: 600;
+}
+
+/* Email Verification Card Body */
+.email-verification-card .card-body {
+    padding: 3vh 4vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+/* Email Verification Notice */
+.email-verification-notice .envelope-icon {
+    font-size: clamp(3rem, 8vw, 5rem);
+}
+
+.email-verification-notice h5 {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    font-weight: 600;
+    margin-bottom: 2vh;
+}
+
+.email-verification-notice .description-text {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    line-height: 1.6;
+    margin-bottom: 2vh;
+    color: #616161;
+}
+
+.email-verification-notice .email-display {
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    color: #757575;
+}
+
+/* Form Section Text */
+.resend-section p {
+    font-size: clamp(1rem, 2.2vw, 1.1rem);
+    color: #616161;
+}
+
+/* Form Input */
+.email-verification-card .form-control {
+    padding: 1vh 1.5vw;
+    font-size: clamp(1rem, 2.2vw, 1.1rem);
+    border-radius: 0.5vw;
+    border-width: 0.15vw;
+}
+
+/* Buttons */
+.email-verification-card .btn {
+    padding: 1vh 2vw;
+    font-size: clamp(1rem, 2.2vw, 1.1rem);
+    border-width: 0.15vw;
+    border-radius: 0.5vw;
+    transition: all 0.3s ease;
+}

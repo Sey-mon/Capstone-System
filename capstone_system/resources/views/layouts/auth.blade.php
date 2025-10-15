@@ -19,13 +19,7 @@
 </head>
 <body>
     <div class="auth-container">
-        <div class="auth-card">
-            <!-- Display Success Messages -->
-            @if(session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
+        
 
             <!-- Display Error Messages -->
             @if($errors->any())
@@ -50,7 +44,6 @@
             @endif
 
             @yield('content')
-        </div>
     </div>
 
     @stack('scripts')

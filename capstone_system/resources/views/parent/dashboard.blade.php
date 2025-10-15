@@ -147,7 +147,7 @@
                         </div>
                         <h4>No children registered yet</h4>
                         <p>Start tracking your children's nutrition by registering them in the system.</p>
-                        <a href="{{ route('parent.bind-child') }}" class="btn btn-primary">
+                        <a href="{{ route('parent.showBindChildForm') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i>
                             Register a Child
                         </a>
