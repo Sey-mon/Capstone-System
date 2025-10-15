@@ -26,10 +26,6 @@
             </div>
             <div class="step" data-step="3">
                 <div class="step-number">3</div>
-                <div class="step-label">Child Info</div>
-            </div>
-            <div class="step" data-step="4">
-                <div class="step-number">4</div>
                 <div class="step-label">Review</div>
             </div>
         </div>
@@ -62,9 +58,7 @@
             <input type="hidden" id="hidden_email" name="email" value="{{ old('email') }}">
             <input type="hidden" id="hidden_password" name="password" value="">
             <input type="hidden" id="hidden_password_confirmation" name="password_confirmation" value="">
-            <input type="hidden" id="hidden_child_first_name" name="child_first_name" value="{{ old('child_first_name') }}">
-            <input type="hidden" id="hidden_child_last_name" name="child_last_name" value="{{ old('child_last_name') }}">
-            <input type="hidden" id="hidden_child_age_months" name="child_age_months" value="{{ old('child_age_months') }}">
+
             <input type="hidden" id="hidden_terms" name="terms" value="0">
 
             <!-- Step 1: Personal Information -->
@@ -303,62 +297,8 @@
                 </div>
             </div>
 
-            <!-- Step 3: Child Information -->
+            <!-- Step 3: Review -->
             <div class="wizard-step" id="step-3" data-step="3">
-                <h3>Child Information</h3>
-                <p class="step-description">Help us find your child in our records (Optional)</p>
-                
-                <div class="info-box">
-                    <strong>🔒 Privacy Protected:</strong> We use this information only to securely link your account to your child's records. This information is kept confidential and secure.
-                </div>
-
-                <div class="form-group">
-                    <label for="child_first_name">Child's First Name</label>
-                    <input type="text" name="child_first_name" id="child_first_name" 
-                           placeholder="Enter your child's first name" 
-                           value="{{ old('child_first_name') }}">
-                    @error('child_first_name')
-                        <span class="error-text">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="child_last_name">Child's Last Name</label>
-                    <input type="text" name="child_last_name" id="child_last_name" 
-                           placeholder="Enter your child's last name" 
-                           value="{{ old('child_last_name') }}">
-                    @error('child_last_name')
-                        <span class="error-text">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="child_age_months">Child's Age (in months)</label>
-                    <input type="number" name="child_age_months" id="child_age_months" 
-                           min="0" max="60" placeholder="e.g., 24 for 2 years old"
-                           value="{{ old('child_age_months') }}">
-                    <small class="field-help">Enter age in months (0-60 months / 0-5 years)</small>
-                    @error('child_age_months')
-                        <span class="error-text">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="skip-option">
-                    <p><em>💡 You can skip this step and link your child later through your dashboard.</em></p>
-                </div>
-                
-                <!-- Step 3 Navigation -->
-                <div class="wizard-navigation">
-                    <button type="button" class="btn secondary prev-step">Previous</button>
-                    <div>
-                        <button type="button" class="btn secondary skip-child-info">Skip This Step</button>
-                        <button type="button" class="btn primary next-step">Continue</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 4: Review -->
-            <div class="wizard-step" id="step-4" data-step="4">
                 <h3>Review Your Information</h3>
                 <p class="step-description">Please review your details before creating your account</p>
                 
@@ -394,17 +334,7 @@
                     </div>
                 </div>
 
-                <div class="review-section">
-                    <h4>Child Information</h4>
-                    <div class="review-item">
-                        <span class="label">Child's Name:</span>
-                        <span class="value" id="review-child-name"></span>
-                    </div>
-                    <div class="review-item">
-                        <span class="label">Age:</span>
-                        <span class="value" id="review-child-age"></span>
-                    </div>
-                </div>
+
 
                 <div class="terms-section">
                     <label class="checkbox-label">

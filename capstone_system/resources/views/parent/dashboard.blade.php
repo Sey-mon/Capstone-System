@@ -146,11 +146,11 @@
                             <i class="fas fa-child"></i>
                         </div>
                         <h4>No children registered yet</h4>
-                        <p>Start tracking your children's nutrition by registering them in the system.</p>
-                        <a href="{{ route('parent.showBindChildForm') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i>
-                            Register a Child
-                        </a>
+                        <p>Contact your nutritionist to get a registration code for linking your child's account.</p>
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>How to add your child:</strong> Ask your nutritionist for a registration code, then use it during account setup.
+                        </div>
                     </div>
                 @endforelse
             </div>

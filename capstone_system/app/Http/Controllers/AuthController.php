@@ -248,19 +248,7 @@ class AuthController extends Controller
                 'string',
                 'regex:/^09\d{9}$/' // Updated to match new format: 09XXXXXXXXX (11 digits, no dashes)
             ],
-            'child_first_name' => [
-                'nullable',
-                'string',
-                'max:255',
-                'regex:/^[a-zA-Z\s\-\.]+$/'
-            ],
-            'child_last_name' => [
-                'nullable',
-                'string',
-                'max:255',
-                'regex:/^[a-zA-Z\s\-\.]+$/'
-            ],
-            'child_age_months' => 'nullable|integer|min:0|max:60',
+
         ], [
             // Custom error messages
             'first_name.regex' => 'First name can only contain letters, spaces, hyphens, and periods.',
@@ -272,14 +260,12 @@ class AuthController extends Controller
             'barangay.required' => 'Please select your barangay.',
             'city.required' => 'City is required.',
             'province.required' => 'Province is required.',
-            'child_first_name.regex' => 'Child\'s first name can only contain letters, spaces, hyphens, and periods.',
-            'child_last_name.regex' => 'Child\'s last name can only contain letters, spaces, hyphens, and periods.',
+
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).',
             'contact_number.regex' => 'Contact number must be an 11-digit Philippine mobile number starting with 09.',
             'birth_date.before' => 'Birth date must be in the past.',
             'birth_date.after' => 'Please enter a valid birth date.',
-            'child_age_months.min' => 'Child age must be at least 0 months.',
-            'child_age_months.max' => 'Child age must be 60 months (5 years) or less.',
+
         ]);
 
         if ($validator->fails()) {
@@ -319,17 +305,13 @@ class AuthController extends Controller
                 'contact_number' => $request->contact_number,
             ]);
 
-            // If child information is provided, attempt to find and create a pending connection
-            if ($request->filled('child_first_name') && $request->filled('child_last_name') && $request->filled('child_age_months')) {
-                $this->attemptChildLinking($user, $request);
-            }
+
 
             // Log the registration
             AuditLog::create([
                 'user_id' => $user->user_id,
                 'action' => 'registration',
-                'description' => 'Parent account registered successfully' . 
-                    ($request->filled('child_first_name') ? ' with child linking request' : ''),
+                'description' => 'Parent account registered successfully',
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -410,50 +392,7 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Attempt to link child to parent account
-     */
-    private function attemptChildLinking($parent, $request)
-    {
-        // Get age in months directly from the form
-        $ageInMonths = (int) $request->child_age_months;
-        
-        // Search for existing patient with matching information
-        // Allow for ±2 months tolerance in age matching
-        $potentialMatches = \App\Models\Patient::where('first_name', 'LIKE', '%' . $request->child_first_name . '%')
-            ->where('last_name', 'LIKE', '%' . $request->child_last_name . '%')
-            ->whereBetween('age_months', [$ageInMonths - 2, $ageInMonths + 2]) // ±2 months tolerance
-            ->whereNull('parent_id') // Only unlinked patients
-            ->get();
 
-        // Create audit log for linking attempt
-        $description = "Parent linking request: Child name: {$request->child_first_name} {$request->child_last_name}, Age: {$ageInMonths} months";
-        
-        if ($potentialMatches->count() > 0) {
-            $description .= ". Found {$potentialMatches->count()} potential match(es) - requires admin verification.";
-            
-            // Store the potential matches for admin review (you could create a separate table for this)
-            foreach ($potentialMatches as $match) {
-                AuditLog::create([
-                    'user_id' => $parent->user_id,
-                    'action' => 'child_link_request',
-                    'description' => $description . " Patient ID: {$match->patient_id} (Patient age: {$match->age_months} months)",
-                    'ip_address' => request()->ip(),
-                    'user_agent' => request()->userAgent(),
-                ]);
-            }
-        } else {
-            $description .= ". No matches found - child may need to be registered first.";
-            
-            AuditLog::create([
-                'user_id' => $parent->user_id,
-                'action' => 'child_link_request',
-                'description' => $description,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-        }
-    }
 
     /**
      * Show nutritionist application form

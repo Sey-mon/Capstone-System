@@ -226,8 +226,7 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
     Route::get('/profile', [ParentController::class, 'profile'])->name('profile');
     Route::put('/profile', [ParentController::class, 'updateProfile'])->name('profile.update');
     Route::put('/password', [ParentController::class, 'updatePassword'])->name('password.update');
-    Route::get('/bind-child', [ParentController::class, 'showBindChildForm'])->name('showBindChildForm');
-    Route::post('/bind-child', [ParentController::class, 'bindChild'])->name('bindChild');
+
 });
 
 // Redirect authenticated users to their appropriate dashboard

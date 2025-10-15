@@ -12,43 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class ParentController extends Controller
 {
-    /**
-     * Show form to bind a child to the authenticated parent
-     */
-    public function showBindChildForm()
-    {
-        return view('parent.bind_child');
-    }
 
-    /**
-     * Handle binding a child to the authenticated parent securely
-     */
-    public function bindChild(Request $request)
-    {
-        $parent = Auth::user();
-        $validated = $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'age_months' => 'required|integer',
-            'contact_number' => 'required|string',
-        ]);
-
-        $child = Patient::where('first_name', $validated['first_name'])
-            ->where('last_name', $validated['last_name'])
-            ->where('age_months', $validated['age_months'])
-            ->where('contact_number', $validated['contact_number'])
-            ->whereNull('parent_id')
-            ->first();
-
-        if (!$child) {
-            return back()->withErrors(['not_found' => 'No matching child found or child already bound.']);
-        }
-
-        $child->parent_id = $parent->user_id;
-        $child->save();
-
-        return redirect()->route('parent.children')->with('success', 'Child successfully bound to your account.');
-    }
     /**
      * Show parent dashboard
      */

@@ -231,12 +231,10 @@
                             </div>
                             <h3>No Children Found</h3>
                             <p>You need to add at least one child to your account before generating meal plans.</p>
-                            <a href="{{ route('parent.bind-child') }}" class="ultra-button secondary">
-                                <div class="button-content">
-                                    <i class="fas fa-plus button-icon"></i>
-                                    <span class="button-text">Add Your First Child</span>
-                                </div>
-                            </a>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>How to add your child:</strong> Contact your nutritionist to get a registration code for linking your child's account.
+                            </div>
                         </div>
                     @endif
                 </div>

@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Wizard State Management
     let currentStep = 1;
-    const totalSteps = 4;
+    const totalSteps = 3;
     let isTransitioning = false;
     let formData = {};
     
@@ -115,20 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     function setupSkipFunctionality() {
-        const skipButton = document.querySelector('.skip-child-info');
-        if (skipButton) {
-            skipButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                // Clear child info fields
-                document.getElementById('child_first_name').value = '';
-                document.getElementById('child_last_name').value = '';
-                document.getElementById('child_age_months').value = '';
-                
-                // Sync and move to next step
-                syncCurrentStepData();
-                nextStep();
-            });
-        }
+        // Child info section removed - no skip functionality needed
     }
     
     function setupFormDataSync() {
@@ -257,15 +244,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('review-email').textContent = 
             document.getElementById('email').value || 'Not provided';
             
-        // Child Information
-        const childFirstName = document.getElementById('child_first_name').value;
-        const childLastName = document.getElementById('child_last_name').value;
-        const childAge = document.getElementById('child_age_months').value;
-        
-        document.getElementById('review-child-name').textContent = 
-            (childFirstName && childLastName) ? `${childFirstName} ${childLastName}` : 'Not provided';
-        document.getElementById('review-child-age').textContent = 
-            childAge ? `${childAge} months` : 'Not provided';
+        // Child information section removed
     }
     
     function validateCurrentStep() {
