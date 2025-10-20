@@ -9,6 +9,8 @@ use App\Http\Controllers\ParentController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\LLMController;
+use App\Http\Controllers\LLMIntegrationController;
+use App\Http\Controllers\KnowledgeBaseController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
@@ -188,6 +190,29 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
         Route::get('/api/stats', [LLMController::class, 'getStats'])->name('stats');
         Route::get('/api/search', [LLMController::class, 'search'])->name('search');
         Route::post('/api/bulk-import', [LLMController::class, 'bulkImport'])->name('bulk-import');
+        
+        // LLM Integration endpoints
+        Route::get('/integration/dashboard', [\App\Http\Controllers\LLMIntegrationController::class, 'dashboard'])->name('integration.dashboard');
+        Route::post('/integration/sync', [\App\Http\Controllers\LLMIntegrationController::class, 'syncKnowledgeBase'])->name('integration.sync');
+        Route::post('/integration/query', [\App\Http\Controllers\LLMIntegrationController::class, 'queryLLM'])->name('integration.query');
+        Route::post('/integration/recommendations', [\App\Http\Controllers\LLMIntegrationController::class, 'generateRecommendations'])->name('integration.recommendations');
+        Route::get('/integration/test', [\App\Http\Controllers\LLMIntegrationController::class, 'testConnection'])->name('integration.test');
+        Route::get('/integration/health', [\App\Http\Controllers\LLMIntegrationController::class, 'healthCheck'])->name('integration.health');
+    });
+
+    // Traditional Knowledge Base Management routes
+    Route::prefix('knowledge-base')->name('knowledge-base.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\KnowledgeBaseController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\KnowledgeBaseController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\KnowledgeBaseController::class, 'store'])->name('store');
+        Route::get('/{id}', [\App\Http\Controllers\KnowledgeBaseController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [\App\Http\Controllers\KnowledgeBaseController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\App\Http\Controllers\KnowledgeBaseController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\App\Http\Controllers\KnowledgeBaseController::class, 'destroy'])->name('destroy');
+        
+        // PDF upload and processing
+        Route::post('/upload-pdf', [\App\Http\Controllers\KnowledgeBaseController::class, 'uploadPdf'])->name('upload-pdf');
+        Route::post('/process-embeddings', [\App\Http\Controllers\KnowledgeBaseController::class, 'processEmbeddings'])->name('process-embeddings');
     });
 
     // Secure route for admin to view nutritionist professional ID

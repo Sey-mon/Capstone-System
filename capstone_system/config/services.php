@@ -44,6 +44,9 @@ return [
     'nutrition_api' => [
         'base_url' => env('LLM_API_URL', 'http://127.0.0.1:8002'),
         'timeout' => env('LLM_API_TIMEOUT', 30),
+        'max_retries' => env('LLM_API_MAX_RETRIES', 3),
+        'retry_delay' => env('LLM_API_RETRY_DELAY', 1),
+        'api_key' => env('LLM_API_KEY', null),
     ],
 
 ];

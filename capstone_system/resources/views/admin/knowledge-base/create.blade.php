@@ -365,9 +365,15 @@
                     <div class="alert alert-success">
                         <i class="fas fa-file-pdf"></i>
                         <span id="file-name"></span>
+                        <button type="button" id="process-pdf" class="btn btn-sm btn-primary" style="margin-left: 10px;">
+                            <i class="fas fa-magic"></i> Extract Text
+                        </button>
                         <button type="button" id="remove-file" style="float: right; background: none; border: none; color: #276749; cursor: pointer;">
                             <i class="fas fa-times"></i>
                         </button>
+                    </div>
+                    <div id="pdf-processing" style="display: none;" class="alert alert-info">
+                        <i class="fas fa-spinner fa-spin"></i> Processing PDF...
                     </div>
                 </div>
                 @error('pdf_file')
@@ -435,6 +441,8 @@
         const fileInfo = document.getElementById('file-info');
         const fileName = document.getElementById('file-name');
         const removeFileBtn = document.getElementById('remove-file');
+        const processPdfBtn = document.getElementById('process-pdf');
+        const pdfProcessing = document.getElementById('pdf-processing');
 
         fileUploadArea.addEventListener('click', () => fileInput.click());
 
@@ -449,6 +457,50 @@
         removeFileBtn.addEventListener('click', function() {
             fileInput.value = '';
             fileInfo.style.display = 'none';
+        });
+
+        // PDF processing
+        processPdfBtn.addEventListener('click', function() {
+            if (fileInput.files.length === 0) {
+                alert('Please select a PDF file first.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('pdf_file', fileInput.files[0]);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+            pdfProcessing.style.display = 'block';
+            processPdfBtn.disabled = true;
+
+            fetch('{{ route("admin.knowledge-base.upload-pdf") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                pdfProcessing.style.display = 'none';
+                processPdfBtn.disabled = false;
+
+                if (data.success) {
+                    // Auto-fill the form with extracted data
+                    document.getElementById('title').value = data.data.title;
+                    document.getElementById('pdf_text').value = data.data.content || 'Content extracted from PDF. Please review and edit as needed.';
+                    
+                    // Update character counts
+                    updateCharacterCount(contentTextarea, contentCount);
+                    
+                    alert('PDF processed successfully! Title and content have been auto-filled. Please review and edit as needed.');
+                } else {
+                    alert('Error processing PDF: ' + data.message);
+                }
+            })
+            .catch(error => {
+                pdfProcessing.style.display = 'none';
+                processPdfBtn.disabled = false;
+                console.error('Error:', error);
+                alert('Error processing PDF. Please try again.');
+            });
         });
 
         // Drag and drop

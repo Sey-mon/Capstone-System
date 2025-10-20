@@ -420,6 +420,231 @@ async def get_treatment_protocols(current_user: str = Depends(verify_token)):
             detail=f"Failed to retrieve protocols: {str(e)}"
         )
 
+@app.post("/generate_meal_plan")
+async def generate_meal_plan(
+    request: MealPlanRequest,
+    current_user: str = Depends(verify_token)
+):
+    """
+    Generate personalized meal plan based on child's nutritional needs
+    """
+    try:
+        logger.info(f"Processing meal plan generation for user: {current_user}")
+        
+        # First perform nutritional assessment
+        child_data = request.child_data
+        gender = 'male' if child_data.gender.lower() in ['male', 'm'] else 'female'
+        
+        # Get malnutrition assessment first
+        assessment_result = malnutrition_model.assess_malnutrition(
+            age_months=child_data.age_months,
+            weight_kg=child_data.weight_kg,
+            height_cm=child_data.height_cm,
+            gender=gender,
+            muac_cm=child_data.muac_cm,
+            has_edema=child_data.has_edema
+        )
+        
+        # Calculate nutritional requirements based on assessment
+        nutritional_needs = calculate_nutritional_requirements(
+            child_data, assessment_result
+        )
+        
+        # Generate meal plan
+        try:
+            # Check if treatment_planner has meal plan generation capability
+            if hasattr(treatment_planner, 'generate_meal_plan'):
+                meal_plan = treatment_planner.generate_meal_plan(
+                    child_age_months=child_data.age_months,
+                    weight_kg=child_data.weight_kg,
+                    malnutrition_status=assessment_result['primary_diagnosis'],
+                    nutritional_needs=nutritional_needs,
+                    dietary_restrictions=request.dietary_restrictions or [],
+                    budget_range=request.budget_range
+                )
+            else:
+                # Fallback meal plan generation
+                meal_plan = generate_basic_meal_plan(
+                    child_data, assessment_result, request
+                )
+        except Exception as e:
+            logger.warning(f"Advanced meal planning failed, using basic plan: {e}")
+            meal_plan = generate_basic_meal_plan(child_data, assessment_result, request)
+        
+        response = {
+            "meal_plan": meal_plan,
+            "nutritional_assessment": assessment_result,
+            "nutritional_requirements": nutritional_needs,
+            "timestamp": datetime.utcnow().isoformat(),
+            "api_version": "1.0.0"
+        }
+        
+        logger.info("Meal plan generated successfully")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Meal plan generation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Meal plan generation failed: {str(e)}"
+        )
+
+def calculate_nutritional_requirements(child_data: ChildData, assessment_result: dict) -> dict:
+    """Calculate nutritional requirements based on child's condition"""
+    age_months = child_data.age_months
+    weight_kg = child_data.weight_kg
+    malnutrition_status = assessment_result['primary_diagnosis']
+    
+    # Base caloric needs (kcal/kg/day)
+    if age_months <= 6:
+        base_calories_per_kg = 120
+    elif age_months <= 12:
+        base_calories_per_kg = 100
+    elif age_months <= 24:
+        base_calories_per_kg = 90
+    else:
+        base_calories_per_kg = 80
+    
+    # Adjust for malnutrition status
+    calorie_multiplier = 1.0
+    if 'severe' in malnutrition_status.lower():
+        calorie_multiplier = 1.5  # 150% of normal needs
+    elif 'moderate' in malnutrition_status.lower():
+        calorie_multiplier = 1.3  # 130% of normal needs
+    
+    daily_calories = weight_kg * base_calories_per_kg * calorie_multiplier
+    
+    # Protein requirements (g/kg/day)
+    if age_months <= 6:
+        protein_per_kg = 2.2
+    elif age_months <= 12:
+        protein_per_kg = 1.6
+    else:
+        protein_per_kg = 1.2
+    
+    if 'severe' in malnutrition_status.lower():
+        protein_per_kg *= 1.5
+    elif 'moderate' in malnutrition_status.lower():
+        protein_per_kg *= 1.3
+    
+    daily_protein = weight_kg * protein_per_kg
+    
+    return {
+        "daily_calories": round(daily_calories),
+        "daily_protein_g": round(daily_protein, 1),
+        "daily_fat_g": round(daily_calories * 0.3 / 9, 1),  # 30% calories from fat
+        "daily_carbs_g": round((daily_calories * 0.5) / 4, 1),  # 50% calories from carbs
+        "feeding_frequency": 6 if age_months <= 12 else 5,
+        "calories_per_meal": round(daily_calories / (6 if age_months <= 12 else 5))
+    }
+
+def generate_basic_meal_plan(child_data: ChildData, assessment_result: dict, request: MealPlanRequest) -> dict:
+    """Generate a basic meal plan when advanced planning is not available"""
+    age_months = child_data.age_months
+    malnutrition_status = assessment_result['primary_diagnosis']
+    
+    # Age-appropriate meal suggestions
+    if age_months <= 6:
+        meals = {
+            "breakfast": ["Breast milk/formula", "Iron-fortified cereal (if >4 months)"],
+            "mid_morning": ["Breast milk/formula"],
+            "lunch": ["Breast milk/formula", "Pureed vegetables (if >4 months)"],
+            "afternoon": ["Breast milk/formula"],
+            "dinner": ["Breast milk/formula", "Pureed fruits (if >4 months)"],
+            "evening": ["Breast milk/formula"]
+        }
+    elif age_months <= 12:
+        meals = {
+            "breakfast": ["Breast milk/formula", "Iron-fortified cereal", "Mashed banana"],
+            "mid_morning": ["Breast milk/formula", "Small crackers"],
+            "lunch": ["Mashed rice with vegetables", "Soft cooked chicken/fish", "Breast milk"],
+            "afternoon": ["Breast milk/formula", "Soft fruits"],
+            "dinner": ["Mashed sweet potato", "Ground meat/beans", "Breast milk"],
+            "evening": ["Breast milk/formula"]
+        }
+    else:
+        meals = {
+            "breakfast": ["Rice porridge with milk", "Boiled egg", "Banana"],
+            "mid_morning": ["Crackers with peanut butter", "Milk"],
+            "lunch": ["Rice with vegetables", "Fish/chicken", "Sayote soup"],
+            "afternoon": ["Fresh fruits", "Biscuits"],
+            "dinner": ["Rice with beans", "Vegetables", "Milk"],
+            "evening": ["Warm milk"]
+        }
+    
+    # Adjust for malnutrition status
+    if 'severe' in malnutrition_status.lower():
+        # Add high-calorie, high-protein foods
+        for meal_time in meals:
+            if meal_time in ['breakfast', 'lunch', 'dinner']:
+                meals[meal_time].append("RUTF sachet (if available)")
+                meals[meal_time].append("Fortified milk")
+    elif 'moderate' in malnutrition_status.lower():
+        # Add supplementary foods
+        for meal_time in meals:
+            if meal_time in ['breakfast', 'lunch', 'dinner']:
+                meals[meal_time].append("Supplementary feeding product")
+    
+    # Add supplements based on age and condition
+    supplements = []
+    if age_months >= 6:
+        supplements.append("Vitamin A supplement (as per schedule)")
+        supplements.append("Iron-folate supplement")
+    
+    if 'severe' in malnutrition_status.lower() or 'moderate' in malnutrition_status.lower():
+        supplements.append("Zinc supplement (if diarrhea present)")
+        supplements.append("Multivitamin supplement")
+    
+    # Feeding instructions
+    feeding_instructions = [
+        f"Feed {6 if age_months <= 12 else 5} times per day",
+        "Ensure proper hygiene during food preparation",
+        "Monitor child's appetite and intake",
+        "Provide clean drinking water"
+    ]
+    
+    if age_months <= 24:
+        feeding_instructions.append("Continue breastfeeding alongside complementary foods")
+    
+    # Budget considerations
+    budget_notes = []
+    if request.budget_range == "low":
+        budget_notes = [
+            "Focus on locally available, affordable foods",
+            "Use eggs, beans, and fish as protein sources",
+            "Include seasonal vegetables and fruits",
+            "Consider home gardening for vegetables"
+        ]
+    elif request.budget_range == "high":
+        budget_notes = [
+            "Include variety of protein sources",
+            "Add fortified foods and supplements",
+            "Include imported fruits and vegetables if desired",
+            "Consider commercial baby foods if appropriate"
+        ]
+    else:  # medium
+        budget_notes = [
+            "Balance between nutrition and cost",
+            "Include both local and some commercial foods",
+            "Focus on nutrient-dense options",
+            "Supplement with fortified foods as needed"
+        ]
+    
+    return {
+        "daily_meals": meals,
+        "supplements": supplements,
+        "feeding_instructions": feeding_instructions,
+        "budget_considerations": budget_notes,
+        "malnutrition_status": malnutrition_status,
+        "age_group": f"{age_months} months",
+        "special_notes": [
+            "Monitor child's growth weekly",
+            "Consult healthcare provider if appetite decreases",
+            "Ensure food safety and hygiene",
+            "Adjust portions based on child's appetite"
+        ]
+    }
+
 # Admin endpoints for managing WHO standards and treatment protocols
 @app.get("/admin/who-standards/summary")
 async def get_who_standards_summary(current_user: str = Depends(verify_token)):
