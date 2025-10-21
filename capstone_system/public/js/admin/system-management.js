@@ -14,6 +14,7 @@ class SystemManagement {
         this.setupEventListeners();
         this.setupModalBehavior();
         this.setupFormValidation();
+        this.restoreActiveTab();
     }
 
     setupEventListeners() {
@@ -108,6 +109,9 @@ class SystemManagement {
 
     // Tab Management
     switchTab(tab) {
+        // Save active tab to localStorage
+        localStorage.setItem('systemManagementActiveTab', tab);
+        
         // Hide all tab contents with animation
         document.querySelectorAll('.tab-content').forEach(content => {
             content.style.opacity = '0';
@@ -137,6 +141,31 @@ class SystemManagement {
                 }, 50);
             }
         }, 150);
+    }
+
+    restoreActiveTab() {
+        // Check URL for pagination parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasBarangayPagination = urlParams.has('barangays_page');
+        const hasCategoryPagination = urlParams.has('categories_page');
+        
+        // Determine which tab should be active
+        let activeTab = 'categories'; // default
+        
+        if (hasBarangayPagination) {
+            activeTab = 'barangays';
+        } else if (!hasCategoryPagination) {
+            // No pagination parameter, check localStorage
+            const savedTab = localStorage.getItem('systemManagementActiveTab');
+            if (savedTab) {
+                activeTab = savedTab;
+            }
+        }
+        
+        // Switch to the determined tab
+        if (activeTab !== 'categories') {
+            this.switchTab(activeTab);
+        }
     }
 
     // Modal Management
