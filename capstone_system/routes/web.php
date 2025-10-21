@@ -8,6 +8,7 @@ use App\Http\Controllers\NutritionistController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\LLMController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
@@ -172,7 +173,18 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
-    // LLM Knowledge Base routes
+    // Knowledge Base Management routes
+    Route::prefix('knowledge-base')->name('knowledge-base.')->group(function () {
+        Route::get('/', [KnowledgeBaseController::class, 'index'])->name('index');
+        Route::post('/upload', [KnowledgeBaseController::class, 'uploadPdf'])->name('upload');
+        Route::post('/process-embeddings', [KnowledgeBaseController::class, 'processEmbeddings'])->name('process-embeddings');
+        Route::post('/reembed-missing', [KnowledgeBaseController::class, 'reembedMissing'])->name('reembed-missing');
+        Route::get('/embedding-status', [KnowledgeBaseController::class, 'checkEmbeddingStatus'])->name('embedding-status');
+        Route::get('/llm-health', [KnowledgeBaseController::class, 'checkLlmHealth'])->name('llm-health');
+        Route::delete('/{id}', [KnowledgeBaseController::class, 'destroy'])->name('delete');
+    });
+
+    // LLM Knowledge Base routes (Legacy - keeping for backward compatibility)
     Route::prefix('llm')->name('llm.')->group(function () {
         Route::get('/', [LLMController::class, 'index'])->name('index');
         Route::get('/create', [LLMController::class, 'create'])->name('create');

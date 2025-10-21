@@ -35,9 +35,9 @@ return [
             'text' => 'API Management',
         ],
         [
-            'route' => 'admin.llm.index',
-            'icon' => 'fas fa-brain',
-            'text' => 'LLM Knowledge Base',
+            'route' => 'admin.knowledge-base.index',
+            'icon' => 'fas fa-book-medical',
+            'text' => 'Knowledge Base',
         ],
         [
             'route' => 'admin.reports',
