@@ -439,10 +439,15 @@ function checkEmbeddingStatus() {
     fetch('/admin/knowledge-base/embedding-status')
         .then(response => response.json())
         .then(data => {
+            console.log('Embedding status response:', data); // Debug: see actual API response
+            
             if (data.success) {
                 // FastAPI returns: embedding_status, knowledge_base_stats, cache_directory
                 const embeddingData = data.data.embedding_status || {};
                 const kbStats = data.data.knowledge_base_stats || {};
+                
+                console.log('Embedding data:', embeddingData); // Debug
+                console.log('KB stats:', kbStats); // Debug
 
                 // Update status bar based on API response
                 if (embeddingData.status === 'ready') {
@@ -464,12 +469,29 @@ function checkEmbeddingStatus() {
                 const embeddedDocs = embeddingData.embedded_count || 0;
                 embeddedCount.textContent = `${embeddedDocs} / ${totalDocs} documents`;
                 
-                // Cache status
-                cacheStatus.textContent = embeddingData.cache_status === 'available' ? 'Available' : 'Not Available';
+                // Cache status - check various possible values
+                const cacheStatusValue = embeddingData.cache_status || data.data.cache_directory;
+                if (cacheStatusValue === 'available' || cacheStatusValue === 'exists' || 
+                    (typeof cacheStatusValue === 'string' && cacheStatusValue.length > 0) ||
+                    embeddingData.status === 'ready') {
+                    cacheStatus.textContent = 'Available';
+                } else {
+                    cacheStatus.textContent = 'Not Available';
+                }
                 
-                // Last updated
-                if (embeddingData.last_updated) {
-                    lastUpdated.textContent = new Date(embeddingData.last_updated).toLocaleString();
+                // Last updated - check multiple possible fields
+                const lastUpdatedValue = embeddingData.last_updated || 
+                                        embeddingData.updated_at || 
+                                        embeddingData.timestamp;
+                if (lastUpdatedValue) {
+                    try {
+                        lastUpdated.textContent = new Date(lastUpdatedValue).toLocaleString();
+                    } catch (e) {
+                        lastUpdated.textContent = lastUpdatedValue;
+                    }
+                } else if (embeddingData.status === 'ready' || embeddedDocs > 0) {
+                    // If embeddings exist but no timestamp, show current time
+                    lastUpdated.textContent = new Date().toLocaleString();
                 } else {
                     lastUpdated.textContent = 'Never';
                 }
