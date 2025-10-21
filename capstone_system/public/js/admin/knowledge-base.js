@@ -6,10 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check system health on page load
     checkLlmHealth();
+    
+    // Check embedding status first, then update document statuses
     checkEmbeddingStatus();
-
-    // Update document statuses
-    updateDocumentStatuses();
+    
+    // Wait a bit for embedding status to load, then update document statuses
+    setTimeout(() => {
+        updateDocumentStatuses();
+    }, 1000);
 
     // Event Listeners
     setupEventListeners();
@@ -21,6 +25,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeKnowledgeBase() {
     console.log('Knowledge Base Management initialized');
+}
+
+// Helper function to get CSRF token
+function getCsrfToken() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return token ? token.getAttribute('content') : '';
 }
 
 function setupEventListeners() {
@@ -208,7 +218,7 @@ function handleUploadSubmit(e) {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+            'X-CSRF-TOKEN': getCsrfToken()
         }
     })
     .then(response => response.json())
@@ -266,9 +276,14 @@ function processAllEmbeddings() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': getCsrfToken()
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({
+            // Optional: specify chunk_size, overlap, batch_size
+            // chunk_size: 1000,
+            // overlap: 200,
+            // batch_size: 128
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -279,9 +294,31 @@ function processAllEmbeddings() {
         processingBadge.innerHTML = '<i class="fas fa-check-circle"></i> Ready';
 
         if (data.success) {
-            showToast(data.message, 'success');
-            checkEmbeddingStatus();
-            updateDocumentStatuses();
+            // Show detailed stats from FastAPI response
+            let message = data.message;
+            
+            // Check if embeddings already exist
+            if (data.data && data.data.stats && data.data.stats.cached === true) {
+                showToast('Embeddings already exist and are up to date', 'info');
+                // Force update of statuses since embeddings are ready
+                setTimeout(() => {
+                    checkEmbeddingStatus();
+                    updateDocumentStatuses();
+                }, 500);
+            } else if (data.data && data.data.stats) {
+                const stats = data.data.stats;
+                message += ` (${stats.total_chunks || 0} chunks from ${stats.total_documents || 0} documents)`;
+                showToast(message, 'success');
+                // Update statuses after processing
+                setTimeout(() => {
+                    checkEmbeddingStatus();
+                    updateDocumentStatuses();
+                }, 500);
+            } else {
+                showToast(message, 'success');
+                checkEmbeddingStatus();
+                updateDocumentStatuses();
+            }
         } else {
             showToast(data.message || 'Processing failed', 'error');
         }
@@ -315,9 +352,12 @@ function reembedMissing() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': getCsrfToken()
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({
+            // Optional: specify batch_size
+            // batch_size: 128
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -328,7 +368,19 @@ function reembedMissing() {
         processingBadge.innerHTML = '<i class="fas fa-check-circle"></i> Ready';
 
         if (data.success) {
-            showToast(data.message, 'success');
+            // Handle different status responses from FastAPI
+            if (data.data && data.data.status === 'all_embedded') {
+                showToast('All documents are already embedded!', 'info');
+            } else {
+                let message = data.message;
+                // Show per-KB details if available
+                if (data.data && data.data.per_kb) {
+                    const perKb = data.data.per_kb;
+                    const processed = Object.keys(perKb).length;
+                    message += ` (${processed} document${processed !== 1 ? 's' : ''} processed)`;
+                }
+                showToast(message, 'success');
+            }
             checkEmbeddingStatus();
             updateDocumentStatuses();
         } else {
@@ -388,14 +440,19 @@ function checkEmbeddingStatus() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const embeddingData = data.data.embedding_status;
-                const kbStats = data.data.knowledge_base_stats;
+                // FastAPI returns: embedding_status, knowledge_base_stats, cache_directory
+                const embeddingData = data.data.embedding_status || {};
+                const kbStats = data.data.knowledge_base_stats || {};
 
-                // Update status bar
+                // Update status bar based on API response
                 if (embeddingData.status === 'ready') {
                     statusIcon.innerHTML = '<i class="fas fa-check-circle healthy"></i>';
                     statusValue.textContent = 'Ready';
                     statusValue.style.color = '#10B981';
+                } else if (embeddingData.status === 'partial') {
+                    statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    statusValue.textContent = 'Partial';
+                    statusValue.style.color = '#F59E0B';
                 } else {
                     statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
                     statusValue.textContent = 'Pending';
@@ -403,9 +460,19 @@ function checkEmbeddingStatus() {
                 }
 
                 // Update embedding info
-                embeddedCount.textContent = `${embeddingData.embedded_count || 0} / ${kbStats.total_documents} documents`;
+                const totalDocs = kbStats.total_documents || 0;
+                const embeddedDocs = embeddingData.embedded_count || 0;
+                embeddedCount.textContent = `${embeddedDocs} / ${totalDocs} documents`;
+                
+                // Cache status
                 cacheStatus.textContent = embeddingData.cache_status === 'available' ? 'Available' : 'Not Available';
-                lastUpdated.textContent = embeddingData.last_updated ? new Date(embeddingData.last_updated).toLocaleString() : 'Never';
+                
+                // Last updated
+                if (embeddingData.last_updated) {
+                    lastUpdated.textContent = new Date(embeddingData.last_updated).toLocaleString();
+                } else {
+                    lastUpdated.textContent = 'Never';
+                }
             } else {
                 statusIcon.innerHTML = '<i class="fas fa-times-circle unhealthy"></i>';
                 statusValue.textContent = 'Error';
@@ -421,18 +488,40 @@ function checkEmbeddingStatus() {
 }
 
 function updateDocumentStatuses() {
-    // Simulate checking which documents are embedded
-    // In a real implementation, this would check against the embedding status
+    // Check which documents are embedded based on the embedding status from API
     fetch('/admin/knowledge-base/embedding-status')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const embeddingData = data.data.embedding_status;
-                // If embeddings are ready, mark all as processed
+                const embeddingData = data.data.embedding_status || {};
+                const kbStats = data.data.knowledge_base_stats || {};
+                
+                // If status is ready, mark all as processed
                 if (embeddingData.status === 'ready') {
                     document.querySelectorAll('.document-status .badge').forEach(badge => {
                         badge.className = 'badge badge-processed';
                         badge.innerHTML = '<i class="fas fa-check-circle"></i> Processed';
+                    });
+                } 
+                // If all documents are embedded, mark all as processed
+                else if (embeddingData.embedded_count >= kbStats.total_documents && kbStats.total_documents > 0) {
+                    document.querySelectorAll('.document-status .badge').forEach(badge => {
+                        badge.className = 'badge badge-processed';
+                        badge.innerHTML = '<i class="fas fa-check-circle"></i> Processed';
+                    });
+                } 
+                // Partial embedding
+                else if (embeddingData.status === 'partial' || embeddingData.embedded_count > 0) {
+                    // Some are embedded, some are not - would need per-document status from API
+                    // For now, show mixed status
+                    document.querySelectorAll('.document-status .badge').forEach((badge, index) => {
+                        if (index < embeddingData.embedded_count) {
+                            badge.className = 'badge badge-processed';
+                            badge.innerHTML = '<i class="fas fa-check-circle"></i> Processed';
+                        } else {
+                            badge.className = 'badge badge-pending';
+                            badge.innerHTML = '<i class="fas fa-clock"></i> Pending';
+                        }
                     });
                 }
             }
@@ -481,7 +570,7 @@ function deleteDocument(kbId, name) {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': getCsrfToken()
         }
     })
     .then(response => response.json())
