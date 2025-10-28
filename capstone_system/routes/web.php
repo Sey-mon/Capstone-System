@@ -10,6 +10,8 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\LLMController;
+use App\Http\Controllers\FoodController;
+use App\Http\Controllers\FoodRequestController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
@@ -206,6 +208,22 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::get('/nutritionist/{user}/professional-id', [\App\Http\Controllers\FileController::class, 'showProfessionalId'])
         ->middleware(['auth'])
         ->name('admin.nutritionist.professional_id');
+
+    // Food Database Management Routes (Admin)
+    Route::get('/foods', [FoodController::class, 'index'])->name('foods.index');
+    Route::get('/foods/{id}', [FoodController::class, 'show'])->name('foods.show');
+    Route::post('/foods', [FoodController::class, 'store'])->name('foods.store');
+    Route::put('/foods/{id}', [FoodController::class, 'update'])->name('foods.update');
+    Route::delete('/foods/{id}', [FoodController::class, 'destroy'])->name('foods.destroy');
+    Route::post('/foods/import', [FoodController::class, 'import'])->name('foods.import');
+    Route::get('/foods/export', [FoodController::class, 'export'])->name('foods.export');
+
+    // Food Request Management Routes (Admin)
+    Route::get('/food-requests', [FoodRequestController::class, 'index'])->name('food-requests.index');
+    Route::get('/food-requests/{id}', [FoodRequestController::class, 'show'])->name('food-requests.show');
+    Route::post('/food-requests/{id}/approve', [FoodRequestController::class, 'approve'])->name('food-requests.approve');
+    Route::post('/food-requests/{id}/reject', [FoodRequestController::class, 'reject'])->name('food-requests.reject');
+    Route::delete('/food-requests/{id}', [FoodRequestController::class, 'destroy'])->name('food-requests.destroy');
 });
 
 // Nutritionist Routes (Protected by auth, verified email, and role middleware)
@@ -243,6 +261,16 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     Route::get('/nutrition/knowledge-base', [ApiController::class, 'getKnowledgeBase'])->name('nutrition.knowledge-base');
     Route::post('/nutrition/meal-plan-detail', [ApiController::class, 'getMealPlanDetail'])->name('nutrition.meal-plan-detail');
     Route::get('/nutrition/test-api', [ApiController::class, 'testNutritionAPI'])->name('nutrition.test-api');
+
+    // Food Database View (Nutritionist - Read Only)
+    Route::get('/foods', [NutritionistController::class, 'viewFoods'])->name('foods.index');
+
+    // Food Request Routes (Nutritionist)
+    Route::get('/food-requests', [FoodRequestController::class, 'index'])->name('food-requests.index');
+    Route::get('/food-requests/create', [FoodRequestController::class, 'create'])->name('food-requests.create');
+    Route::post('/food-requests', [FoodRequestController::class, 'store'])->name('food-requests.store');
+    Route::get('/food-requests/{id}', [FoodRequestController::class, 'show'])->name('food-requests.show');
+    Route::delete('/food-requests/{id}', [FoodRequestController::class, 'destroy'])->name('food-requests.destroy');
 });
 
 // Parent Routes (Protected by auth, verified email, and role middleware)

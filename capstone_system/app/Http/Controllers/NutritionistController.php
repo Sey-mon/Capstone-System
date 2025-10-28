@@ -6,6 +6,7 @@ use App\Models\Patient;
 use App\Models\Assessment;
 use App\Models\User;
 use App\Models\Barangay;
+use App\Models\Food;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -702,6 +703,54 @@ class NutritionistController extends Controller
             ->get();
 
         return view('nutritionist.meal-plans', compact('patients'));
+    }
+
+    /**
+     * View foods database (Read-only for nutritionists)
+     */
+    public function viewFoods(Request $request)
+    {
+        $search = $request->input('search');
+        $tag = $request->input('tag');
+        $perPage = $request->input('per_page', 15);
+
+        $foods = Food::query()
+            ->search($search)
+            ->withTag($tag)
+            ->orderBy('food_name_and_description', 'asc')
+            ->paginate($perPage);
+
+        // Get unique tags for filter
+        $allTags = Food::whereNotNull('nutrition_tags')
+            ->where('nutrition_tags', '!=', '')
+            ->pluck('nutrition_tags')
+            ->flatMap(function ($tags) {
+                return array_map('trim', explode(',', $tags));
+            })
+            ->unique()
+            ->sort()
+            ->values();
+
+        return view('nutritionist.foods', compact('foods', 'allTags', 'search', 'tag'));
+    }
+
+    /**
+     * Search foods (AJAX)
+     */
+    public function searchFoods(Request $request)
+    {
+        $search = $request->input('q', '');
+        $limit = $request->input('limit', 50);
+
+        $foods = Food::search($search)
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $foods,
+            'count' => $foods->count(),
+        ]);
     }
 
 

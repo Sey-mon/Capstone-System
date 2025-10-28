@@ -11,6 +11,8 @@ use App\Models\ItemCategory;
 use App\Models\Barangay;
 use App\Models\AuditLog;
 use App\Models\Role;
+use App\Models\Food;
+use App\Models\FoodRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

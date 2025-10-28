@@ -40,6 +40,16 @@ return [
             'text' => 'Knowledge Base',
         ],
         [
+            'route' => 'admin.foods.index',
+            'icon' => 'fas fa-utensils',
+            'text' => 'Food Database',
+        ],
+        [
+            'route' => 'admin.food-requests.index',
+            'icon' => 'fas fa-clipboard-question',
+            'text' => 'Food Requests',
+        ],
+        [
             'route' => 'admin.reports',
             'icon' => 'fas fa-chart-bar',
             'text' => 'Reports',
@@ -72,6 +82,16 @@ return [
         //     'icon' => 'fas fa-utensils',
         //     'text' => 'Meal Plans',
         // ],
+        [
+            'route' => 'nutritionist.foods.index',
+            'icon' => 'fas fa-database',
+            'text' => 'Food Database',
+        ],
+        [
+            'route' => 'nutritionist.food-requests.index',
+            'icon' => 'fas fa-clipboard-list',
+            'text' => 'My Food Requests',
+        ],
         [
             'route' => 'nutritionist.profile',
             'icon' => 'fas fa-user-cog',
