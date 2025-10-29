@@ -15,17 +15,42 @@
     <!-- Header Section -->
     <div class="assessments-header">
         <div class="header-content">
+            <div class="breadcrumb">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+                <i class="fas fa-chevron-right"></i>
+                <span class="active">Assessments</span>
+            </div>
             <h1 class="page-title">Child Assessment Overview</h1>
-            <p class="page-description">Track your children's nutritional assessments and health progress</p>
+            <p class="page-description">Monitor nutritional assessments, track health progress, and view detailed assessment history for your children</p>
         </div>
         <div class="stats-summary">
             <div class="stat-card">
-                <div class="stat-number">{{ count($children ?? []) }}</div>
-                <div class="stat-label">Total Children</div>
+                <div class="stat-icon">
+                    <i class="fas fa-child"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ count($children ?? []) }}</div>
+                    <div class="stat-label">Total Children</div>
+                </div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
-                <div class="stat-label">Total Assessments</div>
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
+                    <div class="stat-label">Total Assessments</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ $children ? $children->filter(function($child) { return $child->assessments->isNotEmpty(); })->count() : 0 }}</div>
+                    <div class="stat-label">Active Cases</div>
+                </div>
             </div>
         </div>
     </div>
@@ -42,8 +67,22 @@
                             <div class="child-details">
                                 <h3 class="child-name">{{ $child->first_name }} {{ $child->last_name }}</h3>
                                 <div class="child-meta">
-                                    <span class="age">{{ $child->age_months ? ($child->age_months . ' months') : 'Age unknown' }}</span>
-                                    <span class="gender">{{ $child->sex ?? 'Gender unknown' }}</span>
+                                    <span class="meta-item">
+                                        <i class="fas fa-birthday-cake"></i>
+                                        {{ $child->age_months ? ($child->age_months . ' months') : 'Age unknown' }}
+                                    </span>
+                                    <span class="meta-divider">•</span>
+                                    <span class="meta-item">
+                                        <i class="fas fa-{{ $child->sex === 'Male' ? 'mars' : 'venus' }}"></i>
+                                        {{ $child->sex ?? 'Gender unknown' }}
+                                    </span>
+                                    @if($child->assessments->count() > 0)
+                                        <span class="meta-divider">•</span>
+                                        <span class="meta-item">
+                                            <i class="fas fa-chart-line"></i>
+                                            {{ $child->assessments->count() }} {{ $child->assessments->count() === 1 ? 'Assessment' : 'Assessments' }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -51,8 +90,13 @@
                             @if($child->assessments->count() > 0)
                                 <button class="view-history-btn" data-bs-toggle="modal" data-bs-target="#assessmentModal{{ $child->id }}">
                                     <i class="fas fa-history"></i>
-                                    View History
+                                    Full History
                                 </button>
+                            @else
+                                <span class="no-data-badge">
+                                    <i class="fas fa-info-circle"></i>
+                                    No Assessments
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -64,12 +108,15 @@
                     <div class="card-body">
                         @if($latestAssessment)
                             <div class="latest-assessment">
-                                <div class="assessment-header">
-                                    <h4>Latest Assessment</h4>
-                                    <span class="assessment-date">{{ $latestAssessment->created_at->format('M d, Y') }}</span>
-                                </div>
-                                
-                                <div class="assessment-details">
+                                <div class="assessment-header-inline">
+                                    <div class="assessment-title-section">
+                                        <h4><i class="fas fa-file-medical-alt"></i> Latest Assessment</h4>
+                                        <span class="assessment-date">
+                                            <i class="fas fa-calendar"></i>
+                                            {{ $latestAssessment->created_at->format('F d, Y') }}
+                                        </span>
+                                    </div>
+                                    
                                     @php
                                         $diagnosis = null;
                                         if (!empty($latestAssessment->treatment)) {
@@ -78,65 +125,73 @@
                                         }
                                     @endphp
                                     
-                                    <div class="diagnosis-section">
+                                    <div class="diagnosis-section-inline">
                                         @if($diagnosis == 'Severe Acute Malnutrition (SAM)')
                                             <div class="diagnosis-badge critical">
                                                 <i class="fas fa-exclamation-triangle"></i>
-                                                Severe Acute Malnutrition
+                                                <span>Severe Acute Malnutrition</span>
                                             </div>
                                         @elseif($diagnosis == 'Moderate Acute Malnutrition (MAM)')
                                             <div class="diagnosis-badge warning">
                                                 <i class="fas fa-exclamation-circle"></i>
-                                                Moderate Acute Malnutrition
+                                                <span>Moderate Acute Malnutrition</span>
                                             </div>
                                         @elseif($diagnosis == 'Normal')
                                             <div class="diagnosis-badge normal">
                                                 <i class="fas fa-check-circle"></i>
-                                                Normal Nutritional Status
+                                                <span>Normal Status</span>
                                             </div>
                                         @else
                                             <div class="diagnosis-badge unknown">
                                                 <i class="fas fa-question-circle"></i>
-                                                {{ $diagnosis ?? 'Status Unknown' }}
+                                                <span>{{ $diagnosis ?? 'Status Unknown' }}</span>
                                             </div>
                                         @endif
                                     </div>
-
-                                    <div class="metrics-grid">
-                                        <div class="metric">
-                                            <div class="metric-icon">
+                                </div>
+                                
+                                <div class="assessment-details">
+                                    <div class="metrics-row">
+                                        <div class="metric-card">
+                                            <div class="metric-icon-wrapper weight">
                                                 <i class="fas fa-weight"></i>
                                             </div>
-                                            <div class="metric-info">
+                                            <div class="metric-content">
                                                 <span class="metric-label">Weight</span>
-                                                <span class="metric-value">{{ $latestAssessment->weight ?? $child->weight_kg ?? 'N/A' }} kg</span>
+                                                <span class="metric-value">{{ $latestAssessment->weight ?? $child->weight_kg ?? 'N/A' }} <small>kg</small></span>
                                             </div>
                                         </div>
-                                        <div class="metric">
-                                            <div class="metric-icon">
+                                        
+                                        <div class="metric-card">
+                                            <div class="metric-icon-wrapper height">
                                                 <i class="fas fa-ruler-vertical"></i>
                                             </div>
-                                            <div class="metric-info">
+                                            <div class="metric-content">
                                                 <span class="metric-label">Height</span>
-                                                <span class="metric-value">{{ $latestAssessment->height ?? $child->height_cm ?? 'N/A' }} cm</span>
+                                                <span class="metric-value">{{ $latestAssessment->height ?? $child->height_cm ?? 'N/A' }} <small>cm</small></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="metric-card">
+                                            <div class="metric-icon-wrapper nutritionist">
+                                                <i class="fas fa-user-md"></i>
+                                            </div>
+                                            <div class="metric-content">
+                                                <span class="metric-label">Assessed By</span>
+                                                <span class="metric-value">{{ $latestAssessment->nutritionist->first_name ?? 'N/A' }} {{ $latestAssessment->nutritionist->last_name ?? '' }}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="additional-info">
-                                        <div class="info-item">
-                                            <i class="fas fa-user-md"></i>
-                                            <span class="info-label">Nutritionist:</span>
-                                            <span class="info-value">{{ $latestAssessment->nutritionist->first_name ?? 'N/A' }} {{ $latestAssessment->nutritionist->last_name ?? '' }}</span>
-                                        </div>
-                                        @if($latestAssessment->remarks)
-                                            <div class="info-item">
-                                                <i class="fas fa-sticky-note"></i>
-                                                <span class="info-label">Remarks:</span>
-                                                <span class="info-value">{{ $latestAssessment->remarks }}</span>
+                                    @if($latestAssessment->remarks)
+                                        <div class="remarks-section">
+                                            <div class="remarks-header">
+                                                <i class="fas fa-comment-medical"></i>
+                                                <span>Professional Remarks</span>
                                             </div>
-                                        @endif
-                                    </div>
+                                            <p class="remarks-content">{{ $latestAssessment->remarks }}</p>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @else
@@ -144,8 +199,8 @@
                                 <div class="no-assessment-icon">
                                     <i class="fas fa-clipboard-list"></i>
                                 </div>
-                                <h4>No Assessments Yet</h4>
-                                <p>This child hasn't received any nutritional assessments.</p>
+                                <h4>No Assessments Available</h4>
+                                <p>This child has not received any nutritional assessments yet. Please contact your nutritionist to schedule an assessment.</p>
                             </div>
                         @endif
                     </div>
@@ -260,11 +315,17 @@
                     <i class="fas fa-clipboard-list"></i>
                 </div>
                 <h3>No Children Registered</h3>
-                <p>You don't have any children registered for assessments yet.</p>
-                <button class="empty-state-btn">
-                    <i class="fas fa-plus"></i>
-                    Register a Child
-                </button>
+                <p>You don't have any children registered in the system yet. Once children are added to your account, their nutritional assessments and health information will appear here.</p>
+                <div class="empty-state-actions">
+                    <button class="empty-state-btn primary">
+                        <i class="fas fa-user-plus"></i>
+                        Contact Administrator
+                    </button>
+                    <button class="empty-state-btn secondary">
+                        <i class="fas fa-question-circle"></i>
+                        Learn More
+                    </button>
+                </div>
             </div>
         </div>
     @endif
