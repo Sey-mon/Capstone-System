@@ -10,8 +10,43 @@
 @section('page-title')
     <div class="modern-page-header">
         <div class="header-content">
+            <div class="breadcrumb">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+                <i class="fas fa-chevron-right"></i>
+                <span class="active">My Children</span>
+            </div>
             <h1 class="header-title">My Children</h1>
-            <p class="header-subtitle">Monitor your children's health and nutrition journey</p>
+            <p class="header-subtitle">Monitor your children's health and nutrition journey with comprehensive tracking and detailed assessments</p>
+        </div>
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-child"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ count($children ?? []) }}</div>
+                    <div class="stat-label">Total Children</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ $children ? $children->filter(function($child) { return $child->nutritionist !== null; })->count() : 0 }}</div>
+                    <div class="stat-label">Assigned to Nutritionist</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
+                    <div class="stat-label">Total Assessments</div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -31,109 +66,125 @@
                     <div class="child-card">
                         <!-- Card Header -->
                         <div class="child-card-header">
-                            <div class="child-avatar">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <circle cx="12" cy="7" r="4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
+                            <div class="child-profile-section">
+                                <div class="child-avatar">
+                                    <i class="fas fa-child"></i>
+                                </div>
+                                <div class="child-info">
+                                    <h3 class="child-name">{{ $child->first_name }} {{ $child->last_name }}</h3>
+                                    <div class="child-meta">
+                                        <span class="meta-item">
+                                            <i class="fas fa-birthday-cake"></i>
+                                            {{ $child->age_months ? ($child->age_months . ' months old') : ($child->age . ($child->age == 1 ? ' year old' : ' years old')) }}
+                                        </span>
+                                        <span class="meta-divider">•</span>
+                                        <span class="meta-item">
+                                            <i class="fas fa-{{ ($child->gender ?? $child->sex ?? '') === 'Male' ? 'mars' : 'venus' }}"></i>
+                                            {{ $child->gender ?? $child->sex ?? 'Gender not specified' }}
+                                        </span>
+                                        @if($child->barangay)
+                                        <span class="meta-divider">•</span>
+                                        <span class="meta-item">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            {{ $child->barangay->barangay_name }}
+                                        </span>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
-                            <h3 class="child-name">{{ $child->first_name }} {{ $child->last_name }}</h3>
-                            <p class="child-subtitle">
-                                {{ $child->age_months ? ($child->age_months . ' months old') : ($child->age . ($child->age == 1 ? ' year old' : ' years old')) }}
-                                • {{ $child->gender ?? $child->sex ?? 'Gender not specified' }}
-                            </p>
-                        </div>
-
-                        <!-- Card Body -->
-                        <div class="child-card-body">
-                            <!-- Info Grid -->
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 2L2 7h20L12 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M17 13v8a2 2 0 01-2 2H9a2 2 0 01-2-2v-8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                    <div class="info-value">{{ $child->barangay->barangay_name ?? 'N/A' }}</div>
-                                    <div class="info-label">Barangay</div>
-                                </div>
-                                
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                    <div class="info-value">{{ $child->assessments->count() }}</div>
-                                    <div class="info-label">Assessments</div>
-                                </div>
-                                
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <circle cx="9" cy="7" r="4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="m22 21-3-3m1-4a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                    <div class="info-value">{{ $child->nutritionist ? 'Assigned' : 'None' }}</div>
-                                    <div class="info-label">Nutritionist</div>
-                                </div>
-                                
-                                @if($child->weight_kg && $child->height_cm)
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                    <div class="info-value">{{ $child->weight_kg }}kg</div>
-                                    <div class="info-label">Weight</div>
-                                </div>
-                                @endif
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="action-buttons">
+                            <div class="child-actions">
                                 <button type="button" class="btn-modern btn-primary" data-bs-toggle="modal" data-bs-target="#childDetailsModal{{ $child->id }}">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    View Details
+                                    <i class="fas fa-eye"></i>
+                                    View Full Profile
                                 </button>
-                                
                                 @if($child->assessments->count() > 0)
-                                <a href="#" class="btn-modern btn-outline">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    View Reports
+                                <a href="{{ route('parent.assessments') }}" class="btn-modern btn-secondary">
+                                    <i class="fas fa-file-medical-alt"></i>
+                                    Assessment History
                                 </a>
                                 @endif
                             </div>
                         </div>
+
+                        <!-- Card Body -->
+                        <div class="child-card-body">
+                            <!-- Health Metrics Row -->
+                            <div class="metrics-row">
+                                <div class="metric-card">
+                                    <div class="metric-icon-wrapper weight">
+                                        <i class="fas fa-weight"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Weight</span>
+                                        <span class="metric-value">{{ $child->weight_kg ?? 'N/A' }} <small>{{ $child->weight_kg ? 'kg' : '' }}</small></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card">
+                                    <div class="metric-icon-wrapper height">
+                                        <i class="fas fa-ruler-vertical"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Height</span>
+                                        <span class="metric-value">{{ $child->height_cm ?? 'N/A' }} <small>{{ $child->height_cm ? 'cm' : '' }}</small></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card">
+                                    <div class="metric-icon-wrapper assessments">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Assessments</span>
+                                        <span class="metric-value">{{ $child->assessments->count() }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card">
+                                    <div class="metric-icon-wrapper nutritionist">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Care Status</span>
+                                        <span class="metric-value-small">{{ $child->nutritionist ? 'Under Care' : 'Unassigned' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Info Section -->
+                            @if($child->nutritionist || $child->is_4ps_beneficiary !== null)
+                            <div class="additional-info-section">
+                                @if($child->nutritionist)
+                                <div class="info-badge">
+                                    <i class="fas fa-user-nurse"></i>
+                                    <span>Nutritionist: {{ $child->nutritionist->first_name }} {{ $child->nutritionist->last_name }}</span>
+                                </div>
+                                @endif
+                                @if($child->is_4ps_beneficiary)
+                                <div class="info-badge highlight">
+                                    <i class="fas fa-hands-helping"></i>
+                                    <span>4Ps Beneficiary</span>
+                                </div>
+                                @endif
+                            </div>
+                            @endif
+                        </div>
                     </div>
                     <!-- Modern Child Details Modal -->
-                    <div class="modal fade" id="childDetailsModal{{ $child->id }}" tabindex="-1" aria-labelledby="childDetailsModalLabel{{ $child->id }}" aria-hidden="true">
-                        <div class="modal-dialog">
+                    <div class="modal fade child-modal" id="childDetailsModal{{ $child->id }}" tabindex="-1" aria-labelledby="childDetailsModalLabel{{ $child->id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <div class="d-flex align-items-center">
-                                        <div class="child-avatar me-3" style="width: 48px; height: 48px;">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <circle cx="12" cy="7" r="4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
+                                    <div class="modal-header-content">
+                                        <div class="modal-child-avatar">
+                                            <i class="fas fa-child"></i>
                                         </div>
-                                        <div>
-                                            <h5 class="modal-title mb-0" id="childDetailsModalLabel{{ $child->id }}">{{ $child->first_name }} {{ $child->last_name }}</h5>
-                                            <small class="text-muted">Complete Health Information</small>
+                                        <div class="modal-title-section">
+                                            <h5 class="modal-title" id="childDetailsModalLabel{{ $child->id }}">
+                                                <i class="fas fa-user-circle"></i>
+                                                {{ $child->first_name }} {{ $child->last_name }}
+                                            </h5>
+                                            <p class="modal-subtitle">Complete Health and Nutrition Profile</p>
                                         </div>
                                     </div>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -143,10 +194,7 @@
                                         <!-- Personal Information Section -->
                                         <div class="detail-section">
                                             <div class="detail-section-title">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
-                                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
-                                                </svg>
+                                                <i class="fas fa-user"></i>
                                                 Personal Information
                                             </div>
                                             <div class="detail-row">
@@ -158,8 +206,6 @@
                                                     <span class="detail-label">Age</span>
                                                     <span class="detail-value detail-value-highlight">{{ $child->age_months ?? $child->age }} {{ $child->age_months ? 'months' : 'years' }}</span>
                                                 </div>
-                                            </div>
-                                            <div class="detail-row">
                                                 <div class="detail-item">
                                                     <span class="detail-label">Gender</span>
                                                     <span class="detail-value">{{ $child->gender ?? $child->sex ?? 'N/A' }}</span>
@@ -174,10 +220,7 @@
                                         <!-- Contact & Location Section -->
                                         <div class="detail-section">
                                             <div class="detail-section-title">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
-                                                    <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
-                                                </svg>
+                                                <i class="fas fa-map-marker-alt"></i>
                                                 Contact & Location
                                             </div>
                                             <div class="detail-row">
@@ -195,9 +238,7 @@
                                         <!-- Health Metrics Section -->
                                         <div class="detail-section">
                                             <div class="detail-section-title">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" stroke-width="2"/>
-                                                </svg>
+                                                <i class="fas fa-heartbeat"></i>
                                                 Health Metrics
                                             </div>
                                             <div class="detail-row">
@@ -247,9 +288,7 @@
                                         <!-- Care Information Section -->
                                         <div class="detail-section">
                                             <div class="detail-section-title">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7z" stroke="currentColor" stroke-width="2"/>
-                                                </svg>
+                                                <i class="fas fa-user-nurse"></i>
                                                 Care Information
                                             </div>
                                             <div class="detail-row">
@@ -263,8 +302,6 @@
                                                     <span class="detail-label">Date of Admission</span>
                                                     <span class="detail-value">{{ $child->date_of_admission ? \Carbon\Carbon::parse($child->date_of_admission)->format('F j, Y') : 'Not recorded' }}</span>
                                                 </div>
-                                            </div>
-                                            <div class="detail-row">
                                                 <div class="detail-item">
                                                     <span class="detail-label">Total Assessments</span>
                                                     <span class="detail-value">
@@ -292,10 +329,7 @@
                                         <!-- Additional Information Section -->
                                         <div class="detail-section">
                                             <div class="detail-section-title">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                                                    <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2"/>
-                                                </svg>
+                                                <i class="fas fa-notes-medical"></i>
                                                 Additional Health Information
                                             </div>
                                             <div class="detail-row">
@@ -337,13 +371,20 @@
             <!-- Modern Empty State -->
             <div class="empty-state">
                 <div class="empty-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <i class="fas fa-child"></i>
                 </div>
                 <h3 class="empty-title">No Children Registered</h3>
                 <p class="empty-subtitle">Your children's information will appear here once they are registered with the nutrition program. Contact your local health center for assistance with registration.</p>
+                <div class="empty-actions">
+                    <button class="btn-modern btn-primary">
+                        <i class="fas fa-phone"></i>
+                        Contact Health Center
+                    </button>
+                    <button class="btn-modern btn-secondary">
+                        <i class="fas fa-info-circle"></i>
+                        Learn More
+                    </button>
+                </div>
             </div>
         @endif
     </div>
