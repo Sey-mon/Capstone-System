@@ -77,6 +77,11 @@ return [
             'icon' => 'fas fa-clipboard-list',
             'text' => 'Assessments',
         ],
+        [
+            'route' => 'nutritionist.reports',
+            'icon' => 'fas fa-chart-bar',
+            'text' => 'Reports',
+        ],
         // [
         //     'route' => 'nutritionist.meal-plans',
         //     'icon' => 'fas fa-utensils',

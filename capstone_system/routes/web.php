@@ -239,6 +239,13 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
 
     Route::get('/assessments', [NutritionistController::class, 'assessments'])->name('assessments');
     Route::get('/assessments/create', [NutritionistController::class, 'createAssessment'])->name('assessments.create');
+    
+    // Reports
+    Route::get('/reports', [NutritionistController::class, 'reports'])->name('reports');
+    Route::get('/reports/children-monitoring/pdf', [NutritionistController::class, 'downloadChildrenMonitoringReport'])->name('reports.children-monitoring.pdf');
+    Route::get('/reports/assessment-summary/pdf', [NutritionistController::class, 'downloadAssessmentSummaryReport'])->name('reports.assessment-summary.pdf');
+    Route::get('/reports/monthly-progress/pdf', [NutritionistController::class, 'downloadMonthlyProgressReport'])->name('reports.monthly-progress.pdf');
+    
     Route::get('/profile', [NutritionistController::class, 'profile'])->name('profile');
     
     // Profile update routes
