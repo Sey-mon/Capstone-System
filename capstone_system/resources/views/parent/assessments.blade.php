@@ -12,59 +12,64 @@
 <link rel="stylesheet" href="{{ asset('css/parent/parent-assessments.css') }}?v={{ time() }}">
 <script src="{{ asset('js/parent/parent-assessments.js') }}?v={{ time() }}" defer></script>
 
-<div class="assessments-container">
-    <!-- Header Section -->
-    <div class="page-header-banner">
-        <div class="header-content-left">
-            <div class="icon-circle">
-                <i class="fas fa-child"></i>
+<div class="desktop-page-wrapper">
+    <!-- Desktop Header Section -->
+    <div class="desktop-header-section">
+        <div class="header-left">
+            <div class="page-icon">
+                <i class="fas fa-clipboard-check"></i>
             </div>
-            <div class="title-section">
-                <h1 class="main-title">My Children's Health Records</h1>
-                <p class="subtitle">Comprehensive monitoring and tracking of your children's nutrition and health journey</p>
+            <div class="page-info">
+                <h1 class="page-main-title">My Children's Health Records</h1>
+                <p class="page-description">Comprehensive monitoring and tracking of your children's nutrition and health journey</p>
             </div>
         </div>
-        <div class="stats-container">
-            <div class="stat-card-box">
-                <div class="stat-icon-wrapper">
-                    <i class="fas fa-child"></i>
+        <div class="header-right">
+            <div class="header-stats-cards">
+                <div class="header-stat-item">
+                    <div class="header-stat-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <div class="header-stat-content">
+                        <div class="header-stat-value">{{ count($children ?? []) }}</div>
+                        <div class="header-stat-label">Registered Children</div>
+                    </div>
                 </div>
-                <div class="stat-info-wrapper">
-                    <div class="stat-value">{{ count($children ?? []) }}</div>
-                    <div class="stat-title">REGISTERED CHILDREN</div>
+                <div class="header-stat-item">
+                    <div class="header-stat-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="header-stat-content">
+                        <div class="header-stat-value">{{ $children ? $children->filter(function($child) { return $child->assessments->isNotEmpty(); })->count() : 0 }}</div>
+                        <div class="header-stat-label">Under Care</div>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card-box">
-                <div class="stat-icon-wrapper">
-                    <i class="fas fa-heart"></i>
-                </div>
-                <div class="stat-info-wrapper">
-                    <div class="stat-value">{{ $children ? $children->filter(function($child) { return $child->assessments->isNotEmpty(); })->count() : 0 }}</div>
-                    <div class="stat-title">UNDER CARE</div>
-                </div>
-            </div>
-            <div class="stat-card-box">
-                <div class="stat-icon-wrapper">
-                    <i class="fas fa-clipboard-check"></i>
-                </div>
-                <div class="stat-info-wrapper">
-                    <div class="stat-value">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
-                    <div class="stat-title">TOTAL ASSESSMENTS</div>
+                <div class="header-stat-item">
+                    <div class="header-stat-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="header-stat-content">
+                        <div class="header-stat-value">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
+                        <div class="header-stat-label">Total Assessments</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Main Content Area -->
+    <div class="desktop-content-area">
+
     @if(isset($children) && count($children) > 0)
         <div class="assessments-grid">
             @foreach($children as $child)
-                <div class="assessment-card">
-                    <div class="card-header">
-                        <div class="child-info">
+                <div class="child-card">
+                    <div class="child-card-header">
+                        <div class="child-profile-section">
                             <div class="child-avatar">
                                 <i class="fas fa-child"></i>
                             </div>
-                            <div class="child-details">
+                            <div class="child-info">
                                 <h3 class="child-name">{{ $child->first_name }} {{ $child->last_name }}</h3>
                                 <div class="child-meta">
                                     <span class="meta-item">
@@ -86,7 +91,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-actions">
+                        <div class="child-actions">
                             @if($child->assessments->count() > 0)
                                 <button class="view-history-btn" onclick="showAssessmentHistory({{ $child->patient_id }}, '{{ addslashes($child->first_name . ' ' . $child->last_name) }}')">
                                     <i class="fas fa-history"></i>
@@ -105,7 +110,7 @@
                         $latestAssessment = $child->assessments->sortByDesc('created_at')->first();
                     @endphp
 
-                    <div class="card-body">
+                    <div class="child-card-body">
                         @if($latestAssessment)
                             <div class="latest-assessment">
                                 <div class="assessment-header-inline">
@@ -228,6 +233,7 @@
             </div>
         </div>
     @endif
+</div>
 </div>
 
 <!-- Hidden data for assessments -->

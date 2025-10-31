@@ -99,8 +99,8 @@
         <div class="content-card chart-card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-chart-area"></i>
-                    Children Growth Overview
+                    <i class="fas fa-chart-line"></i>
+                    Children Growth Trends Over Time
                 </h3>
                 <div class="chart-controls">
                     <button class="chart-btn active" data-chart="weight">

@@ -280,6 +280,10 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
     Route::get('/assessments', [ParentController::class, 'assessments'])->name('assessments');
     Route::get('/meal-plans', [ParentController::class, 'mealPlans'])->name('meal-plans');
     Route::post('/meal-plans/generate', [ApiController::class, 'generateParentMealPlan'])->name('meal-plans.generate');
+    Route::get('/view-meal-plans', [ParentController::class, 'viewMealPlans'])->name('view-meal-plans');
+    Route::get('/meal-plans/{id}', [ParentController::class, 'getMealPlanDetails'])->name('meal-plans.show');
+    Route::get('/meal-plans/{id}/download', [ParentController::class, 'downloadMealPlan'])->name('meal-plans.download');
+    Route::delete('/meal-plans/{id}', [ParentController::class, 'deleteMealPlan'])->name('meal-plans.delete');
     Route::get('/test-api', [ApiController::class, 'testApi'])->name('test-api');
         Route::post('/test-api', [ApiController::class, 'testApiPost'])->name('test-api.post');
     Route::get('/profile', [ParentController::class, 'profile'])->name('profile');

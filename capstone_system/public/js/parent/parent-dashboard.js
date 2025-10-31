@@ -65,62 +65,73 @@ function initializeGrowthChart() {
     
     if (childrenData.length === 0) return;
 
-    // Prepare chart data
-    const chartData = childrenData.map(item => ({
-        name: item.child.first_name + ' ' + item.child.last_name,
-        weight: parseFloat(item.child.weight_kg) || 0,
-        height: parseFloat(item.child.height_cm) || 0,
-        assessments: item.assessments_count || 0
-    }));
+    // Filter children with at least one assessment
+    const childrenWithAssessments = childrenData.filter(item => 
+        item.assessment_history && item.assessment_history.length > 0
+    );
+
+    if (childrenWithAssessments.length === 0) return;
 
     let currentChart = null;
     
+    // Generate distinct colors for each child
+    const colors = [
+        { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgba(59, 130, 246, 1)' },      // Blue
+        { bg: 'rgba(139, 92, 246, 0.2)', border: 'rgba(139, 92, 246, 1)' },      // Purple
+        { bg: 'rgba(236, 72, 153, 0.2)', border: 'rgba(236, 72, 153, 1)' },      // Pink
+        { bg: 'rgba(249, 115, 22, 0.2)', border: 'rgba(249, 115, 22, 1)' },      // Orange
+        { bg: 'rgba(34, 197, 94, 0.2)', border: 'rgba(34, 197, 94, 1)' },        // Green
+        { bg: 'rgba(14, 165, 233, 0.2)', border: 'rgba(14, 165, 233, 1)' },      // Sky
+        { bg: 'rgba(168, 85, 247, 0.2)', border: 'rgba(168, 85, 247, 1)' },      // Violet
+        { bg: 'rgba(251, 146, 60, 0.2)', border: 'rgba(251, 146, 60, 1)' },      // Amber
+    ];
+    
     function createChart(type) {
-        const labels = chartData.map(child => child.name);
-        const data = chartData.map(child => type === 'weight' ? child.weight : child.height);
-        
         if (currentChart) {
             currentChart.destroy();
         }
         
         const isWeight = type === 'weight';
         
-        // Calculate dynamic max value for Y-axis
-        const maxValue = Math.max(...data);
-        const minValue = Math.min(...data);
+        // Create datasets for each child
+        const datasets = childrenWithAssessments.map((item, index) => {
+            const color = colors[index % colors.length];
+            const childName = item.child.first_name + ' ' + item.child.last_name;
+            
+            return {
+                label: childName,
+                data: item.assessment_history.map(assessment => ({
+                    x: assessment.date,
+                    y: isWeight ? assessment.weight : assessment.height
+                })),
+                borderColor: color.border,
+                backgroundColor: color.bg,
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: color.border,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: color.border,
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 3,
+            };
+        });
         
-        // Add 20% padding to the max value for better visualization
-        const yAxisMax = Math.ceil(maxValue * 1.2);
-        
-        // Calculate nice step size for better readability
-        const range = yAxisMax;
-        let stepSize;
-        if (isWeight) {
-            stepSize = range <= 20 ? 2 : range <= 50 ? 5 : 10;
-        } else {
-            stepSize = range <= 100 ? 10 : range <= 200 ? 20 : 25;
-        }
+        // Get all unique dates across all children
+        const allDates = [...new Set(
+            childrenWithAssessments.flatMap(item => 
+                item.assessment_history.map(a => a.date)
+            )
+        )].sort((a, b) => new Date(a) - new Date(b));
         
         currentChart = new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: labels,
-                datasets: [{
-                    label: isWeight ? 'Weight (kg)' : 'Height (cm)',
-                    data: data,
-                    backgroundColor: isWeight 
-                        ? 'rgba(59, 130, 246, 0.85)'
-                        : 'rgba(139, 92, 246, 0.85)',
-                    borderColor: isWeight
-                        ? 'rgba(59, 130, 246, 1)'
-                        : 'rgba(139, 92, 246, 1)',
-                    borderWidth: 2,
-                    borderRadius: 10,
-                    borderSkipped: false,
-                    hoverBackgroundColor: isWeight
-                        ? 'rgba(59, 130, 246, 1)'
-                        : 'rgba(139, 92, 246, 1)',
-                }]
+                labels: allDates,
+                datasets: datasets
             },
             options: {
                 responsive: true,
@@ -131,7 +142,22 @@ function initializeGrowthChart() {
                 },
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        position: 'top',
+                        align: 'start',
+                        labels: {
+                            font: {
+                                size: 13,
+                                weight: '600',
+                                family: "'Inter', sans-serif"
+                            },
+                            color: '#475569',
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            boxWidth: 8,
+                            boxHeight: 8
+                        }
                     },
                     tooltip: {
                         backgroundColor: 'rgba(30, 41, 59, 0.95)',
@@ -146,27 +172,29 @@ function initializeGrowthChart() {
                             size: 14,
                             family: "'Inter', sans-serif"
                         },
-                        displayColors: false,
+                        displayColors: true,
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        boxPadding: 6,
                         callbacks: {
                             label: function(context) {
                                 const value = context.parsed.y;
                                 const unit = isWeight ? 'kg' : 'cm';
-                                return `${value.toFixed(1)} ${unit}`;
+                                const childName = context.dataset.label;
+                                return `${childName}: ${value.toFixed(1)} ${unit}`;
                             }
                         }
                     }
                 },
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        max: yAxisMax,
+                        beginAtZero: false,
                         grid: {
                             color: 'rgba(0, 0, 0, 0.06)',
                             drawBorder: false,
                             lineWidth: 1
                         },
                         ticks: {
-                            stepSize: stepSize,
                             font: {
                                 size: 12,
                                 family: "'Inter', sans-serif"
@@ -174,8 +202,19 @@ function initializeGrowthChart() {
                             color: '#64748b',
                             padding: 10,
                             callback: function(value) {
-                                return value + (isWeight ? ' kg' : ' cm');
+                                return value.toFixed(1) + (isWeight ? ' kg' : ' cm');
                             }
+                        },
+                        title: {
+                            display: true,
+                            text: isWeight ? 'Weight (kg)' : 'Height (cm)',
+                            font: {
+                                size: 13,
+                                weight: '600',
+                                family: "'Inter', sans-serif"
+                            },
+                            color: '#475569',
+                            padding: { top: 10, bottom: 10 }
                         }
                     },
                     x: {
@@ -185,12 +224,25 @@ function initializeGrowthChart() {
                         },
                         ticks: {
                             font: {
-                                size: 12,
+                                size: 11,
                                 family: "'Inter', sans-serif",
-                                weight: '600'
+                                weight: '500'
+                            },
+                            color: '#64748b',
+                            padding: 10,
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
+                        title: {
+                            display: true,
+                            text: 'Assessment Date',
+                            font: {
+                                size: 13,
+                                weight: '600',
+                                family: "'Inter', sans-serif"
                             },
                             color: '#475569',
-                            padding: 10
+                            padding: { top: 10, bottom: 0 }
                         }
                     }
                 },
