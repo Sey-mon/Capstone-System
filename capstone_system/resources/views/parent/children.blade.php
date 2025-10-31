@@ -1,4 +1,3 @@
-
 @extends('layouts.dashboard')
 
 @section('title', 'My Children')
@@ -7,61 +6,62 @@
     <link rel="stylesheet" href="{{ asset('css/parent/children.css') }}?v={{ now()->timestamp }}">
 @endpush
 
-@section('page-title')
-    <div class="modern-page-header">
-        <div class="header-content">
-            <div class="breadcrumb">
-                <i class="fas fa-home"></i>
-                <span>Dashboard</span>
-                <i class="fas fa-chevron-right"></i>
-                <span class="active">My Children</span>
-            </div>
-            <h1 class="header-title">My Children</h1>
-            <p class="header-subtitle">Monitor your children's health and nutrition journey with comprehensive tracking and detailed assessments</p>
-        </div>
-        <div class="stats-summary">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-child"></i>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-number">{{ count($children ?? []) }}</div>
-                    <div class="stat-label">Total Children</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-heartbeat"></i>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-number">{{ $children ? $children->filter(function($child) { return $child->nutritionist !== null; })->count() : 0 }}</div>
-                    <div class="stat-label">Assigned to Nutritionist</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-clipboard-check"></i>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-number">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
-                    <div class="stat-label">Total Assessments</div>
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
-
 @section('navigation')
     @include('partials.navigation')
 @endsection
 
 @section('content')
 
-<div class="page-container">
-    <div class="container-fluid px-4">
+<div class="desktop-page-wrapper">
+    <!-- Desktop Header Section -->
+    <div class="desktop-header-section">
+        <div class="header-left">
+            <div class="page-icon">
+                <i class="fas fa-child"></i>
+            </div>
+            <div class="page-info">
+                <h1 class="page-main-title">My Children's Health Records</h1>
+                <p class="page-description">Comprehensive monitoring and tracking of your children's nutrition and health journey</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-stats-cards">
+                <div class="header-stat-item">
+                    <div class="header-stat-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <div class="header-stat-content">
+                        <div class="header-stat-value">{{ count($children ?? []) }}</div>
+                        <div class="header-stat-label">Registered Children</div>
+                    </div>
+                </div>
+                <div class="header-stat-item">
+                    <div class="header-stat-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="header-stat-content">
+                        <div class="header-stat-value">{{ $children ? $children->filter(function($child) { return $child->nutritionist !== null; })->count() : 0 }}</div>
+                        <div class="header-stat-label">Under Care</div>
+                    </div>
+                </div>
+                <div class="header-stat-item">
+                    <div class="header-stat-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="header-stat-content">
+                        <div class="header-stat-value">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
+                        <div class="header-stat-label">Total Assessments</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="desktop-content-area">
         @if(isset($children) && count($children) > 0)
             <!-- Children Grid -->
-            <div class="children-grid">
+            <div class="children-desktop-grid">
                 @foreach($children as $child)
                     <div class="child-card">
                         <!-- Card Header -->
@@ -314,21 +314,23 @@
             </div>
         @else
             <!-- Modern Empty State -->
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-child"></i>
-                </div>
-                <h3 class="empty-title">No Children Registered</h3>
-                <p class="empty-subtitle">Your children's information will appear here once they are registered with the nutrition program. Contact your local health center for assistance with registration.</p>
-                <div class="empty-actions">
-                    <button class="btn-modern btn-primary">
-                        <i class="fas fa-phone"></i>
-                        Contact Health Center
-                    </button>
-                    <button class="btn-modern btn-secondary">
-                        <i class="fas fa-info-circle"></i>
-                        Learn More
-                    </button>
+            <div class="empty-state-desktop">
+                <div class="empty-state-card">
+                    <div class="empty-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <h3 class="empty-title">No Children Registered</h3>
+                    <p class="empty-subtitle">Your children's information will appear here once they are registered with the nutrition program. Contact your local health center for assistance with registration.</p>
+                    <div class="empty-actions">
+                        <button class="btn-modern btn-primary">
+                            <i class="fas fa-phone"></i>
+                            Contact Health Center
+                        </button>
+                        <button class="btn-modern btn-secondary">
+                            <i class="fas fa-info-circle"></i>
+                            Learn More
+                        </button>
+                    </div>
                 </div>
             </div>
         @endif

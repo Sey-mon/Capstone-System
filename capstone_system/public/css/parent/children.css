@@ -11,95 +11,100 @@
     --border-gray: #e2e8f0;
 }
 
-/* Page Container */
-.page-container {
+/* Desktop Page Wrapper */
+.desktop-page-wrapper {
     background: #f8fafc;
     min-height: 100vh;
-    padding: 2rem 3rem;
+    padding: 0;
 }
 
-/* Header Section - Desktop Layout */
-.modern-page-header {
-    background: white;
-    border-radius: 16px;
-    padding: 2.5rem;
-    margin-bottom: 2.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    border-left: 4px solid var(--primary-green);
-    display: grid;
-    grid-template-columns: 1fr auto;
+/* Desktop Header Section */
+.desktop-header-section {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    padding: 2.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 3rem;
-    align-items: start;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Breadcrumb */
-.breadcrumb {
+.header-left {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--gray-text);
-    margin-bottom: 1rem;
-}
-
-.breadcrumb .fa-chevron-right {
-    font-size: 0.625rem;
-}
-
-.breadcrumb .active {
-    color: var(--primary-green);
-    font-weight: 600;
-}
-
-.header-content {
+    gap: 1.5rem;
     flex: 1;
 }
 
-.header-title {
+.page-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.page-info {
+    flex: 1;
+}
+
+.page-main-title {
     font-size: 2rem;
     font-weight: 700;
+    color: white;
     margin: 0 0 0.5rem 0;
-    color: var(--dark-text);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     line-height: 1.2;
 }
 
-.header-subtitle {
+.page-description {
     font-size: 1rem;
-    color: var(--gray-text);
+    color: rgba(255, 255, 255, 0.9);
     margin: 0;
     font-weight: 400;
     line-height: 1.5;
-    max-width: 600px;
 }
 
-/* Stats Summary - Horizontal Cards */
-.stats-summary {
+.header-right {
+    flex-shrink: 0;
+}
+
+.header-stats-cards {
     display: flex;
     gap: 1rem;
 }
 
-.stat-card {
-    background: white;
+.header-stat-item {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 12px;
     padding: 1.25rem 1.5rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    min-width: 200px;
-    border: 1px solid var(--border-gray);
+    min-width: 160px;
     transition: all 0.3s ease;
 }
 
-.stat-card:hover {
+.header-stat-item:hover {
+    background: rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-color: var(--primary-green);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.stat-icon {
+.header-stat-icon {
     width: 48px;
     height: 48px;
-    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -107,29 +112,39 @@
     color: white;
     font-size: 1.25rem;
     flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.stat-info {
+.header-stat-content {
     display: flex;
     flex-direction: column;
 }
 
-.stat-number {
-    font-size: 1.875rem;
+.header-stat-value {
+    font-size: 2rem;
     font-weight: 700;
-    color: var(--dark-text);
+    color: white;
     line-height: 1;
     margin-bottom: 0.25rem;
 }
 
-.stat-label {
+.header-stat-label {
     font-size: 0.8125rem;
-    color: var(--gray-text);
+    color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
-/* Children Grid - Desktop Layout */
-.children-grid {
+/* Desktop Content Area */
+.desktop-content-area {
+    padding: 2.5rem 3rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Children Desktop Grid */
+.children-desktop-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -392,6 +407,25 @@
     background: rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
     color: white;
+}
+
+/* Empty State Desktop */
+.empty-state-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 2rem;
+}
+
+.empty-state-card {
+    background: white;
+    border-radius: 16px;
+    padding: 4rem 3rem;
+    max-width: 600px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-gray);
 }
 
 /* Empty State */
@@ -1099,5 +1133,106 @@ h2#swal2-title {
     .child-actions,
     .btn-modern {
         display: none;
+    }
+}
+
+/* Desktop Responsive Enhancements */
+@media (min-width: 1400px) {
+    .desktop-content-area {
+        max-width: 1800px;
+    }
+    
+    .children-desktop-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+}
+
+@media (min-width: 1920px) {
+    .desktop-header-section {
+        padding: 3rem 4rem;
+    }
+    
+    .desktop-content-area {
+        padding: 3rem 4rem;
+        max-width: 2000px;
+    }
+    
+    .page-main-title {
+        font-size: 2.25rem;
+    }
+    
+    .header-stat-value {
+        font-size: 2.25rem;
+    }
+}
+
+/* Tablet adjustments */
+@media (max-width: 1024px) {
+    .desktop-header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+    
+    .header-stats-cards {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .header-stat-item {
+        flex: 1;
+        min-width: 140px;
+    }
+    
+    .desktop-content-area {
+        padding: 2rem;
+    }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .desktop-header-section {
+        padding: 1.5rem;
+    }
+    
+    .page-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+    }
+    
+    .page-main-title {
+        font-size: 1.5rem;
+    }
+    
+    .page-description {
+        font-size: 0.875rem;
+    }
+    
+    .header-stats-cards {
+        flex-direction: column;
+    }
+    
+    .header-stat-item {
+        width: 100%;
+    }
+    
+    .desktop-content-area {
+        padding: 1.5rem;
+    }
+    
+    .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .child-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-modern {
+        width: 100%;
+        justify-content: center;
     }
 }
