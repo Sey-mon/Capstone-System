@@ -4,7 +4,7 @@
 @section('title', 'My Children')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/parent/children.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/parent/children.css') }}?v={{ now()->timestamp }}">
 @endpush
 
 @section('page-title')
@@ -93,7 +93,9 @@
                                 </div>
                             </div>
                             <div class="child-actions">
-                                <button type="button" class="btn-modern btn-primary" data-bs-toggle="modal" data-bs-target="#childDetailsModal{{ $child->id }}">
+                                <button type="button" 
+                                    class="btn-modern btn-primary" 
+                                    onclick="showChildProfile{{ $child->id }}()">
                                     <i class="fas fa-eye"></i>
                                     View Full Profile
                                 </button>
@@ -170,201 +172,144 @@
                             @endif
                         </div>
                     </div>
-                    <!-- Modern Child Details Modal -->
-                    <div class="modal fade child-modal" id="childDetailsModal{{ $child->id }}" tabindex="-1" aria-labelledby="childDetailsModalLabel{{ $child->id }}" aria-hidden="true">
-                        <div class="modal-dialog modal-xl">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <div class="modal-header-content">
-                                        <div class="modal-child-avatar">
+                    
+                    <!-- SweetAlert2 Script -->
+                    <script>
+                    function showChildProfile{{ $child->id }}() {
+                        Swal.fire({
+                            title: `<div class="swal-modal-header">
+                                        <div class="swal-header-icon">
                                             <i class="fas fa-child"></i>
                                         </div>
-                                        <div class="modal-title-section">
-                                            <h5 class="modal-title" id="childDetailsModalLabel{{ $child->id }}">
-                                                <i class="fas fa-user-circle"></i>
-                                                {{ $child->first_name }} {{ $child->last_name }}
-                                            </h5>
-                                            <p class="modal-subtitle">Complete Health and Nutrition Profile</p>
+                                        <div class="swal-header-content">
+                                            <h3 class="swal-header-title">
+                                                <i class="fas fa-user-circle"></i> {{ $child->first_name }} {{ $child->last_name }}
+                                            </h3>
+                                            <p class="swal-header-subtitle">Complete Health and Nutrition Profile</p>
+                                        </div>
+                                    </div>`,
+                            html: `
+                                <div class="swal-modal-content">
+                                    <!-- Personal Information -->
+                                    <div class="profile-section">
+                                        <h4 class="profile-section-title">
+                                            <i class="fas fa-user"></i> Personal Information
+                                        </h4>
+                                        <div class="profile-grid-4">
+                                            <div class="profile-item profile-item-gray">
+                                                <div class="profile-label profile-label-gray">Full Name</div>
+                                                <div class="profile-value profile-value-dark">{{ $child->first_name }} {{ $child->middle_name ?? '' }} {{ $child->last_name }}</div>
+                                            </div>
+                                            <div class="profile-item profile-item-green">
+                                                <div class="profile-label profile-label-green">Age</div>
+                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->age_months ?? $child->age }} {{ $child->age_months ? 'months' : 'years' }}</div>
+                                            </div>
+                                            <div class="profile-item profile-item-gray">
+                                                <div class="profile-label profile-label-gray">Gender</div>
+                                                <div class="profile-value profile-value-dark">{{ $child->gender ?? $child->sex ?? 'N/A' }}</div>
+                                            </div>
+                                            <div class="profile-item profile-item-gray">
+                                                <div class="profile-label profile-label-gray">Birthdate</div>
+                                                <div class="profile-value profile-value-dark">{{ $child->birthdate ? \Carbon\Carbon::parse($child->birthdate)->format('F j, Y') : 'N/A' }}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="detail-grid">
-                                        <!-- Personal Information Section -->
-                                        <div class="detail-section">
-                                            <div class="detail-section-title">
-                                                <i class="fas fa-user"></i>
-                                                Personal Information
-                                            </div>
-                                            <div class="detail-row">
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Full Name</span>
-                                                    <span class="detail-value detail-value-large">{{ $child->first_name }} {{ $child->middle_name ?? '' }} {{ $child->last_name }}</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Age</span>
-                                                    <span class="detail-value detail-value-highlight">{{ $child->age_months ?? $child->age }} {{ $child->age_months ? 'months' : 'years' }}</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Gender</span>
-                                                    <span class="detail-value">{{ $child->gender ?? $child->sex ?? 'N/A' }}</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Birthdate</span>
-                                                    <span class="detail-value">{{ $child->birthdate ? \Carbon\Carbon::parse($child->birthdate)->format('F j, Y') : 'N/A' }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Contact & Location Section -->
-                                        <div class="detail-section">
-                                            <div class="detail-section-title">
-                                                <i class="fas fa-map-marker-alt"></i>
-                                                Contact & Location
+                                    <!-- Contact & Location -->
+                                    <div class="profile-section">
+                                        <h4 class="profile-section-title">
+                                            <i class="fas fa-map-marker-alt"></i> Contact & Location
+                                        </h4>
+                                        <div class="profile-grid-2">
+                                            <div class="profile-item profile-item-green">
+                                                <div class="profile-label profile-label-green">Barangay</div>
+                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->barangay->barangay_name ?? 'N/A' }}</div>
                                             </div>
-                                            <div class="detail-row">
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Barangay</span>
-                                                    <span class="detail-value detail-value-highlight">{{ $child->barangay->barangay_name ?? 'N/A' }}</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Contact Number</span>
-                                                    <span class="detail-value">{{ $child->contact_number ?? 'Not provided' }}</span>
-                                                </div>
+                                            <div class="profile-item profile-item-gray">
+                                                <div class="profile-label profile-label-gray">Contact Number</div>
+                                                <div class="profile-value profile-value-dark">{{ $child->contact_number ?? 'Not provided' }}</div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <!-- Health Metrics Section -->
-                                        <div class="detail-section">
-                                            <div class="detail-section-title">
-                                                <i class="fas fa-heartbeat"></i>
-                                                Health Metrics
+                                    <!-- Health Metrics -->
+                                    <div class="profile-section">
+                                        <h4 class="profile-section-title">
+                                            <i class="fas fa-heartbeat"></i> Health Metrics
+                                        </h4>
+                                        <div class="profile-grid-4">
+                                            <div class="profile-item profile-item-gray">
+                                                <div class="profile-label profile-label-gray">Weight</div>
+                                                <div class="profile-value profile-value-xlarge">{{ $child->weight_kg ?? 'N/A' }}{{ $child->weight_kg ? ' kg' : '' }}</div>
                                             </div>
-                                            <div class="detail-row">
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Weight</span>
-                                                    <span class="detail-value detail-value-large">{{ $child->weight_kg ?? 'N/A' }}{{ $child->weight_kg ? ' kg' : '' }}</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Height</span>
-                                                    <span class="detail-value detail-value-large">{{ $child->height_cm ?? 'N/A' }}{{ $child->height_cm ? ' cm' : '' }}</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">BMI for Age</span>
-                                                    <span class="detail-value">
-                                                        @if($child->bmi_for_age)
-                                                            <span class="status-indicator status-positive">{{ $child->bmi_for_age }}</span>
-                                                        @else
-                                                            <span class="status-indicator status-neutral">Not assessed</span>
-                                                        @endif
-                                                    </span>
-                                                </div>
+                                            <div class="profile-item profile-item-gray">
+                                                <div class="profile-label profile-label-gray">Height</div>
+                                                <div class="profile-value profile-value-xlarge">{{ $child->height_cm ?? 'N/A' }}{{ $child->height_cm ? ' cm' : '' }}</div>
                                             </div>
-                                            <div class="detail-row">
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Weight for Age</span>
-                                                    <span class="detail-value">
-                                                        @if($child->weight_for_age)
-                                                            <span class="status-indicator status-positive">{{ $child->weight_for_age }}</span>
-                                                        @else
-                                                            <span class="status-indicator status-neutral">Not assessed</span>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Height for Age</span>
-                                                    <span class="detail-value">
-                                                        @if($child->height_for_age)
-                                                            <span class="status-indicator status-positive">{{ $child->height_for_age }}</span>
-                                                        @else
-                                                            <span class="status-indicator status-neutral">Not assessed</span>
-                                                        @endif
-                                                    </span>
-                                                </div>
+                                            <div class="profile-item profile-item-green">
+                                                <div class="profile-label profile-label-green">BMI for Age</div>
+                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->bmi_for_age ?? 'Not assessed' }}</div>
+                                            </div>
+                                            <div class="profile-item profile-item-green">
+                                                <div class="profile-label profile-label-green">Weight for Age</div>
+                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->weight_for_age ?? 'Not assessed' }}</div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <!-- Care Information Section -->
-                                        <div class="detail-section">
-                                            <div class="detail-section-title">
-                                                <i class="fas fa-user-nurse"></i>
-                                                Care Information
+                                    <!-- Care Information -->
+                                    <div class="profile-section">
+                                        <h4 class="profile-section-title">
+                                            <i class="fas fa-user-nurse"></i> Care Information
+                                        </h4>
+                                        <div class="profile-grid-4">
+                                            <div class="profile-item profile-item-green">
+                                                <div class="profile-label profile-label-green">Nutritionist</div>
+                                                <div class="profile-value profile-value-green">{{ $child->nutritionist ? ($child->nutritionist->first_name . ' ' . $child->nutritionist->last_name) : 'Not assigned' }}</div>
                                             </div>
-                                            <div class="detail-row">
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Assigned Nutritionist</span>
-                                                    <span class="detail-value detail-value-highlight">
-                                                        {{ $child->nutritionist ? ($child->nutritionist->first_name . ' ' . $child->nutritionist->last_name) : 'Not assigned' }}
-                                                    </span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Date of Admission</span>
-                                                    <span class="detail-value">{{ $child->date_of_admission ? \Carbon\Carbon::parse($child->date_of_admission)->format('F j, Y') : 'Not recorded' }}</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Total Assessments</span>
-                                                    <span class="detail-value">
-                                                        <span class="status-indicator {{ $child->assessments->count() > 0 ? 'status-positive' : 'status-neutral' }}">
-                                                            {{ $child->assessments->count() }} {{ $child->assessments->count() == 1 ? 'Assessment' : 'Assessments' }}
-                                                        </span>
-                                                    </span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">4Ps Beneficiary Status</span>
-                                                    <span class="detail-value">
-                                                        @if(isset($child->is_4ps_beneficiary))
-                                                            <span class="status-indicator {{ $child->is_4ps_beneficiary ? 'status-positive' : 'status-neutral' }}">
-                                                                {{ $child->is_4ps_beneficiary ? 'Yes' : 'No' }}
-                                                            </span>
-                                                        @else
-                                                            <span class="status-indicator status-neutral">Not specified</span>
-                                                        @endif
-                                                    </span>
-                                                </div>
+                                            <div class="profile-item profile-item-gray">
+                                                <div class="profile-label profile-label-gray">Admission Date</div>
+                                                <div class="profile-value profile-value-dark">{{ $child->date_of_admission ? \Carbon\Carbon::parse($child->date_of_admission)->format('F j, Y') : 'Not recorded' }}</div>
+                                            </div>
+                                            <div class="profile-item profile-item-green">
+                                                <div class="profile-label profile-label-green">Assessments</div>
+                                                <div class="profile-value profile-value-number">{{ $child->assessments->count() }}</div>
+                                            </div>
+                                            <div class="profile-item {{ isset($child->is_4ps_beneficiary) && $child->is_4ps_beneficiary ? 'profile-item-green' : 'profile-item-gray' }}">
+                                                <div class="profile-label {{ isset($child->is_4ps_beneficiary) && $child->is_4ps_beneficiary ? 'profile-label-green' : 'profile-label-gray' }}">4Ps Beneficiary</div>
+                                                <div class="profile-value {{ isset($child->is_4ps_beneficiary) && $child->is_4ps_beneficiary ? 'profile-value-green profile-value-large' : 'profile-value-dark profile-value-large' }}">{{ isset($child->is_4ps_beneficiary) ? ($child->is_4ps_beneficiary ? 'Yes' : 'No') : 'Not specified' }}</div>
                                             </div>
                                         </div>
-
-                                        @if($child->other_medical_problems || $child->breastfeeding || $child->edema)
-                                        <!-- Additional Information Section -->
-                                        <div class="detail-section">
-                                            <div class="detail-section-title">
-                                                <i class="fas fa-notes-medical"></i>
-                                                Additional Health Information
-                                            </div>
-                                            <div class="detail-row">
-                                                @if($child->breastfeeding)
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Breastfeeding Status</span>
-                                                    <span class="detail-value">
-                                                        <span class="status-indicator status-positive">{{ $child->breastfeeding }}</span>
-                                                    </span>
-                                                </div>
-                                                @endif
-                                                @if($child->edema)
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Edema Present</span>
-                                                    <span class="detail-value">
-                                                        <span class="status-indicator status-negative">{{ $child->edema }}</span>
-                                                    </span>
-                                                </div>
-                                                @endif
-                                            </div>
-                                            @if($child->other_medical_problems)
-                                            <div class="detail-row">
-                                                <div class="detail-item detail-item-full">
-                                                    <span class="detail-label">Other Medical Problems</span>
-                                                    <span class="detail-value">{{ $child->other_medical_problems }}</span>
-                                                </div>
-                                            </div>
-                                            @endif
-                                        </div>
-                                        @endif
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                            `,
+                            width: '95%',
+                            showCloseButton: true,
+                            showConfirmButton: false,
+                            padding: '0',
+                            background: '#f8fafc',
+                            customClass: {
+                                container: 'swal-wide',
+                                popup: 'swal-popup-custom',
+                                closeButton: 'swal-close-custom'
+                            },
+                            didOpen: () => {
+                                const closeBtn = document.querySelector('.swal-close-custom');
+                                if (closeBtn) {
+                                    closeBtn.onmouseover = () => {
+                                        closeBtn.style.background = 'rgba(255,255,255,0.3) !important';
+                                        closeBtn.style.transform = 'rotate(90deg)';
+                                    };
+                                    closeBtn.onmouseout = () => {
+                                        closeBtn.style.background = 'rgba(255,255,255,0.2) !important';
+                                        closeBtn.style.transform = 'rotate(0deg)';
+                                    };
+                                }
+                            }
+                        });
+                    }
+                    </script>
+                    
                 @endforeach
             </div>
         @else
