@@ -1149,32 +1149,14 @@ h2#swal2-title {
 }
 
 @media (min-width: 1920px) {
-    .desktop-header-section {
-        padding: 3rem 4rem;
-    }
-    
     .desktop-content-area {
         padding: 3rem 4rem;
         max-width: 2000px;
-    }
-    
-    .page-main-title {
-        font-size: 2.25rem;
-    }
-    
-    .header-stat-value {
-        font-size: 2.25rem;
     }
 }
 
 /* Tablet adjustments */
 @media (max-width: 1024px) {
-    .desktop-header-section {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2rem;
-    }
-    
     .header-stats-cards {
         width: 100%;
         flex-wrap: wrap;
@@ -1192,22 +1174,10 @@ h2#swal2-title {
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
-    .desktop-header-section {
-        padding: 1.5rem;
-    }
-    
     .page-icon {
         width: 48px;
         height: 48px;
         font-size: 1.5rem;
-    }
-    
-    .page-main-title {
-        font-size: 1.5rem;
-    }
-    
-    .page-description {
-        font-size: 0.875rem;
     }
     
     .header-stats-cards {

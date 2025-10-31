@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use App\Models\Assessment;
 use App\Models\User;
+use App\Models\MealPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -59,15 +60,15 @@ class ParentController extends Controller
         // Get children with their latest assessments for growth tracking
         $children = Patient::where('parent_id', $parent->user_id)
             ->with(['nutritionist', 'assessments' => function($query) {
-                $query->orderBy('created_at', 'desc');
+                $query->orderBy('created_at', 'asc');
             }])
             ->get();
 
         // Calculate growth trends for each child
         $childrenWithGrowth = $children->map(function($child) {
             $assessments = $child->assessments;
-            $latestAssessment = $assessments->first();
-            $previousAssessment = $assessments->skip(1)->first();
+            $latestAssessment = $assessments->last();
+            $previousAssessment = $assessments->count() > 1 ? $assessments->get($assessments->count() - 2) : null;
             
             $growthTrend = null;
             $weightChange = null;
@@ -92,6 +93,15 @@ class ParentController extends Controller
                 }
             }
             
+            // Prepare assessment history for line chart
+            $assessmentHistory = $assessments->map(function($assessment) {
+                return [
+                    'date' => $assessment->assessment_date->format('M d, Y'),
+                    'weight' => (float) $assessment->weight_kg,
+                    'height' => (float) $assessment->height_cm,
+                ];
+            })->values();
+            
             return [
                 'child' => $child,
                 'latest_assessment' => $latestAssessment,
@@ -99,7 +109,8 @@ class ParentController extends Controller
                 'weight_change' => $weightChange,
                 'height_change' => $heightChange,
                 'nutrition_status' => $nutritionStatus,
-                'assessments_count' => $assessments->count()
+                'assessments_count' => $assessments->count(),
+                'assessment_history' => $assessmentHistory
             ];
         });
         
@@ -224,6 +235,212 @@ class ParentController extends Controller
             $children = Patient::where('parent_id', $parent->user_id)->get();
             
             return view('parent.meal-plans', compact('children'));
+        }
+
+        /**
+         * View all meal plans for the parent's children
+         */
+        public function viewMealPlans()
+        {
+            $parent = Auth::user();
+            $children = Patient::where('parent_id', $parent->user_id)->get();
+            $childrenIds = $children->pluck('patient_id');
+            
+            // Get all meal plans for the parent's children, paginated
+            $mealPlans = MealPlan::with('patient')
+                ->whereIn('patient_id', $childrenIds)
+                ->orderBy('generated_at', 'desc')
+                ->paginate(9);
+            
+            return view('parent.view-meal-plans', compact('mealPlans', 'children'));
+        }
+
+        /**
+         * Get a single meal plan details (for AJAX)
+         */
+        public function getMealPlanDetails($planId)
+        {
+            $parent = Auth::user();
+            $childrenIds = Patient::where('parent_id', $parent->user_id)->pluck('patient_id');
+            
+            $plan = MealPlan::with('patient')
+                ->whereIn('patient_id', $childrenIds)
+                ->where('plan_id', $planId)
+                ->first();
+            
+            if (!$plan) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Meal plan not found or access denied'
+                ], 404);
+            }
+            
+            // Parse the meal plan into structured format
+            $structuredPlan = $this->parseMealPlanToWeeklyFormat($plan->plan_details);
+            
+            return response()->json([
+                'success' => true,
+                'plan' => [
+                    'patient_name' => $plan->patient->first_name . ' ' . $plan->patient->last_name,
+                    'generated_at' => $plan->generated_at->format('F d, Y'),
+                    'notes' => $plan->notes,
+                    'plan_details' => $plan->plan_details,
+                    'weekly_format' => $structuredPlan
+                ]
+            ]);
+        }
+        
+        /**
+         * Parse meal plan HTML into weekly table format
+         */
+        private function parseMealPlanToWeeklyFormat($planDetailsHtml)
+        {
+            $days = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
+            $meals = [
+                'Breakfast' => [], 
+                'Lunch' => [], 
+                'PM Snack' => [],
+                'Dinner' => []
+            ];
+            
+            // Strip HTML tags to get plain text
+            $plainText = strip_tags($planDetailsHtml);
+            
+            // Initialize structure with empty values
+            foreach ($days as $day) {
+                foreach ($meals as $mealType => $value) {
+                    $meals[$mealType][$day] = '-';
+                }
+            }
+            
+            // Parse each day section (DAY 1:, DAY 2:, etc.)
+            for ($i = 1; $i <= 7; $i++) {
+                $dayKey = "Day $i";
+                
+                // Match pattern: DAY X:: - content until next DAY or end
+                $pattern = '/DAY\s+' . $i . ':?\s*:?\s*-\s*(.*?)(?=DAY\s+\d+:|$)/is';
+                
+                if (preg_match($pattern, $plainText, $dayMatches)) {
+                    $dayContent = $dayMatches[1];
+                    
+                    // Extract Breakfast (usually starts with **Breakfast** or similar)
+                    if (preg_match('/\*\*Breakfast\*\*:?\s*([^*]+?)(?=\*\*[A-Z]|\*\*Lunch|\*\*Snack|$)/is', $dayContent, $breakfastMatch)) {
+                        $breakfast = $this->cleanMealText($breakfastMatch[1]);
+                        if (!empty($breakfast)) {
+                            $meals['Breakfast'][$dayKey] = $breakfast;
+                        }
+                    }
+                    
+                    // Extract Lunch (usually marked as **Lunch**)
+                    if (preg_match('/\*\*Lunch\*\*:?\s*([^*]+?)(?=\*\*[A-Z]|\*\*Snack|\*\*Dinner|$)/is', $dayContent, $lunchMatch)) {
+                        $lunch = $this->cleanMealText($lunchMatch[1]);
+                        if (!empty($lunch)) {
+                            $meals['Lunch'][$dayKey] = $lunch;
+                        }
+                    }
+                    
+                    // Extract PM Snack (look for **Snack** after Lunch)
+                    if (preg_match('/\*\*Lunch\*\*.*?\*\*Snack\*\*:?\s*([^*]+?)(?=\*\*Dinner|$)/is', $dayContent, $pmSnackMatch)) {
+                        $pmSnack = $this->cleanMealText($pmSnackMatch[1]);
+                        if (!empty($pmSnack)) {
+                            $meals['PM Snack'][$dayKey] = $pmSnack;
+                        }
+                    }
+                    
+                    // Extract Dinner (usually marked as **Dinner**)
+                    if (preg_match('/\*\*Dinner\*\*:?\s*([^*]+?)(?=\*\*Daily Total|$)/is', $dayContent, $dinnerMatch)) {
+                        $dinner = $this->cleanMealText($dinnerMatch[1]);
+                        if (!empty($dinner)) {
+                            $meals['Dinner'][$dayKey] = $dinner;
+                        }
+                    }
+                }
+            }
+            
+            return [
+                'days' => $days,
+                'meals' => $meals
+            ];
+        }
+        
+        /**
+         * Clean and format meal text for display
+         */
+        private function cleanMealText($text)
+        {
+            // Remove extra whitespace and line breaks
+            $text = preg_replace('/\s+/', ' ', $text);
+            $text = trim($text);
+            
+            // Remove leading/trailing dashes, asterisks, or colons
+            $text = trim($text, " \t\n\r\0\x0B-:*");
+            
+            // Remove calorie information in parentheses at the end
+            $text = preg_replace('/\s*\([^\)]*kcal\)\s*$/i', '', $text);
+            
+            // If text is too long, truncate it
+            if (strlen($text) > 200) {
+                $text = substr($text, 0, 197) . '...';
+            }
+            
+            // Remove "Provides" sections to keep it simple
+            if (preg_match('/^(.*?)\s*-\s*Provides/i', $text, $matches)) {
+                $text = trim($matches[1]);
+            }
+            
+            return $text;
+        }
+
+        /**
+         * Download meal plan as PDF
+         */
+        public function downloadMealPlan($planId)
+        {
+            $parent = Auth::user();
+            $childrenIds = Patient::where('parent_id', $parent->user_id)->pluck('patient_id');
+            
+            $plan = MealPlan::with('patient')
+                ->whereIn('patient_id', $childrenIds)
+                ->where('plan_id', $planId)
+                ->first();
+            
+            if (!$plan) {
+                abort(404, 'Meal plan not found');
+            }
+            
+            // Generate PDF using DomPDF
+            $pdf = \PDF::loadView('parent.meal-plan-pdf', compact('plan'));
+            
+            $filename = 'meal-plan-' . $plan->patient->first_name . '-' . $plan->generated_at->format('Y-m-d') . '.pdf';
+            
+            return $pdf->download($filename);
+        }
+
+        /**
+         * Delete a meal plan
+         */
+        public function deleteMealPlan($planId)
+        {
+            $parent = Auth::user();
+            $childrenIds = Patient::where('parent_id', $parent->user_id)->pluck('patient_id');
+            
+            $plan = MealPlan::whereIn('patient_id', $childrenIds)
+                ->where('plan_id', $planId)
+                ->first();
+            
+            if (!$plan) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Meal plan not found or access denied'
+                ], 404);
+            }
+            
+            $plan->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Meal plan deleted successfully'
+            ]);
         }
 
 

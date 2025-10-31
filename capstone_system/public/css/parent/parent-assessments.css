@@ -1,153 +1,182 @@
 /* ===== DESKTOP WEB APPLICATION DESIGN ===== */
 
-/* Container */
-.assessments-container {
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
-    background: #f8fafc;
-    min-height: 100vh;
+:root {
+    --primary-green: #059669;
+    --secondary-green: #10b981;
+    --light-green: #d1fae5;
+    --accent-green: #6ee7b7;
+    --dark-text: #1e293b;
+    --gray-text: #64748b;
+    --light-gray: #f8fafc;
+    --border-gray: #e2e8f0;
 }
 
-/* Page Header Banner - Matching First Image */
-.page-header-banner {
-    background: linear-gradient(135deg, #2EAA83 0%, #34C595 100%);
-    padding: 2rem 3rem;
+/* Desktop Page Wrapper */
+.desktop-page-wrapper {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding: 0;
+}
+
+/* Desktop Header Section */
+.desktop-header-section {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    padding: 2.5rem 3rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2.5rem;
-    box-shadow: 0 2px 8px rgba(46, 170, 131, 0.2);
+    gap: 3rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
 }
 
-.header-content-left {
+.header-left {
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    flex: 1;
 }
 
-.icon-circle {
-    width: 60px;
-    height: 60px;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 12px;
+.page-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 2rem;
+    color: white;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     flex-shrink: 0;
 }
 
-.icon-circle i {
-    font-size: 1.75rem;
-    color: white;
+.page-info {
+    flex: 1;
 }
 
-.title-section {
-    color: white;
-}
-
-.main-title {
-    font-size: 1.75rem;
+.page-main-title {
+    font-size: 2rem;
     font-weight: 700;
-    margin: 0 0 0.25rem 0;
     color: white;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    line-height: 1.2;
 }
 
-.subtitle {
-    font-size: 0.95rem;
+.page-description {
+    font-size: 1rem;
     color: rgba(255, 255, 255, 0.9);
     margin: 0;
     font-weight: 400;
+    line-height: 1.5;
 }
 
-/* Stats Container */
-.stats-container {
-    display: flex;
-    gap: 1.25rem;
-}
-
-.stat-card-box {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 10px;
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    min-width: 180px;
-    backdrop-filter: blur(10px);
-}
-
-.stat-icon-wrapper {
-    width: 42px;
-    height: 42px;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.header-right {
     flex-shrink: 0;
 }
 
-.stat-icon-wrapper i {
-    font-size: 1.1rem;
-    color: white;
+.header-stats-cards {
+    display: flex;
+    gap: 1rem;
 }
 
-.stat-info-wrapper {
+.header-stat-item {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 160px;
+    transition: all 0.3s ease;
+}
+
+.header-stat-item:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.header-stat-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.header-stat-content {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
 }
 
-.stat-value {
-    font-size: 1.75rem;
+.header-stat-value {
+    font-size: 2rem;
     font-weight: 700;
     color: white;
     line-height: 1;
+    margin-bottom: 0.25rem;
 }
 
-.stat-title {
-    font-size: 0.7rem;
-    font-weight: 600;
+.header-stat-label {
+    font-size: 0.8125rem;
     color: rgba(255, 255, 255, 0.9);
-    letter-spacing: 0.5px;
+    font-weight: 500;
     text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
-/* Assessment Cards Grid */
+/* Desktop Content Area */
+.desktop-content-area {
+    padding: 2.5rem 3rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Assessments Grid */
 .assessments-grid {
-    padding: 0 3rem 2rem 3rem;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.5rem;
 }
 
-/* Assessment Cards - Desktop Layout */
-.assessment-card {
+/* Child Card - Horizontal Desktop Layout */
+.child-card {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-gray);
     transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
 }
 
-.assessment-card:hover {
+.child-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-    border-color: #10b981;
+    border-color: var(--primary-green);
 }
 
-.card-header {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+/* Card Header - Horizontal Layout */
+.child-card-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
     padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 2rem;
 }
 
-.child-info {
+.child-profile-section {
     display: flex;
     align-items: center;
     gap: 1.25rem;
@@ -163,20 +192,20 @@
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    color: #fff;
+    color: white;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.3);
     flex-shrink: 0;
 }
 
-.child-details {
+.child-info {
     flex: 1;
 }
 
 .child-name {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #fff;
+    color: white;
     margin: 0 0 0.5rem 0;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -205,9 +234,14 @@
     font-weight: 300;
 }
 
-.card-actions {
+.child-actions {
     display: flex;
     gap: 0.75rem;
+}
+
+/* Card Body */
+.child-card-body {
+    padding: 2rem;
 }
 
 .view-history-btn {
@@ -351,18 +385,18 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-    margin: 1.5rem 0;
+    margin-bottom: 1.5rem;
 }
 
 .metric-card {
-    background: #f8fafc;
+    background: var(--light-gray);
     border-radius: 12px;
     padding: 1.25rem;
     display: flex;
     align-items: center;
     gap: 1rem;
     transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-gray);
 }
 
 .metric-card:hover {
@@ -392,7 +426,7 @@
 }
 
 .metric-icon-wrapper.nutritionist {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
 }
 
 .metric-content {
@@ -404,7 +438,7 @@
 
 .metric-label {
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--gray-text);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.025em;
@@ -413,15 +447,20 @@
 .metric-value {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--dark-text);
     line-height: 1;
 }
 
 .metric-value small {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--gray-text);
     margin-left: 0.25rem;
+}
+
+/* Latest Assessment Section */
+.latest-assessment {
+    padding: 0;
 }
 
 /* Remarks Section */

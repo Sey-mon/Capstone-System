@@ -44,7 +44,63 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Initialize child search functionality
+    initializeChildSearch();
 });
+
+// Child search functionality for scalable child selection
+function initializeChildSearch() {
+    const searchInput = document.getElementById('childSearch');
+    if (!searchInput) return;
+    
+    const childItems = document.querySelectorAll('.child-list-item');
+    const noResults = document.querySelector('.no-results');
+    const searchCount = document.querySelector('.search-count');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        childItems.forEach(item => {
+            const childName = item.getAttribute('data-child-name');
+            
+            if (childName.includes(searchTerm)) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Update search count
+        if (searchCount) {
+            searchCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'child' : 'children'}`;
+        }
+        
+        // Show/hide no results message
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+        
+        // Add search feedback animation
+        const container = document.querySelector('.children-list-container');
+        if (container) {
+            container.style.opacity = '0.7';
+            setTimeout(() => {
+                container.style.opacity = '1';
+            }, 150);
+        }
+    });
+    
+    // Clear search on Escape key
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            this.dispatchEvent(new Event('input'));
+        }
+    });
+}
 
 // Add ingredient to input field
 function addIngredient(ingredient) {

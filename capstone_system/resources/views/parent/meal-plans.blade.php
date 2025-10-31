@@ -10,41 +10,45 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/parent/meal-plans.css') }}?v={{ time() }}">
+<link rel="stylesheet" href="{{ asset('css/parent/meal-plans.css') }}?v={{ time() }}{{ rand(1000, 9999) }}">
 @endpush
 
 @push('scripts')
-<script src="{{ asset('js/parent/meal-plans.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/parent/meal-plans.js') }}?v={{ time() }}{{ rand(1000, 9999) }}"></script>
 @endpush
 
 @section('content')
 <div class="meal-plan-page-wrapper">
-<!-- Modern Hero Section -->
-<div class="meal-plan-hero">
-    <div class="hero-background">
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-            <div class="shape shape-4"></div>
-        </div>
-    </div>
-    <div class="container-fluid">
-        <div class="hero-content">
-            <div class="hero-badge">
-                <span class="badge-icon">🤖</span>
-                <span>AI-Powered Nutrition</span>
+    <!-- Desktop Header Section -->
+    <div class="desktop-header-section">
+        <div class="header-left">
+            <div class="page-icon">
+                <i class="fas fa-utensils"></i>
             </div>
-            <h1 class="hero-title">Smart Meal Planning</h1>
-            <p class="hero-description">Create personalized, nutritious meal plans tailored specifically for your child's needs using advanced AI technology</p>
+            <div class="page-info">
+                <h1 class="page-main-title">Smart Meal Planning</h1>
+                <p class="page-description">Create personalized, nutritious meal plans tailored specifically for your child's needs using advanced AI technology</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-stats-cards">
+                <div class="header-stat-item">
+                    <div class="header-stat-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <div class="header-stat-content">
+                        <div class="header-stat-value">{{ count($children ?? []) }}</div>
+                        <div class="header-stat-label">Children</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
 <!-- Main Content -->
 <div class="container-fluid meal-plan-container">
     <div class="row justify-content-center">
-        <div class="col-12 col-xl-10">
+        <div class="col-12">
             
             <!-- Alert Messages -->
             @if(session('success'))
@@ -103,12 +107,6 @@
                             <p>Let artificial intelligence create the perfect meal plan</p>
                         </div>
                     </div>
-                    <div class="header-stats">
-                        <div class="stat">
-                            <span class="stat-number">{{ $children->count() }}</span>
-                            <span class="stat-label">Children</span>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="card-body-ultra">
@@ -124,34 +122,85 @@
                                     </div>
                                     <div class="section-info">
                                         <h3>Select Your Child</h3>
-                                        <p>Choose which child you'd like to create a meal plan for</p>
+                                        <p>Choose which child you'd like to create a meal plan for 
+                                            @if($children->count() > 4)
+                                                <span style="color: #10b981; font-weight: 600;">(Showing search mode)</span>
+                                            @endif
+                                        </p>
                                     </div>
                                 </div>
                                 
-                                <div class="children-grid">
-                                    @foreach($children as $child)
-                                        <div class="child-card">
-                                            <input type="radio" 
-                                                   name="patient_id" 
-                                                   value="{{ $child->patient_id }}" 
-                                                   id="child_{{ $child->patient_id }}"
-                                                   {{ old('patient_id') == $child->patient_id ? 'checked' : '' }}
-                                                   required>
-                                            <label for="child_{{ $child->patient_id }}" class="child-label">
-                                                <div class="child-avatar">
-                                                    <i class="fas fa-baby"></i>
-                                                </div>
-                                                <div class="child-info">
-                                                    <h4>{{ $child->first_name }} {{ $child->last_name }}</h4>
-                                                    <p>{{ $child->age_months }} months old</p>
-                                                </div>
-                                                <div class="check-indicator">
-                                                    <i class="fas fa-check"></i>
-                                                </div>
-                                            </label>
+                                @if($children->count() <= 4)
+                                    <!-- Card Grid for 4 or fewer children -->
+                                    <div class="children-grid">
+                                        @foreach($children as $child)
+                                            <div class="child-card">
+                                                <input type="radio" 
+                                                       name="patient_id" 
+                                                       value="{{ $child->patient_id }}" 
+                                                       id="child_{{ $child->patient_id }}"
+                                                       {{ old('patient_id') == $child->patient_id ? 'checked' : '' }}
+                                                       required>
+                                                <label for="child_{{ $child->patient_id }}" class="child-label">
+                                                    <div class="child-avatar">
+                                                        <i class="fas fa-baby"></i>
+                                                    </div>
+                                                    <div class="child-info">
+                                                        <h4>{{ $child->first_name }} {{ $child->last_name }}</h4>
+                                                        <p>{{ $child->age_months }} months old</p>
+                                                    </div>
+                                                    <div class="check-indicator">
+                                                        <i class="fas fa-check"></i>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <!-- Dropdown/List for many children -->
+                                    <div class="children-selector-wrapper">
+                                        <div class="child-search-box">
+                                            <i class="fas fa-search search-icon"></i>
+                                            <input type="text" 
+                                                   id="childSearch" 
+                                                   class="child-search-input" 
+                                                   placeholder="Search by child's name..."
+                                                   autocomplete="off">
+                                            <div class="search-count">{{ $children->count() }} children</div>
                                         </div>
-                                    @endforeach
-                                </div>
+                                        
+                                        <div class="children-list-container">
+                                            @foreach($children as $child)
+                                                <div class="child-list-item" data-child-name="{{ strtolower($child->first_name . ' ' . $child->last_name) }}">
+                                                    <input type="radio" 
+                                                           name="patient_id" 
+                                                           value="{{ $child->patient_id }}" 
+                                                           id="child_{{ $child->patient_id }}"
+                                                           {{ old('patient_id') == $child->patient_id ? 'checked' : '' }}
+                                                           required>
+                                                    <label for="child_{{ $child->patient_id }}" class="child-list-label">
+                                                        <div class="child-list-avatar">
+                                                            <i class="fas fa-baby"></i>
+                                                        </div>
+                                                        <div class="child-list-info">
+                                                            <h4>{{ $child->first_name }} {{ $child->last_name }}</h4>
+                                                            <p>{{ $child->age_months }} months old</p>
+                                                        </div>
+                                                        <div class="child-list-check">
+                                                            <i class="fas fa-check-circle"></i>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        
+                                        <div class="no-results" style="display: none;">
+                                            <i class="fas fa-search"></i>
+                                            <p>No children found matching your search</p>
+                                        </div>
+                                    </div>
+                                @endif
+                                
                                 @error('patient_id')
                                     <div class="field-error">{{ $message }}</div>
                                 @enderror
@@ -189,11 +238,11 @@
                                             <span class="category-label">Popular ingredients:</span>
                                             <div class="suggestion-tags">
                                                 <span class="tag" onclick="addIngredient('rice')">Rice</span>
-                                                <span class="tag" onclick="addIngredient('chicken')">Chicken</span>
-                                                <span class="tag" onclick="addIngredient('vegetables')">Vegetables</span>
-                                                <span class="tag" onclick="addIngredient('milk')">Milk</span>
+                                                <span class="tag" onclick="addIngredient('fish')">Fish</span>
+                                                <span class="tag" onclick="addIngredient('kangkong')">Kangkong</span>
                                                 <span class="tag" onclick="addIngredient('eggs')">Eggs</span>
-                                                <span class="tag" onclick="addIngredient('fruits')">Fruits</span>
+                                                <span class="tag" onclick="addIngredient('tomatoes')">Tomatoes</span>
+                                                <span class="tag" onclick="addIngredient('malunggay')">Malunggay</span>
                                             </div>
                                         </div>
                                     </div>

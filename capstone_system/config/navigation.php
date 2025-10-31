@@ -117,8 +117,13 @@ return [
         ],
         [
             'route' => 'parent.meal-plans',
-            'icon' => 'fas fa-utensils',
-            'text' => 'Meal Plans',
+            'icon' => 'fas fa-magic',
+            'text' => 'Generate Meal Plan',
+        ],
+        [
+            'route' => 'parent.view-meal-plans',
+            'icon' => 'fas fa-book-medical',
+            'text' => 'My Meal Plans',
         ],
         [
             'route' => 'parent.profile',
