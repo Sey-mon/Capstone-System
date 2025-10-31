@@ -30,7 +30,7 @@ class AuthController extends Controller
     // Generate token and send email
     $token = app('auth.password.broker')->createToken($user);
     $resetUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
-    Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($user, $resetUrl));
+    Mail::to($user->email)->queue(new \App\Mail\PasswordResetMail($user, $resetUrl));
     return back()->with('success', 'A password reset link has been sent to your email.');
     }
 
@@ -334,15 +334,15 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // Send welcome email
+            // Send welcome email (queued)
             try {
-                Mail::to($user->email)->send(new WelcomeEmail($user));
+                Mail::to($user->email)->queue(new WelcomeEmail($user));
                 
-                // Log email sent
+                // Log email queued
                 AuditLog::create([
                     'user_id' => $user->user_id,
-                    'action' => 'welcome_email_sent',
-                    'description' => 'Welcome email sent successfully to ' . $user->email,
+                    'action' => 'welcome_email_queued',
+                    'description' => 'Welcome email queued for sending to ' . $user->email,
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                 ]);
@@ -351,7 +351,7 @@ class AuthController extends Controller
                 AuditLog::create([
                     'user_id' => $user->user_id,
                     'action' => 'welcome_email_failed',
-                    'description' => 'Failed to send welcome email: ' . $e->getMessage(),
+                    'description' => 'Failed to queue welcome email: ' . $e->getMessage(),
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                 ]);

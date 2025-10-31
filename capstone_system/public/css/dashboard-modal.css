@@ -1,12 +1,13 @@
 /* Center modals perfectly on screen - ONLY when shown */
-.modal.show {
+/* Exclude child-modal from these global styles */
+.modal.show:not(.child-modal) {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 0 !important;
 }
 
-.modal.show .modal-dialog {
+.modal.show:not(.child-modal) .modal-dialog {
     margin: 0 !important;
     max-width: 90vw !important;
     max-height: 90vh !important;
@@ -16,12 +17,12 @@
 }
 
 /* Hidden modal should not interfere */
-.modal:not(.show) {
+.modal:not(.show):not(.child-modal) {
     display: none !important;
 }
 
 /* White and Green Color Scheme */
-.modal-content {
+.modal-content:not(.child-modal .modal-content) {
     background-color: white !important;
     border: 2px solid #28a745 !important;
     border-radius: 12px !important;
@@ -29,14 +30,14 @@
     overflow: hidden !important;
 }
 
-.modal-header {
+.modal-header:not(.child-modal .modal-header) {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
     color: white !important;
     border-bottom: none !important;
     padding: 1.5rem !important;
 }
 
-.modal-title {
+.modal-title:not(.child-modal .modal-title) {
     color: white !important;
     font-weight: 600 !important;
     margin: 0 !important;
@@ -53,13 +54,13 @@
     opacity: 1 !important;
 }
 
-.modal-body {
+.modal-body:not(.child-modal .modal-body) {
     background-color: white !important;
     padding: 2rem !important;
     color: #333 !important;
 }
 
-.modal-footer {
+.modal-footer:not(.child-modal .modal-footer) {
     background-color: #f8f9fa !important;
     border-top: 1px solid #e9ecef !important;
     padding: 1.5rem !important;
@@ -195,17 +196,17 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .modal-dialog {
+    .modal-dialog:not(.child-modal .modal-dialog) {
         max-width: 95vw !important;
         margin: 1rem !important;
     }
 
-    .modal-body {
+    .modal-body:not(.child-modal .modal-body) {
         padding: 1.5rem !important;
     }
 
-    .modal-header,
-    .modal-footer {
+    .modal-header:not(.child-modal .modal-header),
+    .modal-footer:not(.child-modal .modal-footer) {
         padding: 1rem !important;
     }
 }

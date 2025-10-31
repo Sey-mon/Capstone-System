@@ -127,7 +127,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Mobile Overlay */
+/* Mobile Overlay - ONLY FOR MOBILE/TABLET */
 .mobile-overlay {
     display: none;
     position: fixed;
@@ -142,10 +142,23 @@ body {
     pointer-events: none;
 }
 
-.mobile-overlay.active {
-    display: block;
-    opacity: 1;
-    pointer-events: all;
+/* Only show on tablet and mobile when active */
+@media (max-width: 1024px) {
+    .mobile-overlay.active {
+        display: block;
+        opacity: 1;
+        pointer-events: all;
+    }
+}
+
+/* Ensure it's NEVER shown on desktop */
+@media (min-width: 1025px) {
+    .mobile-overlay,
+    .mobile-overlay.active {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
 }
 
 /* Sidebar Styles - Optimized for LCP */
