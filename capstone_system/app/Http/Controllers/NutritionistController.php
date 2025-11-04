@@ -22,6 +22,7 @@ class NutritionistController extends Controller
         $nutritionist = Auth::user();
         $nutritionistId = $nutritionist->user_id;
         
+        // Basic stats
         $stats = [
             'my_patients' => Patient::where('nutritionist_id', $nutritionistId)->count(),
             'pending_assessments' => Assessment::where('nutritionist_id', $nutritionistId)
@@ -42,7 +43,66 @@ class NutritionistController extends Controller
                 ->get(),
         ];
 
-        return view('nutritionist.dashboard', compact('stats'));
+        // Chart Data: Patient Gender Distribution
+        $genderStats = Patient::where('nutritionist_id', $nutritionistId)
+            ->select('sex', DB::raw('count(*) as count'))
+            ->groupBy('sex')
+            ->get();
+        
+        // Chart Data: Age Distribution (in years)
+        $ageGroups = Patient::where('nutritionist_id', $nutritionistId)
+            ->select(DB::raw('FLOOR(age_months/12) as age_years'), DB::raw('count(*) as count'))
+            ->groupBy('age_years')
+            ->orderBy('age_years')
+            ->get();
+
+        // Chart Data: Monthly Assessment Trends (Last 6 months)
+        $monthlyAssessments = Assessment::where('nutritionist_id', $nutritionistId)
+            ->where('assessment_date', '>=', now()->subMonths(6))
+            ->select(
+                DB::raw('DATE_FORMAT(assessment_date, "%Y-%m") as month'),
+                DB::raw('count(*) as count'),
+                DB::raw('SUM(CASE WHEN completed_at IS NOT NULL THEN 1 ELSE 0 END) as completed'),
+                DB::raw('SUM(CASE WHEN completed_at IS NULL THEN 1 ELSE 0 END) as pending')
+            )
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        // Chart Data: Recovery Status Distribution
+        $recoveryStats = Assessment::where('nutritionist_id', $nutritionistId)
+            ->whereNotNull('recovery_status')
+            ->select('recovery_status', DB::raw('count(*) as count'))
+            ->groupBy('recovery_status')
+            ->get();
+
+        // Chart Data: Nutritional Status Distribution (BMI for Age)
+        $nutritionalStatus = Patient::where('nutritionist_id', $nutritionistId)
+            ->whereNotNull('bmi_for_age')
+            ->select('bmi_for_age', DB::raw('count(*) as count'))
+            ->groupBy('bmi_for_age')
+            ->get();
+
+        // Quick Stats for Cards
+        $stats['total_assessments_this_month'] = Assessment::where('nutritionist_id', $nutritionistId)
+            ->whereMonth('assessment_date', now()->month)
+            ->whereYear('assessment_date', now()->year)
+            ->count();
+
+        $stats['active_cases'] = Patient::where('nutritionist_id', $nutritionistId)
+            ->whereHas('assessments', function($query) {
+                $query->whereNull('completed_at');
+            })
+            ->count();
+
+        return view('nutritionist.dashboard', compact(
+            'stats', 
+            'genderStats', 
+            'ageGroups', 
+            'monthlyAssessments', 
+            'recoveryStats',
+            'nutritionalStatus'
+        ));
     }
 
     /**
@@ -751,6 +811,295 @@ class NutritionistController extends Controller
             'data' => $foods,
             'count' => $foods->count(),
         ]);
+    }
+
+    /**
+     * Show reports for nutritionist
+     */
+    public function reports()
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+
+        // Get nutritionist's patients
+        $myPatients = Patient::where('nutritionist_id', $nutritionistId)->get();
+        $patientIds = $myPatients->pluck('patient_id');
+
+        // Report statistics
+        $reports = [
+            'total_patients' => $myPatients->count(),
+            'male_patients' => $myPatients->where('sex', 'Male')->count(),
+            'female_patients' => $myPatients->where('sex', 'Female')->count(),
+            'total_assessments' => Assessment::where('nutritionist_id', $nutritionistId)->count(),
+            'completed_assessments' => Assessment::where('nutritionist_id', $nutritionistId)
+                ->whereNotNull('completed_at')
+                ->count(),
+            'pending_assessments' => Assessment::where('nutritionist_id', $nutritionistId)
+                ->whereNull('completed_at')
+                ->count(),
+            'assessments_this_month' => Assessment::where('nutritionist_id', $nutritionistId)
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+            '4ps_beneficiaries' => $myPatients->where('is_4ps_beneficiary', true)->count(),
+        ];
+
+        // Age distribution (in years)
+        $ageDistribution = $myPatients->groupBy(function($patient) {
+            $ageYears = floor($patient->age_months / 12);
+            if ($ageYears < 2) return '0-2 years';
+            if ($ageYears < 5) return '3-5 years';
+            if ($ageYears < 10) return '6-10 years';
+            return '10+ years';
+        })->map->count();
+
+        // Nutritional status distribution (from latest assessments)
+        $nutritionalStatus = [];
+        foreach ($myPatients as $patient) {
+            $latestAssessment = Assessment::where('patient_id', $patient->patient_id)
+                ->latest()
+                ->first();
+            
+            if ($latestAssessment && $latestAssessment->recovery_status) {
+                $status = $latestAssessment->recovery_status;
+                $nutritionalStatus[$status] = ($nutritionalStatus[$status] ?? 0) + 1;
+            }
+        }
+
+        // Barangay distribution
+        $barangayDistribution = $myPatients->load('barangay')
+            ->groupBy('barangay.name')
+            ->map(function($group) {
+                return $group->count();
+            })
+            ->sortDesc()
+            ->take(10);
+
+        // Monthly assessment trend (last 6 months)
+        $monthlyTrend = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $monthlyTrend[$date->format('M Y')] = Assessment::where('nutritionist_id', $nutritionistId)
+                ->whereMonth('created_at', $date->month)
+                ->whereYear('created_at', $date->year)
+                ->count();
+        }
+
+        // Recent assessments for tracking
+        $recentAssessments = Assessment::where('nutritionist_id', $nutritionistId)
+            ->with(['patient', 'patient.barangay'])
+            ->latest()
+            ->take(10)
+            ->get();
+
+        // Children needing attention (based on latest assessment)
+        $childrenNeedingAttention = [];
+        foreach ($myPatients as $patient) {
+            $latestAssessment = Assessment::where('patient_id', $patient->patient_id)
+                ->latest()
+                ->first();
+            
+            if ($latestAssessment && 
+                in_array($latestAssessment->recovery_status, ['Severely Malnourished', 'Moderately Malnourished', 'At Risk'])) {
+                $childrenNeedingAttention[] = [
+                    'patient' => $patient,
+                    'assessment' => $latestAssessment,
+                ];
+            }
+        }
+
+        return view('nutritionist.reports', compact(
+            'reports',
+            'ageDistribution',
+            'nutritionalStatus',
+            'barangayDistribution',
+            'monthlyTrend',
+            'recentAssessments',
+            'childrenNeedingAttention'
+        ));
+    }
+
+    /**
+     * Download Children Monitoring Report PDF
+     */
+    public function downloadChildrenMonitoringReport(Request $request)
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+
+        // Filter parameters
+        $startDate = $request->input('start_date', now()->subMonths(3)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+        $barangayId = $request->input('barangay_id');
+        $status = $request->input('status');
+
+        // Get filtered patients
+        $patientsQuery = Patient::where('nutritionist_id', $nutritionistId)
+            ->with(['barangay', 'assessments' => function($query) use ($startDate, $endDate) {
+                $query->whereBetween('assessment_date', [$startDate, $endDate])
+                    ->orderBy('assessment_date', 'desc');
+            }]);
+
+        if ($barangayId) {
+            $patientsQuery->where('barangay_id', $barangayId);
+        }
+
+        $patients = $patientsQuery->get();
+
+        // Filter by status if provided
+        if ($status) {
+            $patients = $patients->filter(function($patient) use ($status) {
+                $latestAssessment = $patient->assessments->first();
+                return $latestAssessment && $latestAssessment->recovery_status === $status;
+            });
+        }
+
+        $data = [
+            'title' => 'Children Monitoring Report',
+            'nutritionist' => $nutritionist,
+            'patients' => $patients,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'generatedDate' => now()->format('F d, Y'),
+            'generatedTime' => now()->format('h:i A'),
+        ];
+
+        $pdf = PDF::loadView('nutritionist.reports.pdf.children-monitoring', $data);
+        $pdf->setPaper('legal', 'landscape');
+        
+        $filename = 'children-monitoring-report-' . now()->format('Y-m-d') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Download Assessment Summary Report PDF
+     */
+    public function downloadAssessmentSummaryReport(Request $request)
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+
+        // Filter parameters
+        $startDate = $request->input('start_date', now()->subMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+
+        // Get assessments in date range
+        $assessments = Assessment::where('nutritionist_id', $nutritionistId)
+            ->with(['patient', 'patient.barangay'])
+            ->whereBetween('assessment_date', [$startDate, $endDate])
+            ->orderBy('assessment_date', 'desc')
+            ->get();
+
+        // Calculate statistics
+        $statistics = [
+            'total_assessments' => $assessments->count(),
+            'completed_assessments' => $assessments->whereNotNull('completed_at')->count(),
+            'by_status' => $assessments->whereNotNull('recovery_status')
+                ->groupBy('recovery_status')
+                ->map->count(),
+            'by_barangay' => $assessments->groupBy('patient.barangay.name')
+                ->map->count(),
+            'average_weight' => round($assessments->avg('weight_kg'), 2),
+            'average_height' => round($assessments->avg('height_cm'), 2),
+        ];
+
+        $data = [
+            'title' => 'Assessment Summary Report',
+            'nutritionist' => $nutritionist,
+            'assessments' => $assessments,
+            'statistics' => $statistics,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'generatedDate' => now()->format('F d, Y'),
+            'generatedTime' => now()->format('h:i A'),
+        ];
+
+        $pdf = PDF::loadView('nutritionist.reports.pdf.assessment-summary', $data);
+        $pdf->setPaper('legal', 'landscape');
+        
+        $filename = 'assessment-summary-report-' . now()->format('Y-m-d') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Download Monthly Progress Report PDF
+     */
+    public function downloadMonthlyProgressReport(Request $request)
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+
+        // Get month and year
+        $month = $request->input('month', now()->month);
+        $year = $request->input('year', now()->year);
+
+        // Get all patients
+        $patients = Patient::where('nutritionist_id', $nutritionistId)
+            ->with(['barangay'])
+            ->get();
+
+        // Get assessments for the month
+        $assessments = Assessment::where('nutritionist_id', $nutritionistId)
+            ->whereMonth('assessment_date', $month)
+            ->whereYear('assessment_date', $year)
+            ->with(['patient'])
+            ->get();
+
+        // Progress tracking - compare with previous assessments
+        $progressData = [];
+        foreach ($patients as $patient) {
+            $currentMonthAssessment = $assessments->where('patient_id', $patient->patient_id)->first();
+            
+            if ($currentMonthAssessment) {
+                // Get previous assessment
+                $previousAssessment = Assessment::where('patient_id', $patient->patient_id)
+                    ->where('assessment_date', '<', $currentMonthAssessment->assessment_date)
+                    ->latest('assessment_date')
+                    ->first();
+
+                $progressData[] = [
+                    'patient' => $patient,
+                    'current' => $currentMonthAssessment,
+                    'previous' => $previousAssessment,
+                    'weight_change' => $previousAssessment ? 
+                        round($currentMonthAssessment->weight_kg - $previousAssessment->weight_kg, 2) : null,
+                    'height_change' => $previousAssessment ? 
+                        round($currentMonthAssessment->height_cm - $previousAssessment->height_cm, 2) : null,
+                ];
+            }
+        }
+
+        // Summary statistics
+        $statistics = [
+            'total_patients' => $patients->count(),
+            'assessed_this_month' => $assessments->count(),
+            'improved' => collect($progressData)->filter(function($item) {
+                return $item['weight_change'] > 0;
+            })->count(),
+            'stable' => collect($progressData)->filter(function($item) {
+                return $item['weight_change'] == 0;
+            })->count(),
+            'declined' => collect($progressData)->filter(function($item) {
+                return $item['weight_change'] < 0;
+            })->count(),
+        ];
+
+        $data = [
+            'title' => 'Monthly Progress Report',
+            'nutritionist' => $nutritionist,
+            'month' => date('F', mktime(0, 0, 0, $month, 1)),
+            'year' => $year,
+            'progressData' => $progressData,
+            'statistics' => $statistics,
+            'generatedDate' => now()->format('F d, Y'),
+            'generatedTime' => now()->format('h:i A'),
+        ];
+
+        $pdf = PDF::loadView('nutritionist.reports.pdf.monthly-progress', $data);
+        $pdf->setPaper('legal', 'landscape');
+        
+        $filename = 'monthly-progress-report-' . $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '.pdf';
+        return $pdf->download($filename);
     }
 
 
