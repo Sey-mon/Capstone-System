@@ -15,9 +15,28 @@ class KnowledgeBaseController extends Controller
     public function index()
     {
         try {
+            // Get knowledge base from local database
             $knowledgeBase = KnowledgeBase::with('user')
                 ->orderBy('added_at', 'desc')
                 ->get();
+
+            // Optionally, you can also fetch from the API to sync data
+            try {
+                $client = new \GuzzleHttp\Client(['timeout' => 30]);
+                $response = $client->post(
+                    config('services.nutrition_api.base_url') . '/get_knowledge_base',
+                    [
+                        'json' => new \stdClass(), // Empty object for Pydantic validation
+                        'headers' => ['Content-Type' => 'application/json']
+                    ]
+                );
+                $apiResult = json_decode($response->getBody()->getContents(), true);
+                // You could use this to sync or display additional information
+                // For now, we'll just use the local database data
+            } catch (\Exception $e) {
+                Log::warning('Could not fetch knowledge base from API: ' . $e->getMessage());
+                // Continue with local data
+            }
 
             return view('admin.knowledge-base', compact('knowledgeBase'));
         } catch (\Exception $e) {
@@ -38,28 +57,22 @@ class KnowledgeBaseController extends Controller
         try {
             $file = $request->file('pdf_file');
             
-            // Read file content
-            $fileContent = file_get_contents($file->getRealPath());
+            // Prepare multipart form data for FastAPI
+            $client = new \GuzzleHttp\Client(['timeout' => 120]);
             
-            // Create form data for FastAPI
-            $formData = [
+            $response = $client->post(config('services.nutrition_api.base_url') . '/upload_pdf', [
                 'multipart' => [
                     [
                         'name' => 'file',
-                        'contents' => $fileContent,
+                        'contents' => fopen($file->getRealPath(), 'r'),
                         'filename' => $file->getClientOriginalName(),
-                        'headers' => ['Content-Type' => 'application/pdf']
                     ],
                     [
                         'name' => 'uploaded_by_id',
-                        'contents' => Auth::id()
+                        'contents' => (string) Auth::id()
                     ]
                 ]
-            ];
-
-            // Call FastAPI endpoint
-            $client = new \GuzzleHttp\Client(['timeout' => 120]);
-            $response = $client->post(config('services.fastapi.base_url') . '/upload_pdf', $formData);
+            ]);
             
             $result = json_decode($response->getBody()->getContents(), true);
 
@@ -76,6 +89,17 @@ class KnowledgeBaseController extends Controller
                 'data' => $result
             ]);
 
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $errorMessage = 'Upload failed';
+            if ($e->hasResponse()) {
+                $errorBody = json_decode($e->getResponse()->getBody()->getContents(), true);
+                $errorMessage = $errorBody['detail'] ?? $errorMessage;
+            }
+            Log::error('Error uploading PDF: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 500);
         } catch (\Exception $e) {
             Log::error('Error uploading PDF: ' . $e->getMessage());
             return response()->json([
@@ -91,16 +115,27 @@ class KnowledgeBaseController extends Controller
     public function processEmbeddings(Request $request)
     {
         try {
-            $requestData = [
-                'kb_ids' => $request->kb_ids ?? null,
-                'chunk_size' => $request->chunk_size ?? 1000,
-                'overlap' => $request->overlap ?? 200,
-                'batch_size' => $request->batch_size ?? 128
-            ];
+            // Prepare request data matching FastAPI spec
+            // Send empty object if no parameters, FastAPI expects valid JSON
+            $requestData = new \stdClass();
+            
+            // Only include fields if they are provided
+            if ($request->has('kb_ids') && !empty($request->kb_ids)) {
+                $requestData->kb_ids = $request->kb_ids;
+            }
+            if ($request->has('chunk_size')) {
+                $requestData->chunk_size = (int) $request->chunk_size;
+            }
+            if ($request->has('overlap')) {
+                $requestData->overlap = (int) $request->overlap;
+            }
+            if ($request->has('batch_size')) {
+                $requestData->batch_size = (int) $request->batch_size;
+            }
 
             $client = new \GuzzleHttp\Client(['timeout' => 300]); // 5 minutes timeout
             $response = $client->post(
-                config('services.fastapi.base_url') . '/process_embeddings',
+                config('services.nutrition_api.base_url') . '/process_embeddings',
                 [
                     'json' => $requestData,
                     'headers' => ['Content-Type' => 'application/json']
@@ -116,10 +151,22 @@ class KnowledgeBaseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Embeddings processed successfully!',
+                'message' => $result['message'] ?? 'Embeddings processed successfully!',
                 'data' => $result
             ]);
 
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $errorMessage = 'Processing failed';
+            if ($e->hasResponse()) {
+                $errorBody = json_decode($e->getResponse()->getBody()->getContents(), true);
+                $errorMessage = $errorBody['detail'] ?? $errorMessage;
+                Log::error('FastAPI Error Response: ' . json_encode($errorBody));
+            }
+            Log::error('Error processing embeddings: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 500);
         } catch (\Exception $e) {
             Log::error('Error processing embeddings: ' . $e->getMessage());
             return response()->json([
@@ -135,13 +182,15 @@ class KnowledgeBaseController extends Controller
     public function reembedMissing(Request $request)
     {
         try {
-            $requestData = [
-                'batch_size' => $request->batch_size ?? 128
-            ];
+            // Prepare request data - send empty object if no batch_size
+            $requestData = new \stdClass();
+            if ($request->has('batch_size')) {
+                $requestData->batch_size = (int) $request->batch_size;
+            }
 
             $client = new \GuzzleHttp\Client(['timeout' => 300]);
             $response = $client->post(
-                config('services.fastapi.base_url') . '/reembed_missing',
+                config('services.nutrition_api.base_url') . '/reembed_missing',
                 [
                     'json' => $requestData,
                     'headers' => ['Content-Type' => 'application/json']
@@ -152,7 +201,7 @@ class KnowledgeBaseController extends Controller
 
             Log::info('Missing embeddings processed', [
                 'user_id' => Auth::id(),
-                'result' => $result
+                'status' => $result['status'] ?? 'unknown'
             ]);
 
             return response()->json([
@@ -161,6 +210,18 @@ class KnowledgeBaseController extends Controller
                 'data' => $result
             ]);
 
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $errorMessage = 'Re-embedding failed';
+            if ($e->hasResponse()) {
+                $errorBody = json_decode($e->getResponse()->getBody()->getContents(), true);
+                $errorMessage = $errorBody['detail'] ?? $errorMessage;
+                Log::error('FastAPI Error Response: ' . json_encode($errorBody));
+            }
+            Log::error('Error re-embedding missing: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 500);
         } catch (\Exception $e) {
             Log::error('Error re-embedding missing: ' . $e->getMessage());
             return response()->json([
@@ -178,9 +239,9 @@ class KnowledgeBaseController extends Controller
         try {
             $client = new \GuzzleHttp\Client(['timeout' => 30]);
             $response = $client->post(
-                config('services.fastapi.base_url') . '/embedding_status',
+                config('services.nutrition_api.base_url') . '/embedding_status',
                 [
-                    'json' => [],
+                    'json' => new \stdClass(), // Empty object for Pydantic validation
                     'headers' => ['Content-Type' => 'application/json']
                 ]
             );
@@ -192,6 +253,18 @@ class KnowledgeBaseController extends Controller
                 'data' => $result
             ]);
 
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $errorMessage = 'Status check failed';
+            if ($e->hasResponse()) {
+                $errorBody = json_decode($e->getResponse()->getBody()->getContents(), true);
+                $errorMessage = $errorBody['detail'] ?? $errorMessage;
+                Log::error('FastAPI Error Response: ' . json_encode($errorBody));
+            }
+            Log::error('Error checking embedding status: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 500);
         } catch (\Exception $e) {
             Log::error('Error checking embedding status: ' . $e->getMessage());
             return response()->json([
@@ -208,17 +281,24 @@ class KnowledgeBaseController extends Controller
     {
         try {
             $client = new \GuzzleHttp\Client(['timeout' => 10]);
-            $response = $client->get(config('services.fastapi.base_url') . '/');
+            $response = $client->get(config('services.nutrition_api.base_url') . '/');
             
             $result = json_decode($response->getBody()->getContents(), true);
 
             return response()->json([
                 'success' => true,
                 'status' => 'healthy',
-                'message' => 'LLM service is running',
+                'message' => $result['message'] ?? 'LLM service is running',
                 'data' => $result
             ]);
 
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            Log::error('LLM health check failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'status' => 'unhealthy',
+                'message' => 'LLM service is not responding'
+            ], 503);
         } catch (\Exception $e) {
             Log::error('LLM health check failed: ' . $e->getMessage());
             return response()->json([

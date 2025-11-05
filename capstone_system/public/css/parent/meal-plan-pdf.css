@@ -1,0 +1,263 @@
+/* ===================================
+   Meal Plan PDF Styles
+   =================================== */
+
+@page {
+    margin: 20mm;
+}
+
+body {
+    font-family: 'DejaVu Sans', 'Arial', sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #2d3748;
+    padding: 0;
+    margin: 0;
+}
+
+/* Header Section */
+.document-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-radius: 12px;
+}
+
+.document-header h1 {
+    font-size: 28pt;
+    font-weight: bold;
+    margin: 0 0 8px 0;
+    letter-spacing: 1px;
+}
+
+.document-header .subtitle {
+    font-size: 12pt;
+    opacity: 0.95;
+    font-style: italic;
+}
+
+/* Patient Info Card */
+.patient-info-card {
+    background: #f0fdf4;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    border-left: 5px solid #10b981;
+}
+
+.patient-info-card h3 {
+    margin: 0 0 18px 0;
+    color: #10b981;
+    font-size: 16pt;
+    font-weight: bold;
+    border-bottom: 2px solid #d1fae5;
+    padding-bottom: 10px;
+}
+
+.info-grid {
+    display: table;
+    width: 100%;
+}
+
+.info-row {
+    display: table-row;
+    margin-bottom: 12px;
+}
+
+.info-label {
+    display: table-cell;
+    font-weight: bold;
+    color: #4a5568;
+    padding: 8px 15px 8px 0;
+    width: 35%;
+    vertical-align: top;
+}
+
+.info-value {
+    display: table-cell;
+    color: #2d3748;
+    padding: 8px 0;
+    vertical-align: top;
+}
+
+/* Notes Section */
+.notes-section {
+    background: #fffbeb;
+    padding: 20px;
+    border-left: 5px solid #f59e0b;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.notes-section h3 {
+    margin: 0 0 12px 0;
+    color: #d97706;
+    font-size: 14pt;
+    font-weight: bold;
+}
+
+.notes-section p {
+    margin: 0;
+    line-height: 1.8;
+    color: #92400e;
+}
+
+/* Meal Plan Content */
+.content-section {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    background: #10b981;
+    color: white;
+    padding: 15px 20px;
+    margin: 30px 0 20px 0;
+    border-radius: 8px;
+    font-size: 18pt;
+    font-weight: bold;
+}
+
+.content-section h2 {
+    color: #059669;
+    font-size: 16pt;
+    margin: 25px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #059669;
+}
+
+.content-section h3 {
+    color: #10b981;
+    font-size: 14pt;
+    margin: 20px 0 12px 0;
+    font-weight: bold;
+}
+
+.content-section h4 {
+    color: #4a5568;
+    font-size: 12pt;
+    margin: 15px 0 10px 0;
+    font-weight: bold;
+}
+
+.content-section p {
+    margin-bottom: 12px;
+    text-align: justify;
+}
+
+.content-section ul {
+    margin: 15px 0;
+    padding-left: 25px;
+}
+
+.content-section ol {
+    margin: 15px 0;
+    padding-left: 25px;
+}
+
+.content-section li {
+    margin-bottom: 8px;
+    line-height: 1.7;
+}
+
+.content-section strong {
+    color: #2d3748;
+    font-weight: bold;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: white;
+}
+
+table thead {
+    background: #10b981;
+    color: white;
+}
+
+table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 11pt;
+}
+
+table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #d1fae5;
+}
+
+table tr:nth-child(even) {
+    background: #f0fdf4;
+}
+
+/* Highlight Boxes */
+.highlight-box {
+    background: #ecfdf5;
+    border-left: 4px solid #10b981;
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 6px;
+}
+
+.highlight-box strong {
+    color: #047857;
+}
+
+/* Tips Section */
+.tips-box {
+    background: #f0fdf4;
+    border: 2px solid #86efac;
+    border-radius: 8px;
+    padding: 18px;
+    margin: 20px 0;
+}
+
+.tips-box::before {
+    content: "💡 ";
+    font-size: 14pt;
+}
+
+/* Footer */
+.document-footer {
+    margin-top: 50px;
+    padding-top: 25px;
+    border-top: 3px solid #e2e8f0;
+    text-align: center;
+    color: #718096;
+    font-size: 9pt;
+}
+
+.document-footer p {
+    margin: 8px 0;
+}
+
+.footer-emphasis {
+    font-weight: bold;
+    color: #4a5568;
+    margin-top: 15px;
+}
+
+/* Page Break Control */
+h2, h3 {
+    page-break-after: avoid;
+}
+
+ul, ol, table {
+    page-break-inside: avoid;
+}
+
+/* Watermark */
+.watermark {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    opacity: 0.1;
+    font-size: 8pt;
+    color: #10b981;
+    transform: rotate(-45deg);
+}
