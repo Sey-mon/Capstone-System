@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "capstone/shares-system",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "SHAReS - Smart Health Assessment & Resource System - BMI Malnutrition Monitoring with AI-powered meal planning",
+    "keywords": ["laravel", "healthcare", "malnutrition", "bmi", "meal-planning", "ai"],
     "license": "MIT",
     "require": {
         "php": "^8.2",
@@ -57,6 +57,34 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "setup": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate --ansi",
+            "npm install",
+            "@php artisan storage:link",
+            "@php artisan migrate",
+            "@echo '\n✅ Setup complete! Run: composer dev'"
+        ],
+        "fresh-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate --ansi",
+            "npm install",
+            "@php artisan storage:link",
+            "@php artisan migrate:fresh --seed",
+            "@echo '\n✅ Fresh installation complete with sample data! Run: composer dev'"
+        ],
+        "reset": [
+            "@php artisan config:clear",
+            "@php artisan cache:clear",
+            "@php artisan route:clear",
+            "@php artisan view:clear",
+            "@php artisan optimize:clear",
+            "@echo '✅ All caches cleared!'"
+        ],
+        "fresh": [
+            "@php artisan migrate:fresh --seed",
+            "@echo '✅ Database refreshed with sample data!'"
         ]
     },
     "extra": {
