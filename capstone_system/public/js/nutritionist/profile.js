@@ -1,96 +1,8 @@
-// profile.js
-// Move all custom JS for nutritionist profile here.
+// Advanced Nutritionist Profile JavaScript
+// ==========================================
+// Modal functions are now handled by SweetAlert2 in the blade file
 
-function editPersonalInfo() {
-    document.getElementById('editPersonalModal').style.display = 'block';
-}
-
-function editProfessionalInfo() {
-    document.getElementById('editProfessionalModal').style.display = 'block';
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
-// Close modal when clicking outside of it
-window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-}
-
-// Handle form submissions
-
-document.getElementById('editPersonalForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const submitBtn = this.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    fetch('{{ route("nutritionist.profile.update.personal") }}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            closeModal('editPersonalModal');
-            showNotification(data.message, 'success');
-            location.reload();
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('An error occurred while updating personal information.', 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-    });
-});
-
-document.getElementById('editProfessionalForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const submitBtn = this.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    fetch('{{ route("nutritionist.profile.update.professional") }}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            closeModal('editProfessionalModal');
-            showNotification(data.message, 'success');
-            location.reload();
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('An error occurred while updating professional information.', 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-    });
-});
-
+// Enhanced Notification Function
 function showNotification(message, type) {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
@@ -104,9 +16,115 @@ function showNotification(message, type) {
         </button>
     `;
     document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds with fade out
     setTimeout(() => {
         if (notification.parentElement) {
-            notification.remove();
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(400px)';
+            setTimeout(() => notification.remove(), 300);
         }
     }, 5000);
 }
+
+// Smooth Scroll for Quick Actions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth reveal animations on page load
+    const cards = document.querySelectorAll('.content-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+    
+    // Animate quick stats on load
+    const quickStats = document.querySelectorAll('.quick-stat');
+    quickStats.forEach((stat, index) => {
+        stat.style.opacity = '0';
+        stat.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            stat.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            stat.style.opacity = '1';
+            stat.style.transform = 'scale(1)';
+        }, 50 * index);
+    });
+    
+    // Animate stat numbers
+    animateNumbers();
+});
+
+// Animate counting numbers
+function animateNumbers() {
+    const statValues = document.querySelectorAll('.quick-stat-value');
+    statValues.forEach(stat => {
+        const target = parseInt(stat.textContent);
+        if (isNaN(target)) return;
+        
+        let current = 0;
+        const increment = target / 30;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                stat.textContent = target + (stat.textContent.includes('%') ? '%' : '');
+                clearInterval(timer);
+            } else {
+                stat.textContent = Math.floor(current) + (stat.textContent.includes('%') ? '%' : '');
+            }
+        }, 30);
+    });
+}
+
+// Add ripple effect to buttons
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('btn') || 
+        e.target.classList.contains('action-btn') ||
+        e.target.closest('.btn') ||
+        e.target.closest('.action-btn')) {
+        
+        const button = e.target.classList.contains('btn') || e.target.classList.contains('action-btn') 
+            ? e.target 
+            : e.target.closest('.btn') || e.target.closest('.action-btn');
+        
+        const ripple = document.createElement('span');
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        ripple.classList.add('ripple');
+        
+        button.style.position = 'relative';
+        button.style.overflow = 'hidden';
+        button.appendChild(ripple);
+        
+        setTimeout(() => ripple.remove(), 600);
+    }
+});
+
+// Add CSS for ripple effect dynamically
+const style = document.createElement('style');
+style.textContent = `
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s ease-out;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(2);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);

@@ -10,6 +10,7 @@ use App\Models\Food;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class NutritionistController extends Controller
@@ -471,19 +472,37 @@ class NutritionistController extends Controller
         $sortBy = $request->get('sort_by', 'first_name');
         $sortOrder = $request->get('sort_order', 'asc');
         
+        // Validate sort order
+        $sortOrder = in_array($sortOrder, ['asc', 'desc']) ? $sortOrder : 'asc';
+        
         switch ($sortBy) {
             case 'assessment_date':
-                $query->leftJoin('assessments', function($join) {
-                    $join->on('patients.patient_id', '=', 'assessments.patient_id')
-                         ->whereRaw('assessments.assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)');
-                })->select('patients.*')->orderBy('assessments.assessment_date', $sortOrder);
+                // Join with the latest assessment for sorting
+                $query->leftJoin('assessments as latest_assessment', function($join) {
+                    $join->on('patients.patient_id', '=', 'latest_assessment.patient_id')
+                         ->whereRaw('latest_assessment.assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)');
+                })
+                ->select('patients.*', 'latest_assessment.assessment_date')
+                ->orderBy('latest_assessment.assessment_date', $sortOrder)
+                ->orderBy('patients.first_name', 'asc'); // Secondary sort by name
+                break;
+            case 'treatment':
+                // Sort by diagnosis in the treatment JSON field
+                $query->leftJoin('assessments as latest_assessment', function($join) {
+                    $join->on('patients.patient_id', '=', 'latest_assessment.patient_id')
+                         ->whereRaw('latest_assessment.assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)');
+                })
+                ->select('patients.*', 'latest_assessment.treatment')
+                ->orderBy('latest_assessment.treatment', $sortOrder)
+                ->orderBy('patients.first_name', 'asc'); // Secondary sort by name
                 break;
             case 'patient_id':
-            case 'first_name':
-                $query->orderBy('first_name', $sortOrder)->orderBy('last_name', $sortOrder);
+                $query->orderBy('patient_id', $sortOrder);
                 break;
+            case 'first_name':
             default:
-                $query->orderBy($sortBy, $sortOrder);
+                $query->orderBy('first_name', $sortOrder)
+                      ->orderBy('last_name', $sortOrder);
                 break;
         }
 
@@ -592,6 +611,42 @@ class NutritionistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating professional information: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $nutritionist = Auth::user();
+        
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8',
+            'new_password_confirmation' => 'required|string|same:new_password',
+        ]);
+
+        try {
+            // Verify current password
+            if (!Hash::check($request->current_password, $nutritionist->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Current password is incorrect'
+                ], 422);
+            }
+
+            // Update password
+            User::where('user_id', $nutritionist->user_id)->update([
+                'password' => Hash::make($request->new_password),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating password: ' . $e->getMessage()
             ], 500);
         }
     }

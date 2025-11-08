@@ -251,6 +251,7 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     // Profile update routes
     Route::put('/profile/personal', [NutritionistController::class, 'updatePersonalInfo'])->name('profile.update.personal');
     Route::put('/profile/professional', [NutritionistController::class, 'updateProfessionalInfo'])->name('profile.update.professional');
+    Route::put('/profile/password', [NutritionistController::class, 'updatePassword'])->name('profile.update.password');
     
     // Assessment routes
     Route::get('/patients/{patientId}/assess', [NutritionistController::class, 'showAssessmentForm'])->name('patients.assess');
