@@ -1,23 +1,4 @@
 @if($patients->count() > 0)
-    <!-- Sort Controls -->
-    <div class="sort-controls">
-        <span class="sort-label">Sort by:</span>
-        <div class="sort-buttons">
-            <button class="sort-btn active" data-sort="first_name">
-                <i class="fas fa-user me-1"></i>
-                Name
-            </button>
-            <button class="sort-btn" data-sort="assessment_date">
-                <i class="fas fa-calendar me-1"></i>
-                Date
-            </button>
-            <button class="sort-btn" data-sort="treatment">
-                <i class="fas fa-stethoscope me-1"></i>
-                Diagnosis
-            </button>
-        </div>
-    </div>
-
     <!-- Modern Card Grid -->
     <div class="patients-grid">
         @foreach($patients as $patient)

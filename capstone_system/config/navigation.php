@@ -97,11 +97,6 @@ return [
             'icon' => 'fas fa-clipboard-list',
             'text' => 'My Food Requests',
         ],
-        [
-            'route' => 'nutritionist.profile',
-            'icon' => 'fas fa-user-cog',
-            'text' => 'Profile',
-        ],
     ],
     
     'parent' => [

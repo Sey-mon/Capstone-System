@@ -53,6 +53,9 @@
                         <div class="user-name">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</div>
                         <div class="user-role">{{ Auth::user()->role->role_name ?? 'User' }}</div>
                     </div>
+                    <a href="{{ route(Auth::user()->role->role_name === 'Admin' ? 'admin.profile' : (Auth::user()->role->role_name === 'Nutritionist' ? 'nutritionist.profile' : 'parent.profile')) }}" class="profile-btn" title="Profile">
+                        <i class="fas fa-user-cog"></i>
+                    </a>
                 </div>
                 
                 <nav class="sidebar-nav">
