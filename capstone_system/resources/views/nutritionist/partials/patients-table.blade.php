@@ -1,5 +1,5 @@
 @if($patients->count() > 0)
-    <div class="table-responsive">
+    <div class="table-responsive" data-total-count="{{ $patients->total() }}">
         <table class="table">
             <thead>
                 <tr>
@@ -80,7 +80,7 @@
         {{ $patients->appends(request()->query())->links() }}
     </div>
 @else
-    <div class="empty-state">
+    <div class="empty-state" data-total-count="0">
         <div class="empty-icon">
             <i class="fas fa-user-injured"></i>
         </div>

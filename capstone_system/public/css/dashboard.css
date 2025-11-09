@@ -667,6 +667,7 @@ body {
     /* Performance optimizations */
     contain: layout;
     will-change: transform;
+    background-color: rgb(245, 245, 245) ;
 }
 
 /* Stats Grid */

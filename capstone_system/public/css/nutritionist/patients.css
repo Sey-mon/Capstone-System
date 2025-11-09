@@ -253,6 +253,7 @@
 
 .card-body {
     padding: 1.5rem;
+    background-color: rgb(245, 245, 245);
 }
 
 /* Table Styles */

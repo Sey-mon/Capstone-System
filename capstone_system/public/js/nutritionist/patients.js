@@ -3,76 +3,118 @@ let isEditing = false;
 let currentPatientId = null;
 let filterTimeout = null;
 
+// Form submission handler - prevent default form submission
+function handlePatientFormSubmit(e) {
+    e.preventDefault();
+    return false;
+}
+
+// Submit patient form data
+function submitPatientForm(form) {
+    const patientId = form.querySelector('#patient_id').value;
+    const url = patientId ? `/nutritionist/patients/${patientId}` : '/nutritionist/patients';
+    const method = patientId ? 'PUT' : 'POST';
+
+    // Get CSRF token from meta tag
+    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+    // Collect all form data into an object
+    const formDataObj = {};
+    new FormData(form).forEach((value, key) => {
+        formDataObj[key] = value;
+    });
+    
+    // Checkbox handling
+    formDataObj['is_4ps_beneficiary'] = form.querySelector('#is_4ps_beneficiary').checked ? 'on' : '';
+    
+    // Handle empty parent_id - convert empty string to null
+    if (!formDataObj['parent_id'] || formDataObj['parent_id'] === '') {
+        formDataObj['parent_id'] = null;
+    }
+
+    return fetch(url, {
+        method: method,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify(formDataObj)
+    })
+    .then(async response => {
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            throw new Error('Failed to update patient.');
+        }
+        if (response.status === 422 && data.errors) {
+            let errorMessages = Object.values(data.errors).map(arr => arr.join(' ')).join('\n');
+            Swal.showValidationMessage(errorMessages);
+            throw new Error(errorMessages);
+        }
+        if (data.success) {
+            return data;
+        } else {
+            throw new Error(data.message || 'Failed to update patient.');
+        }
+    })
+    .then(data => {
+        // Close the current modal first
+        Swal.close();
+        
+        // Show success message
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: patientId ? 'Patient updated successfully!' : 'Patient added successfully!',
+            confirmButtonColor: '#40916c',
+            timer: 2000,
+            showConfirmButton: true
+        }).then(() => {
+            // Refresh the patient list
+            applyFilters();
+        });
+        
+        return true;
+    })
+    .catch(error => {
+        if (error.message && !error.message.includes('Failed to')) {
+            // This is a validation error, already shown via Swal.showValidationMessage
+            return false;
+        }
+        
+        // Close current modal and show error
+        Swal.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Failed to save patient.',
+            confirmButtonColor: '#40916c'
+        });
+        return false;
+    });
+}
+
+// Show success message
+function showSuccess(message) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: message,
+        confirmButtonColor: '#40916c'
+    });
+}
+
 // Initialize filters and event listeners
 document.addEventListener('DOMContentLoaded', function() {
     initializeFilters();
     initializeModals();
     initializeSorting();
     initializePagination();
-    initializePatientFormSubmit();
-function initializePatientFormSubmit() {
-    const form = document.getElementById('patientForm');
-    if (!form) return;
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const patientId = document.getElementById('patient_id').value;
-        const url = patientId ? `/nutritionist/patients/${patientId}` : '/nutritionist/patients';
-        const method = patientId ? 'PUT' : 'POST';
-
-        // Get CSRF token from meta tag
-        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
-
-        // Collect all form data into an object
-        const formDataObj = {};
-        new FormData(form).forEach((value, key) => {
-            formDataObj[key] = value;
-        });
-        // Checkbox handling
-        formDataObj['is_4ps_beneficiary'] = document.getElementById('is_4ps_beneficiary').checked ? 'on' : '';
-
-        fetch(url, {
-            method: method,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: JSON.stringify(formDataObj)
-        })
-        .then(async response => {
-            let data;
-            try {
-                data = await response.json();
-            } catch (e) {
-                showError('Failed to update patient.');
-                return;
-            }
-            if (response.status === 422 && data.errors) {
-                let errorMessages = Object.values(data.errors).map(arr => arr.join(' ')).join('\n');
-                showError(errorMessages);
-                return;
-            }
-            if (data.success) {
-                closePatientModal();
-                showSuccess('Patient data updated successfully!');
-                applyFilters();
-            } else {
-                showError(data.message || 'Failed to update patient.');
-            }
-// Show success notification (Bootstrap Toast or alert)
-function showSuccess(message) {
-    // If you use Bootstrap Toasts, you can trigger one here
-    // For now, use a simple alert
-    alert(message);
-}
-        })
-        .catch(() => {
-            showError('Failed to update patient.');
-        });
-    });
-}
+    updateResultsCount(); // Initialize count on page load
 });
 
 function initializeFilters() {
@@ -226,13 +268,15 @@ function loadPatientsFromUrl(url) {
 }
 
 function updateResultsCount() {
-    // Extract total count from pagination info if available
-    const paginationInfo = document.querySelector('.pagination-wrapper');
-    if (paginationInfo) {
-        const paginationText = paginationInfo.textContent;
-        const matches = paginationText.match(/(\d+)\s+result/i);
-        if (matches) {
-            document.getElementById('resultsCount').textContent = `${matches[1]} patient(s) found`;
+    // Extract total count from data attribute
+    const tableContainer = document.querySelector('.table-responsive[data-total-count]') || 
+                          document.querySelector('.empty-state[data-total-count]');
+    
+    if (tableContainer) {
+        const totalCount = tableContainer.getAttribute('data-total-count');
+        const resultsCountElement = document.getElementById('resultsCount');
+        if (resultsCountElement && totalCount !== null) {
+            resultsCountElement.textContent = `${totalCount} patient(s) found`;
         }
     }
 }
@@ -259,112 +303,84 @@ function hideLoading() {
 }
 
 function showError(message) {
-    // You can customize this to show a better error message
-    alert(message);
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message,
+        confirmButtonColor: '#40916c'
+    });
 }
 
 function initializeModals() {
-    if (typeof bootstrap === 'undefined') {
-        console.error('Bootstrap is not loaded! Modal functionality will not work.');
-    } else {
-        console.log('Bootstrap is loaded successfully.');
-    }
-    
-    const modal = document.getElementById('patientModal');
-    if (modal) {
-        modal.addEventListener('hidden.bs.modal', function() {
-            document.getElementById('patientForm').reset();
-            isEditing = false;
-            currentPatientId = null;
-        });
-    }
+    // SweetAlert2 doesn't need initialization
+    console.log('SweetAlert2 modals ready');
+}
+
+function getFormHTML() {
+    const template = document.getElementById('patientFormTemplate');
+    if (!template) return '';
+    return template.innerHTML;
 }
 
 function openAddPatientModal() {
     isEditing = false;
     currentPatientId = null;
-    document.getElementById('patientModalTitle').textContent = 'Add Patient';
-    document.getElementById('submitBtn').textContent = 'Save Patient';
-    document.getElementById('patientForm').reset();
-    document.getElementById('patient_id').value = '';
-    const modal = document.getElementById('patientModal');
-    if (modal) {
-        if (typeof bootstrap !== 'undefined') {
-            const bsModal = new bootstrap.Modal(modal);
-            bsModal.show();
-        } else {
-            modal.style.display = 'block';
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.id = 'modalBackdrop';
-            document.body.appendChild(backdrop);
-        }
-    }
+    
+    Swal.fire({
+        title: 'Add Patient',
+        html: getFormHTML(),
+        showCancelButton: true,
+        confirmButtonText: 'Save Patient',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'swal2-patient-modal',
+            confirmButton: 'swal2-confirm',
+            cancelButton: 'swal2-cancel'
+        },
+        confirmButtonColor: '#40916c',
+        cancelButtonColor: '#7f8c8d',
+        width: '90vw',
+        didOpen: () => {
+            // Attach form submit handler after modal opens
+            const form = Swal.getPopup().querySelector('#patientForm');
+            if (form) {
+                form.addEventListener('submit', handlePatientFormSubmit);
+            }
+        },
+        preConfirm: () => {
+            const form = Swal.getPopup().querySelector('#patientForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return false;
+            }
+            return submitPatientForm(form);
+        },
+        showLoaderOnConfirm: true,
+        allowOutsideClick: () => !Swal.isLoading()
+    });
 }
 
 function closePatientModal() {
-    const modal = document.getElementById('patientModal');
-    const backdrop = document.getElementById('modalBackdrop');
-    if (modal) {
-        if (typeof bootstrap !== 'undefined') {
-            const bsModal = bootstrap.Modal.getInstance(modal);
-            if (bsModal) {
-                bsModal.hide();
-            }
-        } else {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            document.body.style.overflow = '';
-            if (backdrop) {
-                backdrop.remove();
-            }
-        }
-    }
+    Swal.close();
 }
 
 function closeViewPatientModal() {
-    const modal = document.getElementById('viewPatientModal');
-    const backdrop = document.getElementById('modalBackdrop');
-    if (modal) {
-        if (typeof bootstrap !== 'undefined') {
-            const bsModal = bootstrap.Modal.getInstance(modal);
-            if (bsModal) {
-                bsModal.hide();
-            }
-        } else {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            document.body.style.overflow = '';
-            if (backdrop) {
-                backdrop.remove();
-            }
-        }
-    }
+    Swal.close();
 }
 
 function editPatient(patientId) {
-    // Ensure all fields are enabled for editing
-    const fieldIds = [
-        'parent_id', 'barangay_id', 'first_name', 'middle_name', 'last_name', 'contact_number', 'age_months', 'sex',
-        'date_of_admission', 'total_household_adults', 'total_household_children', 'total_household_twins',
-        'is_4ps_beneficiary', 'weight_kg', 'height_cm', 'weight_for_age', 'height_for_age', 'bmi_for_age',
-        'breastfeeding', 'edema', 'other_medical_problems'
-    ];
-    fieldIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.disabled = false;
-            el.readOnly = false;
+    isEditing = true;
+    currentPatientId = patientId;
+    
+    // Show loading
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Fetching patient data',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
         }
     });
-    // Show loading overlay or spinner in modal
-    const modalTitle = document.getElementById('patientModalTitle');
-    if (modalTitle) modalTitle.textContent = 'Edit Patient';
-    const form = document.getElementById('patientForm');
-    if (form) form.reset();
-    document.getElementById('submitBtn').textContent = 'Update Patient';
 
     // Fetch patient data
     fetch(`/nutritionist/patients/${patientId}`)
@@ -374,60 +390,96 @@ function editPatient(patientId) {
         })
         .then(data => {
             if (!data.success || !data.patient) {
-                alert(data.message || 'Failed to load patient data for editing.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to load patient data for editing.',
+                    confirmButtonColor: '#40916c'
+                });
                 return;
             }
+            
             const patient = data.patient;
-            // Fill form fields
-            document.getElementById('patient_id').value = patient.patient_id ?? '';
-            document.getElementById('first_name').value = patient.first_name ?? '';
-            document.getElementById('middle_name').value = patient.middle_name ?? '';
-            document.getElementById('last_name').value = patient.last_name ?? '';
-            document.getElementById('contact_number').value = patient.contact_number ?? '';
-            document.getElementById('age_months').value = patient.age_months ?? '';
-            document.getElementById('sex').value = patient.sex ?? '';
-            document.getElementById('date_of_admission').value = patient.date_of_admission ? patient.date_of_admission.substring(0, 10) : '';
-            setSelectValue('barangay_id', patient.barangay_id);
-            setSelectValue('parent_id', patient.parent_id);
-            document.getElementById('total_household_adults').value = patient.total_household_adults ?? 0;
-            document.getElementById('total_household_children').value = patient.total_household_children ?? 0;
-            document.getElementById('total_household_twins').value = patient.total_household_twins ?? 0;
-            document.getElementById('is_4ps_beneficiary').checked = !!patient.is_4ps_beneficiary;
-            document.getElementById('weight_kg').value = patient.weight_kg ?? '';
-            document.getElementById('height_cm').value = patient.height_cm ?? '';
-            document.getElementById('weight_for_age').value = patient.weight_for_age ?? '';
-            document.getElementById('height_for_age').value = patient.height_for_age ?? '';
-            document.getElementById('bmi_for_age').value = patient.bmi_for_age ?? '';
-            document.getElementById('breastfeeding').value = patient.breastfeeding ?? '';
-            document.getElementById('edema').value = patient.edema ?? '';
-            document.getElementById('other_medical_problems').value = patient.other_medical_problems ?? '';
+            
+            // Show the form with data
+            Swal.fire({
+                title: 'Edit Patient',
+                html: getFormHTML(),
+                showCancelButton: true,
+                confirmButtonText: 'Update Patient',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'swal2-patient-modal',
+                    confirmButton: 'swal2-confirm',
+                    cancelButton: 'swal2-cancel'
+                },
+                confirmButtonColor: '#40916c',
+                cancelButtonColor: '#7f8c8d',
+                width: '90vw',
+                didOpen: () => {
+                    // Fill form fields
+                    const popup = Swal.getPopup();
+                    popup.querySelector('#patient_id').value = patient.patient_id ?? '';
+                    popup.querySelector('#first_name').value = patient.first_name ?? '';
+                    popup.querySelector('#middle_name').value = patient.middle_name ?? '';
+                    popup.querySelector('#last_name').value = patient.last_name ?? '';
+                    popup.querySelector('#contact_number').value = patient.contact_number ?? '';
+                    popup.querySelector('#age_months').value = patient.age_months ?? '';
+                    popup.querySelector('#sex').value = patient.sex ?? '';
+                    popup.querySelector('#date_of_admission').value = patient.date_of_admission ? patient.date_of_admission.substring(0, 10) : '';
+                    popup.querySelector('#barangay_id').value = patient.barangay_id ?? '';
+                    popup.querySelector('#parent_id').value = patient.parent_id ?? '';
+                    popup.querySelector('#total_household_adults').value = patient.total_household_adults ?? 0;
+                    popup.querySelector('#total_household_children').value = patient.total_household_children ?? 0;
+                    popup.querySelector('#total_household_twins').value = patient.total_household_twins ?? 0;
+                    popup.querySelector('#is_4ps_beneficiary').checked = !!patient.is_4ps_beneficiary;
+                    popup.querySelector('#weight_kg').value = patient.weight_kg ?? '';
+                    popup.querySelector('#height_cm').value = patient.height_cm ?? '';
+                    popup.querySelector('#weight_for_age').value = patient.weight_for_age ?? '';
+                    popup.querySelector('#height_for_age').value = patient.height_for_age ?? '';
+                    popup.querySelector('#bmi_for_age').value = patient.bmi_for_age ?? '';
+                    popup.querySelector('#breastfeeding').value = patient.breastfeeding ?? '';
+                    popup.querySelector('#edema').value = patient.edema ?? '';
+                    popup.querySelector('#other_medical_problems').value = patient.other_medical_problems ?? '';
+                    
+                    // Attach form submit handler
+                    const form = popup.querySelector('#patientForm');
+                    if (form) {
+                        form.addEventListener('submit', handlePatientFormSubmit);
+                    }
+                },
+                preConfirm: () => {
+                    const form = Swal.getPopup().querySelector('#patientForm');
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return false;
+                    }
+                    return submitPatientForm(form);
+                },
+                showLoaderOnConfirm: true,
+                allowOutsideClick: () => !Swal.isLoading()
+            });
         })
         .catch(error => {
-            alert('Failed to load patient data for editing.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load patient data for editing.',
+                confirmButtonColor: '#40916c'
+            });
         });
-// Utility to set select value after options are loaded
-function setSelectValue(selectId, value) {
-    const select = document.getElementById(selectId);
-    if (!select) return;
-    // If options are not loaded yet, wait and retry
-    if (!select.options.length) {
-        setTimeout(() => setSelectValue(selectId, value), 100);
-        return;
-    }
-    select.value = value ?? '';
-}
-
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('patientModal'));
-    modal.show();
 }
 
 function viewPatient(patientId) {
-    // Show loading indicator
-    const detailsDiv = document.getElementById('patientDetails');
-    if (detailsDiv) {
-        detailsDiv.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-    }
+    // Show loading
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Fetching patient details',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
     // Fetch patient details via AJAX
     fetch(`/nutritionist/patients/${patientId}`)
@@ -437,41 +489,263 @@ function viewPatient(patientId) {
         })
         .then(data => {
             if (!data.success || !data.patient) {
-                detailsDiv.innerHTML = `<div class='alert alert-danger'>${data.message || 'Failed to load patient details.'}</div>`;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to load patient details.',
+                    confirmButtonColor: '#40916c'
+                });
                 return;
             }
+            
             const patient = data.patient;
+            
             // Build details HTML
             function show(val) {
                 return (val !== undefined && val !== null && val !== '') ? val : 'N/A';
             }
-            let html = '<ul class="list-group">';
-            html += `<li class='list-group-item'><strong>Name:</strong> ${show(patient.first_name)} ${show(patient.middle_name)} ${show(patient.last_name)}</li>`;
-            html += `<li class='list-group-item'><strong>Age (months):</strong> ${show(patient.age_months)}</li>`;
-            html += `<li class='list-group-item'><strong>Sex:</strong> ${show(patient.sex)}</li>`;
-            html += `<li class='list-group-item'><strong>Contact Number:</strong> ${show(patient.contact_number)}</li>`;
-            html += `<li class='list-group-item'><strong>Date of Admission:</strong> ${show(patient.date_of_admission)}</li>`;
-            html += `<li class='list-group-item'><strong>Barangay:</strong> ${show(patient.barangay?.barangay_name)}</li>`;
-            html += `<li class='list-group-item'><strong>Parent:</strong> ${show(patient.parent?.first_name)} ${show(patient.parent?.last_name)}</li>`;
-            html += `<li class='list-group-item'><strong>Weight (kg):</strong> ${show(patient.weight_kg)}</li>`;
-            html += `<li class='list-group-item'><strong>Height (cm):</strong> ${show(patient.height_cm)}</li>`;
-            html += `<li class='list-group-item'><strong>Other Medical Problems:</strong> ${show(patient.other_medical_problems)}</li>`;
-            html += '</ul>';
-            detailsDiv.innerHTML = html;
+            
+            // Helper function to get status badge
+            function getStatusBadge(value, type = 'default') {
+                if (value === 'N/A' || !value) return '<span class="badge-status badge-na"><i class="fas fa-minus-circle"></i> N/A</span>';
+                
+                if (type === 'boolean') {
+                    return value ? '<span class="badge-status badge-yes"><i class="fas fa-check-circle"></i> Yes</span>' : '<span class="badge-status badge-no"><i class="fas fa-times-circle"></i> No</span>';
+                }
+                
+                if (type === 'sex') {
+                    return value === 'Male' ? '<span class="badge-status badge-male"><i class="fas fa-mars"></i> Male</span>' : '<span class="badge-status badge-female"><i class="fas fa-venus"></i> Female</span>';
+                }
+                
+                return `<span class="badge-status badge-default">${value}</span>`;
+            }
+            
+            // Helper to calculate BMI
+            function calculateBMI(weight, height) {
+                if (weight && height && weight !== 'N/A' && height !== 'N/A') {
+                    const heightInMeters = parseFloat(height) / 100;
+                    const bmi = (parseFloat(weight) / (heightInMeters * heightInMeters)).toFixed(1);
+                    return bmi;
+                }
+                return null;
+            }
+            
+            // Helper to get age display
+            function getAgeDisplay(months) {
+                const m = parseInt(months);
+                if (isNaN(m)) return 'N/A';
+                const years = Math.floor(m / 12);
+                const remainingMonths = m % 12;
+                if (years > 0) {
+                    return remainingMonths > 0 ? `${years}y ${remainingMonths}m` : `${years}y`;
+                }
+                return `${m}m`;
+            }
+            
+            const calculatedBMI = calculateBMI(patient.weight_kg, patient.height_cm);
+            const ageDisplay = getAgeDisplay(patient.age_months);
+            
+            let html = '<div class="patient-details-modern">';
+            
+            // Compact Patient Header
+            html += '<div class="patient-header-compact">';
+            html += '<div class="header-left">';
+            html += `<div class="patient-avatar-sm">${patient.first_name.charAt(0)}${patient.last_name.charAt(0)}</div>`;
+            html += '<div class="header-info">';
+            html += `<h3 class="patient-name-sm">${show(patient.first_name)} ${patient.middle_name ? patient.middle_name.charAt(0) + '. ' : ''}${show(patient.last_name)}</h3>`;
+            html += '<div class="patient-quick-info">';
+            html += `<span class="info-chip"><i class="fas fa-birthday-cake"></i> ${ageDisplay}</span>`;
+            html += `${getStatusBadge(patient.sex, 'sex')}`;
+            html += `<span class="info-chip"><i class="fas fa-map-marker-alt"></i> ${show(patient.barangay?.barangay_name)}</span>`;
+            html += '</div></div></div>';
+            html += '<div class="header-right">';
+            html += `<div class="admission-date"><i class="fas fa-calendar-check"></i> <span>Admitted</span><strong>${show(patient.date_of_admission)}</strong></div>`;
+            html += '</div>';
+            html += '</div>';
+            
+            // Two Column Layout
+            html += '<div class="details-container">';
+            html += '<div class="details-column details-main">';
+            
+            // Contact Information Card - Compact
+            html += '<div class="info-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-address-card"></i> Contact & Location</div>';
+            html += '<div class="card-content">';
+            html += '<div class="info-grid">';
+            html += `<div class="info-cell">`;
+            html += `<label><i class="fas fa-phone"></i> Phone</label>`;
+            html += `<span>${show(patient.contact_number)}</span>`;
+            html += `</div>`;
+            html += `<div class="info-cell">`;
+            html += `<label><i class="fas fa-user-friends"></i> Parent/Guardian</label>`;
+            html += `<span>${patient.parent ? show(patient.parent?.first_name) + ' ' + show(patient.parent?.last_name) : 'N/A'}</span>`;
+            html += `</div>`;
+            html += '</div></div></div>';
+            
+            // Household Information Card - Compact
+            html += '<div class="info-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-home"></i> Household</div>';
+            html += '<div class="card-content">';
+            html += '<div class="stat-row">';
+            html += `<div class="stat-item"><i class="fas fa-users"></i><span class="stat-num">${show(patient.total_household_adults)}</span><span class="stat-text">Adults</span></div>`;
+            html += `<div class="stat-item"><i class="fas fa-child"></i><span class="stat-num">${show(patient.total_household_children)}</span><span class="stat-text">Children</span></div>`;
+            html += `<div class="stat-item"><i class="fas fa-user-friends"></i><span class="stat-num">${show(patient.total_household_twins)}</span><span class="stat-text">Twins</span></div>`;
+            html += '</div>';
+            html += '<div class="benefit-status">';
+            html += `<i class="fas fa-hand-holding-heart"></i> <span>4Ps Beneficiary:</span> ${getStatusBadge(patient.is_4ps_beneficiary, 'boolean')}`;
+            html += '</div>';
+            html += '</div></div>';
+            
+            // Health Metrics Card - Compact with visual indicators
+            html += '<div class="info-card metrics-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-heartbeat"></i> Health Metrics</div>';
+            html += '<div class="card-content">';
+            html += '<div class="metrics-row">';
+            html += `<div class="metric-box">`;
+            html += `<i class="fas fa-weight-hanging"></i>`;
+            html += `<div class="metric-data">`;
+            html += `<span class="metric-value">${show(patient.weight_kg)}</span>`;
+            html += `<span class="metric-unit">kg</span>`;
+            html += `</div>`;
+            html += `<span class="metric-label">Weight</span>`;
+            html += `</div>`;
+            html += `<div class="metric-box">`;
+            html += `<i class="fas fa-ruler-vertical"></i>`;
+            html += `<div class="metric-data">`;
+            html += `<span class="metric-value">${show(patient.height_cm)}</span>`;
+            html += `<span class="metric-unit">cm</span>`;
+            html += `</div>`;
+            html += `<span class="metric-label">Height</span>`;
+            html += `</div>`;
+            if (calculatedBMI) {
+                html += `<div class="metric-box">`;
+                html += `<i class="fas fa-calculator"></i>`;
+                html += `<div class="metric-data">`;
+                html += `<span class="metric-value">${calculatedBMI}</span>`;
+                html += `<span class="metric-unit">BMI</span>`;
+                html += `</div>`;
+                html += `<span class="metric-label">Body Mass Index</span>`;
+                html += `</div>`;
+            }
+            html += '</div>';
+            html += '<div class="indicators-row">';
+            html += `<div class="indicator-item"><label>Weight for Age:</label><span class="indicator-badge">${show(patient.weight_for_age)}</span></div>`;
+            html += `<div class="indicator-item"><label>Height for Age:</label><span class="indicator-badge">${show(patient.height_for_age)}</span></div>`;
+            html += `<div class="indicator-item"><label>BMI for Age:</label><span class="indicator-badge">${show(patient.bmi_for_age)}</span></div>`;
+            html += '</div>';
+            html += '</div></div>';
+            
+            html += '</div>'; // End main column
+            
+            // Sidebar Column
+            html += '<div class="details-column details-sidebar">';
+            
+            // Medical Status Card
+            html += '<div class="info-card status-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-stethoscope"></i> Medical Status</div>';
+            html += '<div class="card-content">';
+            html += '<div class="status-list">';
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-baby"></i>`;
+            html += `<span class="status-label">Breastfeeding</span>`;
+            html += `${getStatusBadge(patient.breastfeeding, patient.breastfeeding === 'Yes' ? 'boolean' : 'default')}`;
+            html += `</div>`;
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-hand-holding-medical"></i>`;
+            html += `<span class="status-label">Edema</span>`;
+            html += `${getStatusBadge(patient.edema, patient.edema === 'Yes' ? 'boolean' : 'default')}`;
+            html += `</div>`;
+            html += '</div>';
+            html += '</div></div>';
+            
+            // Medical Notes if exists
+            if (patient.other_medical_problems && patient.other_medical_problems !== 'N/A' && patient.other_medical_problems.trim() !== '') {
+                html += '<div class="info-card notes-card">';
+                html += '<div class="card-header-sm"><i class="fas fa-clipboard-list"></i> Medical Notes</div>';
+                html += '<div class="card-content">';
+                html += `<div class="notes-text">${show(patient.other_medical_problems)}</div>`;
+                html += '</div></div>';
+            }
+            
+            html += '</div>'; // End sidebar column
+            html += '</div>'; // End details-container
+            html += '</div>'; // End patient-details-modern
+            
+            Swal.fire({
+                title: 'Patient Details',
+                html: html,
+                width: '90vw',
+                customClass: {
+                    popup: 'swal2-patient-modal'
+                },
+                confirmButtonText: 'Close',
+                confirmButtonColor: '#40916c'
+            });
         })
         .catch(error => {
-            detailsDiv.innerHTML = `<div class='alert alert-danger'>Failed to load patient details.</div>`;
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load patient details.',
+                confirmButtonColor: '#40916c'
+            });
         });
-
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('viewPatientModal'));
-    modal.show();
 }
 
 function deletePatient(patientId) {
-    if (confirm('Are you sure you want to delete this patient?')) {
-        console.log('Delete patient:', patientId);
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this! All patient data will be permanently deleted.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef476f',
+        cancelButtonColor: '#7f8c8d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            // Get CSRF token
+            const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+            return fetch(`/nutritionist/patients/${patientId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to delete patient');
+                }
+                return data;
+            })
+            .catch(error => {
+                Swal.showValidationMessage(
+                    `Request failed: ${error.message || error}`
+                );
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            Swal.fire({
+                title: 'Deleted!',
+                text: 'Patient has been deleted successfully.',
+                icon: 'success',
+                confirmButtonColor: '#40916c',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                // Refresh the patient list and update count
+                applyFilters();
+            });
+        }
+    });
 }
 
 // Global functions

@@ -217,7 +217,7 @@ class NutritionistController extends Controller
         $nutritionistId = $nutritionist->user_id;
         
         $request->validate([
-            'parent_id' => 'required|exists:users,user_id',
+            'parent_id' => 'nullable|exists:users,user_id',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'barangay_id' => 'required|exists:barangays,barangay_id',
@@ -231,7 +231,7 @@ class NutritionistController extends Controller
 
         try {
             $patient = Patient::create([
-                'parent_id' => $request->parent_id,
+                'parent_id' => $request->parent_id ?: null,
                 'nutritionist_id' => $nutritionistId,
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
@@ -312,7 +312,7 @@ class NutritionistController extends Controller
         }
 
         $request->validate([
-            'parent_id' => 'required|exists:users,user_id',
+            'parent_id' => 'nullable|exists:users,user_id',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'barangay_id' => 'required|exists:barangays,barangay_id',
@@ -326,7 +326,7 @@ class NutritionistController extends Controller
 
         try {
             $patient->update([
-                'parent_id' => $request->parent_id,
+                'parent_id' => $request->parent_id ?: null,
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
                 'last_name' => $request->last_name,
@@ -784,8 +784,8 @@ class NutritionistController extends Controller
 
         $patient = $assessment->patient;
         
-    // Decode treatment plan (from 'treatment' column)
-    $treatmentPlan = json_decode($assessment->treatment, true);
+        // Decode treatment plan (from 'treatment' column)
+        $treatmentPlan = json_decode($assessment->treatment, true);
         
         // Prepare data for PDF
         $data = [
@@ -795,11 +795,23 @@ class NutritionistController extends Controller
             'nutritionist' => $nutritionist
         ];
 
-        // Generate PDF
+        // Generate PDF with enhanced settings
         $pdf = Pdf::loadView('nutritionist.assessment-pdf', $data);
         $pdf->setPaper('A4', 'portrait');
         
-        $filename = 'assessment_' . $patient->first_name . '_' . $patient->last_name . '_' . date('Y-m-d') . '.pdf';
+        // Optional: Set additional options for better rendering
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'sans-serif',
+            'dpi' => 150,
+            'isFontSubsettingEnabled' => true
+        ]);
+        
+        // Generate filename with proper formatting
+        $filename = 'Nutritional_Assessment_' . 
+                    str_replace(' ', '_', $patient->first_name . '_' . $patient->last_name) . 
+                    '_' . date('Y-m-d') . '.pdf';
         
         return $pdf->download($filename);
     }

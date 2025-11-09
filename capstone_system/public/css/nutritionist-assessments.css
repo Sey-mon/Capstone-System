@@ -841,13 +841,13 @@
 
 /* Modern Filter Container */
 .modern-filters-container {
-    background: linear-gradient(135deg, var(--green-50) 0%, var(--white) 100%);
-    border: 2px solid var(--border-green);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border: 2px solid var(--primary-darker);
     border-radius: 20px;
     padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow-sm);
-    color: var(--text-primary);
+    box-shadow: var(--shadow-green);
+    color: var(--white);
 }
 
 .filter-header {
@@ -861,7 +861,25 @@
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
-    color: var(--text-primary);
+    color: var(--white);
+}
+
+.filter-title i {
+    color: var(--white);
+}
+
+.filter-header .btn-outline-secondary {
+    background: var(--white);
+    border: 2px solid var(--white);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.filter-header .btn-outline-secondary:hover {
+    background: var(--green-50);
+    border-color: var(--white);
+    color: var(--primary-dark);
+    transform: translateY(-2px);
 }
 
 .filters-grid {
@@ -879,7 +897,11 @@
     font-size: 0.875rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: var(--text-secondary);
+    color: var(--white);
+}
+
+.filter-label i {
+    color: var(--white);
 }
 
 .modern-filter-input,
@@ -943,23 +965,27 @@
 }
 
 .modern-card-header {
-    background: linear-gradient(to right, var(--white) 0%, var(--green-50) 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     padding: 2rem 2.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid var(--primary-color);
+    border-bottom: 3px solid var(--primary-darker);
 }
 
 .header-left .modern-title {
     font-size: 2rem;
     font-weight: 800;
-    color: var(--text-primary);
+    color: var(--white);
     margin: 0 0 0.5rem 0;
 }
 
+.header-left .modern-title i {
+    color: var(--white);
+}
+
 .header-left .modern-subtitle {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.9);
     margin: 0;
     font-size: 1rem;
 }
@@ -1013,6 +1039,7 @@
 
 .modern-card-content {
     padding: 2rem;
+    background: var(--gray-100);
 }
 
 /* Modern Patient Cards Grid */
