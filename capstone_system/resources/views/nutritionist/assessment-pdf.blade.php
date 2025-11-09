@@ -3,14 +3,63 @@
 <head>
     <meta charset="utf-8">
     <title>Nutritional Assessment Profile - {{ $patient->first_name }} {{ $patient->last_name }}</title>
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/assessment-pdf.css') }}">
+    <style>
+        {!! file_get_contents(public_path('css/nutritionist/assessment-pdf.css')) !!}
+    </style>
 </head>
 <body>
     <div class="resume-container">
-        <div class="header">
-            <h1>{{ $patient->first_name }} {{ $patient->last_name }}</h1>
-            <div class="subtitle">Nutritional Assessment Profile</div>
-            <div class="date">Assessment Date: {{ $assessment->assessment_date->format('F d, Y') }}</div>
+        <!-- Professional Header with Logo -->
+        <div class="document-header">
+            <div class="header-top">
+                <div class="logo-section">
+                    @if(file_exists(public_path('img/san-pedro-logo.png')))
+                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/san-pedro-logo.png'))) }}" alt="San Pedro Logo" class="header-logo">
+                    @else
+                        <div class="logo-placeholder">
+                            <div class="logo-icon">�️</div>
+                        </div>
+                    @endif
+                </div>
+                <div class="header-info">
+                    <p class="republic-text">Republic of the Philippines</p>
+                    <p class="province-text">Province of Laguna</p>
+                    <h1 class="clinic-name">CITY OF SAN PEDRO</h1>
+                    <h2 class="office-name">CITY HEALTH OFFICE</h2>
+                    <p class="clinic-details">📍 Brgy. Poblacion, City of San Pedro, Laguna | ☎ (02) 808 – 2020 local 302 | ✉ splrhu10211@gmail.com</p>
+                </div>
+                <div class="logo-section">
+                    @if(file_exists(public_path('img/bagong-pilipinas-logo.png')))
+                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/bagong-pilipinas-logo.png'))) }}" alt="Bagong Pilipinas Logo" class="header-logo">
+                    @else
+                        <div class="logo-placeholder">
+                            <div class="logo-icon">🇵🇭</div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+            <div class="header-divider"></div>
+        </div>
+
+        <!-- Patient Header Card -->
+        <div class="patient-header-card">
+            <div class="patient-avatar">
+                @if($patient->profile_picture && file_exists(public_path($patient->profile_picture)))
+                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path($patient->profile_picture))) }}" alt="Patient Photo" class="patient-photo">
+                @else
+                    <div class="avatar-placeholder">
+                        <span class="avatar-initials">{{ substr($patient->first_name, 0, 1) }}{{ substr($patient->last_name, 0, 1) }}</span>
+                    </div>
+                @endif
+            </div>
+            <div class="patient-title-section">
+                <h1 class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</h1>
+                <div class="assessment-title">Nutritional Assessment Profile</div>
+                <div class="assessment-date">📅 Assessment Date: {{ $assessment->assessment_date->format('F d, Y') }}</div>
+            </div>
+            <div class="status-indicator status-{{ strtolower(str_replace(' ', '-', $assessment->diagnosis)) }}">
+                {{ $assessment->diagnosis }}
+            </div>
         </div>
 
         <div class="contact-info">
@@ -215,14 +264,45 @@
             @endif
         </div>
 
+        <!-- Signature Section -->
+        <div class="signature-section no-break">
+            <div class="signature-box">
+                <div style="height: 50px; margin-bottom: 10px;">
+                    <!-- Space for digital signature or stamp -->
+                </div>
+                <div class="signature-line">
+                    <div class="signature-name">{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</div>
+                </div>
+                <div class="signature-label">Licensed Nutritionist</div>
+                <div class="signature-label">License No: _____________</div>
+            </div>
+            <div class="signature-box">
+                <div style="height: 50px; margin-bottom: 10px;">
+                    <!-- Space for date -->
+                </div>
+                <div class="signature-line">
+                    <div class="signature-name">{{ now()->format('F d, Y') }}</div>
+                </div>
+                <div class="signature-label">Date Issued</div>
+                <div class="signature-label">@ {{ now()->format('g:i A') }}</div>
+            </div>
+        </div>
+
+        <!-- Professional Footer -->
         <div class="footer">
             <div class="footer-title">Professional Assessment Certification</div>
             <div class="footer-info">
-                This nutritional assessment profile was professionally conducted and documented by:<br>
+                This comprehensive nutritional assessment profile was professionally conducted, analyzed, and documented by<br>
                 <strong>{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</strong> - Licensed Nutritionist<br>
-                Generated on {{ now()->format('F d, Y \a\t g:i A') }} | Nutritional Assessment System
+                <br>
+                Document Generated: {{ now()->format('l, F d, Y \a\t g:i A') }}<br>
+                Capstone Nutrition System | Professional Nutritional Care & Management<br>
+                <small style="font-size: 10px; opacity: 0.8;">This is a computer-generated document. All information is confidential and protected under medical privacy laws.</small>
             </div>
         </div>
     </div>
+
+    <!-- Optional Watermark -->
+    <div class="watermark">CONFIDENTIAL</div>
 </body>
 </html>
