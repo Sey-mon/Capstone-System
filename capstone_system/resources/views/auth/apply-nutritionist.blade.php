@@ -3,83 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apply as Nutritionist - Nutrition System</title>
+    <title>Apply as Staff - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{ asset('css/nutritionist-wizard.css') }}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/register-parent.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="wizard-container">
-            <!-- Header -->
-            <div class="wizard-header">
-                <h2><i class="fas fa-user-md me-2"></i>Apply as Nutritionist</h2>
-                <p>Join our team of professional nutritionists</p>
-                <div class="wizard-progress">
-                    <div class="wizard-progress-bar" style="width: 33.33%"></div>
+    <!-- Navigation Header -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>Nutrition System</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ route('staff.login') }}">Already have an account? Sign In</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Application -->
+    <section id="home" class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Join Our<br>Professional Team</h1>
+                <p class="hero-subtitle">Apply as a nutritionist or health worker and make a difference in community health and nutrition</p>
+                
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Professional dashboard access</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Manage patient assessments</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Create personalized meal plans</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Track community health metrics</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="wizard-content">
-                @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-                @if($errors->any())
-                    <div class="alert alert-danger">
-                        <ul>
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-                <!-- Step Indicator -->
-                <div class="step-indicator">
-                    <div class="step-progress" style="width: 0%"></div>
-                    <div class="step active">
-                        <div class="step-number">1</div>
-                        <div class="step-title">Personal Info</div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <div class="step-title">Professional Details</div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <div class="step-title">ID Verification</div>
-                    </div>
+            <div class="login-card wizard-container" role="main" aria-label="Staff Application Form">
+                <div class="wizard-header">
+                    <h2>Apply as Staff</h2>
+                    <p>Join our team of professional nutritionists and health workers</p>
                 </div>
+        
+        <!-- Progress Indicator -->
+        <div class="wizard-progress">
+            <div class="step active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-label">Personal Info</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-label">Professional Details</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-number">3</div>
+                <div class="step-label">ID Verification</div>
+            </div>
+        </div>
 
-                <div class="info-box">
-                    <h4>Application Process:</h4>
+        <!-- Error Messages -->
+        @if($errors->any())
+            <div class="error-alert">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    <strong>Please fix the following errors:</strong>
                     <ul>
-                        <li>Complete the 3-step application form</li>
-                        <li>Upload your professional ID for verification</li>
-                        <li>Admin will review your qualifications</li>
-                        <li>You'll receive email notification upon approval</li>
-                        <li>Access your nutritionist dashboard once approved</li>
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
                     </ul>
                 </div>
-                <!-- Display Error Messages -->
-                @if($errors->any())
-                    <div class="alert alert-error">
-                        <ul>
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+            </div>
+        @endif
 
-                <form method="POST" action="{{ route('apply.nutritionist.post') }}" id="nutritionistWizard" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('apply.nutritionist.post') }}" id="nutritionistWizard" class="wizard-form" enctype="multipart/form-data">
                     @csrf
 
                     <!-- Step 1: Personal Information -->
-                    <div class="step-content active" id="step-1">
-                        <div class="step-header">
-                            <h3><i class="fas fa-user me-2"></i>Personal Information</h3>
-                            <p>Please provide your personal details</p>
-                        </div>
+                    <div class="wizard-step active" data-step="1">
+                        <h3 class="step-title">
+                            <i class="fas fa-user"></i>
+                            Personal Information
+                        </h3>
+                        <p class="step-description">Please provide your personal details</p>
 
                         <div class="form-row">
                             <div class="form-col">
@@ -167,14 +185,24 @@
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
                         </div>
+                        
+                        <div class="step-navigation">
+                            <button type="button" class="btn btn-secondary prev-step" style="visibility: hidden;">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                            <button type="button" class="btn btn-primary next-step">
+                                Next Step <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Step 2: Professional Information -->
-                    <div class="step-content" id="step-2">
-                        <div class="step-header">
-                            <h3><i class="fas fa-briefcase me-2"></i>Professional Information</h3>
-                            <p>Tell us about your professional background</p>
-                        </div>
+                    <div class="wizard-step" data-step="2">
+                        <h3 class="step-title">
+                            <i class="fas fa-briefcase"></i>
+                            Professional Information
+                        </h3>
+                        <p class="step-description">Tell us about your professional background</p>
 
                         <div class="form-row">
                             <div class="form-col">
@@ -226,14 +254,24 @@
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
                         </div>
+                        
+                        <div class="step-navigation">
+                            <button type="button" class="btn btn-secondary prev-step">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                            <button type="button" class="btn btn-primary next-step">
+                                Next Step <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Step 3: ID Verification -->
-                    <div class="step-content" id="step-3">
-                        <div class="step-header">
-                            <h3><i class="fas fa-shield-alt me-2"></i>Professional ID Verification</h3>
-                            <p>Upload your professional ID or license for verification</p>
-                        </div>
+                    <div class="wizard-step" data-step="3">
+                        <h3 class="step-title">
+                            <i class="fas fa-shield-alt"></i>
+                            Professional ID Verification
+                        </h3>
+                        <p class="step-description">Upload your professional ID or license for verification</p>
 
                         <div class="form-group">
                             <label class="form-label">Professional ID/License Document *</label>
@@ -288,39 +326,69 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Navigation Buttons -->
-                    <div class="wizard-buttons">
-                        <button type="button" class="btn btn-outline btn-prev" style="display: none;">
-                            <i class="fas fa-arrow-left"></i> Previous
-                        </button>
                         
-                        <div class="button-group">
-                            <button type="button" class="btn btn-primary btn-next">
-                                Next Step <i class="fas fa-arrow-right"></i>
+                        <div class="step-navigation">
+                            <button type="button" class="btn btn-secondary prev-step">
+                                <i class="fas fa-arrow-left"></i> Previous
                             </button>
-                            <button type="submit" class="btn btn-success btn-submit" style="display: none;">
+                            <button type="submit" class="btn btn-success">
                                 <i class="fas fa-check"></i> Submit Application
                             </button>
                         </div>
                     </div>
                 </form>
 
-                <div class="form-footer" style="margin-top: 2rem; text-align: center; padding-top: 2rem; border-top: 1px solid #e9ecef;">
-                    <p>Already have an account? <a href="{{ route('login') }}" style="color: #667eea; text-decoration: none;">Login here</a></p>
-                    <p><a href="{{ route('register') }}" style="color: #6c757d; text-decoration: none;">← Choose different account type</a></p>
+                <div class="form-footer">
+                    <p>Already have an account? <a href="{{ route('staff.login') }}" class="register-link">Sign In</a></p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="{{ asset('js/nutritionist-wizard.js') }}"></script>
+        <!-- Decorative Background -->
+        <div class="hero-decoration">
+            <div class="particle-network"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>Nutrition System</span>
+            </div>
+            <p class="footer-text">© 2025 Nutrition Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="{{ asset('js/staff-application.js') }}"></script>
     <script>
-    // Show/hide 'Other' field for qualifications
+    // File upload preview
     document.addEventListener('DOMContentLoaded', function() {
-        var qualSelect = document.getElementById('qualifications');
-        var qualOther = document.getElementById('qualifications_other');
+        const fileInput = document.getElementById('professional_id_path');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadArea = document.getElementById('uploadArea');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                    fileInfo.innerHTML = `
+                        <div class="selected-file">
+                            <i class="fas fa-file-${file.type.includes('pdf') ? 'pdf' : 'image'}"></i>
+                            <span>${file.name}</span>
+                            <small>(${fileSize} MB)</small>
+                        </div>
+                    `;
+                    uploadArea.classList.add('has-file');
+                }
+            });
+        }
+
+        // Show/hide 'Other' field for qualifications
+        const qualSelect = document.getElementById('qualifications');
+        const qualOther = document.getElementById('qualifications_other');
         if (qualSelect && qualOther) {
             qualSelect.addEventListener('change', function() {
                 if (this.value === 'Other') {
@@ -329,11 +397,24 @@
                     qualOther.style.display = 'none';
                 }
             });
-            // On page load, show if 'Other' was selected
             if (qualSelect.value === 'Other') {
                 qualOther.style.display = 'block';
             }
         }
+
+        // Enhanced date input styling
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = '#66bb6a';
+            });
+            
+            input.addEventListener('blur', function() {
+                if (!this.value) {
+                    this.style.borderColor = '#e2e8f0';
+                }
+            });
+        });
     });
     </script>
 </body>

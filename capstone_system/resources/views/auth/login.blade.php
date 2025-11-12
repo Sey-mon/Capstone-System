@@ -128,6 +128,10 @@
                 
                 <div class="form-footer">
                     <p>Don't have an account? <a href="{{ route('register') }}" class="register-link">Create one here</a></p>
+                    <p class="staff-login-link">
+                        <i class="fas fa-user-shield"></i>
+                        Staff member? <a href="{{ route('staff.login') }}">Login here</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -277,6 +281,12 @@
             <div class="footer-logo">
                 <i class="fas fa-heartbeat"></i>
                 <span>Nutrition System</span>
+            </div>
+            <div class="footer-links">
+                <a href="{{ route('staff.login') }}" class="footer-staff-link">
+                    <i class="fas fa-user-shield"></i>
+                    Staff Portal
+                </a>
             </div>
             <p class="footer-text">© 2025 Nutrition Management System. All rights reserved.</p>
         </div>

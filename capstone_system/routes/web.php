@@ -27,10 +27,17 @@ Route::get('/contact-admin', function() {
     return view('auth.contact-admin');
 })->name('contact.admin');
 Route::post('/contact-admin', [AuthController::class, 'sendContactAdmin'])->name('contact.admin.send');
+
+// Public Login (Default)
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login.get');
 Route::post('/', [AuthController::class, 'login'])->name('login.root.post'); // Handle POST to root
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+
+// Staff Portal Login (Admin, Nutritionist, Health Workers, BHW)
+Route::get('/staff/login', [AuthController::class, 'showStaffLogin'])->name('staff.login');
+Route::post('/staff/login', [AuthController::class, 'staffLogin'])->name('staff.login.post');
+
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Email Verification Routes
@@ -84,12 +91,14 @@ Route::post('/test-registration', function (Request $request) {
 })->name('test.registration');
 
 // Registration Routes
-Route::get('/register', [AuthController::class, 'showRegistrationOptions'])->name('register');
+Route::get('/register', [AuthController::class, 'showParentRegistration'])->name('register'); // Direct to parent registration
 Route::get('/register/parent', [AuthController::class, 'showParentRegistration'])->name('register.parent');
 Route::post('/register/parent', [AuthController::class, 'registerParent'])->name('register.parent.post');
 Route::get('/register/success', function () {
     return view('auth.registration-success');
 })->name('registration.success');
+
+// Staff/Nutritionist Application
 Route::get('/apply/nutritionist', [AuthController::class, 'showNutritionistApplication'])->name('apply.nutritionist');
 Route::post('/apply/nutritionist', [AuthController::class, 'applyNutritionist'])->name('apply.nutritionist.post');
 
