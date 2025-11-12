@@ -52,7 +52,7 @@ class AuthController extends Controller
         return back()->with('success', 'Your message has been sent to the admin.');
     }
     /**
-     * Show the login form
+     * Show the login form (Public/Parent Login)
      */
     public function showLoginForm(Request $request)
     {
@@ -65,7 +65,88 @@ class AuthController extends Controller
     }
 
     /**
-     * Handle login request
+     * Show staff login page (Admin, Nutritionist, Health Workers, BHW)
+     */
+    public function showStaffLogin(Request $request)
+    {
+        if (Auth::check()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+        return view('auth.staff-login');
+    }
+
+    /**
+     * Handle staff login request (Admin, Nutritionist, Health Workers, BHW)
+     */
+    public function staffLogin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $credentials = $request->only('email', 'password');
+
+        // First check if user exists using encryption-aware method
+        $user = User::findByEmail($credentials['email']);
+        
+        if (!$user) {
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ])->withInput();
+        }
+
+        // Verify staff role (Admin, Nutritionist, Health Worker, BHW)
+        $roleName = $user->role->role_name ?? null;
+        $allowedRoles = ['Admin', 'Nutritionist', 'Health Worker', 'BHW'];
+        
+        if (!in_array($roleName, $allowedRoles)) {
+            return back()->withErrors([
+                'email' => 'You do not have staff portal access.',
+            ])->withInput();
+        }
+
+        // Check password
+        if (Hash::check($credentials['password'], $user->password)) {
+            // Check if user is active
+            if (!$user->is_active) {
+                return back()->withErrors([
+                    'email' => 'Your account is pending approval. Please wait for admin activation.',
+                ])->withInput();
+            }
+
+            // Log the user in manually
+            Auth::login($user, $request->filled('remember'));
+            $request->session()->regenerate();
+            
+            // Store login portal for logout redirect
+            $request->session()->put('login_portal', 'staff');
+            
+            // Log successful login
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'staff_login',
+                'description' => 'Staff member logged in successfully',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return $this->redirectToDashboard();
+        }
+
+        return back()->withErrors([
+            'email' => 'Invalid staff credentials.',
+        ])->withInput();
+    }
+
+    /**
+     * Handle login request (Public/Parent)
      */
     public function login(Request $request)
     {
@@ -89,6 +170,14 @@ class AuthController extends Controller
             ])->withInput();
         }
 
+        // Verify parent role only for public login
+        $roleName = $user->role->role_name ?? null;
+        if ($roleName !== 'Parent') {
+            return back()->withErrors([
+                'email' => 'This login is for parents only. Staff members, please use the Staff Portal.',
+            ])->withInput();
+        }
+
         // Check password manually since we're using encrypted emails
         if (Hash::check($credentials['password'], $user->password)) {
             // Check if user is active
@@ -103,11 +192,14 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
             
+            // Store login portal for logout redirect
+            $request->session()->put('login_portal', 'parent');
+            
             // Log successful login
             AuditLog::create([
                 'user_id' => Auth::id(),
-                'action' => 'login',
-                'description' => 'User logged in successfully',
+                'action' => 'parent_login',
+                'description' => 'Parent logged in successfully',
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -125,6 +217,9 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        // Get login portal before session is invalidated
+        $loginPortal = $request->session()->get('login_portal', 'parent');
+        
         // Log logout activity
         if (Auth::check()) {
             AuditLog::create([
@@ -139,6 +234,11 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // Redirect based on which portal they used to login
+        if ($loginPortal === 'staff') {
+            return redirect()->route('staff.login')->with('success', 'You have been logged out successfully.');
+        }
 
         return redirect()->route('login')->with('success', 'You have been logged out successfully.');
     }
