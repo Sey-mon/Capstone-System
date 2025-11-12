@@ -3,16 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Registration - Child Nutrition System</title>
+    <title>Parent Registration - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <link rel="stylesheet" href="{{ asset('css/register-parent.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="register-container wizard-container" role="main" aria-label="Parent Registration Form">
-        <div class="wizard-header">
-            <h2>Create Parent Account</h2>
-            <p>Follow these simple steps to join our nutrition community and help monitor your child's health</p>
+    <!-- Navigation Header -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>Nutrition System</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ route('login') }}">Already have an account? Sign In</a>
+            </div>
         </div>
+    </nav>
+
+    <!-- Hero Section with Registration -->
+    <section id="home" class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Join Our<br>Nutrition Community</h1>
+                <p class="hero-subtitle">Create your parent account to monitor your child's health and nutrition progress with professional guidance</p>
+                
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Track your child's nutrition</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Get personalized meal plans</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Access health assessments</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Connect with nutritionists</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-card wizard-container" role="main" aria-label="Parent Registration Form">
+                <div class="wizard-header">
+                    <h2>Create Parent Account</h2>
+                    <p>Follow these simple steps to join our nutrition community</p>
+                </div>
         
         <!-- Progress Indicator -->
         <div class="wizard-progress">
@@ -421,12 +464,36 @@
             </div>
         </form>
 
-        <div class="form-footer">
-            <p>Already have an account? <a href="{{ route('login') }}">Login here</a></p>
-            <p><a href="{{ route('register') }}">← Choose different account type</a></p>
+                <div class="form-footer">
+                    <p>Already have an account? <a href="{{ route('login') }}" class="register-link">Sign In</a></p>
+                </div>
+            </div>
         </div>
-    </div>
 
+        <!-- Decorative Background -->
+        <div class="hero-decoration">
+            <div class="particle-network"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>Nutrition System</span>
+            </div>
+            <div class="footer-links">
+                <a href="{{ route('staff.login') }}" class="footer-staff-link">
+                    <i class="fas fa-user-shield"></i>
+                    Staff Portal
+                </a>
+            </div>
+            <p class="footer-text">© 2025 Nutrition Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="{{ asset('js/login.js') }}"></script>
     <script src="{{ asset('js/register-parent.js') }}"></script>
     
     <script>
