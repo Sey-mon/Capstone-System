@@ -11,26 +11,115 @@
         }
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 10px;
+            font-size: 12px;
             line-height: 1.4;
             color: #333;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #3b82f6;
+        
+        /* Professional Document Header */
+        .document-header {
+            background: white;
+            color: #000;
+            padding: 20px 30px 15px 30px;
+            margin-bottom: 25px;
+            border-bottom: 4px solid #1e40af;
         }
-        .header h1 {
+        .header-top {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .logo-section {
+            display: table-cell;
+            width: 100px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .header-logo {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+            vertical-align: middle;
+        }
+        .logo-placeholder {
+            width: 85px;
+            height: 85px;
+            background: rgba(30, 64, 175, 0.1);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #1e40af;
+            vertical-align: middle;
+        }
+        .logo-icon {
+            font-size: 40px;
+        }
+        .header-info {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .republic-text {
+            font-size: 12px;
+            margin: 0;
+            font-weight: 400;
+            color: #374151;
+        }
+        .province-text {
+            font-size: 12px;
+            margin: 0;
+            font-weight: 400;
+            color: #374151;
+        }
+        .clinic-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 2px 0;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #1e40af;
+        }
+        .office-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 2px 0 8px 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #374151;
+        }
+        .clinic-details {
+            font-size: 10px;
+            margin: 0;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+        .header-divider {
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, #1e40af, #3b82f6, #1e40af);
+            margin-top: 12px;
+        }
+        
+        .report-title-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+        .report-title-section h1 {
             font-size: 18px;
             color: #3b82f6;
             margin-bottom: 5px;
         }
-        .header h2 {
+        .report-title-section h2 {
             font-size: 14px;
             color: #2563eb;
             margin-bottom: 10px;
         }
+        
         .report-info {
             background: #f3f4f6;
             padding: 10px;
@@ -42,7 +131,7 @@
         }
         .report-info td {
             padding: 3px 5px;
-            font-size: 9px;
+            font-size: 11px;
         }
         .report-info strong {
             color: #2563eb;
@@ -61,12 +150,12 @@
             background: #f9fafb;
         }
         .stat-value {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: #3b82f6;
         }
         .stat-label {
-            font-size: 8px;
+            font-size: 10px;
             color: #6b7280;
             margin-top: 2px;
         }
@@ -116,14 +205,14 @@
             background: #3b82f6;
             color: white;
             padding: 6px 4px;
-            font-size: 8px;
+            font-size: 10px;
             font-weight: bold;
             text-align: left;
             border: 1px solid #2563eb;
         }
         table.data-table td {
             padding: 5px 4px;
-            font-size: 8px;
+            font-size: 10px;
             border: 1px solid #d1d5db;
         }
         table.data-table tr:nth-child(even) {
@@ -153,7 +242,7 @@
             bottom: 0;
             width: 100%;
             text-align: center;
-            font-size: 8px;
+            font-size: 10px;
             color: #6b7280;
             padding-top: 10px;
             border-top: 1px solid #d1d5db;
@@ -177,10 +266,42 @@
     </style>
 </head>
 <body>
-    <div class="header">
+    <!-- Professional Header with Logo -->
+    <div class="document-header">
+        <div class="header-top">
+            <div class="logo-section">
+                @if(file_exists(public_path('img/san-pedro-logo.png')))
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/san-pedro-logo.png'))) }}" alt="San Pedro Logo" class="header-logo">
+                @else
+                    <div class="logo-placeholder">
+                        <div class="logo-icon">🏛️</div>
+                    </div>
+                @endif
+            </div>
+            <div class="header-info">
+                <p class="republic-text">Republic of the Philippines</p>
+                <p class="province-text">Province of Laguna</p>
+                <h1 class="clinic-name">CITY OF SAN PEDRO</h1>
+                <h2 class="office-name">CITY HEALTH OFFICE</h2>
+                <p class="clinic-details">📍 Brgy. Poblacion, City of San Pedro, Laguna | ☎ (02) 808 – 2020 local 302 | ✉ splrhu10211@gmail.com</p>
+            </div>
+            <div class="logo-section">
+                @if(file_exists(public_path('img/bagong-pilipinas-logo.png')))
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/bagong-pilipinas-logo.png'))) }}" alt="Bagong Pilipinas Logo" class="header-logo">
+                @else
+                    <div class="logo-placeholder">
+                        <div class="logo-icon">🇵🇭</div>
+                    </div>
+                @endif
+            </div>
+        </div>
+        <div class="header-divider"></div>
+    </div>
+
+    <div class="report-title-section">
         <h1>{{ $title }}</h1>
         <h2>Assessment Summary for Main Office</h2>
-        <div style="font-size: 9px; color: #6b7280;">
+        <div style="font-size: 11px; color: #6b7280;">
             Report Period: {{ date('F d, Y', strtotime($startDate)) }} to {{ date('F d, Y', strtotime($endDate)) }}
         </div>
     </div>
@@ -331,14 +452,14 @@
             <div style="font-size: 9px; margin-bottom: 5px;"><strong>Prepared by:</strong></div>
             <div class="signature-line">
                 <strong>{{ $nutritionist->name }}</strong><br>
-                <span style="font-size: 8px;">Nutritionist</span>
+                <span style="font-size: 10px;">Nutritionist</span>
             </div>
         </div>
         <div class="signature-box">
             <div style="font-size: 9px; margin-bottom: 5px;"><strong>Received by:</strong></div>
             <div class="signature-line">
                 <strong>_______________________________</strong><br>
-                <span style="font-size: 8px;">Main Office Representative</span>
+                <span style="font-size: 10px;">Main Office Representative</span>
             </div>
         </div>
     </div>
