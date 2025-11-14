@@ -405,14 +405,14 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     # Helper: Allergy section
     allergy_val = patient_data.get('allergies', 'None')
     if allergy_val and allergy_val.lower() not in ['none', 'no', 'n/a', 'not specified']:
-        allergy_section = f"Strictly avoid: {allergy_val}. List all allergen-containing foods from the database. Prevent cross-contamination. Emergency plan ready."
+        allergy_section = f"Avoid {allergy_val}. Check all ingredients."
     else:
         allergy_section = "No known allergies. Monitor for new reactions."
 
     # Helper: Religion section
     religion_val = patient_data.get('religion', '') or religion or 'Not specified'
     if religion_val and religion_val.lower() not in ['none', 'no', 'n/a', 'not specified']:
-        religion_section = f"Respect dietary restrictions for {religion_val}. List allowed/forbidden foods if any."
+        religion_section = f"Follow {religion_val} dietary guidelines."
     else:
         religion_section = "No specific religious dietary restrictions."
 
@@ -634,67 +634,136 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     
     prompt_str = """You are a Pediatric Nutritionist specializing in Filipino cuisine for children 0-5 years.
 
-## PRIMARY CONSTRAINT
-ONLY recommend foods from the database below. Never mention generic food groups or unlisted foods.
+    LANGUAGE INSTRUCTIONS: You may answer in Tagalog, but it's okay to use English if you are unsure of the correct Tagalog word or if there isn't an accurate Tagalog equivalent. Use simple, everyday words that ordinary Filipino parents can understand.
 
-## FOOD DATABASE
-{food_list_str}
+    ## PRIMARY CONSTRAINT
+    ONLY recommend foods from the database below. Never mention generic food groups or unlisted foods.
 
-{pdf_context}
+    ## FOOD DATABASE
+    {food_list_str}
 
-Base your response on {nutrition_analysis}
+    {pdf_context}
 
-## CHILD PROFILE
-- Age: {age_months} months
-- Weight: {weight_kg} kg | Height: {height_cm} cm | BMI: {bmi_for_age}
-- Allergies: {allergies} | Medical: {other_medical_problems} | Religion: {religion}
-- Available Ingredients: {available_ingredients}
+    Base your response on {nutrition_analysis}
 
-## COMPREHENSIVE NUTRITION PLAN
+    ## MANDATORY RESPONSE FORMAT - ALL SECTIONS MUST BE INCLUDED IN THIS EXACT ORDER
 
-Based on {nutrition_analysis}, find fitted foods based on {nutrition_tags} and use it in suggesting foods.
+    ### CHILD PROFILE (MUST include this exact header)
+    **Edad**: {age_months} buwan
+    **Timbang**: {weight_kg} kg
+    **Taas**: {height_cm} cm
+    **BMI**: {bmi_for_age}
+    **Allergy**: {allergies}
+    **Karamdaman**: {other_medical_problems}
+    **Relihiyon**: {religion}
+    **Available Ingredients**: {available_ingredients}
 
-Give estimated kcal needed for the patient based on the prompt
+    AGE-SPECIFIC GUIDELINES:
+    **Kasalukuyang Edad ({age_months} buwan)**:
+    {age_guidelines}
 
-### AGE-SPECIFIC FEEDING GUIDELINES
-**Current Age Group ({age_months} months)**:
-{age_guidelines}
+    **Allergy**: {allergies} {allergy_section}
 
-### ALLERGY COMPLIANCE
-**Allergies: {allergies}**
-{allergy_section}
+    **Relihiyon**: {religion} {religion_section}
 
-### RELIGIOUS DIETARY COMPLIANCE
-**Religion: {religion}**
-{religion_section}
+    **Karamdaman**: {other_medical_problems} [If none, briefly state "Walang special dietary restrictions." If specified, provide brief dietary guidance.]
 
-### 7-DAY MEAL PLAN
-**CRITICAL: Provide complete details for ALL 7 days. No summaries or shortcuts.**
-
-**Day 1-7: Format for each day:**
-- **Breakfast**: [Specific dish] ([portion]) - [Nutrition benefit + kcal]
-- **Lunch**: [Specific dish] ([portion]) - [Nutrition benefit + kcal]
-- **Snack**: [Specific item] ([portion]) - [Purpose + kcal]
-- **Dinner**: [Specific dish] ([portion]) - [Evening focus + kcal]
-- **Daily Total**: [Sum all kcal from energy_kcal values]
-
-**Day 1**: Use available ingredients {available_ingredients}
-**Days 2-7**: Vary using database foods, different themes daily
-
-### PARENT OBSERVATION TRACKING
-**Daily**: Appetite (Good/Fair/Poor), Energy levels, Sleep quality, Bowel movements
-**Weekly**: Weight check, Growth observations, Skill development
-**Monthly**: Height measurement, Food preferences, Feeding independence
-
-### RED FLAGS & EMERGENCY PROTOCOLS
-**Immediate Care**: Severe allergic reactions, Choking, Persistent vomiting, Dehydration, High fever with poor feeding
-**Concerning Signs**: Weight loss, Growth stagnation, Feeding aversion, Digestive issues
-**Emergency Protocol**: Call emergency services → Contact pediatrician → Nutritionist follow-up
-
-{filipino_context}
-
-**FINAL VERIFICATION**: All recommendations use only database foods, respect allergies/religion, and are age-appropriate."""
+    ### 7-DAY MEAL PLAN (MUST include this exact header)
     
+    **MANDATORY: COMPLETE ALL 7 DAYS WITH ALL MEAL CATEGORIES**
+    
+    **Day 1**:
+    - **Breakfast (Almusal)**: [Specific Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [Specific Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [Specific Tagalog snack] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [Specific Tagalog dish] ([portion]) - [benefit in Tagalog]
+
+    **Day 2**:
+    - **Breakfast (Almusal)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [Different Tagalog snack] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+
+    **Day 3**:
+    - **Breakfast (Almusal)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [Different Tagalog snack] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+
+    **Day 4**:
+    - **Breakfast (Almusal)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [Different Tagalog snack] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+
+    **Day 5**:
+    - **Breakfast (Almusal)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [Different Tagalog snack] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+
+    **Day 6**:
+    - **Breakfast (Almusal)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [Different Tagalog snack] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+
+    **Day 7**:
+    - **Breakfast (Almusal)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [Different Tagalog snack] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [Different Tagalog dish] ([portion]) - [benefit in Tagalog]
+
+    **CRITICAL MEAL PLAN RULES:**
+    1. NEVER repeat the same dish or ingredient across different days (MANDATORY)
+    2. Use only foods from the database
+    3. All food names and preparation methods MUST be in Tagalog
+    4. Use common, affordable Filipino dishes (pangmasa)
+    5. For 6-59 months: Use mechanical diet (finely chopped food)
+    6. For 0-6 months: State "Breastfeeding lamang" instead of meal plan
+    7. DO NOT include calorie numbers
+    8. Day 1: Prioritize available ingredients: {available_ingredients}
+
+    **FOOD PREPARATION EXAMPLES:**
+    - "nilagang mais" NOT "fresh corn"
+    - "pritong tilapia" or "ginataang tilapia"
+    - "ginisang kangkong"
+    - "adobong manok"
+
+    ### REGULAR NA OBSERBAHAN (MUST include this exact header)
+    
+    **Araw-Araw** (MUST include this exact subheader):
+    - Gana kumain (Mabuti/Katamtaman/Hindi mabuti) - Sigla ng bata - Tulog (mahimbing ba?) - Dumi (normal ba?)
+
+    **Bawat Linggo** (MUST include this exact subheader):
+    - Timbang - Paglaki - Bagong natututunan
+
+    **Bawat Buwan**:
+    - Taas - Gustong pagkain - Pagiging independent sa pagkain
+
+    ## BALANSENG PAGKAIN PARA SA BATA
+
+    Bawat pagkain dapat may:
+    - Pagkain na nagbibigay lakas at enerhiya (tulad ng kanin, tinapay, mais)
+    - Pagkain na tumutulong sa paglaki ng bata (tulad ng isda, manok, itlog)
+    - Pagkain na nagpapalakas ng katawan (tulad ng gulay, prutas)
+    - Tubig - laging importante
+
+    {filipino_context}
+
+    ### FINAL VERIFICATION CHECKLIST:
+    ✓ CHILD PROFILE section is included with exact header
+    ✓ 7-DAY MEAL PLAN section is included with exact header
+    ✓ All 7 days (Day 1, Day 2, Day 3, Day 4, Day 5, Day 6, Day 7) are included
+    ✓ Each day has Breakfast (Almusal), Lunch (Tanghalian), Snack (Meryenda), Dinner (Hapunan)
+    ✓ REGULAR NA OBSERBAHAN section with Araw-Araw and Bawat Linggo subheaders
+    ✓ Entire response is in simple Tagalog
+    ✓ Only database foods are recommended
+    ✓ No dish/ingredient is repeated across days
+    ✓ No calorie numbers included
+    ✓ Allergies ({allergies}) are avoided
+    ✓ Religious restrictions ({religion}) are respected"""
+        
     prompt_template = PromptTemplate(
         input_variables=["food_list_str", "pdf_context", "nutrition_analysis", "age_months", "weight_kg", "height_cm", "bmi_for_age", "allergies", "other_medical_problems", "religion", "available_ingredients", "nutrition_tags", "age_guidelines", "allergy_section", "religion_section", "filipino_context"],
         template=prompt_str

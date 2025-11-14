@@ -306,7 +306,7 @@ function viewMealPlan(planId) {
                                     </div>
                                     
                                     <div class="detailed-plan-content" style="display: none; margin-top: 20px;">
-                                        <h4 style="color: #10b981; margin-bottom: 15px;">
+                                        <h4 style="color: #055b25; margin-bottom: 15px;">
                                             <i class="fas fa-file-alt"></i> Full Meal Plan Details
                                         </h4>
                                         <div class="plan-content-wrapper">
@@ -940,10 +940,17 @@ style.textContent = `
     }
     
     .plan-content-wrapper h4 {
-        color: #4a5568;
+        color: #055b25;
         font-size: 16px;
         margin-top: 15px;
         margin-bottom: 10px;
+    }
+    
+    .plan-content-wrapper h5 {
+        color: #000000;
+        font-size: 14px;
+        margin-top: 12px;
+        margin-bottom: 8px;
     }
     
     .plan-content-wrapper ul,
