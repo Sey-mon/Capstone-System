@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon; 
 use Illuminate\Support\Facades\Log;
 
@@ -22,16 +23,50 @@ class AuthController extends Controller
      */
     public function sendResetLinkEmail(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        // LAYER 1: Honeypot Protection - Check if bot filled hidden field
+        if ($request->filled('website')) {
+            // Bot detected, silently reject
+            return back()->withErrors([
+                'email' => 'Invalid submission attempt.',
+            ])->withInput($request->except('email'));
+        }
+
+        // LAYER 2: Google reCAPTCHA Validation
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'g-recaptcha-response' => 'required',
+        ], [
+            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
+        ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput($request->except('email'));
+        }
+
+        // LAYER 3: Verify reCAPTCHA with Google API
+        $recaptchaSecret = config('services.recaptcha.secret_key');
+        $recaptcha = new \ReCaptcha\ReCaptcha($recaptchaSecret);
+        $resp = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
+
+        if (!$resp->isSuccess()) {
+            return back()->withErrors([
+                'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
+            ])->withInput($request->except('email'));
+        }
+
+        // Find user by email
         $user = User::findByEmail($request->email);
         if (!$user) {
             return back()->withErrors(['email' => 'No account found with that email.']);
         }
-    // Generate token and send email
-    $token = app('auth.password.broker')->createToken($user);
-    $resetUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
-    Mail::to($user->email)->queue(new \App\Mail\PasswordResetMail($user, $resetUrl));
-    return back()->with('success', 'A password reset link has been sent to your email.');
+        
+        // Generate token and send email
+        $token = app('auth.password.broker')->createToken($user);
+        $resetUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
+        Mail::to($user->email)->queue(new \App\Mail\PasswordResetMail($user, $resetUrl));
+        return back()->with('success', 'A password reset link has been sent to your email.');
     }
 
     /**
@@ -39,10 +74,40 @@ class AuthController extends Controller
      */
     public function sendContactAdmin(Request $request)
     {
-        $request->validate([
+        // LAYER 1: Honeypot Protection - Check if bot filled hidden field
+        if ($request->filled('website')) {
+            // Bot detected, silently reject
+            return back()->withErrors([
+                'email' => 'Invalid submission attempt.',
+            ])->withInput($request->except('message'));
+        }
+
+        // LAYER 2: Google reCAPTCHA Validation
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'message' => 'required|string|max:1000',
+            'g-recaptcha-response' => 'required',
+        ], [
+            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
         ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput($request->except('message'));
+        }
+
+        // LAYER 3: Verify reCAPTCHA with Google API
+        $recaptchaSecret = config('services.recaptcha.secret_key');
+        $recaptcha = new \ReCaptcha\ReCaptcha($recaptchaSecret);
+        $resp = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
+
+        if (!$resp->isSuccess()) {
+            return back()->withErrors([
+                'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
+            ])->withInput($request->except('message'));
+        }
+
         // Send email to admin (replace with actual admin email)
         $adminEmail = config('mail.from.address', 'admin@example.com');
         Mail::raw('From: ' . $request->email . "\n\nMessage:\n" . $request->message, function ($message) use ($request, $adminEmail) {
@@ -61,6 +126,7 @@ class AuthController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }
+        
         return view('auth.login');
     }
 
@@ -74,6 +140,7 @@ class AuthController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }
+        
         return view('auth.staff-login');
     }
 
@@ -82,13 +149,38 @@ class AuthController extends Controller
      */
     public function staffLogin(Request $request)
     {
+        // LAYER 1: Honeypot Protection - Check if bot filled hidden field
+        if ($request->filled('website')) {
+            // Bot detected, silently reject
+            return back()->withErrors([
+                'email' => 'Invalid login attempt.',
+            ])->withInput($request->except('password'));
+        }
+
+        // LAYER 2: Google reCAPTCHA Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|min:6',
+            'g-recaptcha-response' => 'required',
+        ], [
+            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
         ]);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+            return back()->withErrors($validator)->withInput($request->except('password'));
+        }
+
+        // Verify reCAPTCHA with Google
+        $recaptchaSecret = config('services.recaptcha.secret_key');
+        if ($recaptchaSecret && $recaptchaSecret !== '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe') {
+            $recaptcha = new \ReCaptcha\ReCaptcha($recaptchaSecret);
+            $resp = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
+            
+            if (!$resp->isSuccess()) {
+                return back()->withErrors([
+                    'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
+                ])->withInput($request->except('password'));
+            }
         }
 
         $credentials = $request->only('email', 'password');
@@ -150,13 +242,38 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        // LAYER 1: Honeypot Protection - Check if bot filled hidden field
+        if ($request->filled('website')) {
+            // Bot detected, silently reject
+            return back()->withErrors([
+                'email' => 'Invalid login attempt.',
+            ])->withInput($request->except('password'));
+        }
+
+        // LAYER 2: Google reCAPTCHA Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|min:6',
+            'g-recaptcha-response' => 'required',
+        ], [
+            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
         ]);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+            return back()->withErrors($validator)->withInput($request->except('password'));
+        }
+
+        // Verify reCAPTCHA with Google
+        $recaptchaSecret = config('services.recaptcha.secret_key');
+        if ($recaptchaSecret && $recaptchaSecret !== '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe') {
+            $recaptcha = new \ReCaptcha\ReCaptcha($recaptchaSecret);
+            $resp = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
+            
+            if (!$resp->isSuccess()) {
+                return back()->withErrors([
+                    'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
+                ])->withInput($request->except('password'));
+            }
         }
 
         $credentials = $request->only('email', 'password');

@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    
     <style>
         /* Slideshow Styles */
         .slideshow-container {
@@ -147,6 +151,39 @@
             }
         }
 
+        /* CAPTCHA Styling */
+        .cf-turnstile {
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #94a3b8;
+        }
+
+        .security-info {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .security-info i {
+            color: #10b981;
+            margin-right: 0.25rem;
+        }
+
+        /* Google reCAPTCHA Styling */
+        .g-recaptcha {
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
     </style>
 </head>
 <body>
@@ -155,7 +192,7 @@
         <div class="nav-container">
             <div class="nav-logo">
                 <i class="fas fa-heartbeat"></i>
-                <span>Nutrition System</span>
+                <span>SHARES</span>
             </div>
             <div class="nav-links">
                 <a href="{{ route('login') }}">Parent Portal</a>
@@ -248,6 +285,9 @@
                 <form method="POST" action="{{ route('staff.login.post') }}" id="staffLoginForm" class="login-form">
                     @csrf
 
+                    <!-- Honeypot Field (Hidden trap for bots) -->
+                    <input type="text" name="website" id="website" style="display:none !important;" tabindex="-1" autocomplete="off">
+
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <div class="input-wrapper">
@@ -290,12 +330,38 @@
                         <a href="{{ route('password.request') }}" class="forgot-password">Forgot Password?</a>
                     </div>
 
+                    <!-- Google reCAPTCHA v2 -->
+                    <div class="form-group">
+                        <div class="g-recaptcha" 
+                             data-sitekey="{{ config('services.recaptcha.site_key', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') }}"
+                             data-theme="light">
+                        </div>
+                        <p class="security-info">
+                            <i class="fas fa-shield-alt"></i>
+                            Protected by Google reCAPTCHA
+                        </p>
+                        @error('g-recaptcha-response')
+                            <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
+                        @enderror
+                    </div>
+
                     <button type="submit" class="btn-primary" id="loginBtn">
                         <span class="btn-text">Sign In</span>
                         <div class="loading-spinner" style="display: none;">
                             <i class="fas fa-spinner fa-spin"></i>
                         </div>
                     </button>
+
+                    <div class="divider">
+                        <span>or</span>
+                    </div>
+
+                    <div class="extra-links">
+                        <a href="{{ route('contact.admin') }}" class="contact-admin-btn">
+                            <i class="fas fa-headset"></i>
+                            Contact Admin
+                        </a>
+                    </div>
                 </form>
                 
                 <div class="form-footer">
@@ -327,6 +393,16 @@
 
     <script src="{{ asset('js/login.js') }}"></script>
     <script>
+        // Honeypot protection - if bot fills the hidden field, prevent submission
+        document.getElementById('staffLoginForm').addEventListener('submit', function(e) {
+            const honeypot = document.getElementById('website').value;
+            if (honeypot) {
+                e.preventDefault();
+                console.log('Bot detected via honeypot');
+                return false;
+            }
+        });
+
         // Slideshow functionality
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');

@@ -86,13 +86,15 @@ function initializeFormValidation() {
         const isEmailValid = validateEmail(email);
         const isPasswordValid = password.length >= 1;
         
-        // Update button state
-        if (isEmailValid && isPasswordValid) {
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = '1';
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.style.opacity = '0.7';
+        // Update submit button state only
+        if (submitBtn && submitBtn.type === 'submit') {
+            if (isEmailValid && isPasswordValid) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.7';
+            }
         }
         
         return isEmailValid && isPasswordValid;
@@ -197,8 +199,8 @@ setTimeout(() => {
 
 // Add some interactive feedback
 document.addEventListener('click', function(e) {
-    // Add ripple effect to buttons
-    if (e.target.matches('.btn-primary, .contact-admin-btn')) {
+    // Add ripple effect to buttons (but not to links)
+    if (e.target.matches('.btn-primary') && e.target.tagName === 'BUTTON') {
         createRipple(e.target, e);
     }
 });

@@ -420,13 +420,13 @@ body {
     color: var(--primary-color);
     text-decoration: none;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
     transition: var(--transition);
+    position: relative;
 }
 
 .forgot-password:hover {
     color: var(--primary-dark);
-    text-decoration: underline;
 }
 
 .btn-primary {
@@ -513,20 +513,30 @@ body {
 .contact-admin-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--primary-color);
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background: #ffffff;
+    color: var(--text-primary);
     text-decoration: none;
     border-radius: var(--border-radius);
     font-size: 0.875rem;
     font-weight: 500;
     transition: var(--transition);
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    border: 1.5px solid var(--border-color);
+}
+
+.contact-admin-btn i {
+    color: var(--primary-color);
+    font-size: 1rem;
 }
 
 .contact-admin-btn:hover {
-    background: rgba(16, 185, 129, 0.15);
+    background: #f9fafb;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
 .form-footer {
@@ -1270,6 +1280,53 @@ body {
         transform: scale(4);
         opacity: 0;
     }
+}
+
+/* Back Link Styles */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: var(--transition);
+    padding: 0.5rem 0;
+}
+
+.back-link:hover {
+    color: var(--primary-dark);
+    gap: 0.75rem;
+}
+
+.back-link i {
+    transition: var(--transition);
+}
+
+.back-link:hover i {
+    transform: translateX(-3px);
+}
+
+/* Textarea Styles */
+textarea {
+    font-family: inherit;
+    resize: vertical;
+}
+
+textarea:focus {
+    border-color: var(--primary-color) !important;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Icon Wrapper */
+.icon-wrapper {
+    animation: scaleIn 0.6s ease-out;
+}
+
+.icon-wrapper i {
+    animation: pulse 2s ease-in-out infinite;
 }
 
 /* Reduced motion */
