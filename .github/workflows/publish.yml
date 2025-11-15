@@ -50,7 +50,10 @@ jobs:
         run: |
           mkdir -p build
           cd capstone_system
-          # Copy entire Laravel application maintaining structure
+          # Copy public folder contents to build root (for Hostinger web root)
+          cp -r public/* ../build/
+          cp public/.htaccess ../build/ 2>/dev/null || true
+          # Copy Laravel folders to build root (accessible but not in web root)
           cp -r vendor ../build/
           cp -r app ../build/
           cp -r config ../build/
@@ -59,12 +62,16 @@ jobs:
           cp -r routes ../build/
           cp -r storage ../build/
           cp -r bootstrap ../build/
-          cp -r public ../build/
           cp artisan ../build/
           cp composer.json ../build/
           cp composer.lock ../build/
           cp .env.example ../build/.env
           cd ..
+          
+          # Fix index.php paths for flat structure
+          sed -i "s|__DIR__.'/../vendor/autoload.php'|__DIR__.'/vendor/autoload.php'|g" build/index.php
+          sed -i "s|__DIR__.'/../bootstrap/app.php'|__DIR__.'/bootstrap/app.php'|g" build/index.php
+          
           # Add Python/ML components
           if [ -d "LLM" ]; then cp -r LLM build/; fi
           if [ -d "RandomForest" ]; then cp -r RandomForest build/; fi
