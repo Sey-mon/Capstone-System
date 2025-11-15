@@ -1967,7 +1967,7 @@ class AdminController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $admin = Auth::user();
+        $admin = User::findOrFail(Auth::id());
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -1998,7 +1998,7 @@ class AdminController extends Controller
      */
     public function updatePassword(Request $request)
     {
-        $admin = Auth::user();
+        $admin = User::findOrFail(Auth::id());
 
         $validated = $request->validate([
             'current_password' => 'required',
