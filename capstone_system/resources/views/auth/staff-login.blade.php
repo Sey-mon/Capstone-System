@@ -336,10 +336,6 @@
                              data-sitekey="{{ config('services.recaptcha.site_key', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') }}"
                              data-theme="light">
                         </div>
-                        <p class="security-info">
-                            <i class="fas fa-shield-alt"></i>
-                            Protected by Google reCAPTCHA
-                        </p>
                         @error('g-recaptcha-response')
                             <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
                         @enderror
