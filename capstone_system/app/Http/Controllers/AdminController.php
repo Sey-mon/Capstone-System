@@ -1405,7 +1405,7 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Nutritionist application approved successfully.',
-                'temp_password' => $tempPassword // In production, this should be sent via email
+                'temp_password' => $tempPassword
             ]);
 
         } catch (\Exception $e) {
