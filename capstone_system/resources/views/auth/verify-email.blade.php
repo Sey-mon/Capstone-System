@@ -128,9 +128,6 @@
                             <i class="fas fa-paper-plane"></i> Resend Verification Email
                         </button>
                     </form>
-                    
-                    <!-- Development panel link -->
-                    {{-- Removed Development Panel (Quick Verify) button for production --}}
                 </div>
                 @endauth
 
