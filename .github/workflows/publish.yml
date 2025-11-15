@@ -25,7 +25,9 @@ jobs:
           python-version: '3.x' # Adjust to your Python version
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: |
+          cd capstone_system
+          composer install --prefer-dist --no-progress --no-dev --optimize-autoloader
 
       - name: Install Python dependencies
         run: |
@@ -33,25 +35,36 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Install NPM dependencies
-        run: npm install
+        run: |
+          cd capstone_system
+          npm install
 
       - name: Build assets
-        run: npm run build
+        run: |
+          cd capstone_system
+          npm run build
 
       - name: Create build directory
         run: |
           mkdir -p build
-          cp -r public build/
-          cp -r vendor build/
-          cp -r app build/
-          cp -r config build/
-          cp -r database build/
-          cp -r resources build/
-          cp -r routes build/
-          cp -r storage build/
-          cp .env.example build/.env
-          # Add any Python files/folders you need
-          if [ -d "python_scripts" ]; then cp -r python_scripts build/; fi
+          cd capstone_system
+          cp -r public ../build/
+          cp -r vendor ../build/
+          cp -r app ../build/
+          cp -r config ../build/
+          cp -r database ../build/
+          cp -r resources ../build/
+          cp -r routes ../build/
+          cp -r storage ../build/
+          cp -r bootstrap ../build/
+          cp artisan ../build/
+          cp composer.json ../build/
+          cp composer.lock ../build/
+          cp .env.example ../build/.env
+          cd ..
+          # Add Python/ML components
+          if [ -d "LLM" ]; then cp -r LLM build/; fi
+          if [ -d "RandomForest" ]; then cp -r RandomForest build/; fi
 
       - name: Push
         uses: s0/git-publish-subdir-action@develop
