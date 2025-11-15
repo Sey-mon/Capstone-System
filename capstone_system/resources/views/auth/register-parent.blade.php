@@ -16,7 +16,7 @@
         <div class="nav-container">
             <div class="nav-logo">
                 <i class="fas fa-heartbeat"></i>
-                <span>Nutrition System</span>
+                <span>SHARES</span>
             </div>
             <div class="nav-links">
                 <a href="{{ route('login') }}">Already have an account? Sign In</a>

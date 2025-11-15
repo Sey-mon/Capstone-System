@@ -20,23 +20,33 @@ use Illuminate\Http\Request;
 Route::get('/forgot-password', function() {
     return view('auth.forgot-password');
 })->name('password.request');
-Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
+    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->name('password.email');
 
 // Contact Admin
 Route::get('/contact-admin', function() {
     return view('auth.contact-admin');
 })->name('contact.admin');
-Route::post('/contact-admin', [AuthController::class, 'sendContactAdmin'])->name('contact.admin.send');
+Route::post('/contact-admin', [AuthController::class, 'sendContactAdmin'])
+    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->name('contact.admin.send');
 
 // Public Login (Default)
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login.get');
-Route::post('/', [AuthController::class, 'login'])->name('login.root.post'); // Handle POST to root
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->name('login.root.post');
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->name('login.post');
 
 // Staff Portal Login (Admin, Nutritionist, Health Workers, BHW)
 Route::get('/staff/login', [AuthController::class, 'showStaffLogin'])->name('staff.login');
-Route::post('/staff/login', [AuthController::class, 'staffLogin'])->name('staff.login.post');
+Route::post('/staff/login', [AuthController::class, 'staffLogin'])
+    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->name('staff.login.post');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -183,6 +193,11 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::post('/reports/low-stock/download', [AdminController::class, 'downloadLowStockReport'])->name('reports.low-stock.download');
     
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
+
+    // Profile routes
+    Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
+    Route::put('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/password', [AdminController::class, 'updatePassword'])->name('password.update');
 
     // Knowledge Base Management routes
     Route::prefix('knowledge-base')->name('knowledge-base.')->group(function () {

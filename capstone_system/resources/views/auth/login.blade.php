@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <!-- Navigation Header -->
@@ -15,7 +18,7 @@
         <div class="nav-container">
             <div class="nav-logo">
                 <i class="fas fa-heartbeat"></i>
-                <span>Nutrition System</span>
+                <span>SHARES</span>
             </div>
             <div class="nav-links">
                 <a href="#home">Home</a>
@@ -31,7 +34,7 @@
     <section id="home" class="hero-section">
         <div class="hero-content">
             <div class="hero-text">
-                <h1 class="hero-title">Welcome to<br>Nutrition Management System</h1>
+                <h1 class="hero-title">WELCOME TO<br>SMART HEALTH AND RECOMMENDER SYSTEM </h1>
                 <p class="hero-subtitle">Empowering healthier communities through intelligent nutrition tracking and comprehensive health management</p>
                 <a href="#about" class="learn-more-btn">
                     Learn More
@@ -64,6 +67,9 @@
 
                 <form method="POST" action="{{ route('login.post') }}" id="loginForm" class="login-form">
                     @csrf
+
+                    <!-- Honeypot Field (Hidden trap for bots) -->
+                    <input type="text" name="website" id="website" style="display:none !important;" tabindex="-1" autocomplete="off">
 
                     <div class="form-group">
                         <label for="email">Email Address</label>
@@ -105,6 +111,19 @@
                             Remember me
                         </label>
                         <a href="{{ route('password.request') }}" class="forgot-password">Forgot Password?</a>
+                    </div>
+
+                    <!-- Google reCAPTCHA v2 -->
+                    <div class="form-group">
+                        <div class="g-recaptcha" 
+                             data-sitekey="{{ config('services.recaptcha.site_key', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') }}"
+                             data-theme="light"
+                             style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
+                        </div>
+
+                        @error('g-recaptcha-response')
+                            <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
+                        @enderror
                     </div>
 
                     <button type="submit" class="btn-primary" id="loginBtn">
@@ -294,6 +313,16 @@
 
     <script src="{{ asset('js/login.js') }}"></script>
     <script>
+        // Honeypot protection - if bot fills the hidden field, prevent submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const honeypot = document.getElementById('website').value;
+            if (honeypot) {
+                e.preventDefault();
+                console.log('Bot detected via honeypot');
+                return false;
+            }
+        });
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {

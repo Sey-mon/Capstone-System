@@ -1949,7 +1949,83 @@ class AdminController extends Controller
             'data' => $reportData,
             'generated_at' => $timestamp
         ]);
-        
+
         return $pdf->download($fileName . '-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Show admin profile page
+     */
+    public function profile()
+    {
+        $admin = Auth::user();
+        return view('admin.profile', compact('admin'));
+    }
+
+    /**
+     * Update admin profile information
+     */
+    public function updateProfile(Request $request)
+    {
+        $admin = Auth::user();
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($admin->user_id, 'user_id')],
+            'contact_number' => 'nullable|string|max:20',
+        ]);
+
+        $admin->update($validated);
+
+        // Log the profile update
+        AuditLog::create([
+            'user_id' => $admin->user_id,
+            'action' => 'update',
+            'table_name' => 'users',
+            'record_id' => $admin->user_id,
+            'description' => 'Admin updated their profile information',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect()->route('admin.profile')->with('success', 'Profile updated successfully!');
+    }
+
+    /**
+     * Update admin password
+     */
+    public function updatePassword(Request $request)
+    {
+        $admin = Auth::user();
+
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Verify current password
+        if (!Hash::check($validated['current_password'], $admin->password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect.']);
+        }
+
+        // Update password
+        $admin->update([
+            'password' => Hash::make($validated['new_password']),
+        ]);
+
+        // Log the password change
+        AuditLog::create([
+            'user_id' => $admin->user_id,
+            'action' => 'update',
+            'table_name' => 'users',
+            'record_id' => $admin->user_id,
+            'description' => 'Admin changed their password',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect()->route('admin.profile')->with('success', 'Password updated successfully!');
     }
 }

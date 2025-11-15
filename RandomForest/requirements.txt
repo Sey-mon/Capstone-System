@@ -19,4 +19,3 @@ requests>=2.31.0
 matplotlib>=3.7.0
 scipy>=1.11.0
 python-dateutil>=2.8.0
-pip install faiss-cpu
