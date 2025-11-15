@@ -322,17 +322,15 @@
                     </div>
                     
                     <div class="card-body-ultra">
-                        <div class="meal-plan-display">
-                            @if(session('meal_plan_html'))
-                                <div class="meal-plan-content-ultra">
-                                    {!! session('meal_plan_html') !!}
-                                </div>
-                            @else
-                                <div class="meal-plan-content-ultra">
-                                    <pre>{{ session('meal_plan') }}</pre>
-                                </div>
-                            @endif
-                        </div>
+                        @if(session('meal_plan_html'))
+                            <div class="meal-plan-content-ultra">
+                                {!! session('meal_plan_html') !!}
+                            </div>
+                        @else
+                            <div class="meal-plan-content-ultra">
+                                <pre>{{ session('meal_plan') }}</pre>
+                            </div>
+                        @endif
                         
                         <div class="action-footer">
                             <div class="action-buttons">

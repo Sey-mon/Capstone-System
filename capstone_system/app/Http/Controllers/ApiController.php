@@ -583,19 +583,103 @@ class ApiController extends Controller
      */
     private function formatMealPlanHtml($text)
     {
-        // Section headings
-        $text = preg_replace('/COMPREHENSIVE NUTRITION PLAN:/i', '<h4>Comprehensive Nutrition Plan</h4>', $text);
-        $text = preg_replace('/ESTIMATED KCAL NEEDS:/i', '<h5>Estimated Kcal Needs</h5>', $text);
-        $text = preg_replace('/AGE-SPECIFIC FEEDING GUIDELINES:/i', '<h5>Age-Specific Feeding Guidelines</h5>', $text);
-        $text = preg_replace('/7-DAY MEAL PLAN:/i', '<h4>7-Day Meal Plan</h4>', $text);
-        $text = preg_replace('/DAY ([0-9]+):/i', '<h5>Day $1</h5><ul>', $text);
-        $text = preg_replace('/- \*\*(.*?)\*\*: (.*?)(\(~?\d+ kcal\))?/i', '<li><strong>$1:</strong> $2 <span class="text-muted">$3</span></li>', $text);
-        $text = preg_replace('/- ([^-].+)/', '<li>$1</li>', $text);
-        $text = preg_replace('/\*\*Daily Total\*\*: ~?(\d+ kcal)/i', '<div class="daily-total">Daily Total: $1</div></ul>', $text);
-        $text = preg_replace('/PARENT OBSERVATION TRACKING:/i', '<h5>Parent Observation Tracking</h5><div class="observation">', $text);
-        $text = preg_replace('/RED FLAGS & EMERGENCY PROTOCOLS:/i', '</div><h5>Red Flags & Emergency Protocols</h5><div class="red-flags">', $text);
-        $text = preg_replace('/FINAL VERIFICATION:/i', '</div><h5>Final Verification</h5>', $text);
+    // Section headings with big bold black styling (h4)
+    // Ensure the child profile table is opened once and closed before other sections
+    $text = preg_replace('/CHILD PROFILE:/i', '<h4 class="meal-plan-heading">Child Profile</h4><div class="child-profile-table">', $text);
+        
+        // Filipino specific profile items - compact inline format
+        $text = preg_replace('/\*\*Edad\*\*:\s*([^\n\*]+)/i', '<span class="profile-item"><strong>👶 Edad:</strong> $1</span>', $text);
+        $text = preg_replace('/\*\*Timbang\*\*:\s*([^\n\*]+)/i', '<span class="profile-item"><strong>⚖️ Timbang:</strong> $1</span>', $text);
+        $text = preg_replace('/\*\*Taas\*\*:\s*([^\n\*]+)/i', '<span class="profile-item"><strong>📏 Taas:</strong> $1</span>', $text);
+        $text = preg_replace('/\*\*BMI\*\*:\s*([^\n\*]+)/i', '<span class="profile-item"><strong>📊 BMI:</strong> $1</span>', $text);
+        // Profile items: keep as inline blocks inside the child-profile-table
+        $text = preg_replace('/\*\*Allergy\*\*:\s*([^\n\*]+)/i', '<span class="profile-item"><strong>🚫 Allergy:</strong> $1</span>', $text);
+        $text = preg_replace('/\*\*Allergies\*\*:\s*([^\n\*]+)/i', '<span class="profile-item"><strong>🚫 Allergies:</strong> $1</span>', $text);
+        $text = preg_replace('/\*\*Karamdaman\*\*:\s*([^\n\*]+)/i', '<span class="profile-item"><strong>⚕️ Karamdaman:</strong> $1</span>', $text);
+        $text = preg_replace('/\*\*Relihiyon\*\*:\s*([^\n\*]+)/i', '<span class="profile-item"><strong>🕌 Relihiyon:</strong> $1</span>', $text);
+
+        // Additional patterns for compliance items that might not have ** formatting
+        $text = preg_replace('/(^|\n)\s*Allerg(?:y|ies):\s*([^\n]+)/i', '<span class="profile-item"><strong>🚫 Allergy:</strong> $2</span>', $text);
+        $text = preg_replace('/(^|\n)\s*Relihiyon:\s*([^\n]+)/i', '<span class="profile-item"><strong>🕌 Relihiyon:</strong> $2</span>', $text);
+        $text = preg_replace('/(^|\n)\s*Karamdaman:\s*([^\n]+)/i', '<span class="profile-item"><strong>⚕️ Karamdaman:</strong> $2</span>', $text);
+        $text = preg_replace('/\*\*Available Ingredients\*\*:/i', '</div><h4 class="meal-plan-heading">🥘 Available Ingredients:</h4>', $text);
+        // Fix the 7-DAY MEAL PLAN pattern to ensure it's properly detected as a section header
+        $text = preg_replace('/\b7-DAY MEAL PLAN\b:?\s*/i', '</div><h4 class="meal-plan-heading">📅 7-Day Meal Plan</h4>', $text);
+        $text = preg_replace('/###\s*7-DAY MEAL PLAN\s*/i', '</div><h4 class="meal-plan-heading">📅 7-Day Meal Plan</h4>', $text);
+        $text = preg_replace('/\*\*Kasalukuyang Edad \([0-9]+ buwan\)\*\*:/i', '<h5 class="meal-plan-heading">👶 Kasalukuyang Edad:</h5>', $text);
+        $text = preg_replace('/\*\*Araw-Araw\*\*:/i', '<h4 class="meal-plan-heading">Araw-Araw:</h4>', $text);
+        $text = preg_replace('/\*\*Kailangan ng Agarang Atensyon\*\*:/i', '<h4 class="meal-plan-heading">Kailangan ng Agarang Atensyon:</h4>', $text);
+        
+        // Green h4 patterns
+        $text = preg_replace('/AGE-SPECIFIC GUIDELINES:/i', '<h4 class="green-heading">🍼 AGE-SPECIFIC GUIDELINES:</h4>', $text);
+        
+        // Day headers - handle both quoted and unquoted formats with big bold black styling (h3)
+        $text = preg_replace('/\*\*Day ([0-9]+)\*\*:/i', '<h3 class="day-heading">📅 Day $1</h3>', $text);
+        $text = preg_replace('/"?\*\*Day ([0-9]+)\*\*"?:?/i', '<h3 class="day-heading">📅 Day $1</h3>', $text);
+        $text = preg_replace('/DAY ([0-9]+):/i', '<h3 class="day-heading">📅 Day $1</h3>', $text);
+        
+        // Meal type formatting - big bold black with emojis (h4)
+        $text = preg_replace('/- \*\*Breakfast \(Almusal\)\*\*:/i', '<h4 class="meal-type-heading">🍳 Breakfast (Almusal)</h4>', $text);
+        $text = preg_replace('/- \*\*Lunch \(Tanghalian\)\*\*:/i', '<h4 class="meal-type-heading">🍽️ Lunch (Tanghalian)</h4>', $text);
+        $text = preg_replace('/- \*\*Snack \(Meryenda\)\*\*:/i', '<h4 class="meal-type-heading">🍪 Snack (Meryenda)</h4>', $text);
+        $text = preg_replace('/- \*\*Dinner \(Hapunan\)\*\*:/i', '<h4 class="meal-type-heading">🌙 Dinner (Hapunan)</h4>', $text);
+        
+        // Alternative patterns without parentheses (fallback) - big bold black (h4)
+        $text = preg_replace('/- \*\*Breakfast\*\*:/i', '<h4 class="meal-type-heading">🍳 Breakfast (Almusal)</h4>', $text);
+        $text = preg_replace('/- \*\*Lunch\*\*:/i', '<h4 class="meal-type-heading">🍽️ Lunch (Tanghalian)</h4>', $text);
+        $text = preg_replace('/- \*\*Snack\*\*:/i', '<h4 class="meal-type-heading">🍪 Snack (Meryenda)</h4>', $text);
+        $text = preg_replace('/- \*\*Dinner\*\*:/i', '<h4 class="meal-type-heading">🌙 Dinner (Hapunan)</h4>', $text);
+        
+        // Fix bullet points - convert • to proper list items
+        $text = preg_replace('/• ([^<\n]+)/i', '<ul class="meal-details"><li>$1</li></ul>', $text);
+        $text = preg_replace('/\* ([^<\n]+)/i', '<ul class="meal-details"><li>$1</li></ul>', $text);
+        
+        // Special fix for Day 1 bullet points that appear after meal names
+        $text = preg_replace('/(📅 Day 1.*?🍳 Breakfast \(Almusal\).*?)(\n)• ([^\n]+)/s', '$1$2<ul class="meal-details"><li>$3</li></ul>', $text);
+        
+        // Format meal items with proper spacing and structure
+        $text = preg_replace('/(🍳|🍽️|🍪|🌙)\s*([^\n]+)\n([^🍳🍽️🍪🌙📅\n]+)\n?([^🍳🍽️🍪🌙📅\n]*)/m', 
+            '$1 $2<div class="meal-item"><div class="meal-name">$3</div><div class="meal-description">$4</div></div>', $text);
+        
+        // Handle simple meal items (food name - description)
+        $text = preg_replace('/^([A-Za-z][^\n-]*?)\s*-\s*([^\n]+)$/m', '<div class="meal-item"><div class="meal-name">$1</div><div class="meal-description">$2</div></div>', $text);
+        
+        // Clean up any remaining meal formatting patterns
+        // Remove old meal item patterns that are no longer needed
+        $text = preg_replace('/- \*\*(.*?)\*\*: (.*?)(\(~?\d+ kcal\))?/i', '<div class="meal-item"><div class="meal-name">$1</div><div class="meal-description">$2 $3</div></div>', $text);
+        $text = preg_replace('/\*\*Daily Total\*\*: ~?(\d+ kcal)/i', '<div class="daily-total"><strong>Daily Total:</strong> $1</div>', $text);
+        
+        // Fix long text blocks that run together - add line breaks
+        $text = preg_replace('/([a-z])\s*-\s*([A-Z])/m', '$1<br>- $2', $text);
+        $text = preg_replace('/([^\n])\s*\*\*([A-Z])/m', '$1<br><br>**$2', $text);
+        
+        // Ensure proper spacing after periods in long text
+        $text = preg_replace('/([a-z]\.)\s*([A-Z][a-z])/m', '$1<br>$2', $text);
+        
+        // Fix spacing around observation sections
+        // Minimal spacing between sections
+        $text = preg_replace('/([a-z])\s*(Regular na Obserbahan|Balanseng Pagkain)/i', '$1 $2', $text);
+        
+        // Filipino observation sections - h4 headings with spacing
+        $text = preg_replace('/REGULAR NA OBSERBAHAN:/i', '<br><h4 class="observation-heading">👀 Regular na Obserbahan</h4><div class="observation">', $text);
+        
+        // Observation frequency headings - simplified patterns
+        $text = preg_replace('/\*\*Araw-Araw\*\*\s*(\(MUST include this exact subheader\))?:/i', '<h4 class="observation-subheading">📅 Araw-Araw</h4>', $text);
+        $text = preg_replace('/\*\*Bawat Linggo\*\*\s*(\(MUST include this exact subheader\))?:/i', '<h4 class="observation-subheading">📊 Bawat Linggo</h4>', $text);
+        $text = preg_replace('/\*\*Bawat Buwan\*\*:/i', '<h4 class="observation-subheading">📅 Bawat Buwan</h4>', $text);
+        // BALANSENG PAGKAIN section - h3 heading with spacing
+        $text = preg_replace('/BALANSENG PAGKAIN PARA SA BATA:/i', '<br><h3 class="balanced-food-heading">🍽️ BALANSENG PAGKAIN PARA SA BATA</h3>', $text);
+        $text = preg_replace('/###\\s*BALANSENG PAGKAIN PARA SA BATA/i', '<br><h3 class="balanced-food-heading">🍽️ BALANSENG PAGKAIN PARA SA BATA</h3>', $text);
+        
+        // Make "Bawat pagkain dapat may:" an h4 heading
+        $text = preg_replace('/Bawat pagkain dapat may:/i', '<h4 class="balanced-food-subheading">Bawat pagkain dapat may:</h4>', $text);
+        
+        // Warning sub-sections - h4 headings 
+        $text = preg_replace('/KAILANGAN NG AGARANG ATENSYON:/i', '<h4 class="urgent-heading">🚨 Kailangan ng Agarang Atensyon</h4>', $text);
+        $text = preg_replace('/MGA DAPAT PANSININ:/i', '<h4 class="notice-heading">👁️ Mga Dapat Pansinin</h4>', $text);
+        
         $text = nl2br($text); // Convert newlines to <br>
+        
         return $text;
     }
 }
