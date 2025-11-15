@@ -50,10 +50,7 @@ jobs:
         run: |
           mkdir -p build
           cd capstone_system
-          # Copy public folder contents to build root (for Hostinger)
-          cp -r public/* ../build/
-          cp public/.htaccess ../build/ 2>/dev/null || true
-          # Copy Laravel folders to build root
+          # Copy entire Laravel application maintaining structure
           cp -r vendor ../build/
           cp -r app ../build/
           cp -r config ../build/
@@ -62,6 +59,7 @@ jobs:
           cp -r routes ../build/
           cp -r storage ../build/
           cp -r bootstrap ../build/
+          cp -r public ../build/
           cp artisan ../build/
           cp composer.json ../build/
           cp composer.lock ../build/
