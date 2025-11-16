@@ -207,6 +207,7 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
         Route::post('/reembed-missing', [KnowledgeBaseController::class, 'reembedMissing'])->name('reembed-missing');
         Route::get('/embedding-status', [KnowledgeBaseController::class, 'checkEmbeddingStatus'])->name('embedding-status');
         Route::get('/llm-health', [KnowledgeBaseController::class, 'checkLlmHealth'])->name('llm-health');
+        Route::get('/{id}/summary', [KnowledgeBaseController::class, 'getSummary'])->name('summary');
         Route::delete('/{id}', [KnowledgeBaseController::class, 'destroy'])->name('delete');
     });
 
