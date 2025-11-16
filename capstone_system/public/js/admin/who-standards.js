@@ -2,8 +2,9 @@
 
 let currentData = null;
 let currentView = 'table';
+let currentSearchTerm = '';
 
-// Enhanced modal functionality
+// Enhanced SweetAlert2 modal functionality
 function showStandardDataModern(type, title) {
     const button = event.target.closest('button');
     const dataString = button.getAttribute('data-standard');
@@ -11,28 +12,110 @@ function showStandardDataModern(type, title) {
     try {
         const data = JSON.parse(dataString);
         currentData = data;
+        currentView = 'table';
+        currentSearchTerm = '';
         
-        const modal = new bootstrap.Modal(document.getElementById('standardModal'));
-        document.getElementById('standardModalLabel').textContent = title;
-        
-        // Initialize view
-        renderDataView('table');
-        updateRecordCount();
-        
-        modal.show();
+        // Show SweetAlert2 with wide view
+        Swal.fire({
+            title: `<div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 2.5rem; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                                    border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-chart-line" style="color: white; font-size: 1rem;"></i>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="font-size: 1.25rem; font-weight: 700; color: #1f2937;">${title}</div>
+                            <div style="font-size: 0.813rem; color: #6b7280; font-weight: 400;">Reference growth standards dataset</div>
+                        </div>
+                    </div>`,
+            html: generateModalContent(),
+            width: '95%',
+            padding: '1.5rem',
+            showConfirmButton: false,
+            showCloseButton: true,
+            customClass: {
+                popup: 'swal2-who-standards',
+                title: 'swal2-who-title',
+                htmlContainer: 'swal2-who-html',
+                closeButton: 'swal2-who-close'
+            },
+            didOpen: () => {
+                initializeModalControls();
+            }
+        });
     } catch (error) {
         console.error('Error parsing standard data:', error);
         showNotification('Error loading standard data', 'error');
     }
 }
 
+// Generate modal content
+function generateModalContent() {
+    return `
+        <div class="swal-data-controls">
+            <div class="swal-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="swalDataSearch" placeholder="Search data..." />
+            </div>
+            <div class="swal-view-toggles">
+                <button class="swal-toggle-btn active" data-view="table">
+                    <i class="fas fa-table"></i> Table
+                </button>
+                <button class="swal-toggle-btn" data-view="chart">
+                    <i class="fas fa-chart-area"></i> Chart
+                </button>
+            </div>
+        </div>
+        <div id="swalStandardDataContent" class="swal-data-content"></div>
+        <div class="swal-data-footer">
+            <div class="swal-data-info">
+                <span id="swalRecordCount">0 records</span>
+            </div>
+            <div class="swal-export-options">
+                <button class="swal-btn-export" onclick="exportData('csv')">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button class="swal-btn-export" onclick="exportData('json')">
+                    <i class="fas fa-file-code"></i> Export JSON
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Initialize modal controls
+function initializeModalControls() {
+    // Render initial view
+    renderDataView('table');
+    updateRecordCount();
+    
+    // Search functionality
+    const searchInput = document.getElementById('swalDataSearch');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentSearchTerm = this.value;
+            filterData(currentSearchTerm);
+        }, 300);
+    });
+    
+    // View toggle handlers
+    document.querySelectorAll('.swal-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const viewType = this.getAttribute('data-view');
+            renderDataView(viewType);
+        });
+    });
+}
+
 // Render data based on current view
 function renderDataView(viewType) {
     currentView = viewType;
-    const content = document.getElementById('standardDataContent');
+    const content = document.getElementById('swalStandardDataContent');
     
     // Update toggle buttons
-    document.querySelectorAll('.toggle-btn').forEach(btn => {
+    document.querySelectorAll('.swal-toggle-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.getAttribute('data-view') === viewType) {
             btn.classList.add('active');
@@ -131,25 +214,12 @@ function formatCellValue(value) {
 
 // Update record count
 function updateRecordCount() {
-    const countElement = document.getElementById('recordCount');
-    if (currentData && currentData.data) {
+    const countElement = document.getElementById('swalRecordCount');
+    if (countElement && currentData && currentData.data) {
         countElement.textContent = `${currentData.data.length} records`;
-    } else {
+    } else if (countElement) {
         countElement.textContent = '0 records';
     }
-}
-
-// Search functionality
-function initializeSearch() {
-    const searchInput = document.getElementById('dataSearch');
-    let searchTimeout;
-    
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            filterData(this.value);
-        }, 300);
-    });
 }
 
 // Filter data based on search term
@@ -172,11 +242,13 @@ function filterData(searchTerm) {
     });
     
     // Update count
-    const countElement = document.getElementById('recordCount');
-    if (searchTerm === '') {
-        countElement.textContent = `${currentData.data.length} records`;
-    } else {
-        countElement.textContent = `${visibleCount} of ${currentData.data.length} records`;
+    const countElement = document.getElementById('swalRecordCount');
+    if (countElement) {
+        if (searchTerm === '') {
+            countElement.textContent = `${currentData.data.length} records`;
+        } else {
+            countElement.textContent = `${visibleCount} of ${currentData.data.length} records`;
+        }
     }
 }
 
@@ -308,19 +380,6 @@ function getIconForType(type) {
 
 // Initialize page functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize search when modal is shown
-    document.getElementById('standardModal').addEventListener('shown.bs.modal', function() {
-        initializeSearch();
-    });
-    
-    // View toggle handlers
-    document.querySelectorAll('.toggle-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const viewType = this.getAttribute('data-view');
-            renderDataView(viewType);
-        });
-    });
-    
     // Add hover effects to standard cards
     document.querySelectorAll('.standard-card-modern').forEach(card => {
         card.addEventListener('mouseenter', function() {
@@ -343,5 +402,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    console.log('🧬 WHO Standards page initialized with modern functionality');
+    console.log('🧬 WHO Standards page initialized with SweetAlert2 functionality');
 });

@@ -30,15 +30,23 @@
             <div class="medical-pattern"></div>
         </div>
         <div class="header-content">
-            <div class="breadcrumb-modern">
-                <a href="{{ route('admin.api.management') }}" class="breadcrumb-link">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>API Management</span>
-                </a>
-                <div class="breadcrumb-separator">
-                    <i class="fas fa-chevron-right"></i>
+            <div class="header-top-row">
+                <div class="breadcrumb-modern">
+                    <a href="{{ route('admin.api.management') }}" class="breadcrumb-link">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>API Management</span>
+                    </a>
+                    <div class="breadcrumb-separator">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    <div class="breadcrumb-current">Treatment Protocols</div>
                 </div>
-                <div class="breadcrumb-current">Treatment Protocols</div>
+                <div class="header-badge">
+                    <span class="quality-badge">
+                        <i class="fas fa-shield-check"></i>
+                        WHO Certified
+                    </span>
+                </div>
             </div>
             <div class="header-main">
                 <div class="header-icon-large">
@@ -48,12 +56,6 @@
                     <h1>Clinical Treatment Protocols</h1>
                     <p>Evidence-based medical interventions for malnutrition management following WHO guidelines</p>
                 </div>
-            </div>
-            <div class="header-badge">
-                <span class="quality-badge">
-                    <i class="fas fa-shield-check"></i>
-                    WHO Certified
-                </span>
             </div>
         </div>
     </div>
@@ -242,31 +244,6 @@
                                                 <div class="spec-item">
                                                     <span class="spec-label">Setting:</span>
                                                     <span class="spec-value">{{ $protocolName === 'sam_protocol' ? 'Hospital/Clinic' : 'Community/Outpatient' }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Raw Protocol Data (Collapsible) -->
-                                    <div class="protocol-card-section">
-                                        <div class="section-header-card">
-                                            <i class="fas fa-code"></i>
-                                            <h6>Technical Data</h6>
-                                        </div>
-                                        <div class="section-content-card">
-                                            <button class="btn-expand-data" type="button" data-bs-toggle="collapse" data-bs-target="#rawData{{ $index }}">
-                                                <i class="fas fa-chevron-down"></i>
-                                                <span>View Raw Protocol Data</span>
-                                            </button>
-                                            <div class="collapse" id="rawData{{ $index }}">
-                                                <div class="raw-data-modern">
-                                                    <div class="data-header">
-                                                        <span class="data-format">JSON</span>
-                                                        <button class="btn-copy-data" onclick="copyProtocolData('{{ $index }}')">
-                                                            <i class="fas fa-copy"></i>
-                                                        </button>
-                                                    </div>
-                                                    <pre id="protocolData{{ $index }}">{{ json_encode($protocols['protocols'], JSON_PRETTY_PRINT) }}</pre>
                                                 </div>
                                             </div>
                                         </div>
