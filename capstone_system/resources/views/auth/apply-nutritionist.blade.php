@@ -69,7 +69,7 @@
             </div>
             <div class="step" data-step="3">
                 <div class="step-number">3</div>
-                <div class="step-label">ID Verification</div>
+                <div class="step-label">Account Setup</div>
             </div>
         </div>
 
@@ -161,18 +161,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label class="form-label" for="birth_date">Date of Birth</label>
-                                    <input type="date" class="form-control" name="birth_date" id="birth_date" 
-                                           value="{{ old('birth_date') }}">
-                                    @error('birth_date')
-                                        <span class="error-text">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
                         </div>
-
                         <div class="form-group">
                             <label class="form-label" for="sex">Gender</label>
                             <select class="form-control form-select" name="sex" id="sex">
@@ -254,7 +243,7 @@
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
                         </div>
-                        
+
                         <div class="step-navigation">
                             <button type="button" class="btn btn-secondary prev-step">
                                 <i class="fas fa-arrow-left"></i> Previous
@@ -265,43 +254,13 @@
                         </div>
                     </div>
 
-                    <!-- Step 3: ID Verification -->
+                    <!-- Step 3: Account Setup -->
                     <div class="wizard-step" data-step="3">
                         <h3 class="step-title">
-                            <i class="fas fa-shield-alt"></i>
-                            Professional ID Verification
+                            <i class="fas fa-lock"></i>
+                            Account Setup
                         </h3>
-                        <p class="step-description">Upload your professional ID or license for verification</p>
-
-                        <div class="form-group">
-                            <label class="form-label">Professional ID/License Document *</label>
-                            <div class="upload-area" id="uploadArea">
-                                <div class="upload-icon">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                </div>
-                                <div class="upload-text">Drag and drop your document here</div>
-                                <div class="upload-subtext">or click to browse files</div>
-                                <input type="file" class="form-control" name="professional_id_path" id="professional_id_path" 
-                                       accept=".jpg,.jpeg,.png,.pdf" required style="display: none;">
-                                <button type="button" class="btn btn-outline" onclick="document.getElementById('professional_id_path').click();">
-                                    <i class="fas fa-folder-open"></i> Browse Files
-                                </button>
-                                <div class="upload-requirements">
-                                    Supported formats: JPG, PNG, PDF • Maximum size: 5MB
-                                </div>
-                            </div>
-                            <div class="file-info" id="fileInfo"></div>
-                            @error('professional_id_path')
-                                <span class="error-text">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Verification Process:</strong> Your professional ID will be reviewed by our admin team. 
-                            This process typically takes 2-3 business days. You'll receive an email notification once 
-                            your credentials are verified and your account is approved.
-                        </div>
+                        <p class="step-description">Create your secure account credentials</p>
 
                         <div class="form-row">
                             <div class="form-col">
@@ -326,7 +285,13 @@
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Account Review:</strong> Your application will be reviewed by our admin team. 
+                            You'll receive an email notification once your account is approved and activated.
+                        </div>
+
                         <div class="step-navigation">
                             <button type="button" class="btn btn-secondary prev-step">
                                 <i class="fas fa-arrow-left"></i> Previous
@@ -363,30 +328,8 @@
 
     <script src="{{ asset('js/staff-application.js') }}"></script>
     <script>
-    // File upload preview
+    // Keep only qualifications show/hide logic (removed file upload + date JS)
     document.addEventListener('DOMContentLoaded', function() {
-        const fileInput = document.getElementById('professional_id_path');
-        const fileInfo = document.getElementById('fileInfo');
-        const uploadArea = document.getElementById('uploadArea');
-
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    const fileSize = (file.size / 1024 / 1024).toFixed(2);
-                    fileInfo.innerHTML = `
-                        <div class="selected-file">
-                            <i class="fas fa-file-${file.type.includes('pdf') ? 'pdf' : 'image'}"></i>
-                            <span>${file.name}</span>
-                            <small>(${fileSize} MB)</small>
-                        </div>
-                    `;
-                    uploadArea.classList.add('has-file');
-                }
-            });
-        }
-
-        // Show/hide 'Other' field for qualifications
         const qualSelect = document.getElementById('qualifications');
         const qualOther = document.getElementById('qualifications_other');
         if (qualSelect && qualOther) {
@@ -401,20 +344,6 @@
                 qualOther.style.display = 'block';
             }
         }
-
-        // Enhanced date input styling
-        const dateInputs = document.querySelectorAll('input[type="date"]');
-        dateInputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.style.borderColor = '#66bb6a';
-            });
-            
-            input.addEventListener('blur', function() {
-                if (!this.value) {
-                    this.style.borderColor = '#e2e8f0';
-                }
-            });
-        });
     });
     </script>
 </body>

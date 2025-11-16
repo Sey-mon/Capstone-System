@@ -1095,6 +1095,15 @@ class AdminController extends Controller
                 $updateData['password'] = Hash::make($request->password);
             }
 
+            // Auto-verify email for staff members when activated via edit form
+            $newRole = \App\Models\Role::find($request->role_id);
+            $staffRoles = ['Nutritionist', 'Health Worker', 'BHW'];
+            $isBeingActivated = $updateData['is_active'] && !$user->is_active;
+            
+            if ($newRole && in_array($newRole->role_name, $staffRoles) && $isBeingActivated) {
+                $updateData['email_verified_at'] = now();
+            }
+
             $user->update($updateData);
 
             // Log the action
@@ -1243,7 +1252,7 @@ class AdminController extends Controller
     public function activateUser($id)
     {
         try {
-            $user = User::findOrFail($id);
+            $user = User::with('role')->findOrFail($id);
 
             // Prevent activating/deactivating the current authenticated user
             if ($user->user_id === Auth::id()) {
@@ -1262,7 +1271,16 @@ class AdminController extends Controller
 
             DB::beginTransaction();
 
-            $user->update(['is_active' => true]);
+            // Activate account and verify email for staff members
+            $updateData = ['is_active' => true];
+            
+            // For staff roles (Nutritionist, Health Worker, BHW), auto-verify email when activated
+            $staffRoles = ['Nutritionist', 'Health Worker', 'BHW'];
+            if ($user->role && in_array($user->role->role_name, $staffRoles)) {
+                $updateData['email_verified_at'] = now();
+            }
+            
+            $user->update($updateData);
 
             // Log the action
             AuditLog::create([
@@ -1270,7 +1288,8 @@ class AdminController extends Controller
                 'action' => 'ACTIVATE',
                 'table_name' => 'users',
                 'record_id' => $user->user_id,
-                'description' => "Activated user account: {$user->first_name} {$user->last_name}",
+                'description' => "Activated user account: {$user->first_name} {$user->last_name}" . 
+                    (isset($updateData['email_verified_at']) ? ' (Email auto-verified)' : ''),
             ]);
 
             DB::commit();

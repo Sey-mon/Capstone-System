@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Wizard State Management
     let currentStep = 1;
-    const totalSteps = 3; // Staff application has 3 steps
+    const totalSteps = 3; // Staff application has 3 steps (Personal, Professional, Account)
     let isTransitioning = false;
     
     // Initialize wizard

@@ -90,19 +90,19 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 2.5rem 0;
+    margin: 1.5rem 0;
     position: relative;
-    padding: 0 20px;
+    padding: 0 10px;
 }
 
 .wizard-progress::before {
     content: '';
     position: absolute;
-    top: 20px;
-    left: 15%;
-    right: 15%;
-    height: 3px;
-    background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 100%);
+    top: 16px;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: #e5e7eb;
     border-radius: 2px;
     z-index: 1;
     transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -111,15 +111,15 @@ body {
 .wizard-progress::after {
     content: '';
     position: absolute;
-    top: 20px;
-    left: 15%;
-    height: 3px;
+    top: 16px;
+    left: 20%;
+    height: 2px;
     background: linear-gradient(90deg, #10b981, #34d399);
     border-radius: 2px;
     z-index: 2;
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     width: 0%;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 
 .step {
@@ -132,30 +132,50 @@ body {
 }
 
 .step-number {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: #e5e7eb;
-    color: #6b7280;
+    background: #f3f4f6;
+    color: #9ca3af;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 0.5rem;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 0.4rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    position: relative;
+}
+
+.step-number::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: transparent;
     transition: all 0.3s ease;
 }
 
 .step-label {
-    font-size: 0.75rem;
-    color: #6b7280;
+    font-size: 0.7rem;
+    color: #9ca3af;
     text-align: center;
     font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .step.active .step-number {
-    background: #10b981;
+    background: linear-gradient(135deg, #10b981, #34d399);
     color: white;
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4), 0 0 0 4px rgba(16, 185, 129, 0.1);
+    transform: scale(1.1);
+}
+
+.step.active .step-number::before {
+    background: rgba(16, 185, 129, 0.1);
 }
 
 .step.active .step-label {
@@ -164,12 +184,15 @@ body {
 }
 
 .step.completed .step-number {
-    background: #059669;
+    background: linear-gradient(135deg, #059669, #10b981);
     color: white;
+    border-color: #059669;
+    box-shadow: 0 3px 10px rgba(5, 150, 105, 0.3);
 }
 
 .step.completed .step-label {
     color: #059669;
+    font-weight: 500;
 }
 
 /* Wizard Steps */
@@ -389,6 +412,119 @@ body {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+}
+
+/* Step Navigation Buttons */
+.step-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    gap: 1rem;
+}
+
+.step-navigation .btn {
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    cursor: pointer;
+    min-width: 140px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    font-family: inherit;
+}
+
+.step-navigation .btn i {
+    font-size: 0.875rem;
+}
+
+.step-navigation .btn-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.step-navigation .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.step-navigation .btn-primary:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.step-navigation .btn-primary:hover::before {
+    left: 100%;
+}
+
+.step-navigation .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 2px solid #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.step-navigation .btn-secondary:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.step-navigation .btn-success {
+    background: linear-gradient(135deg, #059669, #047857);
+    color: white;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
+}
+
+.step-navigation .btn-success::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.step-navigation .btn-success:hover {
+    background: linear-gradient(135deg, #047857, #065f46);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
+}
+
+.step-navigation .btn-success:hover::before {
+    left: 100%;
+}
+
+.step-navigation .btn:active {
+    transform: translateY(0);
+}
+
+.step-navigation .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Form Field Validation */
@@ -1032,65 +1168,7 @@ body {
     }
 }
 
-/* Enhanced Date Input Styling */
-.form-group input[type="date"] {
-    position: relative;
-    background: #ffffff;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 16px;
-    font-family: inherit;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    color: #374151;
-}
-
-.form-group input[type="date"]:focus {
-    border-color: #66bb6a;
-    box-shadow: 0 0 0 3px rgba(102, 187, 106, 0.1);
-    outline: none;
-}
-
-.form-group input[type="date"]::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    border-radius: 6px;
-    margin-left: 8px;
-    padding: 8px;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    transition: all 0.2s ease;
-    width: 20px;
-    height: 20px;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3e%3cpath fill-rule='evenodd' d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z' clip-rule='evenodd' /%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 16px;
-}
-
-.form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
-    background-color: #e9ecef;
-    border-color: #66bb6a;
-    transform: scale(1.05);
-}
-
-/* Better date input text handling */
-.form-group input[type="date"]::-webkit-datetime-edit {
-    color: #374151;
-}
-
-.form-group input[type="date"]::-webkit-datetime-edit-text {
-    color: #6b7280;
-}
-
-.form-group input[type="date"]::-webkit-datetime-edit-month-field,
-.form-group input[type="date"]::-webkit-datetime-edit-day-field,
-.form-group input[type="date"]::-webkit-datetime-edit-year-field {
-    color: #374151;
-    background: transparent;
-    border: none;
-    padding: 2px;
-}
+/* Date input styling removed (birthday field removed from forms) */
 
 /* Legacy Password Input Container (kept for compatibility) */
 .password-input-container {
@@ -1603,12 +1681,6 @@ body {
     background: rgba(220, 252, 231, 0.8);
     color: #047857;
     border: 1px solid rgba(5, 150, 105, 0.3);
-}
-
-/* Enhanced Input Styling */
-.form-group input#contact_number {
-    font-family: 'Courier New', monospace;
-    letter-spacing: 1px;
 }
 
 /* Input Animation on Focus */
