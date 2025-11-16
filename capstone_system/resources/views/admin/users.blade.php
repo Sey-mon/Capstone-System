@@ -273,7 +273,17 @@
                         <input type="password" id="edit_password_confirmation" name="password_confirmation">
                     </div>
                 </div>
-                <input type="hidden" id="edit_is_active" name="is_active" value="1">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="edit_is_active" name="is_active" value="1" style="width: auto;">
+                            <span>Active Account</span>
+                        </label>
+                        <small style="color: #6b7280; font-size: 0.875rem;">
+                            For staff members (Nutritionist, Health Worker, BHW): Activating will also verify their email automatically.
+                        </small>
+                    </div>
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update User</button>
@@ -335,7 +345,7 @@
                     document.getElementById('edit_email').value = user.email;
                     document.getElementById('edit_contact_number').value = user.contact_number || '';
                     document.getElementById('edit_role_id').value = user.role_id;
-                    document.getElementById('edit_is_active').value = user.is_active ? '1' : '0';
+                    document.getElementById('edit_is_active').checked = user.is_active ? true : false;
                     document.getElementById('edit_password').value = '';
                     document.getElementById('edit_password_confirmation').value = '';
                     
