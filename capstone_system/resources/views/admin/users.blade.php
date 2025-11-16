@@ -70,7 +70,6 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
-                            <th>Contact</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th>Actions</th>
@@ -104,7 +103,6 @@
                                     {{ $roleName }}
                                 </span>
                             </td>
-                            <td class="user-contact">{{ $user->contact_number ?? 'N/A' }}</td>
                             <td>
                                 @if($user->is_active)
                                     <span class="status-badge status-active">

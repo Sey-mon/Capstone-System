@@ -21,7 +21,6 @@
 }
 
 .users-table tbody tr {
-    border-bottom: 1px solid var(--border-light);
     transition: background-color var(--transition-fast);
 }
 
@@ -31,6 +30,7 @@
 
 .users-table td {
     padding: 1rem;
+    vertical-align: middle;
 }
 
 .users-table .user-id {
@@ -41,6 +41,14 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    background: none;
+    border-bottom: none;
+    padding: 0;
+    margin: 0;
+}
+
+.users-table .user-info > div:not(.user-avatar) {
+    background: none;
 }
 
 .users-table .user-avatar {
@@ -58,6 +66,7 @@
 
 .users-table .user-name {
     font-weight: 500;
+    text-decoration: none;
 }
 
 .users-table .user-email,
