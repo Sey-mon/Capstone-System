@@ -331,62 +331,12 @@
     </div>
 @endsection
 
-<!-- Modern Modal for displaying standard data -->
-<div class="modal fade" id="standardModal" tabindex="-1" aria-labelledby="standardModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-modern">
-        <div class="modal-content modern-modal">
-            <div class="modal-header-modern">
-                <div class="modal-title-section">
-                    <div class="modal-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="modal-title-text">
-                        <h5 class="modal-title" id="standardModalLabel">WHO Standard Data</h5>
-                        <span class="modal-subtitle">Reference growth standards dataset</span>
-                    </div>
-                </div>
-                <button type="button" class="btn-close-modern" data-bs-dismiss="modal" aria-label="Close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body-modern">
-                <div class="data-controls">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="dataSearch" placeholder="Search data..." />
-                    </div>
-                    <div class="view-toggles">
-                        <button class="toggle-btn active" data-view="table">
-                            <i class="fas fa-table"></i> Table
-                        </button>
-                        <button class="toggle-btn" data-view="chart">
-                            <i class="fas fa-chart-area"></i> Chart
-                        </button>
-                    </div>
-                </div>
-                <div id="standardDataContent" class="data-content"></div>
-                <div class="data-footer">
-                    <div class="data-info">
-                        <span id="recordCount">0 records</span>
-                    </div>
-                    <div class="export-options">
-                        <button class="btn-export" onclick="exportData('csv')">
-                            <i class="fas fa-file-csv"></i> Export CSV
-                        </button>
-                        <button class="btn-export" onclick="exportData('json')">
-                            <i class="fas fa-file-code"></i> Export JSON
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/who-standards.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ asset('js/admin/who-standards.js') }}"></script>
 @endpush

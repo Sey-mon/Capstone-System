@@ -178,50 +178,6 @@
         </div>
     </div>
 
-    <!-- API Configuration -->
-    <div class="content-section-modern">
-        <div class="section-header-modern">
-            <div class="section-title">
-                <i class="fas fa-cog"></i>
-                <h2>API Configuration</h2>
-            </div>
-            <p>Current configuration and available endpoints</p>
-        </div>
-
-        <div class="config-grid-modern">
-            <div class="config-card-modern primary">
-                <div class="config-header">
-                    <div class="config-icon">
-                        <i class="fas fa-server"></i>
-                    </div>
-                    <h3>API Endpoint</h3>
-                </div>
-                <div class="config-content">
-                    <div class="endpoint-display">
-                        <span class="endpoint-protocol">HTTPS</span>
-                        <code class="endpoint-url">{{ config('services.random_forest_api.base_url') }}</code>
-                        <button class="copy-btn" onclick="copyToClipboard(`{{ config('services.random_forest_api.base_url') }}`)">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="config-card-modern warning">
-                <div class="config-header">
-                    <div class="config-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <h3>Timeout Configuration</h3>
-                </div>
-                <div class="config-content">
-                    <div class="timeout-display">
-                        <span class="timeout-value">{{ config('services.random_forest_api.timeout') }}</span>
-                        <span class="timeout-unit">seconds</span>
-                    </div>
-                    <div class="timeout-description">Maximum request duration</div>
-                </div>
-            </div>
             
             <div class="config-card-modern info full-width">
                 <div class="config-header">
