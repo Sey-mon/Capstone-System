@@ -332,6 +332,31 @@ class KnowledgeBaseController extends Controller
     }
 
     /**
+     * Get document summary
+     */
+    public function getSummary($id)
+    {
+        try {
+            $kb = KnowledgeBase::findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'summary' => $kb->ai_summary ?? 'No summary available for this document.',
+                'pdf_name' => $kb->pdf_name,
+                'added_at' => $kb->added_at->format('M d, Y'),
+                'uploaded_by' => $kb->user ? $kb->user->first_name . ' ' . $kb->user->last_name : 'System'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching document summary: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching document summary.'
+            ], 500);
+        }
+    }
+
+    /**
      * Delete knowledge base entry
      */
     public function destroy($id)

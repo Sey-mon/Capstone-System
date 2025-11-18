@@ -474,9 +474,42 @@ class AdminController extends Controller
      */
     public function reports()
     {
+        // Get low stock items
+        $low_stock_items = InventoryItem::with('category')
+            ->where('quantity', '<', 10)
+            ->orderBy('quantity', 'asc')
+            ->get();
+        
+        // Get expired items
+        $expired_items = InventoryItem::with('category')
+            ->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '<=', now())
+            ->orderBy('expiry_date', 'asc')
+            ->get();
+        
+        // Merge and remove duplicates
+        $alert_items = $low_stock_items->merge($expired_items)->unique('item_id');
+        
+        $low_stock_items_data = $alert_items->map(function($item) {
+                $isExpired = $item->expiry_date && $item->expiry_date <= now();
+                $isLowStock = $item->quantity < 10;
+                
+                return [
+                    'item_name' => $item->item_name,
+                    'category_name' => $item->category ? $item->category->category_name : 'N/A',
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'expiry_date' => $item->expiry_date ? $item->expiry_date->format('Y-m-d') : null,
+                    'is_expired' => $isExpired,
+                    'is_low_stock' => $isLowStock,
+                    'alert_type' => $isExpired && $isLowStock ? 'both' : ($isExpired ? 'expired' : 'low_stock')
+                ];
+            });
+        
         $reports = [
             'monthly_assessments' => Assessment::whereMonth('created_at', now()->month)->count(),
-            'low_stock_items' => InventoryItem::where('quantity', '<', 10)->count(),
+            'low_stock_items' => $alert_items->count(),
+            'low_stock_items_data' => $low_stock_items_data,
             'active_users' => User::where('created_at', '>=', now()->subDays(30))->count(),
             'total_patients' => Patient::count(),
             'total_inventory_value' => InventoryItem::all()->sum(function($item) {
@@ -540,7 +573,7 @@ class AdminController extends Controller
             return [
                 'item_name' => $item->item_name,
                 'category' => [
-                    'category_name' => $item->category ? $item->category->name : null
+                    'category_name' => $item->category ? $item->category->category_name : 'Uncategorized'
                 ],
                 'quantity' => $item->quantity,
                 'minimum_stock' => property_exists($item, 'minimum_stock') ? $item->minimum_stock : 10,
@@ -553,12 +586,21 @@ class AdminController extends Controller
             'total_items' => $inventory_items->count(),
             // 'total_value' removed
             'low_stock_items' => $low_stock_items,
-            'items_by_category' => $inventory_items->groupBy('category.name')->map->count(),
+            'items_by_category' => $inventory_items->groupBy(function($item) {
+                return $item->category ? $item->category->category_name : 'Uncategorized';
+            })->map->count(),
             'recent_transactions' => $transactions,
             'stock_levels' => $inventory_items->map(function($item) {
+                // Calculate total usage (outgoing transactions)
+                $totalUsage = InventoryTransaction::where('item_id', $item->item_id)
+                    ->where('transaction_type', 'out')
+                    ->sum('quantity');
+                
                 return [
                     'item_name' => $item->item_name,
+                    'category_name' => $item->category ? $item->category->category_name : 'Uncategorized',
                     'quantity' => $item->quantity,
+                    'total_usage' => $totalUsage,
                     'unit' => $item->unit,
                     'status' => $item->quantity < 10 ? 'Low' : ($item->quantity < 50 ? 'Medium' : 'Good')
                 ];
@@ -1646,77 +1688,119 @@ class AdminController extends Controller
      */
     private function getPatientDistribution()
     {
-        $patients = Patient::with('assessments')->get();
+        $patients = Patient::with(['assessments', 'barangay'])->get();
         $distribution = [
-            'normal' => 0,
-            'underweight' => 0,
-            'malnourished' => 0,
-            'severe_malnourishment' => 0,
+            'normal' => ['count' => 0, 'percentage' => 0, 'patients' => []],
+            'underweight' => ['count' => 0, 'percentage' => 0, 'patients' => []],
+            'malnourished' => ['count' => 0, 'percentage' => 0, 'patients' => []],
+            'severe_malnourishment' => ['count' => 0, 'percentage' => 0, 'patients' => []],
         ];
+        
+        $barangay_breakdown = [];
 
         foreach ($patients as $patient) {
             // Get the latest assessment for each patient
             $latestAssessment = $patient->assessments()->latest()->first();
+            $category = 'normal';
+            $bmi = null;
             
             if ($latestAssessment) {
                 // Calculate BMI if we have weight and height
                 if ($latestAssessment->weight_kg && $latestAssessment->height_cm) {
                     $height_m = $latestAssessment->height_cm / 100;
-                    $bmi = $latestAssessment->weight_kg / ($height_m * $height_m);
+                    $bmi = round($latestAssessment->weight_kg / ($height_m * $height_m), 2);
                     
-                    // Classify based on BMI (you can adjust these thresholds based on WHO standards)
+                    // Classify based on BMI (WHO standards)
                     if ($bmi < 16) {
-                        $distribution['severe_malnourishment']++;
-                    } elseif ($bmi < 18.5) {
-                        $distribution['malnourished']++;
+                        $category = 'severe_malnourishment';
                     } elseif ($bmi < 17) {
-                        $distribution['underweight']++;
+                        $category = 'underweight';
+                    } elseif ($bmi < 18.5) {
+                        $category = 'malnourished';
                     } else {
-                        $distribution['normal']++;
+                        $category = 'normal';
                     }
                 } else {
                     // If no weight/height data, check recovery status
                     if ($latestAssessment->recovery_status === 'severe') {
-                        $distribution['severe_malnourishment']++;
+                        $category = 'severe_malnourishment';
                     } elseif ($latestAssessment->recovery_status === 'moderate') {
-                        $distribution['malnourished']++;
+                        $category = 'malnourished';
                     } elseif ($latestAssessment->recovery_status === 'mild') {
-                        $distribution['underweight']++;
+                        $category = 'underweight';
                     } else {
-                        $distribution['normal']++;
+                        $category = 'normal';
                     }
                 }
             } else {
                 // Patient with no assessments - classify based on initial data
                 if ($patient->weight_kg && $patient->height_cm) {
                     $height_m = $patient->height_cm / 100;
-                    $bmi = $patient->weight_kg / ($height_m * $height_m);
+                    $bmi = round($patient->weight_kg / ($height_m * $height_m), 2);
                     
                     if ($bmi < 16) {
-                        $distribution['severe_malnourishment']++;
-                    } elseif ($bmi < 18.5) {
-                        $distribution['malnourished']++;
+                        $category = 'severe_malnourishment';
                     } elseif ($bmi < 17) {
-                        $distribution['underweight']++;
+                        $category = 'underweight';
+                    } elseif ($bmi < 18.5) {
+                        $category = 'malnourished';
                     } else {
-                        $distribution['normal']++;
+                        $category = 'normal';
                     }
-                } else {
-                    $distribution['normal']++;
                 }
+            }
+            
+            $distribution[$category]['count']++;
+            
+            // Add patient details for at-risk categories
+            if ($category !== 'normal') {
+                $barangayName = $patient->barangay ? $patient->barangay->barangay_name : 'Unknown';
+                
+                $distribution[$category]['patients'][] = [
+                    'name' => $patient->first_name . ' ' . $patient->last_name,
+                    'barangay' => $barangayName,
+                    'bmi' => $bmi,
+                    'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
+                    'last_assessment' => $latestAssessment ? $latestAssessment->created_at->format('M d, Y') : 'No assessment'
+                ];
+                
+                // Track barangay breakdown
+                if (!isset($barangay_breakdown[$barangayName])) {
+                    $barangay_breakdown[$barangayName] = [
+                        'severe' => 0,
+                        'malnourished' => 0,
+                        'underweight' => 0,
+                        'total' => 0
+                    ];
+                }
+                
+                if ($category === 'severe_malnourishment') {
+                    $barangay_breakdown[$barangayName]['severe']++;
+                } elseif ($category === 'malnourished') {
+                    $barangay_breakdown[$barangayName]['malnourished']++;
+                } elseif ($category === 'underweight') {
+                    $barangay_breakdown[$barangayName]['underweight']++;
+                }
+                $barangay_breakdown[$barangayName]['total']++;
             }
         }
 
         // Calculate percentages
-        $total = array_sum($distribution);
+        $total = $distribution['normal']['count'] + $distribution['underweight']['count'] + 
+                 $distribution['malnourished']['count'] + $distribution['severe_malnourishment']['count'];
+        
         if ($total > 0) {
-            foreach ($distribution as $key => $count) {
-                $distribution[$key] = [
-                    'count' => $count,
-                    'percentage' => round(($count / $total) * 100, 1)
-                ];
+            foreach ($distribution as $key => $data) {
+                $distribution[$key]['percentage'] = round(($data['count'] / $total) * 100, 1);
             }
         }
+        
+        // Sort barangays by total at-risk cases
+        uasort($barangay_breakdown, function($a, $b) {
+            return $b['total'] - $a['total'];
+        });
+        
+        $distribution['barangay_breakdown'] = $barangay_breakdown;
 
         return $distribution;
     }
@@ -1748,6 +1832,91 @@ class AdminController extends Controller
                 ->count();
             $recoveredCounts[] = $recoveredCount;
         }
+        
+        // Get detailed patient progress data
+        $patients = Patient::with(['barangay', 'assessments' => function($query) {
+            $query->orderBy('assessment_date', 'desc')->limit(10);
+        }])->get();
+        
+        $patientProgress = [];
+        $barangayProgress = [];
+        
+        foreach ($patients as $patient) {
+            if ($patient->assessments->count() > 0) {
+                $latestAssessment = $patient->assessments->first();
+                $firstAssessment = $patient->assessments->last();
+                
+                // Calculate BMI change
+                $initialBmi = null;
+                $currentBmi = null;
+                
+                if ($firstAssessment->weight_kg && $firstAssessment->height_cm) {
+                    $height_m = $firstAssessment->height_cm / 100;
+                    $initialBmi = round($firstAssessment->weight_kg / ($height_m * $height_m), 2);
+                }
+                
+                if ($latestAssessment->weight_kg && $latestAssessment->height_cm) {
+                    $height_m = $latestAssessment->height_cm / 100;
+                    $currentBmi = round($latestAssessment->weight_kg / ($height_m * $height_m), 2);
+                }
+                
+                $bmiChange = ($initialBmi && $currentBmi) ? round($currentBmi - $initialBmi, 2) : null;
+                $weightChange = ($firstAssessment->weight_kg && $latestAssessment->weight_kg) 
+                    ? round($latestAssessment->weight_kg - $firstAssessment->weight_kg, 2) 
+                    : null;
+                
+                $barangayName = $patient->barangay ? $patient->barangay->barangay_name : 'Unknown';
+                
+                $patientData = [
+                    'name' => $patient->first_name . ' ' . $patient->last_name,
+                    'barangay' => $barangayName,
+                    'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
+                    'total_assessments' => $patient->assessments->count(),
+                    'initial_weight' => $firstAssessment->weight_kg,
+                    'current_weight' => $latestAssessment->weight_kg,
+                    'weight_change' => $weightChange,
+                    'initial_bmi' => $initialBmi,
+                    'current_bmi' => $currentBmi,
+                    'bmi_change' => $bmiChange,
+                    'recovery_status' => $latestAssessment->recovery_status,
+                    'last_assessment_date' => $latestAssessment->assessment_date ? $latestAssessment->assessment_date->format('M d, Y') : $latestAssessment->created_at->format('M d, Y'),
+                    'first_assessment_date' => $firstAssessment->assessment_date ? $firstAssessment->assessment_date->format('M d, Y') : $firstAssessment->created_at->format('M d, Y'),
+                    'progress_trend' => $bmiChange > 0 ? 'improving' : ($bmiChange < 0 ? 'declining' : 'stable')
+                ];
+                
+                $patientProgress[] = $patientData;
+                
+                // Group by barangay
+                if (!isset($barangayProgress[$barangayName])) {
+                    $barangayProgress[$barangayName] = [
+                        'total_patients' => 0,
+                        'improving' => 0,
+                        'stable' => 0,
+                        'declining' => 0,
+                        'recovered' => 0
+                    ];
+                }
+                
+                $barangayProgress[$barangayName]['total_patients']++;
+                
+                if ($latestAssessment->recovery_status === 'recovered') {
+                    $barangayProgress[$barangayName]['recovered']++;
+                } elseif ($bmiChange > 0.5) {
+                    $barangayProgress[$barangayName]['improving']++;
+                } elseif ($bmiChange < -0.5) {
+                    $barangayProgress[$barangayName]['declining']++;
+                } else {
+                    $barangayProgress[$barangayName]['stable']++;
+                }
+            }
+        }
+        
+        // Sort patients by BMI change (most improvement first)
+        usort($patientProgress, function($a, $b) {
+            if ($a['bmi_change'] === null) return 1;
+            if ($b['bmi_change'] === null) return -1;
+            return $b['bmi_change'] <=> $a['bmi_change'];
+        });
 
         return [
             'months' => $months,
@@ -1755,6 +1924,9 @@ class AdminController extends Controller
             'recovered' => $recoveredCounts,
             'total_assessments' => array_sum($assessmentCounts),
             'total_recovered' => array_sum($recoveredCounts),
+            'patient_progress' => $patientProgress,
+            'barangay_progress' => $barangayProgress,
+            'barangays' => array_keys($barangayProgress)
         ];
     }
 

@@ -33,6 +33,9 @@ function getCsrfToken() {
     return token ? token.getAttribute('content') : '';
 }
 
+// Flag to prevent duplicate event listener attachment
+let eventListenersAttached = false;
+
 function setupEventListeners() {
     // File upload handlers
     const browseBtn = document.getElementById('browse-btn');
@@ -89,28 +92,12 @@ function setupEventListeners() {
         });
     }
 
-    // Document actions
-    const viewSummaryBtns = document.querySelectorAll('.view-summary-btn');
-    const deleteDocumentBtns = document.querySelectorAll('.delete-document-btn');
-
-    viewSummaryBtns.forEach(btn => {
-        btn.addEventListener('click', () => viewDocumentSummary(btn.dataset.kbId));
-    });
-
-    deleteDocumentBtns.forEach(btn => {
-        btn.addEventListener('click', () => deleteDocument(btn.dataset.kbId, btn.dataset.name));
-    });
-
-    // Modal
-    const modalOverlay = document.getElementById('modal-overlay');
-    const closeModal = document.getElementById('close-modal');
-
-    if (modalOverlay) {
-        modalOverlay.addEventListener('click', hideModal);
-    }
-
-    if (closeModal) {
-        closeModal.addEventListener('click', hideModal);
+    // Document actions - Use event delegation for dynamically loaded content
+    // Only attach once to prevent multiple triggers
+    if (!eventListenersAttached) {
+        document.addEventListener('click', handleDocumentActions);
+        eventListenersAttached = true;
+        console.log('✅ Document action listeners attached');
     }
 
     // Search
@@ -123,6 +110,38 @@ function setupEventListeners() {
     const toastClose = document.querySelector('.toast-close');
     if (toastClose) {
         toastClose.addEventListener('click', hideToast);
+    }
+}
+
+// ============================================================================
+// DOCUMENT ACTION HANDLER
+// ============================================================================
+
+function handleDocumentActions(e) {
+    // View Summary button
+    if (e.target.closest('.view-summary-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const btn = e.target.closest('.view-summary-btn');
+        const kbId = btn.dataset.kbId;
+        if (kbId) {
+            console.log('🔘 View summary button clicked');
+            viewDocumentSummary(kbId);
+        }
+        return;
+    }
+    
+    // Delete button
+    if (e.target.closest('.delete-document-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const btn = e.target.closest('.delete-document-btn');
+        const kbId = btn.dataset.kbId;
+        const name = btn.dataset.name;
+        if (kbId && name) {
+            deleteDocument(kbId, name);
+        }
+        return;
     }
 }
 
@@ -556,65 +575,214 @@ function updateDocumentStatuses() {
 // ============================================================================
 
 function viewDocumentSummary(kbId) {
+    console.log('viewDocumentSummary called with kbId:', kbId);
+    
     // Find document element
     const documentItem = document.querySelector(`.document-item[data-kb-id="${kbId}"]`);
     
-    if (documentItem) {
-        const title = documentItem.querySelector('.document-title').getAttribute('title');
-        const summary = documentItem.querySelector('.document-summary p')?.textContent || 'No summary available';
-        const metaItems = documentItem.querySelectorAll('.meta-item');
-        let metaText = '';
-        metaItems.forEach(item => {
-            metaText += item.textContent.trim() + ' | ';
+    if (!documentItem) {
+        console.error('Document not found with kbId:', kbId);
+        Swal.fire({
+            icon: 'error',
+            title: 'Document Not Found',
+            text: 'Could not find the requested document.',
+            confirmButtonColor: '#10B981'
         });
-        metaText = metaText.slice(0, -3); // Remove last ' | '
-
-        const summaryContent = document.getElementById('summary-content');
-        summaryContent.innerHTML = `
-            <div style="margin-bottom: 1rem;">
-                <h4 style="color: var(--kb-text-primary); margin-bottom: 0.5rem;">${title}</h4>
-                <p style="color: var(--kb-text-secondary); font-size: 0.875rem;">
-                    ${metaText}
-                </p>
-            </div>
-            <pre style="background: var(--kb-bg); padding: 1rem; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; font-size: 0.875rem; line-height: 1.6;">${summary}</pre>
-        `;
-        showModal();
-    }
-}
-
-function deleteDocument(kbId, name) {
-    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
         return;
     }
 
-    fetch(`/admin/knowledge-base/${kbId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': getCsrfToken()
+    const title = documentItem.querySelector('.document-title').getAttribute('title');
+    const metaItems = documentItem.querySelectorAll('.meta-item');
+    let metaText = '';
+    metaItems.forEach(item => {
+        metaText += item.textContent.trim() + ' ';
+    });
+    
+    console.log('Document found:', title);
+
+    // Show loading state with SweetAlert2
+    Swal.fire({
+        title: '<i class="fas fa-file-pdf"></i> Loading Summary',
+        html: `
+            <div style="text-align: left; margin-top: 1rem;">
+                <h5 style="color: #1F2937; margin-bottom: 0.5rem; font-size: 1rem;">${title}</h5>
+                <p style="color: #6B7280; font-size: 0.875rem; margin-bottom: 1rem;">
+                    <i class="fas fa-info-circle"></i> ${metaText}
+                </p>
+                <div style="text-align: center; padding: 2rem;">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p style="margin-top: 1rem; color: #6B7280;">Fetching document summary...</p>
+                </div>
+            </div>
+        `,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        customClass: {
+            popup: 'swal-wide'
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            // Remove document from DOM
-            const documentItem = document.querySelector(`.document-item[data-kb-id="${kbId}"]`);
-            if (documentItem) {
-                documentItem.remove();
+    });
+
+    // Fetch full summary from server
+    fetch(`/admin/knowledge-base/${kbId}/summary`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const summary = data.summary || 'No summary available for this document.';
+                
+                Swal.fire({
+                    title: '<i class="fas fa-file-pdf" style="color: #10B981;"></i> Document Summary',
+                    html: `
+                        <div style="text-align: left;">
+                            <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; color: white; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);">
+                                <h5 style="margin: 0 0 0.75rem 0; font-size: 1.1rem; font-weight: 600;">
+                                    <i class="fas fa-file-alt"></i> ${title}
+                                </h5>
+                                <p style="margin: 0; font-size: 0.875rem; opacity: 0.95;">
+                                    <i class="fas fa-info-circle"></i> ${metaText}
+                                </p>
+                            </div>
+                            <div style="background: #ffffff; padding: 1.25rem; border-radius: 12px; border: 2px solid #D1FAE5; max-height: 400px; overflow-y: auto; box-shadow: inset 0 2px 4px rgba(16, 185, 129, 0.1);">
+                                <div style="color: #047857; font-size: 0.9rem; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word;">${summary}</div>
+                            </div>
+                        </div>
+                    `,
+                    width: '700px',
+                    confirmButtonText: '<i class="fas fa-check"></i> Close',
+                    confirmButtonColor: '#10B981',
+                    customClass: {
+                        popup: 'swal-wide',
+                        confirmButton: 'btn btn-success'
+                    },
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown animate__faster'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp animate__faster'
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Summary Not Available',
+                    html: `
+                        <div style="text-align: left;">
+                            <h5 style="color: #1F2937; margin-bottom: 0.5rem;">${title}</h5>
+                            <p style="color: #6B7280; font-size: 0.875rem;">${metaText}</p>
+                        </div>
+                        <p style="margin-top: 1rem;">No summary is available for this document yet.</p>
+                    `,
+                    confirmButtonColor: '#10B981',
+                    confirmButtonText: 'OK'
+                });
             }
-            // Update document count
-            const documentsStatus = document.getElementById('documents-status');
-            const currentCount = parseInt(documentsStatus.querySelector('.status-value').textContent);
-            documentsStatus.querySelector('.status-value').textContent = currentCount - 1;
-        } else {
-            showToast(data.message || 'Delete failed', 'error');
+        })
+        .catch(error => {
+            console.error('Error fetching summary:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error Loading Summary',
+                html: `
+                    <div style="text-align: left;">
+                        <h5 style="color: #1F2937; margin-bottom: 0.5rem;">${title}</h5>
+                        <p style="color: #6B7280; font-size: 0.875rem;">${metaText}</p>
+                    </div>
+                    <p style="margin-top: 1rem;">Failed to load the document summary. Please try again.</p>
+                `,
+                confirmButtonColor: '#EF4444',
+                confirmButtonText: 'OK'
+            });
+        });
+}
+
+function deleteDocument(kbId, name) {
+    Swal.fire({
+        title: 'Delete Document?',
+        html: `
+            <div style="text-align: left; margin: 1rem 0;">
+                <p style="margin-bottom: 0.5rem;">Are you sure you want to delete:</p>
+                <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #991B1B;">${name}</strong>
+                </div>
+                <p style="margin-top: 1rem; color: #DC2626; font-weight: 600;">
+                    <i class="fas fa-exclamation-triangle"></i> This action cannot be undone!
+                </p>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete It',
+        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+        customClass: {
+            confirmButton: 'btn btn-danger',
+            cancelButton: 'btn btn-secondary'
+        },
+        showClass: {
+            popup: 'animate__animated animate__shakeX'
         }
-    })
-    .catch(error => {
-        console.error('Delete error:', error);
-        showToast('Delete failed: ' + error.message, 'error');
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Deleting...',
+                html: 'Please wait while we delete the document.',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`/admin/knowledge-base/${kbId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove document from DOM
+                    const documentItem = document.querySelector(`.document-item[data-kb-id="${kbId}"]`);
+                    if (documentItem) {
+                        documentItem.remove();
+                    }
+                    // Update document count
+                    const documentsStatus = document.getElementById('documents-status');
+                    const currentCount = parseInt(documentsStatus.querySelector('.status-value').textContent);
+                    documentsStatus.querySelector('.status-value').textContent = currentCount - 1;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: data.message || 'Document deleted successfully.',
+                        confirmButtonColor: '#10B981',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Delete Failed',
+                        text: data.message || 'Failed to delete document.',
+                        confirmButtonColor: '#EF4444'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Delete error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while deleting the document.',
+                    confirmButtonColor: '#EF4444'
+                });
+            });
+        }
     });
 }
 
@@ -641,16 +809,6 @@ function handleSearch(e) {
 // ============================================================================
 // UI HELPERS
 // ============================================================================
-
-function showModal() {
-    const modal = document.getElementById('summary-modal');
-    modal.classList.add('active');
-}
-
-function hideModal() {
-    const modal = document.getElementById('summary-modal');
-    modal.classList.remove('active');
-}
 
 function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');

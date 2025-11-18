@@ -1,19 +1,19 @@
 /* Modern WHO Standards Design System - Green & White Theme */
 :root {
-    --gradient-male: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --gradient-female: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
-    --gradient-weight: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-    --gradient-height: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    --gradient-primary: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --gradient-success: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    --gradient-info: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-    --gradient-warning: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
-    --shadow-modern: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --shadow-glow-green: 0 10px 40px -10px rgba(16, 185, 129, 0.3);
+    --gradient-male: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    --gradient-female: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+    --gradient-weight: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+    --gradient-height: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    --gradient-primary: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    --gradient-success: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    --gradient-info: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+    --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    --shadow-sm: 0 1px 3px rgba(46, 125, 50, 0.05), 0 1px 2px rgba(46, 125, 50, 0.02);
+    --shadow-modern: 0 2px 6px rgba(46, 125, 50, 0.15);
+    --shadow-hover: 0 4px 20px rgba(46, 125, 50, 0.2);
+    --shadow-glow-green: 0 10px 40px -10px rgba(46, 125, 50, 0.3);
     --border-radius-modern: 16px;
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s ease;
     --glass-bg: rgba(255, 255, 255, 0.7);
     --glass-border: rgba(255, 255, 255, 0.2);
 }
@@ -85,8 +85,8 @@
 
 .swal-search-box input:focus {
     outline: none;
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    border-color: #43a047;
+    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
 }
 
 .swal-view-toggles {
@@ -723,7 +723,7 @@
     font-size: 0.875rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.25);
 }
 
 .btn-view-data::before {
@@ -746,7 +746,7 @@
 
 .btn-view-data:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 4px 20px rgba(46, 125, 50, 0.4);
 }
 
 .btn-view-data:active {

@@ -7,6 +7,93 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/knowledge-base.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        /* Custom SweetAlert2 Styles for Knowledge Base - Green & White Theme */
+        .swal-wide {
+            border-radius: 16px !important;
+            box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.3) !important;
+            background: linear-gradient(to bottom, #ffffff 0%, #f0fdf4 100%) !important;
+        }
+        
+        .swal2-popup {
+            font-family: 'Inter', 'Segoe UI', sans-serif !important;
+            border: 2px solid #10B981 !important;
+        }
+        
+        .swal2-title {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: #047857 !important;
+        }
+        
+        .swal2-html-container {
+            margin: 1rem 0 !important;
+            font-size: 0.95rem !important;
+        }
+        
+        /* Custom scrollbar for summary - Green theme */
+        .swal2-html-container > div > div:last-child {
+            scrollbar-width: thin;
+            scrollbar-color: #10B981 #F0FDF4;
+        }
+        
+        .swal2-html-container > div > div:last-child::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .swal2-html-container > div > div:last-child::-webkit-scrollbar-track {
+            background: #F0FDF4;
+            border-radius: 10px;
+        }
+        
+        .swal2-html-container > div > div:last-child::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+            border-radius: 10px;
+        }
+        
+        .swal2-html-container > div > div:last-child::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #059669 0%, #047857 100%);
+        }
+        
+        .swal2-confirm {
+            padding: 0.625rem 1.5rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            transition: all 0.3s ease !important;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+            border: none !important;
+        }
+        
+        .swal2-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.6) !important;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        }
+        
+        .swal2-cancel {
+            background: #ffffff !important;
+            color: #047857 !important;
+            border: 2px solid #10B981 !important;
+        }
+        
+        .swal2-cancel:hover {
+            background: #F0FDF4 !important;
+            border-color: #059669 !important;
+        }
+        
+        .swal2-icon.swal2-success {
+            border-color: #10B981 !important;
+        }
+        
+        .swal2-icon.swal2-success [class^='swal2-success-line'] {
+            background-color: #10B981 !important;
+        }
+        
+        .swal2-icon.swal2-success .swal2-success-ring {
+            border-color: rgba(16, 185, 129, 0.3) !important;
+        }
+    </style>
 @endpush
 
 @section('navigation')
@@ -226,22 +313,6 @@
                     @endforeach
                 </div>
             @endif
-        </div>
-    </div>
-
-    <!-- Summary Modal -->
-    <div class="modal" id="summary-modal">
-        <div class="modal-overlay" id="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Document Summary</h3>
-                <button type="button" class="modal-close" id="close-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="summary-content">
-                <!-- Summary content will be loaded here -->
-            </div>
         </div>
     </div>
 

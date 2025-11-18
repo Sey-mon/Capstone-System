@@ -44,7 +44,7 @@
     color: #333;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid #007bff;
+    border-bottom: 2px solid #2e7d32;
     font-size: 1.1rem;
     font-weight: 600;
 }
@@ -72,7 +72,7 @@
 
 .data-value {
     font-weight: bold;
-    color: #007bff;
+    color: #2e7d32;
 }
 
 .table-container {
@@ -97,7 +97,7 @@
 }
 
 .report-table th {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
     color: white;
     font-weight: 600;
     position: sticky;
