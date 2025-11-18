@@ -705,7 +705,6 @@ class AuthController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,NULL,user_id,deleted_at,NULL',
             'contact_number' => 'required|string|max:20',
-            'birth_date' => 'nullable|date',
             'sex' => 'nullable|string|in:male,female,other',
             'address' => 'nullable|string|max:255',
             'license_number' => 'required|string|max:255',
@@ -714,7 +713,6 @@ class AuthController extends Controller
             'qualifications' => 'required|string|min:2|max:1000',
             // Professional experience: at least 10 characters, but allow short entries for real-world cases
             'professional_experience' => 'required|string|min:10|max:1000',
-            'professional_id_path' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'password' => 'required|string|min:6|confirmed',
         ], [
             'qualifications.min' => 'Please provide at least your school, degree, or certification.',
@@ -738,21 +736,11 @@ class AuthController extends Controller
         }
 
         try {
-            // Handle file upload
-            $professionalIdPath = null;
-            if ($request->hasFile('professional_id_path')) {
-                $file = $request->file('professional_id_path');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/professional_ids'), $filename);
-                $professionalIdPath = 'uploads/professional_ids/' . $filename;
-            }
-
             $user = User::create([
                 'role_id' => $nutritionistRole->role_id,
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
                 'last_name' => $request->last_name,
-                'birth_date' => $request->birth_date,
                 'sex' => $request->sex,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
@@ -762,12 +750,11 @@ class AuthController extends Controller
                 'years_experience' => $request->years_experience,
                 'qualifications' => $request->qualifications,
                 'professional_experience' => $request->professional_experience,
-                'professional_id_path' => $professionalIdPath,
                 'is_active' => false,
             ]);
 
-            // Send email verification notification
-            $user->sendEmailVerificationNotification();
+            // Note: Email will be auto-verified when admin activates the account
+            // No need to send verification email here since account requires admin approval first
 
             AuditLog::create([
                 'user_id' => $user->user_id,
@@ -780,7 +767,7 @@ class AuthController extends Controller
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => true]);
             }
-            return redirect()->route('login')->with('success', 'Your application has been submitted successfully! You will receive an email notification once your application is reviewed and approved by our admin team.');
+            return redirect()->route('staff.login')->with('success', 'Application submitted successfully! Please wait for admin approval. You will be able to login once your account is activated.');
 
         } catch (\Exception $e) {
             Log::error('Nutritionist application error: ' . $e->getMessage(), ['exception' => $e]);

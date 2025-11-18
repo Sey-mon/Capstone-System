@@ -207,6 +207,7 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
         Route::post('/reembed-missing', [KnowledgeBaseController::class, 'reembedMissing'])->name('reembed-missing');
         Route::get('/embedding-status', [KnowledgeBaseController::class, 'checkEmbeddingStatus'])->name('embedding-status');
         Route::get('/llm-health', [KnowledgeBaseController::class, 'checkLlmHealth'])->name('llm-health');
+        Route::get('/{id}/summary', [KnowledgeBaseController::class, 'getSummary'])->name('summary');
         Route::delete('/{id}', [KnowledgeBaseController::class, 'destroy'])->name('delete');
     });
 
@@ -235,12 +236,12 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
 
     // Food Database Management Routes (Admin)
     Route::get('/foods', [FoodController::class, 'index'])->name('foods.index');
-    Route::get('/foods/{id}', [FoodController::class, 'show'])->name('foods.show');
+    Route::get('/foods/export', [FoodController::class, 'export'])->name('foods.export');
+    Route::post('/foods/import', [FoodController::class, 'import'])->name('foods.import');
     Route::post('/foods', [FoodController::class, 'store'])->name('foods.store');
+    Route::get('/foods/{id}', [FoodController::class, 'show'])->name('foods.show');
     Route::put('/foods/{id}', [FoodController::class, 'update'])->name('foods.update');
     Route::delete('/foods/{id}', [FoodController::class, 'destroy'])->name('foods.destroy');
-    Route::post('/foods/import', [FoodController::class, 'import'])->name('foods.import');
-    Route::get('/foods/export', [FoodController::class, 'export'])->name('foods.export');
 
     // Food Request Management Routes (Admin)
     Route::get('/food-requests', [FoodRequestController::class, 'index'])->name('food-requests.index');

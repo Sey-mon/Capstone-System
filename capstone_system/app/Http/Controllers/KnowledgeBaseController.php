@@ -20,22 +20,27 @@ class KnowledgeBaseController extends Controller
                 ->orderBy('added_at', 'desc')
                 ->get();
 
+            // Check if LLM API is configured
+            $llmApiAvailable = !empty(config('services.nutrition_api.base_url'));
+            
             // Optionally, you can also fetch from the API to sync data
-            try {
-                $client = new \GuzzleHttp\Client(['timeout' => 30]);
-                $response = $client->post(
-                    config('services.nutrition_api.base_url') . '/get_knowledge_base',
-                    [
-                        'json' => new \stdClass(), // Empty object for Pydantic validation
-                        'headers' => ['Content-Type' => 'application/json']
-                    ]
-                );
-                $apiResult = json_decode($response->getBody()->getContents(), true);
-                // You could use this to sync or display additional information
-                // For now, we'll just use the local database data
-            } catch (\Exception $e) {
-                Log::warning('Could not fetch knowledge base from API: ' . $e->getMessage());
-                // Continue with local data
+            if ($llmApiAvailable) {
+                try {
+                    $client = new \GuzzleHttp\Client(['timeout' => 30]);
+                    $response = $client->post(
+                        config('services.nutrition_api.base_url') . '/get_knowledge_base',
+                        [
+                            'json' => new \stdClass(), // Empty object for Pydantic validation
+                            'headers' => ['Content-Type' => 'application/json']
+                        ]
+                    );
+                    $apiResult = json_decode($response->getBody()->getContents(), true);
+                    // You could use this to sync or display additional information
+                    // For now, we'll just use the local database data
+                } catch (\Exception $e) {
+                    Log::warning('Could not fetch knowledge base from API: ' . $e->getMessage());
+                    // Continue with local data
+                }
             }
 
             return view('admin.knowledge-base', compact('knowledgeBase'));
@@ -53,6 +58,14 @@ class KnowledgeBaseController extends Controller
         $request->validate([
             'pdf_file' => 'required|file|mimes:pdf|max:10240', // 10MB max
         ]);
+
+        // Check if LLM API is configured
+        if (empty(config('services.nutrition_api.base_url'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'AI Knowledge Base service is not configured. Please configure the Python API.'
+            ], 503);
+        }
 
         try {
             $file = $request->file('pdf_file');
@@ -279,6 +292,15 @@ class KnowledgeBaseController extends Controller
      */
     public function checkLlmHealth()
     {
+        // Check if LLM API is configured
+        if (empty(config('services.nutrition_api.base_url'))) {
+            return response()->json([
+                'success' => false,
+                'status' => 'disabled',
+                'message' => 'AI Knowledge Base service is not configured yet'
+            ], 200);
+        }
+
         try {
             $client = new \GuzzleHttp\Client(['timeout' => 10]);
             $response = $client->get(config('services.nutrition_api.base_url') . '/');
@@ -306,6 +328,31 @@ class KnowledgeBaseController extends Controller
                 'status' => 'unhealthy',
                 'message' => 'LLM service is not responding: ' . $e->getMessage()
             ], 503);
+        }
+    }
+
+    /**
+     * Get document summary
+     */
+    public function getSummary($id)
+    {
+        try {
+            $kb = KnowledgeBase::findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'summary' => $kb->ai_summary ?? 'No summary available for this document.',
+                'pdf_name' => $kb->pdf_name,
+                'added_at' => $kb->added_at->format('M d, Y'),
+                'uploaded_by' => $kb->user ? $kb->user->first_name . ' ' . $kb->user->last_name : 'System'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching document summary: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching document summary.'
+            ], 500);
         }
     }
 

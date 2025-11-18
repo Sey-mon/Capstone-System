@@ -13,6 +13,8 @@ class Barangay extends Model
 
     protected $fillable = [
         'barangay_name',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [

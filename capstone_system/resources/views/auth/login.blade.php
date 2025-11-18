@@ -120,10 +120,7 @@
                              data-theme="light"
                              style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
                         </div>
-                        <p class="security-info" style="text-align: center; margin-top: 0.5rem; font-size: 0.875rem; color: #64748b;">
-                            <i class="fas fa-shield-alt" style="color: #10b981; margin-right: 0.25rem;"></i>
-                            Protected by Google reCAPTCHA
-                        </p>
+
                         @error('g-recaptcha-response')
                             <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
                         @enderror

@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Security configuration
-SECRET_KEY = os.getenv("API_SECRET_KEY", "your-super-secret-key-change-this-in-production")
+SECRET_KEY = os.getenv("API_SECRET_KEY", "your-super-secret-key-change-this")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 API_KEY = os.getenv("API_KEY", "malnutrition-api-key-2025")
@@ -44,7 +44,7 @@ app = FastAPI(
 # Security middleware
 security = HTTPBearer()
 
-# CORS configuration - restrict to your Laravel domain in production
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],  # Add your Laravel domain
@@ -618,7 +618,7 @@ if __name__ == "__main__":
         "api_server:app",
         host="127.0.0.1",  # Bind to localhost only for security
         port=8001,
-        reload=False,  # Set to False in production
+        reload=False,
         access_log=True,
         log_level="info"
     )

@@ -217,7 +217,7 @@
 }
 
 .enhanced-patients-table th {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #2e7d32 100%);
     color: white;
     padding: 1rem;
     text-align: left;
@@ -233,7 +233,7 @@
 }
 
 .enhanced-patients-table th.sortable:hover {
-    background: linear-gradient(135deg, #4f46e5 0%, var(--primary-color) 100%);
+    background: linear-gradient(135deg, #2e7d32 0%, var(--primary-color) 100%);
 }
 
 .enhanced-patients-table th.sortable i {
@@ -283,7 +283,7 @@
 }
 
 .patient-card .card-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #2e7d32 100%);
     color: white;
     padding: 1.5rem;
     display: flex;
@@ -462,8 +462,8 @@
 }
 
 .badge-primary {
-    background-color: #dbeafe;
-    color: #1e40af;
+    background-color: #c8e6c9;
+    color: #2e7d32;
 }
 
 .badge-secondary {
@@ -496,7 +496,7 @@
 }
 
 .btn-primary:hover {
-    background: #4f46e5;
+    background: #2e7d32;
     transform: translateY(-1px);
 }
 
@@ -921,8 +921,8 @@
 }
 
 .badge-info {
-    background: #d1ecf1;
-    color: #0c5460;
+    background: #c8e6c9;
+    color: #1b5e20;
 }
 
 .badge-secondary {
@@ -931,8 +931,8 @@
 }
 
 .badge-primary {
-    background: #cce7ff;
-    color: #004085;
+    background: #c8e6c9;
+    color: #2e7d32;
 }
 
 /* Patient Details View */

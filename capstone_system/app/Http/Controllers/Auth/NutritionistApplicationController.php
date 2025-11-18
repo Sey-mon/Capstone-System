@@ -35,13 +35,11 @@ class NutritionistApplicationController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'contact_number' => ['required', 'string', 'max:20'],
-            'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'in:male,female,other'],
             'license_number' => ['required', 'string', 'max:100', 'unique:users,license_number'],
             'years_experience' => ['nullable', 'integer', 'min:0', 'max:50'],
             'qualifications' => ['required', 'string', 'max:2000'],
             'experience' => ['required', 'string', 'max:2000'],
-            'professional_id' => ['required', 'file', 'mimes:jpeg,png,jpg,pdf', 'max:5120'], // 5MB max
             'password' => ['required', 'confirmed', Password::min(6)],
         ]);
 
@@ -60,21 +58,12 @@ class NutritionistApplicationController extends Controller
                     ->withInput();
             }
 
-            // Handle file upload
-            $professionalIdPath = null;
-            if ($request->hasFile('professional_id')) {
-                $file = $request->file('professional_id');
-                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $professionalIdPath = $file->storeAs('professional-ids', $filename, 'public');
-            }
-
             // Create the nutritionist user account
             $user = User::create([
                 'role_id' => $nutritionistRole->role_id,
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
                 'last_name' => $request->last_name,
-                'birth_date' => $request->date_of_birth,
                 'sex' => $request->gender,
                 'email' => $request->email,
                 'password' => $request->password, // Will be hashed automatically
@@ -83,7 +72,6 @@ class NutritionistApplicationController extends Controller
                 'years_experience' => $request->years_experience ?? 0,
                 'qualifications' => $request->qualifications,
                 'professional_experience' => $request->experience,
-                'professional_id_path' => $professionalIdPath,
                 'verification_status' => 'pending',
                 'account_status' => 'pending',
                 'is_active' => false, // Account will be activated upon approval
@@ -100,11 +88,6 @@ class NutritionistApplicationController extends Controller
         } catch (\Exception $e) {
             // Log the error
             Log::error('Nutritionist application error: ' . $e->getMessage());
-            
-            // Delete uploaded file if it exists
-            if ($professionalIdPath) {
-                Storage::disk('public')->delete($professionalIdPath);
-            }
 
             return back()
                 ->withErrors(['error' => 'An error occurred while submitting your application. Please try again.'])
