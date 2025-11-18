@@ -313,42 +313,42 @@ class ParentController extends Controller
                 }
             }
             
-            // Parse each day section (DAY 1:, DAY 2:, etc.)
+            // Parse each day section (**Day X**: format)
             for ($i = 1; $i <= 7; $i++) {
                 $dayKey = "Day $i";
                 
-                // Match pattern: DAY X:: - content until next DAY or end
-                $pattern = '/DAY\s+' . $i . ':?\s*:?\s*-\s*(.*?)(?=DAY\s+\d+:|$)/is';
+                // Updated pattern to match **Day X**: format from nutrition_chain.py
+                $pattern = '/\*\*Day\s+' . $i . '\*\*:?\s*(.*?)(?=\*\*Day\s+\d+\*\*:|REGULAR\s+NA\s+OBSERBAHAN|$)/is';
                 
                 if (preg_match($pattern, $plainText, $dayMatches)) {
                     $dayContent = $dayMatches[1];
                     
-                    // Extract Breakfast (usually starts with **Breakfast** or similar)
-                    if (preg_match('/\*\*Breakfast\*\*:?\s*([^*]+?)(?=\*\*[A-Z]|\*\*Lunch|\*\*Snack|$)/is', $dayContent, $breakfastMatch)) {
+                    // Extract Breakfast (looking for **Breakfast (Almusal)**: format)
+                    if (preg_match('/\*\*Breakfast\s*\(Almusal\)\*\*:?\s*([^*]+?)(?=\*\*Lunch|\*\*Snack|\*\*Dinner|$)/is', $dayContent, $breakfastMatch)) {
                         $breakfast = $this->cleanMealText($breakfastMatch[1]);
                         if (!empty($breakfast)) {
                             $meals['Breakfast'][$dayKey] = $breakfast;
                         }
                     }
                     
-                    // Extract Lunch (usually marked as **Lunch**)
-                    if (preg_match('/\*\*Lunch\*\*:?\s*([^*]+?)(?=\*\*[A-Z]|\*\*Snack|\*\*Dinner|$)/is', $dayContent, $lunchMatch)) {
+                    // Extract Lunch (looking for **Lunch (Tanghalian)**: format)
+                    if (preg_match('/\*\*Lunch\s*\(Tanghalian\)\*\*:?\s*([^*]+?)(?=\*\*Snack|\*\*Dinner|$)/is', $dayContent, $lunchMatch)) {
                         $lunch = $this->cleanMealText($lunchMatch[1]);
                         if (!empty($lunch)) {
                             $meals['Lunch'][$dayKey] = $lunch;
                         }
                     }
                     
-                    // Extract PM Snack (look for **Snack** after Lunch)
-                    if (preg_match('/\*\*Lunch\*\*.*?\*\*Snack\*\*:?\s*([^*]+?)(?=\*\*Dinner|$)/is', $dayContent, $pmSnackMatch)) {
+                    // Extract PM Snack (looking for **Snack (Meryenda)**: format)
+                    if (preg_match('/\*\*Snack\s*\(Meryenda\)\*\*:?\s*([^*]+?)(?=\*\*Dinner|$)/is', $dayContent, $pmSnackMatch)) {
                         $pmSnack = $this->cleanMealText($pmSnackMatch[1]);
                         if (!empty($pmSnack)) {
                             $meals['PM Snack'][$dayKey] = $pmSnack;
                         }
                     }
                     
-                    // Extract Dinner (usually marked as **Dinner**)
-                    if (preg_match('/\*\*Dinner\*\*:?\s*([^*]+?)(?=\*\*Daily Total|$)/is', $dayContent, $dinnerMatch)) {
+                    // Extract Dinner (looking for **Dinner (Hapunan)**: format)
+                    if (preg_match('/\*\*Dinner\s*\(Hapunan\)\*\*:?\s*([^*]+?)(?=\*\*Day\s+\d+|REGULAR\s+NA|$)/is', $dayContent, $dinnerMatch)) {
                         $dinner = $this->cleanMealText($dinnerMatch[1]);
                         if (!empty($dinner)) {
                             $meals['Dinner'][$dayKey] = $dinner;
@@ -375,12 +375,15 @@ class ParentController extends Controller
             // Remove leading/trailing dashes, asterisks, or colons
             $text = trim($text, " \t\n\r\0\x0B-:*");
             
+            // Remove benefit descriptions (text after " - " that starts with "Mayaman")
+            $text = preg_replace('/\s*-\s*Mayaman\s+sa\s+.*$/i', '', $text);
+            
             // Remove calorie information in parentheses at the end
             $text = preg_replace('/\s*\([^\)]*kcal\)\s*$/i', '', $text);
             
             // If text is too long, truncate it
-            if (strlen($text) > 200) {
-                $text = substr($text, 0, 197) . '...';
+            if (strlen($text) > 150) {
+                $text = substr($text, 0, 147) . '...';
             }
             
             // Remove "Provides" sections to keep it simple
