@@ -27,6 +27,83 @@ function initializeSortFilter() {
     }
 }
 
+// Format meal plan details with the same formatting as ApiController.php
+function formatMealPlanDetails(text) {
+    if (!text) return '';
+    
+    // Section headings with big bold black styling (h4)
+    // Ensure the child profile table is opened once and closed before other sections
+    text = text.replace(/CHILD PROFILE:/gi, '<h4 class="meal-plan-heading">Child Profile</h4><div class="child-profile-table">');
+        
+    // Filipino specific profile items - compact inline format
+    text = text.replace(/\*\*Edad\*\*:\s*([^\n\*]+)/gi, '<span class="profile-item"><strong>👶 Edad:</strong> $1</span>');
+    text = text.replace(/\*\*Timbang\*\*:\s*([^\n\*]+)/gi, '<span class="profile-item"><strong>⚖️ Timbang:</strong> $1</span>');
+    text = text.replace(/\*\*Taas\*\*:\s*([^\n\*]+)/gi, '<span class="profile-item"><strong>📏 Taas:</strong> $1</span>');
+    text = text.replace(/\*\*BMI\*\*:\s*([^\n\*]+)/gi, '<span class="profile-item"><strong>📊 BMI:</strong> $1</span>');
+    
+    // Profile items: keep as inline blocks inside the child-profile-table
+    text = text.replace(/\*\*Allergy\*\*:\s*([^\n\*]+)/gi, '<span class="profile-item"><strong>🚫 Allergy:</strong> $1</span>');
+    text = text.replace(/\*\*Allergies\*\*:\s*([^\n\*]+)/gi, '<span class="profile-item"><strong>🚫 Allergies:</strong> $1</span>');
+    text = text.replace(/\*\*Karamdaman\*\*:\s*([^\n\*]+)/gi, '<span class="profile-item"><strong>⚕️ Karamdaman:</strong> $1</span>');
+    text = text.replace(/\*\*Relihiyon\*\*:\s*([^\n\*]+)/gi, '<span class="profile-item"><strong>🕌 Relihiyon:</strong> $1</span>');
+
+    // Additional patterns for compliance items that might not have ** formatting
+    text = text.replace(/(^|\n)\s*Allerg(?:y|ies):\s*([^\n]+)/gi, '<span class="profile-item"><strong>🚫 Allergy:</strong> $2</span>');
+    text = text.replace(/(^|\n)\s*Relihiyon:\s*([^\n]+)/gi, '<span class="profile-item"><strong>🕌 Relihiyon:</strong> $2</span>');
+    text = text.replace(/(^|\n)\s*Karamdaman:\s*([^\n]+)/gi, '<span class="profile-item"><strong>⚕️ Karamdaman:</strong> $2</span>');
+    text = text.replace(/\*\*Available Ingredients\*\*:/gi, '</div><h4 class="meal-plan-heading">🥘 Available Ingredients:</h4>');
+    
+    // Fix the 7-DAY MEAL PLAN pattern to ensure it's properly detected as a section header
+    text = text.replace(/\b7-DAY MEAL PLAN\b:?\s*/gi, '</div><h4 class="meal-plan-heading">📅 7-Day Meal Plan</h4>');
+    text = text.replace(/###\s*7-DAY MEAL PLAN\s*/gi, '</div><h4 class="meal-plan-heading">📅 7-Day Meal Plan</h4>');
+    text = text.replace(/\*\*Kasalukuyang Edad \([0-9]+ buwan\)\*\*:/gi, '<h5 class="meal-plan-heading">👶 Kasalukuyang Edad:</h5>');
+    
+    // Green h4 patterns
+    text = text.replace(/AGE-SPECIFIC GUIDELINES:/gi, '<h4 class="green-heading">🍼 AGE-SPECIFIC GUIDELINES:</h4>');
+    
+    // Day headers - handle both quoted and unquoted formats with big bold black styling (h3)
+    text = text.replace(/\*\*Day ([0-9]+)\*\*:/gi, '<h3 class="day-heading">📅 Day $1</h3>');
+    text = text.replace(/"?\*\*Day ([0-9]+)\*\*"?:?/gi, '<h3 class="day-heading">📅 Day $1</h3>');
+    text = text.replace(/DAY ([0-9]+):/gi, '<h3 class="day-heading">📅 Day $1</h3>');
+    
+    // Meal type formatting - big bold black with emojis (h4)
+    text = text.replace(/- \*\*Breakfast \(Almusal\)\*\*:/gi, '<h4 class="meal-type-heading">🍳 Breakfast (Almusal)</h4>');
+    text = text.replace(/- \*\*Lunch \(Tanghalian\)\*\*:/gi, '<h4 class="meal-type-heading">🍽️ Lunch (Tanghalian)</h4>');
+    text = text.replace(/- \*\*Snack \(Meryenda\)\*\*:/gi, '<h4 class="meal-type-heading">🍪 Snack (Meryenda)</h4>');
+    text = text.replace(/- \*\*Dinner \(Hapunan\)\*\*:/gi, '<h4 class="meal-type-heading">🌙 Dinner (Hapunan)</h4>');
+    
+    // Alternative patterns without parentheses (fallback) - big bold black (h4)
+    text = text.replace(/- \*\*Breakfast\*\*:/gi, '<h4 class="meal-type-heading">🍳 Breakfast (Almusal)</h4>');
+    text = text.replace(/- \*\*Lunch\*\*:/gi, '<h4 class="meal-type-heading">🍽️ Lunch (Tanghalian)</h4>');
+    text = text.replace(/- \*\*Snack\*\*:/gi, '<h4 class="meal-type-heading">🍪 Snack (Meryenda)</h4>');
+    text = text.replace(/- \*\*Dinner\*\*:/gi, '<h4 class="meal-type-heading">🌙 Dinner (Hapunan)</h4>');
+    
+    // Filipino observation sections - h4 headings with spacing
+    text = text.replace(/REGULAR NA OBSERBAHAN:/gi, '<br><br><h4 class="observation-heading">👀 Regular na Obserbahan</h4><div class="observation">');
+    
+    // Observation frequency headings - simplified patterns
+    text = text.replace(/\*\*Araw Araw\*\*\s*(\(MUST include this exact subheader\))?:/gi, '<h4 class="observation-subheading">📅 Araw Araw</h4>');
+    text = text.replace(/\*\*Araw-Araw\*\*\s*(\(MUST include this exact subheader\))?:/gi, '<h4 class="observation-subheading">📅 Araw Araw</h4>');
+    text = text.replace(/\*\*Bawat Linggo\*\*\s*(\(MUST include this exact subheader\))?:/gi, '<h4 class="observation-subheading">📊 Bawat Linggo</h4>');
+    text = text.replace(/\*\*Bawat Buwan\*\*:/gi, '<h4 class="observation-subheading">📅 Bawat Buwan</h4>');
+    
+    // BALANSENG PAGKAIN section - h3 heading with spacing
+    text = text.replace(/BALANSENG PAGKAIN PARA SA BATA:/gi, '<br><br><h3 class="balanced-food-heading">🍽️ BALANSENG PAGKAIN PARA SA BATA</h3>');
+    text = text.replace(/###\\s*BALANSENG PAGKAIN PARA SA BATA/gi, '<br><br><h3 class="balanced-food-heading">🍽️ BALANSENG PAGKAIN PARA SA BATA</h3>');
+    
+    // Make "Bawat pagkain dapat may:" an h4 heading
+    text = text.replace(/Bawat pagkain dapat may:/gi, '<h4 class="balanced-food-subheading">Bawat pagkain dapat may:</h4>');
+    
+    // Warning sub-sections - h4 headings 
+    text = text.replace(/KAILANGAN NG AGARANG ATENSYON:/gi, '<h4 class="urgent-heading">🚨 Kailangan ng Agarang Atensyon</h4>');
+    text = text.replace(/MGA DAPAT PANSININ:/gi, '<h4 class="notice-heading">👁️ Mga Dapat Pansinin</h4>');
+    
+    // Convert newlines to <br>
+    text = text.replace(/\n/g, '<br>');
+    
+    return text;
+}
+
 // Filter meal plans by child with smooth animation
 function filterMealPlans(childId) {
     const cards = document.querySelectorAll('.meal-plan-card-premium');
@@ -310,7 +387,7 @@ function viewMealPlan(planId) {
                                             <i class="fas fa-file-alt"></i> Full Meal Plan Details
                                         </h4>
                                         <div class="plan-content-wrapper">
-                                            ${data.plan.plan_details}
+                                            ${formatMealPlanDetails(data.plan.plan_details)}
                                         </div>
                                     </div>
                                 </div>
@@ -484,6 +561,11 @@ function printMealPlanFromSwal(planId, data) {
             
             <div style="margin: 20px 0;">
                 ${weeklyTableHtml}
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px;">
+                <h3 style="color: #055b25; margin-bottom: 15px;">Full Meal Plan Details</h3>
+                ${formatMealPlanDetails(data.plan.plan_details)}
             </div>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #718096; font-size: 11px;">
@@ -1026,6 +1108,108 @@ style.textContent = `
     
     .swal-premium-content::-webkit-scrollbar-thumb:hover {
         background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+    }
+    
+    /* Meal Plan Formatting Styles - matching ApiController.php formatting */
+    .meal-plan-heading {
+        color: #055b25;
+        font-size: 18px;
+        font-weight: 700;
+        margin: 20px 0 10px 0;
+    }
+    
+    .child-profile-table {
+        background: #f8fffe;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .profile-item {
+        display: inline-block;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #d1fae5;
+        margin: 2px;
+        font-size: 14px;
+    }
+    
+    .day-heading {
+        color: #2563eb;
+        font-size: 20px;
+        font-weight: 700;
+        margin: 25px 0 15px 0;
+        padding: 10px 0;
+        border-bottom: 2px solid #dbeafe;
+    }
+    
+    .meal-type-heading {
+        color: #7c3aed;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 15px 0 8px 0;
+    }
+    
+    .green-heading {
+        color: #059669;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 15px 0 10px 0;
+    }
+    
+    .observation-heading {
+        color: #dc2626;
+        font-size: 18px;
+        font-weight: 700;
+        margin: 25px 0 15px 0;
+    }
+    
+    .observation-subheading {
+        color: #ea580c;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 15px 0 8px 0;
+    }
+    
+    .balanced-food-heading {
+        color: #7c2d12;
+        font-size: 20px;
+        font-weight: 700;
+        margin: 25px 0 15px 0;
+        text-align: center;
+    }
+    
+    .balanced-food-subheading {
+        color: #92400e;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 15px 0 10px 0;
+    }
+    
+    .urgent-heading {
+        color: #dc2626;
+        font-size: 16px;
+        font-weight: 700;
+        margin: 15px 0 10px 0;
+        background: #fef2f2;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border-left: 4px solid #dc2626;
+    }
+    
+    .notice-heading {
+        color: #d97706;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 15px 0 10px 0;
+        background: #fffbeb;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border-left: 4px solid #d97706;
     }
 `;
 document.head.appendChild(style);

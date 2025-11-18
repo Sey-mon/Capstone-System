@@ -206,7 +206,37 @@
                                             <span>Meal Plan Preview</span>
                                         </div>
                                         <div class="plan-content-preview">
-                                            {{ Str::limit(strip_tags($plan->plan_details), 180) }}
+                                            @php
+                                                // Extract Day 1 meals from plan_details
+                                                $extractDay1Meals = function($planDetails) {
+                                                    // Look for Day 1 section
+                                                    if (preg_match('/\*\*Day 1\*\*:(.*?)(?=\*\*Day 2\*\*|$)/s', $planDetails, $day1Match)) {
+                                                        $day1Content = $day1Match[1];
+                                                        
+                                                        // Extract meals from Day 1
+                                                        $meals = [];
+                                                        if (preg_match('/\*\*Breakfast \(Almusal\)\*\*:(.*?)(?=\*\*Lunch|$)/s', $day1Content, $breakfast)) {
+                                                            $meals[] = 'Breakfast: ' . trim(strip_tags($breakfast[1]));
+                                                        }
+                                                        if (preg_match('/\*\*Lunch \(Tanghalian\)\*\*:(.*?)(?=\*\*Snack|$)/s', $day1Content, $lunch)) {
+                                                            $meals[] = 'Lunch: ' . trim(strip_tags($lunch[1]));
+                                                        }
+                                                        if (preg_match('/\*\*Snack \(Meryenda\)\*\*:(.*?)(?=\*\*Dinner|$)/s', $day1Content, $snack)) {
+                                                            $meals[] = 'Snack: ' . trim(strip_tags($snack[1]));
+                                                        }
+                                                        if (preg_match('/\*\*Dinner \(Hapunan\)\*\*:(.*?)(?=\*\*|$)/s', $day1Content, $dinner)) {
+                                                            $meals[] = 'Dinner: ' . trim(strip_tags($dinner[1]));
+                                                        }
+                                                        
+                                                        return !empty($meals) ? 'Day 1 - ' . implode(' | ', array_slice($meals, 0, 2)) : null;
+                                                    }
+                                                    return null;
+                                                };
+                                                
+                                                $day1Preview = $extractDay1Meals($plan->plan_details);
+                                            @endphp
+                                            
+                                            {{ $day1Preview ?? Str::limit(strip_tags($plan->plan_details), 180) }}
                                         </div>
                                     </div>
 

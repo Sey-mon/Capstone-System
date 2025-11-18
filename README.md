@@ -85,6 +85,7 @@ This capstone project consists of three integrated applications:
 cd capstone_system
 composer install
 npm install
+npm run build
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
