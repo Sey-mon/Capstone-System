@@ -35,11 +35,20 @@ class FoodRequestController extends Controller
 
         $requests = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $stats = [
-            'pending' => FoodRequest::pending()->count(),
-            'approved' => FoodRequest::approved()->count(),
-            'rejected' => FoodRequest::rejected()->count(),
-        ];
+        // Calculate stats based on user role
+        if ($user->role->role_name === 'Nutritionist') {
+            $stats = [
+                'pending' => FoodRequest::pending()->where('requested_by', $user->user_id)->count(),
+                'approved' => FoodRequest::approved()->where('requested_by', $user->user_id)->count(),
+                'rejected' => FoodRequest::rejected()->where('requested_by', $user->user_id)->count(),
+            ];
+        } else {
+            $stats = [
+                'pending' => FoodRequest::pending()->count(),
+                'approved' => FoodRequest::approved()->count(),
+                'rejected' => FoodRequest::rejected()->count(),
+            ];
+        }
 
         if ($user->role->role_name === 'Admin') {
             return view('admin.food-requests', compact('requests', 'stats', 'status'));

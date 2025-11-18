@@ -1,15 +1,15 @@
 /* Modern Treatment Protocols Design System - Green & White Theme */
 :root {
-    --gradient-medical: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    --gradient-primary: linear-gradient(135deg, #047857 0%, #059669 100%);
-    --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-    --gradient-info: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%);
-    --gradient-warning: linear-gradient(135deg, #84cc16 0%, #a3e635 100%);
-    --gradient-danger: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-    --shadow-medical: 0 4px 15px rgba(5, 150, 105, 0.12);
-    --shadow-hover: 0 8px 25px rgba(5, 150, 105, 0.18);
+    --gradient-medical: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    --gradient-primary: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+    --gradient-success: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%);
+    --gradient-info: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+    --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    --gradient-danger: linear-gradient(135deg, #c62828 0%, #a51c1c 100%);
+    --shadow-medical: 0 2px 6px rgba(46, 125, 50, 0.15);
+    --shadow-hover: 0 4px 20px rgba(46, 125, 50, 0.2);
     --border-radius-medical: 12px;
-    --transition-medical: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-medical: all 0.3s ease;
 }
 
 /* Modern Alert */
@@ -509,9 +509,9 @@
     display: flex;
     gap: 1rem;
     padding: 1.25rem;
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
     border-radius: 10px;
-    border: 1px solid #10b981;
+    border: 1px solid #43a047;
 }
 
 .overview-icon {
@@ -531,12 +531,12 @@
     margin: 0 0 0.5rem 0;
     font-size: 1rem;
     font-weight: 700;
-    color: #047857;
+    color: #1b5e20;
 }
 
 .overview-content p {
     margin: 0;
-    color: #059669;
+    color: #2e7d32;
     line-height: 1.5;
     font-size: 0.85rem;
 }
@@ -555,8 +555,8 @@
 }
 
 .protocol-card-section:hover {
-    border-color: #10b981;
-    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.12);
+    border-color: #43a047;
+    box-shadow: 0 3px 12px rgba(46, 125, 50, 0.15);
 }
 
 .section-header-card {
@@ -655,7 +655,7 @@
 
 .spec-value {
     font-weight: 700;
-    color: #047857;
+    color: #1b5e20;
     font-size: 0.85rem;
 }
 
@@ -702,7 +702,7 @@
 .data-format {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #10b981;
+    color: #43a047;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -718,8 +718,8 @@
 }
 
 .btn-copy-data:hover {
-    color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
+    color: #43a047;
+    background: rgba(46, 125, 50, 0.1);
 }
 
 .raw-data-modern pre {
@@ -835,13 +835,13 @@
 
 .btn-retry:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .btn-back {
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-    color: #047857;
-    border: 1px solid #d1fae5;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    color: #1b5e20;
+    border: 1px solid #a5d6a7;
 }
 
 .btn-back:hover {

@@ -1,15 +1,15 @@
 /* Modern Design System - Green & White Theme */
 :root {
-    --gradient-primary: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --gradient-success: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    --gradient-warning: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
-    --gradient-info: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-    --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --gradient-primary: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    --gradient-success: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    --gradient-info: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+    --gradient-danger: linear-gradient(135deg, #c62828 0%, #a51c1c 100%);
+    --shadow-soft: 0 2px 6px rgba(46, 125, 50, 0.15);
+    --shadow-hover: 0 4px 20px rgba(46, 125, 50, 0.2);
     --border-radius-lg: 12px;
     --border-radius-md: 8px;
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s ease;
 }
 
 /* Modern Alert Styles */
@@ -51,7 +51,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1.5rem;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
     border-radius: var(--border-radius-lg);
     margin-bottom: 2rem;
     box-shadow: var(--shadow-soft);
