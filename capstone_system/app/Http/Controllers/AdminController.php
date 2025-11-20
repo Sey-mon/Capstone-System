@@ -527,31 +527,102 @@ class AdminController extends Controller
     /**
      * Generate User Activity Report
      */
-    public function generateUserActivityReport()
+    public function generateUserActivityReport(Request $request)
     {
+        // Get date range parameters
+        $start_date = $request->input('start_date');
+        $end_date = $request->input('end_date');
+        
+        // Set default date range if not provided (last 30 days)
+        $start = $start_date ? \Carbon\Carbon::parse($start_date)->startOfDay() : now()->subDays(30)->startOfDay();
+        $end = $end_date ? \Carbon\Carbon::parse($end_date)->endOfDay() : now()->endOfDay();
+        
+        // Get users and assessments within date range
         $users = User::with('role')->get();
-        $assessments = Assessment::with(['user', 'patient'])->get();
+        $assessments = Assessment::with(['user.role', 'patient'])
+            ->whereBetween('created_at', [$start, $end])
+            ->whereNotNull('nutritionist_id')
+            ->get();
+        
+        // Filter assessments to only include those with valid users
+        $assessments = $assessments->filter(function($assessment) {
+            return $assessment->user !== null;
+        });
+        
+        // Get all users who performed assessments in the date range
+        $activeUsers = $assessments->pluck('nutritionist_id')->unique()->filter();
+        
+        // Users by role breakdown - ensure role names are properly retrieved
+        $usersByRole = [];
+        foreach ($users as $user) {
+            if ($user->role && !empty($user->role->name)) {
+                $roleName = $user->role->name;
+                if (!isset($usersByRole[$roleName])) {
+                    $usersByRole[$roleName] = 0;
+                }
+                $usersByRole[$roleName]++;
+            }
+        }
+        
+        // Assessments by user with names - ensure proper role loading
+        $assessmentsByUser = [];
+        $userGroups = $assessments->groupBy('nutritionist_id');
+        
+        foreach ($userGroups as $userId => $userAssessments) {
+            // Get user directly from database to ensure role is loaded
+            $user = User::with('role')->find($userId);
+            if ($user) {
+                $roleName = 'Nutritionist'; // Default role for users performing assessments
+                if ($user->role && !empty($user->role->name)) {
+                    $roleName = $user->role->name;
+                }
+                
+                $assessmentsByUser[] = [
+                    'user_name' => $user->name ?? 'Unknown User',
+                    'role' => $roleName,
+                    'count' => $userAssessments->count()
+                ];
+            }
+        }
+        
+        // Sort by count descending
+        usort($assessmentsByUser, function($a, $b) {
+            return $b['count'] - $a['count'];
+        });
+        
+        // Recent assessments with full details
+        $recentAssessments = $assessments->sortByDesc('created_at')->take(10)->map(function($assessment) {
+            $userName = 'System User';
+            $userRole = 'Nutritionist';
+            
+            if ($assessment->user) {
+                $userName = $assessment->user->name ?? 'System User';
+                if ($assessment->user->role && !empty($assessment->user->role->name)) {
+                    $userRole = $assessment->user->role->name;
+                }
+            }
+            
+            return [
+                'id' => $assessment->assessment_id,
+                'patient_name' => $assessment->patient ? 
+                    $assessment->patient->first_name . ' ' . $assessment->patient->last_name : 'Unknown Patient',
+                'user_name' => $userName,
+                'user_role' => $userRole,
+                'date' => $assessment->created_at->format('M d, Y'),
+                'recovery_status' => $assessment->recovery_status ?? 'N/A'
+            ];
+        })->values()->toArray();
         
         $report_data = [
             'total_users' => $users->count(),
-            'active_users_30_days' => User::where('updated_at', '>=', now()->subDays(30))->count(),
-            'users_by_role' => $users->filter(function($user) {
-                return $user->role !== null;
-            })->groupBy('role.name')->map->count(),
-            'recent_assessments' => $assessments->take(10)->map(function($assessment) {
-                return [
-                    'id' => $assessment->assessment_id,
-                    'patient' => $assessment->patient ? [
-                        'first_name' => $assessment->patient->first_name,
-                        'last_name' => $assessment->patient->last_name
-                    ] : null,
-                    'user' => $assessment->user ? ['name' => $assessment->user->name] : null,
-                    'created_at' => $assessment->created_at
-                ];
-            }),
-            'assessments_by_user' => $assessments->filter(function($assessment) {
-                return $assessment->user !== null;
-            })->groupBy('nutritionist_id')->map->count(),
+            'active_users' => $activeUsers->count(),
+            'total_assessments' => $assessments->count(),
+            'users_by_role' => $usersByRole,
+            'assessments_by_user' => $assessmentsByUser,
+            'recent_assessments' => $recentAssessments,
+            'start_display' => $start->format('M d, Y'),
+            'end_display' => $end->format('M d, Y'),
+            'date_range_days' => $start->diffInDays($end)
         ];
 
         return response()->json([
@@ -643,7 +714,276 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * Get Monthly Trends Filtered by Date Range
+     */
+    public function getMonthlyTrendsFiltered(Request $request)
+    {
+        $start_date = $request->input('start_date');
+        $end_date = $request->input('end_date');
+        
+        // Validate dates
+        if (!$start_date || !$end_date) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Start date and end date are required'
+            ], 400);
+        }
 
+        try {
+            $start = \Carbon\Carbon::parse($start_date)->startOfDay();
+            $end = \Carbon\Carbon::parse($end_date)->endOfDay();
+            
+            // Get all assessments within date range
+            $allAssessments = Assessment::whereBetween('created_at', [$start, $end])
+                ->get();
+            
+            // Get all recovered assessments within date range
+            $allRecovered = Assessment::where('recovery_status', 'recovered')
+                ->whereBetween('created_at', [$start, $end])
+                ->get();
+            
+            // Build complete month range and count data
+            $months = [];
+            $assessment_data = [];
+            $recovered_data = [];
+            
+            $current = clone $start;
+            while ($current <= $end) {
+                $month_key = $current->format('Y-m');
+                $month_display = $current->format('M Y');
+                
+                $months[] = $month_display;
+                
+                // Count assessments for this month
+                $assessmentCount = $allAssessments->filter(function($assessment) use ($month_key) {
+                    return $assessment->created_at->format('Y-m') === $month_key;
+                })->count();
+                $assessment_data[] = $assessmentCount;
+                
+                // Count recovered assessments for this month
+                $recoveredCount = $allRecovered->filter(function($assessment) use ($month_key) {
+                    return $assessment->created_at->format('Y-m') === $month_key;
+                })->count();
+                $recovered_data[] = $recoveredCount;
+                
+                $current->addMonth();
+            }
+            
+            return response()->json([
+                'success' => true,
+                'months' => $months,
+                'assessments' => $assessment_data,
+                'recovered' => $recovered_data,
+                'start_display' => $start->format('M d, Y'),
+                'end_display' => $end->format('M d, Y'),
+                'total_months' => count($months)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Monthly trends filter error: ' . $e->getMessage(), [
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error processing date range: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+    /**
+     * Get Malnutrition Cases Report (API)
+     */
+    public function getMalnutritionCasesReport()
+    {
+        $distribution = $this->getPatientDistribution();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $distribution,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Get Patient Progress Report (API)
+     */
+    public function getPatientProgressReport()
+    {
+        $progress = $this->getMonthlyProgress();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $progress,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Get Low Stock Alert Report (API)
+     */
+    public function getLowStockAlertReport()
+    {
+        $low_stock_items = InventoryItem::with('category')
+            ->where('quantity', '<', 10)
+            ->orderBy('quantity', 'asc')
+            ->get();
+        
+        $expired_items = InventoryItem::with('category')
+            ->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '<=', now())
+            ->orderBy('expiry_date', 'asc')
+            ->get();
+        
+        $alert_items = $low_stock_items->merge($expired_items)->unique('item_id')->map(function($item) {
+            $isExpired = $item->expiry_date && $item->expiry_date <= now();
+            $isLowStock = $item->quantity < 10;
+            
+            return [
+                'item_name' => $item->item_name,
+                'category_name' => $item->category ? $item->category->category_name : 'N/A',
+                'quantity' => $item->quantity,
+                'unit' => $item->unit,
+                'expiry_date' => $item->expiry_date ? $item->expiry_date->format('Y-m-d') : null,
+                'is_expired' => $isExpired,
+                'is_low_stock' => $isLowStock,
+                'alert_type' => $isExpired && $isLowStock ? 'both' : ($isExpired ? 'expired' : 'low_stock'),
+                'priority' => $item->quantity < 5 ? 'critical' : ($item->quantity < 10 ? 'high' : 'medium')
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'alert_items' => $alert_items,
+                'total_alerts' => $alert_items->count(),
+                'critical_count' => $alert_items->where('priority', 'critical')->count(),
+                'high_count' => $alert_items->where('priority', 'high')->count()
+            ],
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Get Monthly Trends Report (API)
+     */
+    public function getMonthlyTrendsReport()
+    {
+        $progress = $this->getMonthlyProgress();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $progress,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Get list of all patients for selection (API)
+     */
+    public function getPatientsList()
+    {
+        $patients = Patient::with(['barangay', 'assessments'])
+            ->get()
+            ->map(function($patient) {
+                $latestAssessment = $patient->assessments()->latest()->first();
+                return [
+                    'id' => $patient->patient_id,
+                    'name' => $patient->first_name . ' ' . $patient->last_name,
+                    'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown',
+                    'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
+                    'total_assessments' => $patient->assessments->count(),
+                    'last_assessment' => $latestAssessment ? $latestAssessment->created_at->format('M d, Y') : 'No assessments'
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $patients,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Get Individual Patient Report (API)
+     */
+    public function getIndividualPatientReport($id)
+    {
+        $patient = Patient::with(['barangay', 'assessments' => function($query) {
+            $query->orderBy('assessment_date', 'desc')->orderBy('created_at', 'desc');
+        }])->find($id);
+        
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Patient not found'
+            ], 404);
+        }
+        
+        $assessments = $patient->assessments->map(function($assessment) {
+            $bmi = null;
+            if ($assessment->weight_kg && $assessment->height_cm) {
+                $height_m = $assessment->height_cm / 100;
+                $bmi = round($assessment->weight_kg / ($height_m * $height_m), 2);
+            }
+            
+            return [
+                'id' => $assessment->assessment_id,
+                'date' => $assessment->assessment_date ? $assessment->assessment_date->format('M d, Y') : $assessment->created_at->format('M d, Y'),
+                'weight' => $assessment->weight_kg,
+                'height' => $assessment->height_cm,
+                'bmi' => $bmi,
+                'muac' => $assessment->muac_cm ?? null,
+                'recovery_status' => $assessment->recovery_status ?? 'N/A',
+                'notes' => $assessment->notes ?? ''
+            ];
+        });
+        
+        $latestAssessment = $assessments->first();
+        $firstAssessment = $assessments->last();
+        
+        $weightChange = null;
+        $bmiChange = null;
+        
+        if ($firstAssessment && $latestAssessment && $assessments->count() > 1) {
+            if ($firstAssessment['weight'] && $latestAssessment['weight']) {
+                $weightChange = round($latestAssessment['weight'] - $firstAssessment['weight'], 2);
+            }
+            if ($firstAssessment['bmi'] && $latestAssessment['bmi']) {
+                $bmiChange = round($latestAssessment['bmi'] - $firstAssessment['bmi'], 2);
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'patient' => [
+                    'id' => $patient->patient_id,
+                    'name' => $patient->first_name . ' ' . $patient->last_name,
+                    'date_of_birth' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->format('M d, Y') : 'N/A',
+                    'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
+                    'sex' => $patient->sex ?? 'N/A',
+                    'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown',
+                    'address' => $patient->address ?? 'N/A'
+                ],
+                'assessments' => $assessments,
+                'summary' => [
+                    'total_assessments' => $assessments->count(),
+                    'first_assessment_date' => $firstAssessment ? $firstAssessment['date'] : null,
+                    'latest_assessment_date' => $latestAssessment ? $latestAssessment['date'] : null,
+                    'weight_change' => $weightChange,
+                    'bmi_change' => $bmiChange,
+                    'current_status' => $latestAssessment ? $latestAssessment['recovery_status'] : 'No assessments',
+                    'progress_trend' => $bmiChange > 0 ? 'improving' : ($bmiChange < 0 ? 'declining' : 'stable')
+                ]
+            ],
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
 
     /**
      * Get inventory by category

@@ -182,10 +182,20 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
     Route::put('/barangays/{id}', [AdminController::class, 'updateBarangay'])->name('barangays.update');
     Route::delete('/barangays/{id}', [AdminController::class, 'deleteBarangay'])->name('barangays.delete');
     
+    // Reports
     Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+    
+    // Dynamic report API endpoints
+    Route::get('/reports/malnutrition-cases', [AdminController::class, 'getMalnutritionCasesReport'])->name('reports.malnutrition-cases');
+    Route::get('/reports/patient-progress', [AdminController::class, 'getPatientProgressReport'])->name('reports.patient-progress');
+    Route::get('/reports/low-stock-alert', [AdminController::class, 'getLowStockAlertReport'])->name('reports.low-stock-alert');
+    Route::get('/reports/monthly-trends', [AdminController::class, 'getMonthlyTrendsReport'])->name('reports.monthly-trends');
+    Route::get('/reports/patients-list', [AdminController::class, 'getPatientsList'])->name('reports.patients-list');
+    Route::get('/reports/individual-patient/{id}', [AdminController::class, 'getIndividualPatientReport'])->name('reports.individual-patient');
+    
+    // Legacy report endpoints (kept for backward compatibility with existing modals)
     Route::get('/reports/user-activity', [AdminController::class, 'generateUserActivityReport'])->name('reports.user-activity');
     Route::get('/reports/inventory', [AdminController::class, 'generateInventoryReport'])->name('reports.inventory');
-    Route::get('/reports/low-stock', [AdminController::class, 'generateLowStockReport'])->name('reports.low-stock');
     
     // PDF Download routes
     Route::post('/reports/user-activity/download', [AdminController::class, 'downloadUserActivityReport'])->name('reports.user-activity.download');

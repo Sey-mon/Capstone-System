@@ -124,41 +124,41 @@
         }
         .report-swal-content .stat-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
         }
         .report-swal-content .stat-item {
             text-align: center;
-            padding: 1rem;
+            padding: 0.75rem;
             background: #f8fafc;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px solid #e5e7eb;
         }
         .report-swal-content .stat-label {
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             color: #6b7280;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
         .report-swal-content .stat-value {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: #1f2937;
         }
         .report-swal-content .stat-meta {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #9ca3af;
-            margin-top: 0.25rem;
+            margin-top: 0.2rem;
         }
         .report-swal-content .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1rem 0;
-            font-size: 0.875rem;
+            margin: 0.75rem 0;
+            font-size: 0.813rem;
         }
         .report-swal-content .data-table th,
         .report-swal-content .data-table td {
-            padding: 0.75rem;
+            padding: 0.625rem;
             text-align: left;
             border-bottom: 1px solid #e5e7eb;
         }
@@ -168,9 +168,9 @@
             color: #374151;
         }
         .report-swal-content .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
+            padding: 0.2rem 0.625rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
             font-weight: 500;
         }
         .report-swal-content .status-good {
@@ -186,18 +186,19 @@
             color: #991b1b;
         }
         .report-swal-content .report-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
         .report-swal-content .report-section h4 {
             color: #1f2937;
-            font-size: 1.125rem;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.625rem;
         }
         .report-swal-content .alert {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            padding: 0.875rem;
+            border-radius: 6px;
+            margin-bottom: 0.875rem;
+            font-size: 0.875rem;
         }
         .report-swal-content .alert-info {
             background: #dbeafe;

@@ -283,7 +283,7 @@
                 <p class="province-text">Province of Laguna</p>
                 <h1 class="clinic-name">CITY OF SAN PEDRO</h1>
                 <h2 class="office-name">CITY HEALTH OFFICE</h2>
-                <p class="clinic-details">📍 Brgy. Poblacion, City of San Pedro, Laguna | ☎ (02) 808 – 2020 local 302 | ✉ splrhu10211@gmail.com</p>
+                <p class="clinic-details">📍 4F, New City Hall Bldg, Brgy. Poblacion, San Pedro, Laguna | ☎ (02) 808 – 2020 local 302 | ✉ CHOsanpedro@gmail.com</p>
             </div>
             <div class="logo-section">
                 @if(file_exists(public_path('img/bagong-pilipinas-logo.png')))
