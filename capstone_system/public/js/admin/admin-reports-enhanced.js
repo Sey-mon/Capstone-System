@@ -2,7 +2,27 @@
  * Admin Reports JavaScript - Main Controller
  */
 
+// Load images for PDF header
+let sanPedroLogo = null;
+let bagongPilipinasLogo = null;
+
+// Preload images
+function preloadImages() {
+    const sanPedroImg = new Image();
+    sanPedroImg.src = '/img/san-pedro-logo.png';
+    sanPedroImg.onload = function() {
+        sanPedroLogo = sanPedroImg;
+    };
+    
+    const bagongImg = new Image();
+    bagongImg.src = '/img/bagong-pilipinas-logo.png';
+    bagongImg.onload = function() {
+        bagongPilipinasLogo = bagongImg;
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    preloadImages();
     initializeCharts();
     initializeEventListeners();
 });
@@ -88,35 +108,73 @@ function generateReport(reportType, button) {
  * Generate comprehensive report based on type
  */
 function generateComprehensiveReport(reportType) {
-    let content = '';
     let title = '';
+    let endpoint = '';
     
     switch(reportType) {
         case 'malnutrition-cases':
             title = 'Malnutrition Cases by Severity';
-            content = generateMalnutritionCasesContent();
+            endpoint = '/admin/reports/malnutrition-cases';
             break;
         case 'patient-progress':
             title = 'Patient Progress & Recovery Report';
-            content = generatePatientProgressContent();
+            endpoint = '/admin/reports/patient-progress';
             break;
         case 'individual-patient':
             title = 'Individual Patient Report';
-            content = generateIndividualPatientSelector();
-            break;
+            // Special case - show patient selector first
+            showIndividualPatientSelector();
+            return;
         case 'low-stock-alert':
             title = 'Low Stock Alert Report';
-            content = generateLowStockAlertContent();
+            endpoint = '/admin/reports/low-stock-alert';
             break;
         case 'monthly-trends':
             title = 'Monthly Trends Analysis';
-            content = generateMonthlyTrendsContent();
+            endpoint = '/admin/reports/monthly-trends';
             break;
         default:
-            content = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Report generation in progress...</div>';
+            showAlert('Unknown report type', 'error');
+            return;
     }
     
-    showReportModalWithContent(title, content, reportType);
+    // Show loading state
+    showReportModalWithContent(title, '<div style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #2e7d32;"></i><p style="margin-top: 1rem; color: #6b7280;">Loading report data...</p></div>', reportType);
+    
+    // Fetch data from API
+    fetch(endpoint)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (result.success) {
+                let content = '';
+                switch(reportType) {
+                    case 'malnutrition-cases':
+                        content = generateMalnutritionCasesContent(result.data);
+                        break;
+                    case 'patient-progress':
+                        content = generatePatientProgressContent(result.data);
+                        break;
+                    case 'low-stock-alert':
+                        content = generateLowStockAlertContent(result.data);
+                        break;
+                    case 'monthly-trends':
+                        content = generateMonthlyTrendsContent(result.data);
+                        break;
+                }
+                showReportModalWithContent(title, content, reportType);
+            } else {
+                showAlert('Error generating report: ' + (result.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching report:', error);
+            showAlert('Error loading report: ' + error.message, 'error');
+        });
 }
 
 /**
@@ -304,74 +362,45 @@ function showReportModal(reportType, data) {
  * Generate user activity content
  */
 function generateUserActivityContent(data) {
+    // Get current date and 30 days ago as defaults
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+    
+    const defaultStartDate = thirtyDaysAgo.toISOString().split('T')[0];
+    const defaultEndDate = today.toISOString().split('T')[0];
+    
+    // Auto-apply filter after content loads
+    setTimeout(() => applyUserActivityDateFilter(), 100);
+    
     return `
-        <div class="report-summary">
-            <div class="stat-grid">
-                <div class="stat-item">
-                    <div class="stat-label">Total Users</div>
-                    <div class="stat-value">${data.total_users || 0}</div>
+        <div class="report-section">
+            <h4><i class="fas fa-calendar-range" style="color: #2e7d32; margin-right: 0.5rem;"></i>Date Range Filter</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; background: #f0f9ff; padding: 1rem; border-radius: 8px; border: 1px solid #bae6fd;">
+                <div>
+                    <label style="font-size: 0.875rem; font-weight: 600; color: #374151; display: block; margin-bottom: 0.5rem;">
+                        <i class="fas fa-calendar-day" style="color: #3b82f6;"></i> Start Date
+                    </label>
+                    <input type="date" id="userActivityStartDate" class="form-control" value="${defaultStartDate}"
+                        onchange="applyUserActivityDateFilter()"
+                        style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
                 </div>
-                <div class="stat-item">
-                    <div class="stat-label">Active Users (30 days)</div>
-                    <div class="stat-value" style="color: #10b981">${data.active_users_30_days || 0}</div>
+                <div>
+                    <label style="font-size: 0.875rem; font-weight: 600; color: #374151; display: block; margin-bottom: 0.5rem;">
+                        <i class="fas fa-calendar-day" style="color: #3b82f6;"></i> End Date
+                    </label>
+                    <input type="date" id="userActivityEndDate" class="form-control" value="${defaultEndDate}"
+                        onchange="applyUserActivityDateFilter()"
+                        style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
                 </div>
             </div>
         </div>
         
-        ${(data.users_by_role && Object.keys(data.users_by_role).length > 0) ? `
-            <div class="report-section">
-                <h4>Users by Role</h4>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Role</th>
-                            <th>Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Object.entries(data.users_by_role).map(([role, count]) => `
-                            <tr>
-                                <td><strong>${role}</strong></td>
-                                <td>${count}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+        <div id="userActivityResultsSection">
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i>
+                <p style="margin-top: 1rem; color: #6b7280;">Loading user activity data...</p>
             </div>
-        ` : ''}
-        
-        ${(data.recent_assessments && data.recent_assessments.length > 0) ? `
-            <div class="report-section">
-                <h4>Recent Assessments (Last 10)</h4>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Patient</th>
-                            <th>By User</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.recent_assessments.map(assessment => {
-                            const patientName = assessment.patient 
-                                ? `${assessment.patient.first_name} ${assessment.patient.last_name}` 
-                                : 'N/A';
-                            const userName = assessment.user ? assessment.user.name : 'N/A';
-                            const date = assessment.created_at ? new Date(assessment.created_at).toLocaleDateString() : 'N/A';
-                            return `
-                                <tr>
-                                    <td>${assessment.id}</td>
-                                    <td>${patientName}</td>
-                                    <td>${userName}</td>
-                                    <td>${date}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-        ` : ''}
+        </div>
     `;
 }
 
@@ -485,6 +514,73 @@ function closeReportModal() {
 }
 
 /**
+ * Add official header to PDF with logos
+ */
+function addPDFHeader(doc, reportTitle = '') {
+    // Add San Pedro Logo (left)
+    if (sanPedroLogo) {
+        doc.addImage(sanPedroLogo, 'PNG', 15, 10, 25, 25);
+    }
+    
+    // Add Bagong Pilipinas Logo (right)
+    if (bagongPilipinasLogo) {
+        doc.addImage(bagongPilipinasLogo, 'PNG', 170, 10, 25, 25);
+    }
+    
+    // Center header text
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+    doc.text('Republic of the Philippines', 105, 14, { align: 'center' });
+    
+    doc.setFontSize(8);
+    doc.text('Province of Laguna', 105, 18, { align: 'center' });
+    
+    // CITY OF SAN PEDRO - larger and bold
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 51, 153); // Blue color
+    doc.text('CITY OF SAN PEDRO', 105, 25, { align: 'center' });
+    
+    // CITY HEALTH OFFICE
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(64, 64, 64); // Dark gray
+    doc.text('CITY HEALTH OFFICE', 105, 31, { align: 'center' });
+    
+    // Address and contact info - split into readable parts without emojis
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text('4F, New City Hall Bldg, Brgy. Poblacion, San Pedro, Laguna | (02) 808 - 2020 local 302 |', 105, 36, { align: 'center' });
+    doc.text('CHOsanpedro@gmail.com', 105, 40, { align: 'center' });
+    
+    // Add horizontal line separator
+    doc.setDrawColor(0, 51, 153); // Blue line
+    doc.setLineWidth(0.8);
+    doc.line(15, 43, 195, 43);
+    
+    // Add report title below header if provided
+    let yPos = 52;
+    if (reportTitle) {
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(46, 125, 50);
+        doc.text(reportTitle, 105, yPos, { align: 'center' });
+        yPos += 8;
+        
+        // Add generation date
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100, 100, 100);
+        doc.text('Generated on: ' + new Date().toLocaleString(), 105, yPos, { align: 'center' });
+        yPos += 10;
+    }
+    
+    return yPos; // Return the Y position where content should start
+}
+
+/**
  * Generate PDF report using jsPDF
  */
 function generatePDF(reportType, title, content) {
@@ -502,21 +598,8 @@ function generatePDF(reportType, title, content) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // Add header
-            doc.setFontSize(20);
-            doc.setTextColor(46, 125, 50);
-            doc.text('Nutrition Management System', 105, 20, { align: 'center' });
-            
-            doc.setFontSize(16);
-            doc.setTextColor(0, 0, 0);
-            doc.text(title, 105, 35, { align: 'center' });
-            
-            // Add generation date
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 45, { align: 'center' });
-            
-            let yPos = 60;
+            // Add official header with logos
+            let yPos = addPDFHeader(doc, title);
             
             // Add report content based on type
             if (reportType === 'malnutrition-cases') {
@@ -531,6 +614,19 @@ function generatePDF(reportType, title, content) {
                 yPos = addInventoryPDF(doc, yPos);
             } else if (reportType === 'user-activity') {
                 yPos = addUserActivityPDF(doc, yPos);
+            } else if (reportType === 'individual-patient-detail') {
+                // Close the loading dialog
+                Swal.close();
+                // Call the dedicated individual patient PDF function
+                if (window.currentPatientIndex !== undefined) {
+                    const monthlyData = window.monthlyProgressData || { patient_progress: [] };
+                    const patients = monthlyData.patient_progress || [];
+                    const patient = patients[window.currentPatientIndex];
+                    if (patient) {
+                        generateIndividualPatientPDF(window.currentPatientIndex, patient.name);
+                    }
+                }
+                return; // Exit early since generateIndividualPatientPDF handles everything
             } else {
                 doc.setFontSize(12);
                 doc.text('Report data is being prepared.', 20, yPos);
@@ -1200,56 +1296,113 @@ function addUserActivityPDF(doc, startY) {
     doc.text('User Activity & System Usage Report', 20, startY);
     startY += 10;
     
+    // Date range
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Period: ${userData.start_display} to ${userData.end_display} (${userData.date_range_days} days)`, 20, startY);
+    startY += 10;
+    
     // User statistics
     doc.setFontSize(12);
-    doc.text('User Statistics:', 20, startY);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Overall Statistics:', 20, startY);
     startY += 8;
     
     doc.setFontSize(10);
-    doc.text(`Total Active Users: ${userData.total_users || 0}`, 25, startY);
-    doc.text(`Recent Assessments: ${userData.recent_assessments || 0}`, 25, startY + 7);
+    doc.text(`• Total System Users: ${userData.total_users || 0}`, 25, startY);
+    doc.text(`• Active Users (in period): ${userData.active_users || 0}`, 25, startY + 7);
+    doc.text(`• Total Assessments: ${userData.total_assessments || 0}`, 25, startY + 14);
+    doc.text(`• Average per Day: ${userData.date_range_days > 0 ? Math.round(userData.total_assessments / userData.date_range_days) : 0}`, 25, startY + 21);
     
-    startY += 20;
+    startY += 33;
     
-    // Roles breakdown
-    if (userData.by_role && userData.by_role.length > 0) {
+    // Users by role
+    if (userData.users_by_role && Object.keys(userData.users_by_role).length > 0) {
         doc.setFontSize(12);
         doc.text('Users by Role:', 20, startY);
         startY += 8;
         
-        const roleData = userData.by_role.map(role => [
-            role.name,
-            role.count.toString()
-        ]);
+        const roleData = Object.entries(userData.users_by_role).map(([role, count]) => {
+            const percentage = userData.total_users > 0 ? Math.round((count / userData.total_users) * 100) : 0;
+            return [role, count.toString(), `${percentage}%`];
+        });
         
         doc.autoTable({
             startY: startY,
-            head: [['Role', 'Count']],
+            head: [['Role', 'Count', 'Percentage']],
             body: roleData,
             theme: 'grid',
             headStyles: { fillColor: [59, 130, 246] },
             margin: { left: 20, right: 20 },
-            styles: { fontSize: 10 },
-            columnStyles: {
-                0: { cellWidth: 100 },
-                1: { cellWidth: 50, halign: 'center' }
-            }
+            styles: { fontSize: 10 }
         });
         
         startY = doc.lastAutoTable.finalY + 15;
     }
     
-    // Recent activity summary
-    if (userData.recent_assessments > 0) {
+    // Top active users
+    if (userData.assessments_by_user && userData.assessments_by_user.length > 0) {
+        if (startY > 240) {
+            doc.addPage();
+            startY = addPDFHeader(doc);
+        }
+        
         doc.setFontSize(12);
-        doc.text('Activity Summary:', 20, startY);
+        doc.text('Top 10 Active Users:', 20, startY);
         startY += 8;
         
-        doc.setFontSize(10);
-        doc.text('System is actively being used for patient assessments.', 25, startY);
-        doc.text('Regular monitoring is recommended to ensure optimal performance.', 25, startY + 7);
+        const userActivityData = userData.assessments_by_user.slice(0, 10).map(item => [
+            item.user_name,
+            item.role,
+            item.count.toString()
+        ]);
         
-        startY += 20;
+        doc.autoTable({
+            startY: startY,
+            head: [['User Name', 'Role', 'Assessments']],
+            body: userActivityData,
+            theme: 'grid',
+            headStyles: { fillColor: [16, 185, 129] },
+            margin: { left: 20, right: 20 },
+            styles: { fontSize: 9 }
+        });
+        
+        startY = doc.lastAutoTable.finalY + 15;
+    }
+    
+    // Recent assessments
+    if (userData.recent_assessments && userData.recent_assessments.length > 0) {
+        if (startY > 200) {
+            doc.addPage();
+            startY = addPDFHeader(doc);
+        }
+        
+        doc.setFontSize(12);
+        doc.text('Recent Assessments:', 20, startY);
+        startY += 8;
+        
+        const assessmentData = userData.recent_assessments.map(assessment => [
+            assessment.id.toString(),
+            assessment.patient_name,
+            `${assessment.user_name}\n(${assessment.user_role || 'Nutritionist'})`,
+            assessment.recovery_status,
+            assessment.date
+        ]);
+        
+        doc.autoTable({
+            startY: startY,
+            head: [['ID', 'Patient', 'By User (Role)', 'Status', 'Date']],
+            body: assessmentData,
+            theme: 'grid',
+            headStyles: { fillColor: [245, 158, 11] },
+            margin: { left: 20, right: 20 },
+            styles: { fontSize: 8, cellPadding: 3 },
+            columnStyles: {
+                2: { cellWidth: 40 } // Wider column for user name + role
+            }
+        });
+        
+        startY = doc.lastAutoTable.finalY + 15;
     }
     
     return startY;
@@ -1509,7 +1662,8 @@ function showReportModalWithContent(title, content, reportType) {
     Swal.fire({
         title: title,
         html: content,
-        width: '900px',
+        width: '1200px',
+        padding: '2rem',
         showCloseButton: true,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-download"></i> Download PDF',
@@ -1579,14 +1733,17 @@ function showReportModalWithContent(title, content, reportType) {
 
 // ===== COMPREHENSIVE REPORT GENERATION FUNCTIONS =====
 
-function generateMalnutritionCasesContent() {
-    const distData = window.patientDistributionData || {
-        normal: { count: 0, percentage: 0, patients: [] },
-        underweight: { count: 0, percentage: 0, patients: [] },
-        malnourished: { count: 0, percentage: 0, patients: [] },
-        severe_malnourishment: { count: 0, percentage: 0, patients: [] },
-        barangay_breakdown: {}
-    };
+function generateMalnutritionCasesContent(distData = null) {
+    // Use provided data or fallback to window data
+    if (!distData) {
+        distData = window.patientDistributionData || {
+            normal: { count: 0, percentage: 0, patients: [] },
+            underweight: { count: 0, percentage: 0, patients: [] },
+            malnourished: { count: 0, percentage: 0, patients: [] },
+            severe_malnourishment: { count: 0, percentage: 0, patients: [] },
+            barangay_breakdown: {}
+        };
+    }
     
     const totalAtRisk = distData.severe_malnourishment.count + distData.malnourished.count + distData.underweight.count;
     const totalPatients = totalAtRisk + distData.normal.count;
@@ -1779,17 +1936,20 @@ function generateMalnutritionCasesContent() {
     `;
 }
 
-function generatePatientProgressContent() {
-    const monthlyData = window.monthlyProgressData || {
-        months: [],
-        assessments: [],
-        recovered: [],
-        total_assessments: 0,
-        total_recovered: 0,
-        patient_progress: [],
-        barangay_progress: {},
-        barangays: []
-    };
+function generatePatientProgressContent(monthlyData = null) {
+    // Use provided data or fallback to window data
+    if (!monthlyData) {
+        monthlyData = window.monthlyProgressData || {
+            months: [],
+            assessments: [],
+            recovered: [],
+            total_assessments: 0,
+            total_recovered: 0,
+            patient_progress: [],
+            barangay_progress: {},
+            barangays: []
+        };
+    }
     
     const recoveryRate = monthlyData.total_assessments > 0 
         ? Math.round((monthlyData.total_recovered / monthlyData.total_assessments) * 100) 
@@ -2030,9 +2190,15 @@ function applyProgressFilters() {
     }
 }
 
-function generateLowStockAlertContent() {
-    const stats = window.reportsStatsData || { low_stock_items: 0, low_stock_items_data: [] };
-    const alertItems = stats.low_stock_items_data || [];
+function generateLowStockAlertContent(data = null) {
+    // Use provided data or fallback to window data
+    let alertItems = [];
+    if (data && data.alert_items) {
+        alertItems = data.alert_items;
+    } else {
+        const stats = window.reportsStatsData || { low_stock_items: 0, low_stock_items_data: [] };
+        alertItems = stats.low_stock_items_data || [];
+    }
     
     // Separate items by alert type
     const expiredItems = alertItems.filter(item => item.is_expired);
@@ -2100,7 +2266,7 @@ function generateLowStockAlertContent() {
             ${alertItems.length > 0 ? `
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Action Required:</strong> ${stats.low_stock_items} item${stats.low_stock_items !== 1 ? 's' : ''} require immediate attention.
+                    <strong>Action Required:</strong> ${alertItems.length} item${alertItems.length !== 1 ? 's' : ''} require immediate attention.
                 </div>
                 <div class="stat-grid">
                     <div class="stat-item">
@@ -2145,52 +2311,185 @@ function generateLowStockAlertContent() {
     `;
 }
 
-function generateMonthlyTrendsContent() {
-    const monthlyData = window.monthlyProgressData || {
-        months: [],
-        assessments: [],
-        recovered: []
-    };
+function generateMonthlyTrendsContent(monthlyData = null) {
+    // Use provided data or fallback to window data
+    if (!monthlyData) {
+        monthlyData = window.monthlyProgressData || {
+            months: [],
+            assessments: [],
+            recovered: [],
+            total_assessments: 0,
+            total_recovered: 0
+        };
+    }
+    
+    const totalAssessments = monthlyData.total_assessments || 0;
+    const totalRecovered = monthlyData.total_recovered || 0;
+    const recoveryRate = totalAssessments > 0 ? Math.round((totalRecovered / totalAssessments) * 100) : 0;
     
     return `
         <div class="report-section">
-            <h4>6-Month Trend Analysis</h4>
-            <p>Comprehensive trends showing program effectiveness over time.</p>
-            <canvas id="trendChart" style="max-height: 300px;"></canvas>
-            <script>
-                setTimeout(() => {
-                    const ctx = document.getElementById('trendChart').getContext('2d');
-                    new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: ${JSON.stringify(monthlyData.months)},
-                            datasets: [{
-                                label: 'Assessments',
-                                data: ${JSON.stringify(monthlyData.assessments)},
-                                borderColor: '#3b82f6',
-                                tension: 0.4
-                            }, {
-                                label: 'Recovered',
-                                data: ${JSON.stringify(monthlyData.recovered)},
-                                borderColor: '#10b981',
-                                tension: 0.4
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false }
-                    });
-                }, 100);
-            </script>
+            <h4><i class="fas fa-chart-line" style="color: #2e7d32; margin-right: 0.5rem;"></i>Monthly Trends Overview</h4>
+            <div class="alert alert-info" style="margin-bottom: 1rem;">
+                <i class="fas fa-info-circle"></i> Showing last 6 months of assessment and recovery data
+            </div>
+            
+            <div class="stat-grid" style="margin-bottom: 1.5rem;">
+                <div class="stat-item">
+                    <div class="stat-label">Total Assessments</div>
+                    <div class="stat-value" style="color: #3b82f6">${totalAssessments}</div>
+                    <div class="stat-meta">Last 6 months</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Recovered</div>
+                    <div class="stat-value" style="color: #10b981">${totalRecovered}</div>
+                    <div class="stat-meta">Successfully treated</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Recovery Rate</div>
+                    <div class="stat-value" style="color: ${recoveryRate >= 50 ? '#10b981' : recoveryRate >= 25 ? '#f59e0b' : '#ef4444'}">${recoveryRate}%</div>
+                    <div class="stat-meta">Success rate</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <h4>Trend Chart</h4>
+            ${monthlyData.months.length > 0 ? `
+                <div style="background: #f0f9ff; padding: 0.875rem; border-radius: 6px; border: 1px solid #bae6fd; margin-bottom: 1rem;">
+                    <i class="fas fa-info-circle" style="color: #0284c7;"></i> Showing data from <strong>${monthlyData.months[0]}</strong> to <strong>${monthlyData.months[monthlyData.months.length - 1]}</strong>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 1.5rem;">
+                    <canvas id="trendChart" style="max-height: 300px;"></canvas>
+                </div>
+            ` : `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> No trend data available yet. Data will appear once assessments are recorded.
+                </div>
+            `}
+            
+        <div class="report-section">
+            <h4>Monthly Breakdown</h4>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th style="text-align: center;">Assessments</th>
+                        <th style="text-align: center;">Recovered</th>
+                        <th style="text-align: center;">Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${monthlyData.months.length > 0 ? monthlyData.months.map((month, i) => {
+                        const rate = monthlyData.assessments[i] > 0 
+                            ? Math.round((monthlyData.recovered[i] / monthlyData.assessments[i]) * 100) 
+                            : 0;
+                        return `
+                            <tr>
+                                <td><strong>${month}</strong></td>
+                                <td style="text-align: center;">${monthlyData.assessments[i]}</td>
+                                <td style="text-align: center; color: #10b981;">${monthlyData.recovered[i]}</td>
+                                <td style="text-align: center; color: ${rate >= 50 ? '#10b981' : rate >= 25 ? '#f59e0b' : '#ef4444'}; font-weight: bold;">${rate}%</td>
+                            </tr>
+                        `;
+                    }).join('') : `
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 1.5rem; color: #6b7280;">
+                                <i class="fas fa-inbox"></i> No monthly data available yet
+                            </td>
+                        </tr>
+                    `}
+                </tbody>
+            </table>
         </div>
     `;
+    
+    // Initialize chart if data exists
+    if (monthlyData.months.length > 0) {
+        setTimeout(() => {
+            const canvas = document.getElementById('trendChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: monthlyData.months,
+                        datasets: [{
+                            label: 'Assessments',
+                            data: monthlyData.assessments,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2
+                        }, {
+                            label: 'Recovered',
+                            data: monthlyData.recovered,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }, 100);
+    }
 }
 
 /**
  * Generate individual patient selector interface
  */
-function generateIndividualPatientSelector() {
-    const monthlyData = window.monthlyProgressData || { patient_progress: [] };
-    const patients = monthlyData.patient_progress || [];
+/**
+ * Show patient selector by fetching list from API
+ */
+function showIndividualPatientSelector() {
+    const title = 'Individual Patient Report - Select Patient';
+    const loadingContent = '<div style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #2e7d32;"></i><p style="margin-top: 1rem; color: #6b7280;">Loading patients list...</p></div>';
     
+    showReportModalWithContent(title, loadingContent, 'individual-patient');
+    
+    // Fetch patients list from API
+    fetch('/admin/reports/patients-list')
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                const content = generateIndividualPatientSelector(result.data);
+                showReportModalWithContent(title, content, 'individual-patient');
+            } else {
+                showAlert('Error loading patients list: ' + (result.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching patients list:', error);
+            showAlert('Error loading patients list: ' + error.message, 'error');
+        });
+}
+
+function generateIndividualPatientSelector(patients = []) {
     if (patients.length === 0) {
         return `
             <div style="text-align: center; padding: 3rem; color: #9ca3af;">
@@ -2200,6 +2499,9 @@ function generateIndividualPatientSelector() {
             </div>
         `;
     }
+    
+    // Store patients globally for filtering
+    window.currentPatientsList = patients;
     
     return `
         <div class="report-section">
@@ -2308,8 +2610,7 @@ function generatePatientSelectionList(patients, searchTerm = '') {
  */
 function filterIndividualPatients() {
     const searchTerm = document.getElementById('individualPatientSearch')?.value || '';
-    const monthlyData = window.monthlyProgressData || { patient_progress: [] };
-    const patients = monthlyData.patient_progress || [];
+    const patients = window.currentPatientsList || [];
     
     const listContainer = document.getElementById('patientSelectionList');
     if (listContainer) {
@@ -2321,8 +2622,7 @@ function filterIndividualPatients() {
  * Show detailed report for individual patient
  */
 function showIndividualPatientReport(patientIndex) {
-    const monthlyData = window.monthlyProgressData || { patient_progress: [] };
-    const patients = monthlyData.patient_progress || [];
+    const patients = window.currentPatientsList || [];
     const patient = patients[patientIndex];
     
     if (!patient) {
@@ -2330,81 +2630,315 @@ function showIndividualPatientReport(patientIndex) {
         return;
     }
     
-    const content = `
+    const title = `Individual Patient Report: ${patient.name}`;
+    const loadingContent = '<div style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #2e7d32;"></i><p style="margin-top: 1rem; color: #6b7280;">Loading patient report...</p></div>';
+    
+    showReportModalWithContent(title, loadingContent, 'individual-patient-detail');
+    
+    // Fetch detailed patient report from API
+    fetch(`/admin/reports/individual-patient/${patient.id}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                const content = generateIndividualPatientReportContent(result.data);
+                showReportModalWithContent(title, content, 'individual-patient-detail');
+                
+                // Store for PDF generation
+                window.currentPatientData = result.data;
+            } else {
+                showAlert('Error loading patient report: ' + (result.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching patient report:', error);
+            showAlert('Error loading patient report: ' + error.message, 'error');
+        });
+}
+
+/**
+ * Generate individual patient report content from API data
+ */
+function generateIndividualPatientReportContent(data) {
+    const patient = data.patient;
+    const assessments = data.assessments || [];
+    const summary = data.summary;
+    
+    return `
         <div class="report-section">
             <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #bae6fd;">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h3 style="margin: 0 0 0.5rem 0; color: #1e3a8a; font-size: 1.25rem;">
+                    <i class="fas fa-user-circle"></i> Patient Information
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 1rem;">
                     <div>
-                        <h3 style="margin: 0 0 0.5rem 0; color: #1e3a8a; font-size: 1.5rem;">
-                            <i class="fas fa-user-circle"></i> ${patient.name}
-                        </h3>
-                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                            <span style="color: #1e40af; font-size: 0.875rem;">
-                                <i class="fas fa-map-marker-alt" style="color: #f59e0b;"></i> ${patient.barangay}
-                            </span>
-                            <span style="color: #1e40af; font-size: 0.875rem;">
-                                <i class="fas fa-birthday-cake"></i> Age: ${patient.age || 'N/A'}
-                            </span>
-                        </div>
+                        <span style="color: #6b7280; font-size: 0.75rem; display: block;">Date of Birth</span>
+                        <span style="color: #1e40af; font-weight: 600;">${patient.date_of_birth}</span>
                     </div>
-                    <button onclick="generateIndividualPatientPDF(${patientIndex}, '${patient.name.replace(/'/g, "\\'")}')" class="btn btn-primary" 
-                        style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                        <i class="fas fa-file-pdf"></i> Export PDF
-                    </button>
+                    <div>
+                        <span style="color: #6b7280; font-size: 0.75rem; display: block;">Sex</span>
+                        <span style="color: #1e40af; font-weight: 600;">${patient.sex}</span>
+                    </div>
+                    <div>
+                        <span style="color: #6b7280; font-size: 0.75rem; display: block;">Barangay</span>
+                        <span style="color: #1e40af; font-weight: 600;">${patient.barangay}</span>
+                    </div>
+                    <div>
+                        <span style="color: #6b7280; font-size: 0.75rem; display: block;">Address</span>
+                        <span style="color: #1e40af; font-weight: 600;">${patient.address}</span>
+                    </div>
                 </div>
             </div>
             
             <div class="stat-grid" style="margin-bottom: 1.5rem;">
                 <div class="stat-item">
                     <div class="stat-label">Total Assessments</div>
-                    <div class="stat-value">${patient.total_assessments}</div>
+                    <div class="stat-value">${summary.total_assessments}</div>
                     <div class="stat-meta">Recorded visits</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Weight Change</div>
-                    <div class="stat-value" style="color: ${patient.weight_change > 0 ? '#10b981' : patient.weight_change < 0 ? '#ef4444' : '#6b7280'}">
-                        ${patient.weight_change ? (patient.weight_change > 0 ? '+' : '') + patient.weight_change + ' kg' : 'N/A'}
+                    <div class="stat-value" style="color: ${summary.weight_change > 0 ? '#10b981' : summary.weight_change < 0 ? '#ef4444' : '#6b7280'}">
+                        ${summary.weight_change ? (summary.weight_change > 0 ? '+' : '') + summary.weight_change + ' kg' : 'N/A'}
                     </div>
                     <div class="stat-meta">Overall trend</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">BMI Change</div>
-                    <div class="stat-value" style="color: ${patient.bmi_change > 0 ? '#10b981' : patient.bmi_change < 0 ? '#ef4444' : '#6b7280'}">
-                        ${patient.bmi_change ? (patient.bmi_change > 0 ? '+' : '') + patient.bmi_change : 'N/A'}
+                    <div class="stat-value" style="color: ${summary.bmi_change > 0 ? '#10b981' : summary.bmi_change < 0 ? '#ef4444' : '#6b7280'}">
+                        ${summary.bmi_change ? (summary.bmi_change > 0 ? '+' : '') + summary.bmi_change : 'N/A'}
                     </div>
                     <div class="stat-meta">Progress indicator</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Progress Status</div>
-                    <div class="stat-value" style="color: ${patient.progress_trend === 'improving' ? '#10b981' : patient.progress_trend === 'declining' ? '#ef4444' : '#3b82f6'}; font-size: 1.25rem;">
-                        ${patient.progress_trend === 'improving' ? '↗ Improving' : patient.progress_trend === 'declining' ? '↘ Declining' : '→ Stable'}
+                    <div class="stat-label">Current Status</div>
+                    <div class="stat-value" style="color: ${summary.progress_trend === 'improving' ? '#10b981' : summary.progress_trend === 'declining' ? '#ef4444' : '#3b82f6'}; font-size: 1rem;">
+                        ${summary.current_status}
                     </div>
-                    <div class="stat-meta">Current trend</div>
+                    <div class="stat-meta">${summary.progress_trend === 'improving' ? '↗ Improving' : summary.progress_trend === 'declining' ? '↘ Declining' : '→ Stable'}</div>
                 </div>
             </div>
             
             <div class="report-section">
                 <h4><i class="fas fa-calendar-alt" style="color: #3b82f6;"></i> Assessment Period</h4>
                 <p style="color: #6b7280; font-size: 0.875rem;">
-                    <strong>First Assessment:</strong> ${patient.first_assessment_date}<br>
-                    <strong>Latest Assessment:</strong> ${patient.last_assessment_date}
+                    <strong>First Assessment:</strong> ${summary.first_assessment_date || 'N/A'}<br>
+                    <strong>Latest Assessment:</strong> ${summary.latest_assessment_date || 'N/A'}
                 </p>
             </div>
+            
+            ${assessments.length > 0 ? `
+                <div class="report-section">
+                    <h4><i class="fas fa-history" style="color: #2e7d32;"></i> Assessment History</h4>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Weight (kg)</th>
+                                    <th>Height (cm)</th>
+                                    <th>BMI</th>
+                                    <th>MUAC (cm)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${assessments.map(assessment => `
+                                    <tr>
+                                        <td>${assessment.date}</td>
+                                        <td>${assessment.weight || 'N/A'}</td>
+                                        <td>${assessment.height || 'N/A'}</td>
+                                        <td>${assessment.bmi || 'N/A'}</td>
+                                        <td>${assessment.muac || 'N/A'}</td>
+                                        <td>${assessment.recovery_status}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ` : ''}
             
             <div class="alert alert-info" style="margin-top: 1rem;">
                 <i class="fas fa-lightbulb"></i>
                 <strong>Progress Summary:</strong> 
-                ${patient.progress_trend === 'improving' 
-                    ? `This patient shows positive progress with ${patient.bmi_change > 0 ? 'improving' : 'stable'} BMI trends. Continue current intervention plan.`
-                    : patient.progress_trend === 'declining'
+                ${summary.progress_trend === 'improving' 
+                    ? `This patient shows positive progress with ${summary.bmi_change > 0 ? 'improving' : 'stable'} BMI trends. Continue current intervention plan.`
+                    : summary.progress_trend === 'declining'
                     ? `This patient's progress shows decline. Review and adjust intervention plan as needed. Consider additional nutritional support.`
                     : `This patient maintains stable condition. Continue monitoring and maintain current care plan.`
                 }
             </div>
         </div>
     `;
+}
+
+/**
+ * Apply date range filter for user activity
+ */
+function applyUserActivityDateFilter() {
+    const startDate = document.getElementById('userActivityStartDate')?.value;
+    const endDate = document.getElementById('userActivityEndDate')?.value;
     
-    showReportModalWithContent(`Individual Patient Report: ${patient.name}`, content, 'individual-patient-detail');
+    if (!startDate || !endDate) {
+        showAlert('Please select both start and end dates', 'warning');
+        return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+        showAlert('Start date must be before end date', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const resultsSection = document.getElementById('userActivityResultsSection');
+    if (resultsSection) {
+        resultsSection.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i>
+                <p style="margin-top: 1rem; color: #6b7280;">Loading user activity data...</p>
+            </div>
+        `;
+    }
+    
+    // Fetch filtered data from server
+    fetch(`/admin/reports/user-activity?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => response.json())
+        .then(result => {
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to load data');
+            }
+            
+            const data = result.data;
+            
+            if (resultsSection) {
+                resultsSection.innerHTML = `
+                    <h4>User Activity Results</h4>
+                    <p>Showing data from <strong>${data.start_display}</strong> to <strong>${data.end_display}</strong> (${data.date_range_days} days)</p>
+                    
+                    <div class="report-summary">
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Total Users</div>
+                                <div class="stat-value">${data.total_users || 0}</div>
+                                <div class="stat-meta">System-wide</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Active Users</div>
+                                <div class="stat-value" style="color: #10b981">${data.active_users || 0}</div>
+                                <div class="stat-meta">In selected period</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Total Assessments</div>
+                                <div class="stat-value" style="color: #3b82f6">${data.total_assessments || 0}</div>
+                                <div class="stat-meta">Created</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Avg Per Day</div>
+                                <div class="stat-value" style="color: #f59e0b">${data.date_range_days > 0 ? Math.round(data.total_assessments / data.date_range_days) : 0}</div>
+                                <div class="stat-meta">Assessments/day</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${(data.users_by_role && Object.keys(data.users_by_role).length > 0) ? `
+                        <div class="report-section">
+                            <h4><i class="fas fa-users" style="color: #3b82f6; margin-right: 0.5rem;"></i>Users by Role</h4>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Role</th>
+                                        <th style="text-align: center;">Count</th>
+                                        <th style="text-align: center;">Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.entries(data.users_by_role).map(([role, count]) => {
+                                        const percentage = data.total_users > 0 ? Math.round((count / data.total_users) * 100) : 0;
+                                        return `
+                                            <tr>
+                                                <td><strong>${role}</strong></td>
+                                                <td style="text-align: center;">${count}</td>
+                                                <td style="text-align: center;">${percentage}%</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : ''}
+                    
+                    ${(data.assessments_by_user && data.assessments_by_user.length > 0) ? `
+                        <div class="report-section">
+                            <h4><i class="fas fa-chart-bar" style="color: #10b981; margin-right: 0.5rem;"></i>Assessments by User (Top 10)</h4>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>User Name</th>
+                                        <th>Role</th>
+                                        <th style="text-align: center;">Assessments</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.assessments_by_user.slice(0, 10).map(item => `
+                                        <tr>
+                                            <td><strong>${item.user_name}</strong></td>
+                                            <td>${item.role}</td>
+                                            <td style="text-align: center;"><span style="background: #dbeafe; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600; color: #1e40af;">${item.count}</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : ''}
+                    
+                    ${(data.recent_assessments && data.recent_assessments.length > 0) ? `
+                        <div class="report-section">
+                            <h4><i class="fas fa-clock" style="color: #f59e0b; margin-right: 0.5rem;"></i>Recent Assessments</h4>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Patient</th>
+                                        <th>By User (Role)</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.recent_assessments.map(assessment => `
+                                        <tr>
+                                            <td>${assessment.id}</td>
+                                            <td>${assessment.patient_name}</td>
+                                            <td>
+                                                <strong>${assessment.user_name}</strong>
+                                                <br>
+                                                <span style="font-size: 0.85em; color: #6b7280;">${assessment.user_role || 'Nutritionist'}</span>
+                                            </td>
+                                            <td><span class="badge badge-${assessment.recovery_status === 'recovered' ? 'success' : 'info'}">${assessment.recovery_status}</span></td>
+                                            <td>${assessment.date}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<div class="alert alert-info">No assessments found in this period</div>'}
+                `;
+            }
+            
+            // Store data for PDF generation
+            window.lastUserActivityData = data;
+        })
+        .catch(error => {
+            console.error('Error fetching user activity data:', error);
+            if (resultsSection) {
+                resultsSection.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Error loading data:</strong> Unable to fetch user activity data for the selected period. Please try again.
+                    </div>
+                `;
+            }
+        });
 }
 
 /**
@@ -2435,68 +2969,171 @@ function generateIndividualPatientPDF(patientIndex, patientName) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Header
-    doc.setFontSize(18);
-    doc.setTextColor(46, 125, 50);
-    doc.text('Individual Patient Report', 20, 20);
+    // Add official header with logos
+    let yPos = addPDFHeader(doc, 'Individual Patient Report');
     
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 27);
-    
-    // Patient Info
-    let yPos = 40;
-    doc.setFontSize(14);
+    // Patient Info Section
+    yPos += 5;
+    doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'bold');
     doc.text(`Patient: ${patient.name}`, 20, yPos);
-    yPos += 8;
-    
-    doc.setFontSize(10);
-    doc.text(`Barangay: ${patient.barangay}`, 20, yPos);
-    doc.text(`Age: ${patient.age || 'N/A'}`, 80, yPos);
-    yPos += 15;
-    
-    // Summary Stats
-    doc.setFontSize(12);
-    doc.text('Progress Summary:', 20, yPos);
-    yPos += 8;
-    
-    doc.setFontSize(10);
-    doc.text(`• Total Assessments: ${patient.total_assessments}`, 25, yPos);
-    yPos += 7;
-    doc.text(`• Weight Change: ${patient.weight_change ? (patient.weight_change > 0 ? '+' : '') + patient.weight_change + ' kg' : 'N/A'}`, 25, yPos);
-    yPos += 7;
-    doc.text(`• BMI Change: ${patient.bmi_change ? (patient.bmi_change > 0 ? '+' : '') + patient.bmi_change : 'N/A'}`, 25, yPos);
-    yPos += 7;
-    doc.text(`• Progress Status: ${patient.progress_trend === 'improving' ? 'Improving' : patient.progress_trend === 'declining' ? 'Declining' : 'Stable'}`, 25, yPos);
     yPos += 10;
     
-    // Assessment Period
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Barangay: ${patient.barangay}`, 20, yPos);
+    doc.text(`Age: ${patient.age || 'N/A'} years old`, 100, yPos);
+    yPos += 7;
+    doc.text(`First Assessment Date: ${patient.first_assessment_date}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Latest Assessment Date: ${patient.last_assessment_date}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Total Assessments Completed: ${patient.total_assessments}`, 20, yPos);
+    yPos += 12;
+    
+    // Progress Status Box
+    doc.setDrawColor(46, 125, 50);
+    doc.setLineWidth(0.5);
+    let statusColor = patient.progress_trend === 'improving' ? [16, 185, 129] : 
+                     patient.progress_trend === 'declining' ? [239, 68, 68] : [59, 130, 246];
+    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.rect(20, yPos, 170, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Progress Status: ${patient.progress_trend === 'improving' ? '↗ IMPROVING' : patient.progress_trend === 'declining' ? '↘ DECLINING' : '→ STABLE'}`, 105, yPos + 5.5, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+    yPos += 15;
+    
+    // Weight and BMI Comparison Table
     doc.setFontSize(12);
-    doc.text('Assessment Period:', 20, yPos);
+    doc.setFont(undefined, 'bold');
+    doc.text('Nutritional Assessment Data:', 20, yPos);
+    yPos += 8;
+    
+    doc.autoTable({
+        startY: yPos,
+        head: [['Measurement', 'Initial', 'Current', 'Change']],
+        body: [
+            [
+                'Weight (kg)',
+                (patient.initial_weight != null && patient.initial_weight !== '') ? Number(patient.initial_weight).toFixed(1) : 'N/A',
+                (patient.current_weight != null && patient.current_weight !== '') ? Number(patient.current_weight).toFixed(1) : 'N/A',
+                (patient.weight_change != null && patient.weight_change !== '') ? (patient.weight_change > 0 ? '+' : '') + Number(patient.weight_change).toFixed(1) + ' kg' : 'N/A'
+            ],
+            [
+                'BMI',
+                (patient.initial_bmi != null && patient.initial_bmi !== '') ? Number(patient.initial_bmi).toFixed(2) : 'N/A',
+                (patient.current_bmi != null && patient.current_bmi !== '') ? Number(patient.current_bmi).toFixed(2) : 'N/A',
+                (patient.bmi_change != null && patient.bmi_change !== '') ? (patient.bmi_change > 0 ? '+' : '') + Number(patient.bmi_change).toFixed(2) : 'N/A'
+            ],
+            [
+                'Recovery Status',
+                '-',
+                patient.recovery_status ? patient.recovery_status.charAt(0).toUpperCase() + patient.recovery_status.slice(1) : 'Under Observation',
+                '-'
+            ]
+        ],
+        theme: 'grid',
+        headStyles: { 
+            fillColor: [46, 125, 50],
+            fontSize: 10,
+            fontStyle: 'bold'
+        },
+        columnStyles: {
+            0: { fontStyle: 'bold', cellWidth: 50 },
+            1: { halign: 'center', cellWidth: 40 },
+            2: { halign: 'center', cellWidth: 40 },
+            3: { 
+                halign: 'center', 
+                cellWidth: 40,
+                textColor: function(data) {
+                    if (data.row.index === 0 || data.row.index === 1) {
+                        const changeText = data.cell.text[0];
+                        if (changeText.includes('+')) return [16, 185, 129]; // Green for positive
+                        if (changeText.includes('-')) return [239, 68, 68]; // Red for negative
+                    }
+                    return [0, 0, 0];
+                }
+            }
+        },
+        margin: { left: 20, right: 20 },
+        styles: { fontSize: 9 }
+    });
+    
+    yPos = doc.lastAutoTable.finalY + 15;
+    
+    // Progress Interpretation
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('Progress Interpretation:', 20, yPos);
     yPos += 8;
     
     doc.setFontSize(10);
-    doc.text(`First Assessment: ${patient.first_assessment_date}`, 25, yPos);
-    yPos += 7;
-    doc.text(`Latest Assessment: ${patient.last_assessment_date}`, 25, yPos);
-    yPos += 15;
+    doc.setFont(undefined, 'normal');
+    let interpretation = '';
     
-    // Recommendation
+    // Safe number formatting helper
+    const formatWeight = (val) => (val != null && val !== '') ? Math.abs(Number(val)).toFixed(1) : '0';
+    const formatBMI = (val) => (val != null && val !== '') ? Number(val).toFixed(2) : '0';
+    
+    if (patient.progress_trend === 'improving') {
+        interpretation = `The patient shows positive nutritional progress. Weight has ${patient.weight_change > 0 ? 'increased by ' + formatWeight(patient.weight_change) + ' kg' : 'remained stable'} and BMI has ${patient.bmi_change > 0 ? 'improved by ' + formatBMI(patient.bmi_change) + ' points' : 'shown positive trends'}. This indicates the current intervention plan is effective.`;
+    } else if (patient.progress_trend === 'declining') {
+        interpretation = `The patient's nutritional status shows concerning trends. Weight has ${patient.weight_change < 0 ? 'decreased by ' + formatWeight(patient.weight_change) + ' kg' : 'not improved as expected'} and BMI has ${patient.bmi_change < 0 ? 'declined by ' + formatBMI(Math.abs(patient.bmi_change)) + ' points' : 'not shown improvement'}. Immediate review of the intervention plan is recommended.`;
+    } else {
+        interpretation = `The patient maintains a stable nutritional condition with minimal changes in weight and BMI measurements. Continue monitoring and maintain the current care plan while watching for any changes in status.`;
+    }
+    
+    const interpretationLines = doc.splitTextToSize(interpretation, 170);
+    doc.text(interpretationLines, 20, yPos);
+    yPos += (interpretationLines.length * 5) + 10;
+    
+    // Clinical Recommendations
     doc.setFontSize(12);
-    doc.text('Recommendation:', 20, yPos);
+    doc.setFont(undefined, 'bold');
+    doc.text('Clinical Recommendations:', 20, yPos);
     yPos += 8;
     
     doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60);
-    const recommendation = patient.progress_trend === 'improving' 
-        ? 'Patient shows positive progress. Continue current intervention plan and monitor regularly.'
-        : patient.progress_trend === 'declining'
-        ? 'Patient progress shows decline. Review and adjust intervention plan. Consider additional support.'
-        : 'Patient maintains stable condition. Continue monitoring and maintain current care plan.';
+    doc.setFont(undefined, 'normal');
     
-    const lines = doc.splitTextToSize(recommendation, 170);
-    doc.text(lines, 25, yPos);
+    if (patient.progress_trend === 'improving') {
+        doc.text('✓ Continue current intervention plan and nutritional supplementation', 25, yPos);
+        yPos += 6;
+        doc.text('✓ Maintain regular follow-up assessments every 2-4 weeks', 25, yPos);
+        yPos += 6;
+        doc.text('✓ Continue nutritional counseling with family members', 25, yPos);
+        yPos += 6;
+        doc.text('✓ Monitor for sustained improvement and adjust plan as needed', 25, yPos);
+    } else if (patient.progress_trend === 'declining') {
+        doc.text('⚠ URGENT: Review and modify current intervention plan immediately', 25, yPos);
+        yPos += 6;
+        doc.text('⚠ Consider medical referral for comprehensive health assessment', 25, yPos);
+        yPos += 6;
+        doc.text('⚠ Increase frequency of monitoring to weekly assessments', 25, yPos);
+        yPos += 6;
+        doc.text('⚠ Provide additional food supplementation and family support', 25, yPos);
+        yPos += 6;
+        doc.text('⚠ Conduct home visit to assess environmental and social factors', 25, yPos);
+    } else {
+        doc.text('• Continue current monitoring schedule and intervention plan', 25, yPos);
+        yPos += 6;
+        doc.text('• Maintain regular assessments every 4 weeks', 25, yPos);
+        yPos += 6;
+        doc.text('• Watch for any changes in status or new symptoms', 25, yPos);
+        yPos += 6;
+        doc.text('• Continue nutritional education and family counseling', 25, yPos);
+    }
+    
+    yPos += 12;
+    
+    // Add footer note
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Report Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 20, yPos);
+    doc.text(`by City Health Office Nutrition Program`, 20, yPos + 4);
     
     // Save PDF
     doc.save(`Patient_Report_${patient.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);

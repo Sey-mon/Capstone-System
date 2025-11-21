@@ -10,215 +10,379 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/parent/parent-profile.css') }}?v={{ time() }}">
-<style>
-    .profile-avatar {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-</style>
-@endpush
-
-@push('scripts')
-<script src="{{ asset('js/parent/parent-profile.js') }}?v={{ time() }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/admin/profile.css') }}">
 @endpush
 
 @section('content')
-<div class="profile-container">
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="d-flex align-items-center">
-            <div class="profile-avatar">
-                <i class="fas fa-user-shield"></i>
-            </div>
-            <div class="profile-info ms-4">
-                <h1>{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</h1>
-                <p><i class="fas fa-crown me-2"></i>System Administrator</p>
-                <p><i class="fas fa-envelope me-2"></i>{{ Auth::user()->email }}</p>
-            </div>
+    <div class="profile-container">
+        <!-- Profile Banner -->
+        <div class="profile-banner">
+            <div class="banner-overlay"></div>
+            <div class="banner-pattern"></div>
         </div>
-    </div>
 
-    <!-- Profile Tabs -->
-    <div class="profile-tabs">
-        <button class="tab-btn active" onclick="showTab('personal')">
-            <i class="fas fa-user me-2"></i>Personal Information
-        </button>
-        <button class="tab-btn" onclick="showTab('security')">
-            <i class="fas fa-shield-alt me-2"></i>Security
-        </button>
-    </div>
-
-    <!-- Personal Information Tab -->
-    <div id="personal-tab" class="tab-content active">
-        <div class="info-card">
-            @if(session('success'))
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-header-content">
+                <div class="profile-avatar">
+                    <div class="avatar-circle">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="avatar-status {{ Auth::user()->is_active ? 'online' : 'offline' }}"></div>
                 </div>
-            @endif
-
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <!-- View Mode -->
-            <div id="view-mode">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">Personal Information</h3>
-                    <button class="btn-modern btn-primary" onclick="toggleEdit()">
-                        <i class="fas fa-edit"></i>Edit Profile
-                    </button>
-                </div>
-
-                <div class="info-display">
-                    <span class="info-label">First Name</span>
-                    <span class="info-value">{{ Auth::user()->first_name }}</span>
-                </div>
-                <div class="info-display">
-                    <span class="info-label">Middle Name</span>
-                    <span class="info-value">{{ Auth::user()->middle_name ?? 'Not provided' }}</span>
-                </div>
-                <div class="info-display">
-                    <span class="info-label">Last Name</span>
-                    <span class="info-value">{{ Auth::user()->last_name }}</span>
-                </div>
-                <div class="info-display">
-                    <span class="info-label">Email Address</span>
-                    <span class="info-value">{{ Auth::user()->email }}</span>
-                </div>
-                <div class="info-display">
-                    <span class="info-label">Contact Number</span>
-                    <span class="info-value">{{ Auth::user()->contact_number ?? 'Not provided' }}</span>
-                </div>
-                <div class="info-display">
-                    <span class="info-label">Account Status</span>
-                    <span class="info-value">
-                        @if(Auth::user()->is_active)
-                            <span class="badge bg-success">Active</span>
-                        @else
-                            <span class="badge bg-danger">Inactive</span>
+                <div class="profile-info">
+                    <div class="profile-name-section">
+                        <h1 class="profile-name">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</h1>
+                        <span class="verified-icon" title="System Administrator">
+                            <i class="fas fa-shield-alt"></i>
+                        </span>
+                    </div>
+                    <p class="profile-title"><i class="fas fa-crown"></i> System Administrator</p>
+                    <div class="profile-meta">
+                        <span class="meta-item">
+                            <i class="fas fa-calendar-check"></i>
+                            Member since {{ Auth::user()->created_at->format('M Y') }}
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-envelope"></i>
+                            {{ Auth::user()->email }}
+                        </span>
+                        @if(Auth::user()->contact_number)
+                        <span class="meta-item">
+                            <i class="fas fa-phone"></i>
+                            {{ Auth::user()->contact_number }}
+                        </span>
                         @endif
-                    </span>
+                    </div>
                 </div>
-                <div class="info-display">
-                    <span class="info-label">Member Since</span>
-                    <span class="info-value">{{ Auth::user()->created_at->format('F d, Y') }}</span>
-                </div>
-            </div>
-
-            <!-- Edit Mode -->
-            <div id="edit-mode" class="edit-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">Edit Personal Information</h3>
-                    <button class="btn-modern btn-secondary" onclick="toggleEdit()">
-                        <i class="fas fa-times"></i>Cancel
+                <div class="profile-actions">
+                    <button class="btn btn-primary" onclick="editPersonalInfo()">
+                        <i class="fas fa-edit"></i>
+                        Edit Profile
+                    </button>
+                    <button class="btn btn-outline" onclick="window.print()">
+                        <i class="fas fa-print"></i>
+                        Print
                     </button>
                 </div>
+            </div>
+        </div>
 
-                <form method="POST" action="{{ route('admin.profile.update') }}">
-                    @csrf
-                    @method('PUT')
+        <!-- Quick Stats Bar -->
+        <div class="quick-stats-bar">
+            <div class="quick-stat">
+                <div class="quick-stat-icon users">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="quick-stat-info">
+                    <div class="quick-stat-value">{{ \App\Models\User::count() }}</div>
+                    <div class="quick-stat-label">Total Users</div>
+                </div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-icon patients">
+                    <i class="fas fa-child"></i>
+                </div>
+                <div class="quick-stat-info">
+                    <div class="quick-stat-value">{{ \App\Models\Patient::count() }}</div>
+                    <div class="quick-stat-label">Total Patients</div>
+                </div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-icon active">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="quick-stat-info">
+                    <div class="quick-stat-value">{{ \App\Models\User::where('is_active', true)->count() }}</div>
+                    <div class="quick-stat-label">Active Users</div>
+                </div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-icon assessments">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="quick-stat-info">
+                    <div class="quick-stat-value">{{ \App\Models\Assessment::count() }}</div>
+                    <div class="quick-stat-label">Assessments</div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">First Name</label>
-                                <input type="text" name="first_name" class="form-control" 
-                                       value="{{ old('first_name', Auth::user()->first_name) }}" required>
+        <!-- Main Content Grid -->
+        <div class="profile-content">
+            <!-- Left Column -->
+            <div class="content-left">
+                <!-- Personal Information Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon personal">
+                                <i class="fas fa-user"></i>
                             </div>
+                            <h3 class="card-title">Personal Information</h3>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Middle Name</label>
-                                <input type="text" name="middle_name" class="form-control" 
-                                       value="{{ old('middle_name', Auth::user()->middle_name) }}">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" name="last_name" class="form-control" 
-                                       value="{{ old('last_name', Auth::user()->last_name) }}" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control" 
-                               value="{{ old('email', Auth::user()->email) }}" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Contact Number</label>
-                        <input type="text" name="contact_number" class="form-control" 
-                               value="{{ old('contact_number', Auth::user()->contact_number) }}">
-                    </div>
-
-                    <div class="d-flex gap-3">
-                        <button type="submit" class="btn-modern btn-primary">
-                            <i class="fas fa-save"></i>Save Changes
+                        <button class="btn-icon" onclick="editPersonalInfo()" title="Edit Personal Information">
+                            <i class="fas fa-pencil-alt"></i>
                         </button>
-                        <button type="button" class="btn-modern btn-secondary" onclick="toggleEdit()">
-                            <i class="fas fa-times"></i>Cancel
-                        </button>
                     </div>
-                </form>
+                    <div class="card-content">
+                        <div class="info-list">
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-signature"></i>
+                                    Full Name
+                                </div>
+                                <div class="info-value">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </div>
+                                <div class="info-value">{{ Auth::user()->email }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-phone"></i>
+                                    Contact Number
+                                </div>
+                                <div class="info-value">{{ Auth::user()->contact_number ?? 'Not provided' }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-crown"></i>
+                                    Role
+                                </div>
+                                <div class="info-value badge-value">System Administrator</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar-plus"></i>
+                                    Account Created
+                                </div>
+                                <div class="info-value">{{ Auth::user()->created_at->format('F d, Y') }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-clock"></i>
+                                    Last Updated
+                                </div>
+                                <div class="info-value">{{ Auth::user()->updated_at->format('F d, Y') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Access Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon professional">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <h3 class="card-title">System Access & Permissions</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-list">
+                            <div class="info-row full-width">
+                                <div class="info-label">
+                                    <i class="fas fa-shield-alt"></i>
+                                    Administrator Privileges
+                                </div>
+                                <div class="info-value text-block">
+                                    Full system access with unrestricted permissions. Can manage users, view all data, configure system settings, and perform administrative tasks.
+                                </div>
+                            </div>
+                            <div class="info-row full-width">
+                                <div class="info-label">
+                                    <i class="fas fa-cog"></i>
+                                    Capabilities
+                                </div>
+                                <div class="info-value text-block">
+                                    User Management • Patient Records • System Configuration • Reports & Analytics • Security Settings • Database Management
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="content-right">
+                <!-- Account Status Card -->
+                <div class="content-card status-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon status">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 class="card-title">Account Status</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="status-items">
+                            <div class="status-item {{ Auth::user()->is_active ? 'active' : 'inactive' }}">
+                                <div class="status-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div class="status-details">
+                                    <div class="status-title">Account Status</div>
+                                    <div class="status-value">{{ Auth::user()->is_active ? 'Active' : 'Inactive' }}</div>
+                                </div>
+                            </div>
+                            <div class="status-item verified">
+                                <div class="status-icon">
+                                    <i class="fas fa-certificate"></i>
+                                </div>
+                                <div class="status-details">
+                                    <div class="status-title">Role Status</div>
+                                    <div class="status-value">Administrator</div>
+                                </div>
+                            </div>
+                            <div class="status-item {{ Auth::user()->email_verified_at ? 'verified' : 'pending' }}">
+                                <div class="status-icon">
+                                    <i class="fas fa-envelope-circle-check"></i>
+                                </div>
+                                <div class="status-details">
+                                    <div class="status-title">Email Status</div>
+                                    <div class="status-value">{{ Auth::user()->email_verified_at ? 'Verified' : 'Not Verified' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Security Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon status">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <h3 class="card-title">Account Security</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-list">
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-key"></i>
+                                    Password
+                                </div>
+                                <div class="info-value">
+                                    <button class="btn btn-sm btn-outline" onclick="changePassword()">
+                                        <i class="fas fa-edit"></i>
+                                        Change Password
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </div>
+                                <div class="info-value">{{ Auth::user()->email }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-clock"></i>
+                                    Last Updated
+                                </div>
+                                <div class="info-value">{{ Auth::user()->updated_at->format('M d, Y') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Timeline Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon activity">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <h3 class="card-title">Recent Activity</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-marker active"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Profile Viewed</div>
+                                    <div class="timeline-date">Just now</div>
+                                </div>
+                            </div>
+                            @if(Auth::user()->email_verified_at)
+                            <div class="timeline-item">
+                                <div class="timeline-marker success"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Email Verified</div>
+                                    <div class="timeline-date">{{ Auth::user()->email_verified_at->format('M d, Y') }}</div>
+                                </div>
+                            </div>
+                            @endif
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Account Created</div>
+                                    <div class="timeline-date">{{ Auth::user()->created_at->format('M d, Y') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Card -->
+                <div class="content-card actions-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon actions">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h3 class="card-title">Quick Actions</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="action-buttons">
+                            <a href="{{ route('admin.users') }}" class="action-btn">
+                                <i class="fas fa-users"></i>
+                                <span>Manage Users</span>
+                            </a>
+                            <a href="{{ route('admin.patients') }}" class="action-btn">
+                                <i class="fas fa-child"></i>
+                                <span>View Patients</span>
+                            </a>
+                            <a href="{{ route('admin.dashboard') }}" class="action-btn">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="{{ route('admin.reports') }}" class="action-btn">
+                                <i class="fas fa-file-medical"></i>
+                                <span>View Reports</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Security Tab -->
-    <div id="security-tab" class="tab-content">
-        <div class="info-card">
-            <h3 class="mb-4">Change Password</h3>
-            
-            <form method="POST" action="{{ route('admin.password.update') }}">
-                @csrf
-                @method('PUT')
-
-                <div class="form-group">
-                    <label class="form-label">Current Password</label>
-                    <input type="password" name="current_password" class="form-control" required>
-                </div>
-
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label class="form-label">New Password</label>
-                            <input type="password" name="new_password" class="form-control" required minlength="8">
-                            <small class="text-muted">Minimum 8 characters</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label class="form-label">Confirm New Password</label>
-                            <input type="password" name="new_password_confirmation" class="form-control" required>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-modern btn-danger">
-                    <i class="fas fa-key"></i>Update Password
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
 @endsection
+
+@push('scripts')
+<script>
+    // Expose server-side data and routes as globals for external JS
+    window.adminData = {
+        first_name: "{{ Auth::user()->first_name }}",
+        middle_name: "{{ Auth::user()->middle_name }}",
+        last_name: "{{ Auth::user()->last_name }}",
+        contact_number: "{{ Auth::user()->contact_number }}",
+        email: "{{ Auth::user()->email }}"
+    };
+    window.adminProfileUpdateUrl = "{{ route('admin.profile.update') }}";
+    window.adminPasswordUpdateUrl = "{{ route('admin.password.update') }}";
+</script>
+<script src="{{ asset('js/admin/profile.js') }}"></script>
+@endpush
