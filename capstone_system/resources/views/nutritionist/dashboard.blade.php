@@ -12,17 +12,29 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/nutritionist/dashboard.css') }}">
     <style>
+        .dashboard-wrapper {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 320px;
             margin-bottom: 20px;
         }
         .chart-card {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
             margin-bottom: 24px;
+            border: 2px solid #d1fae5;
+            transition: all 0.3s ease;
+        }
+        .chart-card:hover {
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.15);
+            transform: translateY(-2px);
+            border-color: #86efac;
         }
         .chart-header {
             display: flex;
@@ -31,24 +43,45 @@
             margin-bottom: 20px;
         }
         .chart-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3748;
+            font-size: 19px;
+            font-weight: 700;
+            color: #047857;
         }
         .chart-subtitle {
             font-size: 14px;
-            color: #718096;
+            color: #059669;
             margin-top: 4px;
         }
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
+            gap: 28px;
+            margin-bottom: 28px;
+        }
+        .page-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+        .page-header h1 {
+            color: white;
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .page-header p {
+            color: #d1fae5;
+            margin: 0.5rem 0 0 0;
+            font-size: 1.1rem;
         }
         @media (max-width: 768px) {
             .charts-grid {
                 grid-template-columns: 1fr;
+            }
+            .dashboard-wrapper {
+                padding: 1rem 0;
             }
         }
     </style>
@@ -249,11 +282,18 @@
 @push('scripts')
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     
     <script>
         // Chart.js Global Configuration
         Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
         Chart.defaults.color = '#4a5568';
+        
+        // Register datalabels plugin but disable by default
+        Chart.register(ChartDataLabels);
+        Chart.defaults.set('plugins.datalabels', {
+            display: false
+        });
         
         // Assessment Trends Chart (Line Chart)
         const assessmentTrendsData = {!! json_encode($monthlyAssessments) !!};
@@ -318,7 +358,7 @@
         new Chart(genderCtx, {
             type: 'doughnut',
             data: {
-                labels: genderData.map(d => d.sex === 'M' ? 'Male' : 'Female'),
+                labels: genderData.map(d => d.sex === 'Male' || d.sex === 'M' ? 'Male' : 'Female'),
                 datasets: [{
                     data: genderData.map(d => d.count),
                     backgroundColor: [
@@ -338,6 +378,30 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        },
+                        formatter: (value, ctx) => {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return percentage + '%';
+                        }
                     }
                 }
             }
@@ -349,7 +413,7 @@
         new Chart(ageCtx, {
             type: 'bar',
             data: {
-                labels: ageData.map(d => d.age_years + ' years'),
+                labels: ageData.map(d => d.age_years + (d.age_years === 1 ? ' year' : ' years')),
                 datasets: [{
                     label: 'Number of Patients',
                     data: ageData.map(d => d.count),
@@ -413,6 +477,30 @@
                             font: {
                                 size: 11
                             }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        },
+                        formatter: (value, ctx) => {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return percentage + '%';
                         }
                     }
                 }

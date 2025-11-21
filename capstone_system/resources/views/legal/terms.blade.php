@@ -15,87 +15,48 @@
             
             <p><strong>Last Updated:</strong> {{ date('F d, Y') }}</p>
             
-            <h2>1. Acceptance of Terms</h2>
-            <p>By accessing and using the Nutrition System platform, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our services.</p>
+            <h2>1. Agreement to Terms</h2>
+            <p>By using the Nutrition System, you agree to these terms. If you disagree, please do not use our services.</p>
             
-            <h2>2. Description of Service</h2>
-            <p>The Nutrition System is a healthcare platform designed to:</p>
+            <h2>2. Our Service</h2>
+            <p>We provide a nutrition tracking platform that helps monitor children's nutritional health, connects parents with nutritionists, and maintains health records.</p>
+            
+            <h2>3. Your Responsibilities</h2>
+            <p>You agree to:</p>
             <ul>
-                <li>Track nutritional assessments of children</li>
-                <li>Provide nutritional guidance and recommendations</li>
-                <li>Connect parents with nutritionists</li>
-                <li>Maintain health records and progress tracking</li>
+                <li>Provide accurate information</li>
+                <li>Keep your password secure and not share it with others</li>
+                <li>Use the platform for its intended purpose only</li>
+                <li>Report any security concerns immediately</li>
             </ul>
             
-            <h2>3. User Responsibilities</h2>
-            <p>As a user of our platform, you agree to:</p>
+            <h2>4. Medical Disclaimer</h2>
+            <p><strong>Important:</strong> This platform provides nutritional information and guidance only. It does not replace professional medical advice. Always consult healthcare professionals for medical decisions. In emergencies, call emergency services immediately.</p>
+            
+            <h2>5. What You Cannot Do</h2>
+            <p>You may not:</p>
             <ul>
-                <li>Provide accurate and truthful information</li>
-                <li>Keep your account credentials secure</li>
-                <li>Use the platform only for its intended purposes</li>
-                <li>Respect the privacy and confidentiality of other users</li>
-                <li>Follow all applicable laws and regulations</li>
+                <li>Provide false health information</li>
+                <li>Access other users' accounts</li>
+                <li>Attempt to disrupt or harm the platform</li>
+                <li>Use the service for unauthorized commercial purposes</li>
             </ul>
             
-            <h2>4. Healthcare Disclaimer</h2>
-            <p>Important healthcare information:</p>
+            <h2>6. Service Availability</h2>
+            <p>We strive to keep the platform available but cannot guarantee uninterrupted access. We are not responsible for technical issues, service interruptions, or decisions made based on platform information.</p>
+            
+            <h2>7. Changes to Terms</h2>
+            <p>We may update these terms as needed. Significant changes will be communicated to users. Continued use after changes means you accept the updated terms.</p>
+            
+            <h2>8. Contact Us</h2>
+            <p>For questions or concerns:</p>
             <ul>
-                <li>This platform provides nutritional guidance but does not replace professional medical advice</li>
-                <li>Always consult with healthcare professionals for medical decisions</li>
-                <li>In case of medical emergencies, contact emergency services immediately</li>
-                <li>The platform is designed to support, not replace, the relationship between patient and healthcare provider</li>
+                <li><strong>Email:</strong> support@nutritionsystem.ph</li>
+                <li><strong>Phone:</strong> +63 (XXX) XXX-XXXX</li>
             </ul>
             
-            <h2>5. Privacy and Data Protection</h2>
-            <p>We are committed to protecting your privacy:</p>
-            <ul>
-                <li>Personal health information is handled in accordance with applicable privacy laws</li>
-                <li>Data is collected only for the purposes of providing nutritional services</li>
-                <li>Information is shared only with authorized healthcare professionals</li>
-                <li>Users have the right to access, correct, and delete their personal information</li>
-            </ul>
-            
-            <h2>6. Account Security</h2>
-            <p>To maintain account security:</p>
-            <ul>
-                <li>Create strong passwords with at least 8 characters</li>
-                <li>Do not share your login credentials with others</li>
-                <li>Log out after each session, especially on shared devices</li>
-                <li>Report any suspected unauthorized access immediately</li>
-            </ul>
-            
-            <h2>7. Prohibited Uses</h2>
-            <p>You may not use this platform to:</p>
-            <ul>
-                <li>Violate any local, national, or international laws</li>
-                <li>Share false or misleading health information</li>
-                <li>Access other users' accounts without authorization</li>
-                <li>Interfere with the platform's security or functionality</li>
-                <li>Use the platform for commercial purposes without permission</li>
-            </ul>
-            
-            <h2>8. Limitation of Liability</h2>
-            <p>The Nutrition System platform is provided "as is" without warranties. We are not liable for:</p>
-            <ul>
-                <li>Decisions made based on platform information</li>
-                <li>Technical issues or service interruptions</li>
-                <li>Loss of data due to technical problems</li>
-                <li>Any indirect or consequential damages</li>
-            </ul>
-            
-            <h2>9. Changes to Terms</h2>
-            <p>We reserve the right to modify these terms at any time. Users will be notified of significant changes, and continued use of the platform constitutes acceptance of updated terms.</p>
-            
-            <h2>10. Contact Information</h2>
-            <p>For questions about these terms or our services, please contact:</p>
-            <ul>
-                <li>Email: support@nutritionsystem.ph</li>
-                <li>Phone: +63 (XXX) XXX-XXXX</li>
-                <li>Address: [Your Address]</li>
-            </ul>
-            
-            <h2>11. Governing Law</h2>
-            <p>These terms are governed by the laws of the Republic of the Philippines. Any disputes will be resolved in Philippine courts.</p>
+            <h2>9. Governing Law</h2>
+            <p>These terms are governed by Philippine law. Disputes will be resolved in accordance with the laws of the Republic of the Philippines.</p>
         </div>
         
         <div class="back-link">
