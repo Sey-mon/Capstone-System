@@ -16,154 +16,99 @@
             <p><strong>Last Updated:</strong> {{ date('F d, Y') }}</p>
             
             <div class="highlight-box">
-                <strong>🔒 Your Privacy Matters:</strong> We are committed to protecting your personal health information and respecting your privacy rights. This policy explains how we collect, use, and protect your data.
+                <strong>🔒 Your Privacy Matters:</strong> We protect your personal health information in compliance with the Data Privacy Act of 2012 (RA 10173). This policy explains how we collect, use, and protect your data.
             </div>
             
-            <h2>1. Information We Collect</h2>
-            <p>We collect the following types of information to provide our nutrition services:</p>
+            <h2>1. What Information We Collect</h2>
+            <p>We collect only the information necessary to provide nutrition services:</p>
             
             <h3>Personal Information:</h3>
             <ul>
-                <li>Name (first, middle, last)</li>
-                <li>Date of birth</li>
-                <li>Sex/gender information</li>
-                <li>Contact information (phone number, email, address)</li>
-                <li>Emergency contact details</li>
+                <li>Name, date of birth, sex</li>
+                <li>Contact details (phone, email, address)</li>
+                <li>Emergency contact information</li>
             </ul>
             
             <h3>Health Information:</h3>
             <ul>
-                <li>Nutritional assessment data</li>
-                <li>Height, weight, and growth measurements</li>
-                <li>Dietary preferences and restrictions</li>
-                <li>Medical history relevant to nutrition</li>
-                <li>Progress tracking information</li>
+                <li>Height, weight, and measurements</li>
+                <li>Nutritional assessment results</li>
+                <li>Dietary information</li>
+                <li>Relevant medical history</li>
             </ul>
             
-            <h3>Technical Information:</h3>
+            <h3>Account Information:</h3>
             <ul>
-                <li>Login credentials (encrypted passwords)</li>
-                <li>Platform usage data</li>
-                <li>Device and browser information</li>
-                <li>IP addresses for security purposes</li>
+                <li>Login credentials (encrypted)</li>
+                <li>Usage activity for service improvement</li>
             </ul>
             
             <h2>2. How We Use Your Information</h2>
-            <p>Your information is used exclusively for:</p>
+            <p>We use your information only for:</p>
             <ul>
-                <li>Providing nutritional assessments and recommendations</li>
-                <li>Tracking health progress and development</li>
-                <li>Facilitating communication between parents and nutritionists</li>
-                <li>Improving our services and platform functionality</li>
-                <li>Ensuring platform security and preventing unauthorized access</li>
-                <li>Complying with legal and regulatory requirements</li>
+                <li>Providing nutritional assessments and tracking progress</li>
+                <li>Connecting you with healthcare providers</li>
+                <li>Improving our services</li>
+                <li>Maintaining platform security</li>
+                <li>Complying with legal requirements</li>
             </ul>
             
-            <h2>3. Information Sharing and Disclosure</h2>
-            <p>We maintain strict confidentiality and only share your information in these limited circumstances:</p>
-            
-            <h3>Authorized Healthcare Providers:</h3>
+            <h2>3. Who We Share Your Information With</h2>
+            <p>We keep your information confidential. We only share it with:</p>
             <ul>
-                <li>Licensed nutritionists providing your care</li>
-                <li>Healthcare professionals involved in your treatment</li>
-                <li>Medical staff requiring access for continuity of care</li>
+                <li><strong>Healthcare Providers:</strong> Authorized nutritionists and medical staff providing your care</li>
+                <li><strong>Legal Authorities:</strong> When required by law, court order, or to protect public safety</li>
             </ul>
             
-            <h3>Legal Requirements:</h3>
+            <p><strong>We never sell or share your information for marketing, advertising, or commercial purposes.</strong></p>
+            
+            <h2>4. How We Protect Your Information</h2>
+            <p>We use security measures including:</p>
             <ul>
-                <li>When required by Philippine law or court orders</li>
-                <li>To protect the safety of individuals or the public</li>
-                <li>For regulatory compliance and reporting</li>
+                <li>Encryption of all data</li>
+                <li>Secure access controls and authentication</li>
+                <li>Regular security monitoring</li>
+                <li>Staff training on data privacy</li>
+                <li>Secure backup systems</li>
             </ul>
             
-            <h3>We Never Share Information For:</h3>
+            <h2>5. Your Rights Under Philippine Law</h2>
+            <p>Under the Data Privacy Act of 2012, you have the right to:</p>
             <ul>
-                <li>Marketing or advertising purposes</li>
-                <li>Commercial gain or profit</li>
-                <li>Non-healthcare related activities</li>
-                <li>Third-party data brokers</li>
+                <li><strong>Access:</strong> View your personal information</li>
+                <li><strong>Correction:</strong> Correct inaccurate data</li>
+                <li><strong>Erasure/Blocking:</strong> Request deletion or blocking of your data</li>
+                <li><strong>Object:</strong> Object to processing of your data</li>
+                <li><strong>Data Portability:</strong> Obtain your data in usable format</li>
+                <li><strong>File a Complaint:</strong> Lodge complaints with the National Privacy Commission</li>
+            </ul>
+            <p><strong>To exercise these rights, contact us using the information below.</strong></p>
+            
+            <h2>6. How Long We Keep Your Information</h2>
+            <ul>
+                <li>While your account is active</li>
+                <li>As required by Philippine healthcare and legal regulations</li>
+                <li>You may request earlier deletion where legally permitted</li>
             </ul>
             
-            <h2>4. Data Security Measures</h2>
-            <p>We implement comprehensive security measures to protect your information:</p>
-            <ul>
-                <li><strong>Encryption:</strong> All data is encrypted in transit and at rest</li>
-                <li><strong>Access Controls:</strong> Role-based access with multi-factor authentication</li>
-                <li><strong>Regular Audits:</strong> Security assessments and vulnerability testing</li>
-                <li><strong>Staff Training:</strong> Privacy and security training for all personnel</li>
-                <li><strong>Secure Infrastructure:</strong> Protected servers and network security</li>
-                <li><strong>Backup Systems:</strong> Secure data backup and recovery procedures</li>
-            </ul>
+            <h2>7. Children's Information</h2>
+            <p>For children under 18, we require parental or guardian consent before collecting information. We apply additional security measures to protect children's data.</p>
             
-            <h2>5. Your Privacy Rights</h2>
-            <p>Under Philippine law and our commitment to privacy, you have the right to:</p>
-            <ul>
-                <li><strong>Access:</strong> View and obtain copies of your personal information</li>
-                <li><strong>Correction:</strong> Request correction of inaccurate or incomplete data</li>
-                <li><strong>Deletion:</strong> Request deletion of your personal information (subject to legal requirements)</li>
-                <li><strong>Portability:</strong> Obtain your data in a portable format</li>
-                <li><strong>Restriction:</strong> Request limitations on how your data is processed</li>
-                <li><strong>Objection:</strong> Object to certain types of data processing</li>
-            </ul>
+            <h2>8. Changes to This Policy</h2>
+            <p>We may update this policy as needed to comply with laws or improve our services. You will be notified of significant changes.</p>
             
-            <h2>6. Data Retention</h2>
-            <p>We retain your information according to these principles:</p>
-            <ul>
-                <li>Active accounts: Data retained while account is active</li>
-                <li>Inactive accounts: Data retained for 3 years after last activity</li>
-                <li>Medical records: Retained according to Philippine healthcare regulations</li>
-                <li>Legal requirements: Some data may be retained longer for compliance</li>
-                <li>Upon request: Data can be deleted earlier upon user request (where legally permissible)</li>
-            </ul>
-            
-            <h2>7. Children's Privacy</h2>
-            <p>Special protection for children's information:</p>
-            <ul>
-                <li>Parental consent required for children under 18</li>
-                <li>Additional security measures for pediatric records</li>
-                <li>Limited access to child information</li>
-                <li>Enhanced data protection protocols</li>
-                <li>Regular review of children's data handling practices</li>
-            </ul>
-            
-            <h2>8. International Data Transfers</h2>
-            <p>Your data is primarily stored and processed in the Philippines. Any international transfers will:</p>
-            <ul>
-                <li>Only occur when necessary for service provision</li>
-                <li>Be subject to adequate privacy protections</li>
-                <li>Require your explicit consent</li>
-                <li>Comply with Philippine data protection laws</li>
-            </ul>
-            
-            <h2>9. Changes to This Privacy Policy</h2>
-            <p>We may update this privacy policy to reflect:</p>
-            <ul>
-                <li>Changes in laws or regulations</li>
-                <li>Improvements to our services</li>
-                <li>Enhanced security measures</li>
-                <li>User feedback and suggestions</li>
-            </ul>
-            
-            <p>You will be notified of significant changes via email or platform notification.</p>
-            
-            <h2>10. Contact Us</h2>
-            <p>For privacy-related questions or to exercise your rights, contact our Data Protection Officer:</p>
+            <h2>9. Contact Us</h2>
+            <p>For privacy questions or to exercise your rights:</p>
             <ul>
                 <li><strong>Email:</strong> privacy@nutritionsystem.ph</li>
                 <li><strong>Phone:</strong> +63 (XXX) XXX-XXXX</li>
-                <li><strong>Address:</strong> [Your Address]</li>
-                <li><strong>Office Hours:</strong> Monday-Friday, 8:00 AM - 5:00 PM (Philippine Time)</li>
+                <li><strong>Address:</strong> [Your Complete Address]</li>
             </ul>
             
-            <h2>11. Compliance</h2>
-            <p>This privacy policy complies with:</p>
-            <ul>
-                <li>Data Privacy Act of 2012 (Republic Act No. 10173)</li>
-                <li>Implementing Rules and Regulations of the DPA</li>
-                <li>National Privacy Commission guidelines</li>
-                <li>Philippine healthcare privacy regulations</li>
-                <li>International privacy best practices</li>
-            </ul>
+            <p><strong>National Privacy Commission:</strong> You may also file complaints directly with the National Privacy Commission at <a href="https://www.privacy.gov.ph" target="_blank">www.privacy.gov.ph</a></p>
+            
+            <h2>10. Legal Compliance</h2>
+            <p>This privacy policy complies with the Data Privacy Act of 2012 (Republic Act No. 10173) and its Implementing Rules and Regulations, as enforced by the National Privacy Commission of the Philippines.</p>
         </div>
         
         <div class="back-link">

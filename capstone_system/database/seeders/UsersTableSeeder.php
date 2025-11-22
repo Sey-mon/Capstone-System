@@ -10,33 +10,42 @@ class UsersTableSeeder extends Seeder
 {
     public function run()
     {
+            // First, create the admin user (without any verified_by reference)
+            $adminUser = [
+                'role_id' => 1, // Admin
+                'first_name' => 'System',
+                'middle_name' => '',
+                'last_name' => 'Administrator',
+                'email' => 'admin@example.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('password123'), // Change later
+                'contact_number' => '09123456789',
+                'birth_date' => null,
+                'sex' => null,
+                'address' => null,
+                'is_active' => true,
+                'license_number' => null,
+                'years_experience' => null,
+                'qualifications' => null,
+                'professional_experience' => null,
+                'professional_id_path' => null,
+                'verification_status' => 'pending',
+                'rejection_reason' => null,
+                'verified_at' => null,
+                'verified_by' => null,
+                'account_status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+
+            // Insert admin first
+            DB::table('users')->updateOrInsert(
+                ['email' => 'admin@example.com'],
+                $adminUser
+            );
+
+            // Now create other users (can reference admin user ID 1)
             $users = [
-                [
-                    'role_id' => 1, // Admin
-                    'first_name' => 'System',
-                    'middle_name' => '',
-                    'last_name' => 'Administrator',
-                    'email' => 'admin@example.com',
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('password123'), // Change later
-                    'contact_number' => '09123456789',
-                    'birth_date' => null,
-                    'sex' => null,
-                    'address' => null,
-                    'is_active' => true,
-                    'license_number' => null,
-                    'years_experience' => null,
-                    'qualifications' => null,
-                    'professional_experience' => null,
-                    'professional_id_path' => null,
-                    'verification_status' => 'pending',
-                    'rejection_reason' => null,
-                    'verified_at' => null,
-                    'verified_by' => null,
-                    'account_status' => 'active',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ],
                 [
                     'role_id' => 2, // Nutritionist
                     'first_name' => 'Maria',
@@ -60,58 +69,6 @@ class UsersTableSeeder extends Seeder
                     'verified_at' => now(),
                     'verified_by' => 1,
                     'account_status' => 'active',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ],
-                [
-                    'role_id' => 2, // Nutritionist
-                    'first_name' => 'Roberto',
-                    'middle_name' => 'C.',
-                    'last_name' => 'Reyes',
-                    'email' => 'nutritionist2@example.com',
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('password123'),
-                    'contact_number' => '09122223333',
-                    'birth_date' => '1987-03-22',
-                    'sex' => 'Male',
-                    'address' => 'Calendola, San Pedro, Laguna',
-                    'is_active' => true,
-                    'license_number' => 'NUTR-2025-002',
-                    'years_experience' => 12,
-                    'qualifications' => 'BS Nutrition, MS Public Health',
-                    'professional_experience' => '12 years in hospital nutrition, 3 years in research.',
-                    'professional_id_path' => 'uploads/professional_ids/nutritionist2.jpg',
-                    'verification_status' => 'pending',
-                    'rejection_reason' => null,
-                    'verified_at' => null,
-                    'verified_by' => null,
-                    'account_status' => 'pending',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ],
-                [
-                    'role_id' => 2, // Nutritionist
-                    'first_name' => 'Ana',
-                    'middle_name' => 'M.',
-                    'last_name' => 'Garcia',
-                    'email' => 'nutritionist3@example.com',
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('password123'),
-                    'contact_number' => '09133334444',
-                    'birth_date' => '1992-11-05',
-                    'sex' => 'Female',
-                    'address' => 'GSIS, San Pedro, Laguna',
-                    'is_active' => true,
-                    'license_number' => 'NUTR-2025-003',
-                    'years_experience' => 5,
-                    'qualifications' => 'BS Nutrition',
-                    'professional_experience' => '5 years in barangay nutrition programs.',
-                    'professional_id_path' => 'uploads/professional_ids/nutritionist3.jpg',
-                    'verification_status' => 'rejected',
-                    'rejection_reason' => 'Incomplete documents',
-                    'verified_at' => null,
-                    'verified_by' => null,
-                    'account_status' => 'rejected',
                     'created_at' => now(),
                     'updated_at' => now()
                 ],
@@ -141,113 +98,14 @@ class UsersTableSeeder extends Seeder
                     'created_at' => now(),
                     'updated_at' => now()
                 ],
-                [
-                    'role_id' => 3, // Parent
-                    'first_name' => 'Luisa',
-                    'middle_name' => 'A.',
-                    'last_name' => 'Dela Cruz',
-                    'email' => 'parent2@example.com',
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('password123'),
-                    'contact_number' => '09333333333',
-                    'birth_date' => '1988-02-14',
-                    'sex' => 'Female',
-                    'address' => 'Calendola, San Pedro, Laguna',
-                    'is_active' => true,
-                    'license_number' => null,
-                    'years_experience' => null,
-                    'qualifications' => null,
-                    'professional_experience' => null,
-                    'professional_id_path' => null,
-                    'verification_status' => 'pending',
-                    'rejection_reason' => null,
-                    'verified_at' => null,
-                    'verified_by' => null,
-                    'account_status' => 'active',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ],
-                [
-                    'role_id' => 3, // Parent
-                    'first_name' => 'Carlos',
-                    'middle_name' => 'B.',
-                    'last_name' => 'Santiago',
-                    'email' => 'parent3@example.com',
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('password123'),
-                    'contact_number' => '09444444444',
-                    'birth_date' => '1982-07-30',
-                    'sex' => 'Male',
-                    'address' => 'GSIS, San Pedro, Laguna',
-                    'is_active' => true,
-                    'license_number' => null,
-                    'years_experience' => null,
-                    'qualifications' => null,
-                    'professional_experience' => null,
-                    'professional_id_path' => null,
-                    'verification_status' => 'pending',
-                    'rejection_reason' => null,
-                    'verified_at' => null,
-                    'verified_by' => null,
-                    'account_status' => 'active',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ],
-                [
-                    'role_id' => 3, // Parent
-                    'first_name' => 'Marites',
-                    'middle_name' => 'E.',
-                    'last_name' => 'Villanueva',
-                    'email' => 'parent4@example.com',
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('password123'),
-                    'contact_number' => '09555555555',
-                    'birth_date' => '1991-12-05',
-                    'sex' => 'Female',
-                    'address' => 'Landayan, San Pedro, Laguna',
-                    'is_active' => true,
-                    'license_number' => null,
-                    'years_experience' => null,
-                    'qualifications' => null,
-                    'professional_experience' => null,
-                    'professional_id_path' => null,
-                    'verification_status' => 'pending',
-                    'rejection_reason' => null,
-                    'verified_at' => null,
-                    'verified_by' => null,
-                    'account_status' => 'active',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ],
-                [
-                    'role_id' => 3, // Parent
-                    'first_name' => 'Pedro',
-                    'middle_name' => 'F.',
-                    'last_name' => 'Ramos',
-                    'email' => 'parent5@example.com',
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('password123'),
-                    'contact_number' => '09666666666',
-                    'birth_date' => '1980-03-18',
-                    'sex' => 'Male',
-                    'address' => 'Pacita 2, San Pedro, Laguna',
-                    'is_active' => true,
-                    'license_number' => null,
-                    'years_experience' => null,
-                    'qualifications' => null,
-                    'professional_experience' => null,
-                    'professional_id_path' => null,
-                    'verification_status' => 'pending',
-                    'rejection_reason' => null,
-                    'verified_at' => null,
-                    'verified_by' => null,
-                    'account_status' => 'active',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ],
             ];
 
-            // Use upsert for production readiness
-            DB::table('users')->upsert($users, ['email'], ['role_id','first_name','middle_name','last_name','contact_number','birth_date','sex','address','is_active','updated_at','password']);
+            // Insert other users (admin already exists, so verified_by = 1 is valid)
+            foreach ($users as $user) {
+                DB::table('users')->updateOrInsert(
+                    ['email' => $user['email']],
+                    $user
+                );
+            }
     }
 }
