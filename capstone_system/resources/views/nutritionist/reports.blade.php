@@ -70,19 +70,19 @@
             font-size: 1.25rem;
         }
         .stat-icon.primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-        }
-        .stat-icon.success {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
         }
+        .stat-icon.success {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            color: white;
+        }
         .stat-icon.warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
             color: white;
         }
         .stat-icon.info {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
             color: white;
         }
         .stat-value {
@@ -187,7 +187,10 @@
             color: white;
         }
         .btn-secondary {
-            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+        .btn-secondary:hover {
+            box-shadow: 0 4px 6px rgba(52, 211, 153, 0.3);
         }
 
         /* Status badges */
@@ -249,14 +252,14 @@
             gap: 0.75rem;
         }
         .alert-box.info {
-            background: #dbeafe;
-            color: #1e40af;
-            border-left: 4px solid #3b82f6;
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
         }
         .alert-box.warning {
-            background: #fef3c7;
-            color: #92400e;
-            border-left: 4px solid #f59e0b;
+            background: #ecfdf5;
+            color: #047857;
+            border-left: 4px solid #34d399;
         }
     </style>
 @endpush
@@ -344,7 +347,7 @@
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
             <!-- Children Monitoring Report -->
-            <div style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem;">
+            <div style="border: 2px solid #d1fae5; border-radius: 12px; padding: 1.5rem; background: #f0fdf4;">
                 <h3 style="font-size: 1.125rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">
                     <i class="fas fa-child" style="color: #10b981;"></i> Children Monitoring Report
                 </h3>
@@ -364,9 +367,9 @@
             </div>
 
             <!-- Assessment Summary Report -->
-            <div style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem;">
+            <div style="border: 2px solid #d1fae5; border-radius: 12px; padding: 1.5rem; background: #f0fdf4;">
                 <h3 style="font-size: 1.125rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">
-                    <i class="fas fa-clipboard-list" style="color: #3b82f6;"></i> Assessment Summary Report
+                    <i class="fas fa-clipboard-list" style="color: #10b981;"></i> Assessment Summary Report
                 </h3>
                 <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
                     Summary of all assessments conducted within a specific period, with statistics and trends.
@@ -384,9 +387,9 @@
             </div>
 
             <!-- Monthly Progress Report -->
-            <div style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem;">
+            <div style="border: 2px solid #d1fae5; border-radius: 12px; padding: 1.5rem; background: #f0fdf4;">
                 <h3 style="font-size: 1.125rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">
-                    <i class="fas fa-chart-line" style="color: #8b5cf6;"></i> Monthly Progress Report
+                    <i class="fas fa-chart-line" style="color: #10b981;"></i> Monthly Progress Report
                 </h3>
                 <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
                     Track month-to-month progress of children, showing improvements and changes in nutritional status.
@@ -591,6 +594,7 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
     // Age Distribution Chart
     const ageCtx = document.getElementById('ageDistributionChart').getContext('2d');
@@ -614,9 +618,46 @@
             plugins: {
                 legend: {
                     position: 'right',
+                },
+                tooltip: {
+                    padding: 16,
+                    bodySpacing: 8,
+                    bodyFont: {
+                        size: 16
+                    },
+                    titleFont: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            label += value + ' (' + percentage + '%)';
+                            return label;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    formatter: function(value, context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return percentage + '%';
+                    }
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 
     @if(count($nutritionalStatus) > 0)
@@ -643,9 +684,46 @@
             plugins: {
                 legend: {
                     position: 'right',
+                },
+                tooltip: {
+                    padding: 16,
+                    bodySpacing: 8,
+                    bodyFont: {
+                        size: 16
+                    },
+                    titleFont: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            label += value + ' (' + percentage + '%)';
+                            return label;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    formatter: function(value, context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return percentage + '%';
+                    }
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
     @endif
 
@@ -670,6 +748,17 @@
             plugins: {
                 legend: {
                     display: false,
+                },
+                tooltip: {
+                    padding: 16,
+                    bodySpacing: 8,
+                    bodyFont: {
+                        size: 16
+                    },
+                    titleFont: {
+                        size: 18,
+                        weight: 'bold'
+                    }
                 }
             },
             scales: {

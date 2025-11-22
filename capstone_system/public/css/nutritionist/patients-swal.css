@@ -32,7 +32,7 @@
     color: white !important;
     padding: 20px 25px !important;
     margin: 0 !important;
-    background: linear-gradient(135deg, #40916c 0%, #2d6a4f 100%) !important;
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%) !important;
     border-radius: 16px 16px 0 0 !important;
     text-align: left !important;
     display: flex !important;
@@ -64,8 +64,8 @@
     margin: 15px;
     border-radius: 12px;
     border: 1px solid #e8f5e9;
-    box-shadow: 0 2px 6px rgba(45, 106, 79, 0.06);
-    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.06);
+    transition: all 0.3s ease;
 }
 
 .patient-form-swal .form-section:first-child {
@@ -77,8 +77,8 @@
 }
 
 .patient-form-swal .form-section:hover {
-    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.1);
-    border-color: #d8f3dc;
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.1);
+    border-color: #c8e6c9;
 }
 
 /* Section Titles - Modern Icon Style */
@@ -88,7 +88,7 @@
     color: white;
     margin: -20px -20px 18px -20px;
     padding: 12px 18px;
-    background: linear-gradient(135deg, #52b788 0%, #40916c 100%);
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
     border-radius: 12px 12px 0 0;
     display: flex;
     align-items: center;
@@ -98,22 +98,9 @@
     font-size: 0.9rem;
 }
 
-.patient-form-swal .section-title::before {
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
+.patient-form-swal .section-title i {
     font-size: 1.1rem;
-}
-
-.patient-form-swal .form-section:nth-child(1) .section-title::before {
-    content: '\f2bb'; /* ID Card icon */
-}
-
-.patient-form-swal .form-section:nth-child(2) .section-title::before {
-    content: '\f015'; /* Home icon */
-}
-
-.patient-form-swal .form-section:nth-child(3) .section-title::before {
-    content: '\f0f1'; /* Stethoscope icon */
+    opacity: 0.95;
 }
 
 /* Form Labels - Modern & Compact */
@@ -123,16 +110,55 @@
     margin-bottom: 6px;
     font-size: 0.85rem;
     display: block;
-    text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
+.patient-form-swal .form-label i {
+    color: #667eea;
+    font-size: 0.75rem;
+    margin-left: 4px;
+    cursor: help;
+}
+
 /* Required Field Indicator */
-.patient-form-swal .form-label:has(+ .form-control[required])::after,
-.patient-form-swal .form-label:has(+ .form-select[required])::after {
-    content: ' *';
+.patient-form-swal .required {
     color: #ef476f;
     font-weight: 700;
+}
+
+/* Custom Checkbox Styling */
+.custom-checkbox {
+    padding: 12px;
+    background: #f0f9ff;
+    border: 2px solid #bae6fd;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.custom-checkbox:hover {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+}
+
+.custom-checkbox .form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.125rem;
+    cursor: pointer;
+}
+
+.custom-checkbox .form-check-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #0369a1;
+    cursor: pointer;
+    margin-left: 0.5rem;
+}
+
+.custom-checkbox .form-check-label i {
+    font-size: 1rem;
 }
 
 /* Form Controls - Refined */

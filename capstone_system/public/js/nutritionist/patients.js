@@ -114,41 +114,49 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeModals();
     initializeSorting();
     initializePagination();
+    initializeViewToggle();
     updateResultsCount(); // Initialize count on page load
 });
 
 function initializeFilters() {
     // Search input with debounce
     const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    
     if (searchInput) {
         searchInput.addEventListener('input', function() {
+            // Show/hide clear button
+            if (searchClear) {
+                searchClear.style.display = this.value ? 'block' : 'none';
+            }
+            
             clearTimeout(filterTimeout);
             filterTimeout = setTimeout(() => {
                 applyFilters();
             }, 500); // 500ms delay for automatic search
         });
+        
+        // Show clear button if there's initial value
+        if (searchClear && searchInput.value) {
+            searchClear.style.display = 'block';
+        }
+    }
+    
+    // Clear search button
+    if (searchClear) {
+        searchClear.addEventListener('click', function() {
+            searchInput.value = '';
+            this.style.display = 'none';
+            applyFilters();
+        });
     }
 
     // Filter dropdowns with immediate response
-    const filters = ['barangayFilter', 'sexFilter', 'perPageFilter'];
+    const filters = ['barangayFilter', 'sexFilter', 'ageRangeFilter', 'nutritionistFilter'];
     filters.forEach(filterId => {
         const filterElement = document.getElementById(filterId);
         if (filterElement) {
             filterElement.addEventListener('change', applyFilters);
-        }
-    });
-
-    // Age range filters with debounce
-    const ageFilters = ['ageMin', 'ageMax'];
-    ageFilters.forEach(filterId => {
-        const filterElement = document.getElementById(filterId);
-        if (filterElement) {
-            filterElement.addEventListener('input', function() {
-                clearTimeout(filterTimeout);
-                filterTimeout = setTimeout(() => {
-                    applyFilters();
-                }, 800); // Longer delay for number inputs
-            });
         }
     });
 }
@@ -186,17 +194,19 @@ function applyFilters() {
     const search = document.getElementById('searchInput').value.trim();
     const barangay = document.getElementById('barangayFilter').value;
     const sex = document.getElementById('sexFilter').value;
-    const ageMin = document.getElementById('ageMin').value;
-    const ageMax = document.getElementById('ageMax').value;
-    const perPage = document.getElementById('perPageFilter').value;
+    const ageRange = document.getElementById('ageRangeFilter').value;
+    const nutritionist = document.getElementById('nutritionistFilter').value;
     
     // Add non-empty filters to params
     if (search) params.append('search', search);
     if (barangay) params.append('barangay', barangay);
     if (sex) params.append('sex', sex);
-    if (ageMin) params.append('age_min', ageMin);
-    if (ageMax) params.append('age_max', ageMax);
-    if (perPage) params.append('per_page', perPage);
+    if (ageRange) {
+        const [min, max] = ageRange.split('-');
+        params.append('age_min', min);
+        params.append('age_max', max);
+    }
+    if (nutritionist) params.append('nutritionist', nutritionist);
     
     // Get current sort parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -276,7 +286,7 @@ function updateResultsCount() {
         const totalCount = tableContainer.getAttribute('data-total-count');
         const resultsCountElement = document.getElementById('resultsCount');
         if (resultsCountElement && totalCount !== null) {
-            resultsCountElement.textContent = `${totalCount} patient(s) found`;
+            resultsCountElement.textContent = totalCount;
         }
     }
 }
@@ -286,12 +296,38 @@ function clearFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('barangayFilter').value = '';
     document.getElementById('sexFilter').value = '';
-    document.getElementById('ageMin').value = '';
-    document.getElementById('ageMax').value = '';
-    document.getElementById('perPageFilter').value = '15';
+    document.getElementById('ageRangeFilter').value = '';
+    const nutritionistFilter = document.getElementById('nutritionistFilter');
+    if (nutritionistFilter && nutritionistFilter.options.length > 1) {
+        nutritionistFilter.value = '';
+    }
     
     // Apply empty filters (reload without filters)
     applyFilters();
+}
+
+function refreshPatients() {
+    // Reload current page with current filters
+    applyFilters();
+}
+
+function initializeViewToggle() {
+    // Handle view toggle buttons
+    const viewButtons = document.querySelectorAll('.btn-view');
+    viewButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const view = this.getAttribute('data-view');
+            
+            // Update active state
+            viewButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // TODO: Implement grid view when needed
+            if (view === 'grid') {
+                console.log('Grid view not yet implemented');
+            }
+        });
+    });
 }
 
 function showLoading() {
@@ -756,5 +792,6 @@ window.editPatient = editPatient;
 window.viewPatient = viewPatient;
 window.deletePatient = deletePatient;
 window.clearFilters = clearFilters;
+window.refreshPatients = refreshPatients;
 
 console.log('Enhanced patient page functions loaded with filtering and pagination');

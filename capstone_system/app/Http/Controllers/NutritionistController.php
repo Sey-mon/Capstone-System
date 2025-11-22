@@ -116,17 +116,14 @@ class NutritionistController extends Controller
         $query = Patient::where('nutritionist_id', $nutritionistId)
             ->with(['parent', 'barangay', 'assessments']);
 
-                // Search functionality
+        // Search functionality
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->whereHas('patient', function($subQ) use ($search) {
-                    $subQ->where('first_name', 'like', "%{$search}%")
-                         ->orWhere('last_name', 'like', "%{$search}%")
-                         ->orWhere('contact_number', 'like', "%{$search}%");
-                })
-                ->orWhere('treatment', 'like', "%{$search}%")
-                ->orWhere('assessment_id', 'like', "%{$search}%");
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('contact_number', 'like', "%{$search}%")
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
             });
         }
 
@@ -179,6 +176,11 @@ class NutritionistController extends Controller
         $parents = User::where('role_id', function($query) {
             $query->select('role_id')->from('roles')->where('role_name', 'Parent');
         })->get();
+        
+        // Get all nutritionists for admin view
+        $nutritionists = User::where('role_id', function($query) {
+            $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
+        })->get();
 
         // If it's an AJAX request, return filtered data
         if ($request->ajax()) {
@@ -204,11 +206,9 @@ class NutritionistController extends Controller
             
             return view('nutritionist.partials.patients-table', compact('patients'));
         }
-
-        return view('nutritionist.patients', compact('patients', 'barangays', 'parents'));
-    }
-
-    /**
+        
+        return view('nutritionist.patients', compact('patients', 'barangays', 'parents', 'nutritionists'));
+    }    /**
      * Store a new patient
      */
     public function storePatient(Request $request)
@@ -840,6 +840,9 @@ class NutritionistController extends Controller
         $search = $request->input('search');
         $tag = $request->input('tag');
         $perPage = $request->input('per_page', 15);
+        $view = $request->input('view', 'foods');
+        $status = $request->input('status');
+        $user = Auth::user();
 
         $foods = Food::query()
             ->search($search)
@@ -858,7 +861,24 @@ class NutritionistController extends Controller
             ->sort()
             ->values();
 
-        return view('nutritionist.foods', compact('foods', 'allTags', 'search', 'tag'));
+        // Get food requests data
+        $requestsQuery = \App\Models\FoodRequest::with(['requester', 'reviewer'])
+            ->where('requested_by', $user->user_id);
+
+        if ($status) {
+            $requestsQuery->where('status', $status);
+        }
+
+        $requests = $requestsQuery->orderBy('created_at', 'desc')->paginate(10);
+
+        // Calculate stats
+        $stats = [
+            'pending' => \App\Models\FoodRequest::pending()->where('requested_by', $user->user_id)->count(),
+            'approved' => \App\Models\FoodRequest::approved()->where('requested_by', $user->user_id)->count(),
+            'rejected' => \App\Models\FoodRequest::rejected()->where('requested_by', $user->user_id)->count(),
+        ];
+
+        return view('nutritionist.foods', compact('foods', 'allTags', 'search', 'tag', 'requests', 'stats', 'status'));
     }
 
     /**

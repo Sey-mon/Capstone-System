@@ -53,7 +53,9 @@ class FoodRequestController extends Controller
         if ($user->role->role_name === 'Admin') {
             return view('admin.food-requests', compact('requests', 'stats', 'status'));
         } else {
-            return view('nutritionist.food-requests', compact('requests', 'stats', 'status'));
+            // Redirect nutritionists to the unified foods page with requests view
+            $statusParam = $status ? '&status=' . $status : '';
+            return redirect()->route('nutritionist.foods') . '?view=requests' . $statusParam;
         }
     }
 
@@ -62,13 +64,9 @@ class FoodRequestController extends Controller
      */
     public function create()
     {
-        $stats = [
-            'pending' => FoodRequest::pending()->where('requested_by', Auth::id())->count(),
-            'approved' => FoodRequest::approved()->where('requested_by', Auth::id())->count(),
-            'rejected' => FoodRequest::rejected()->where('requested_by', Auth::id())->count(),
-        ];
-        
-        return view('nutritionist.food-requests', compact('stats'));
+        // Redirect nutritionists to the unified foods page
+        // They can use the SweetAlert2 modal to create requests
+        return redirect()->route('nutritionist.foods');
     }
 
     /**
@@ -84,6 +82,12 @@ class FoodRequestController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ], 422);
+            }
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -112,11 +116,27 @@ class FoodRequestController extends Controller
 
             DB::commit();
 
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Food request submitted successfully! Admin will review it soon.',
+                    'data' => $foodRequest
+                ]);
+            }
+
             return redirect()->route('nutritionist.food-requests.index')
                 ->with('success', 'Food request submitted successfully! Admin will review it soon.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating food request: ' . $e->getMessage());
+            
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while submitting the food request.'
+                ], 500);
+            }
+            
             return redirect()->back()
                 ->with('error', 'An error occurred while submitting the food request.')
                 ->withInput();
@@ -138,17 +158,15 @@ class FoodRequestController extends Controller
 
         // Return JSON for AJAX requests (admin view details)
         if (request()->wantsJson() || request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'request' => $foodRequest
-            ]);
+            return response()->json($foodRequest);
         }
 
         // Return view for direct access
         if ($user->role->role_name === 'Admin') {
             return view('admin.food-requests', compact('foodRequest'));
         } else {
-            return view('nutritionist.food-requests', compact('foodRequest'));
+            // Redirect nutritionists to the unified foods page with requests view
+            return redirect()->route('nutritionist.foods') . '?view=requests';
         }
     }
 
@@ -258,7 +276,7 @@ class FoodRequestController extends Controller
     /**
      * Delete a food request (Admin or own request if pending)
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             DB::beginTransaction();
@@ -269,6 +287,12 @@ class FoodRequestController extends Controller
             $user = Auth::user();
             if ($user->role->role_name === 'Nutritionist') {
                 if ($foodRequest->requested_by !== $user->user_id || $foodRequest->status !== 'pending') {
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'You can only delete your own pending requests.'
+                        ], 403);
+                    }
                     abort(403, 'You can only delete your own pending requests.');
                 }
             }
@@ -289,6 +313,13 @@ class FoodRequestController extends Controller
 
             DB::commit();
 
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Food request cancelled successfully!'
+                ]);
+            }
+
             if ($user->role->role_name === 'Admin') {
                 return redirect()->route('admin.food-requests.index')
                     ->with('success', 'Food request deleted successfully!');
@@ -299,6 +330,13 @@ class FoodRequestController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error deleting food request: ' . $e->getMessage());
+            
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while deleting the food request.'
+                ], 500);
+            }
             
             // Determine where to redirect based on role
             $redirectRoute = Auth::user()->role->role_name === 'Admin' 
