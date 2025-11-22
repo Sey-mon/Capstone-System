@@ -47,7 +47,7 @@ security = HTTPBearer()
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],  # Add your Laravel domain
+    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000","https://shares-app.site" ],  # Add your Laravel domain
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
