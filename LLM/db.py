@@ -23,9 +23,9 @@ def _init_pool():
 
     # db_config = {
     #     'host': os.getenv('DB_HOST', 'localhost'),
-    #     'user': os.getenv('DB_USERNAME', 'root'),
-    #     'password': os.getenv('DB_PASSWORD', ''),
-    #     'database': os.getenv('DB_DATABASE', 'capstone_demo'),
+    #     'user': os.getenv('DB_USER', 'shares'),
+    #     'password': os.getenv('DB_PASSWORD', 'shares123'),
+    #     'database': os.getenv('DB_NAME', 'sharesapp'),
     #     'autocommit': True,
     # }
 
