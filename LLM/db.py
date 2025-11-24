@@ -21,6 +21,14 @@ def _init_pool():
     if _pool is not None:
         return _pool
 
+    # db_config = {
+    #     'host': os.getenv('DB_HOST', 'localhost'),
+    #     'user': os.getenv('DB_USERNAME', 'root'),
+    #     'password': os.getenv('DB_PASSWORD', ''),
+    #     'database': os.getenv('DB_DATABASE', 'capstone_demo'),
+    #     'autocommit': True,
+    # }
+
     db_config = {
         'host': os.getenv('DB_HOST', 'localhost'),
         'user': os.getenv('DB_USER', 'capstone_user'),

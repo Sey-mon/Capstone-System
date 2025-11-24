@@ -15,8 +15,7 @@
     <nav class="main-nav">
         <div class="nav-container">
             <div class="nav-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>SHARES</span>
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 45px; width: auto;">
             </div>
             <div class="nav-links">
                 <a href="{{ route('staff.login') }}">Already have an account? Sign In</a>
@@ -75,17 +74,45 @@
 
         <!-- Error Messages -->
         @if($errors->any())
-            <div class="error-alert">
-                <i class="fas fa-exclamation-circle"></i>
-                <div>
-                    <strong>Please fix the following errors:</strong>
-                    <ul>
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+            <div class="error-alert" id="errorAlert" style="position: relative; background: linear-gradient(135deg, #fee, #fdd); border-left: 4px solid #dc3545; padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15); animation: slideInDown 0.3s ease-out;">
+                <button type="button" onclick="dismissError()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.2rem; color: #dc3545; cursor: pointer; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div style="display: flex; gap: 1rem;">
+                    <i class="fas fa-exclamation-circle" style="color: #dc3545; font-size: 1.5rem; flex-shrink: 0; margin-top: 2px;"></i>
+                    <div style="flex: 1;">
+                        <strong style="color: #721c24; font-size: 1.05rem; display: block; margin-bottom: 0.5rem;">Please fix the following errors:</strong>
+                        <ul style="margin: 0; padding-left: 1.2rem; color: #721c24;">
+                            @foreach($errors->all() as $error)
+                                <li style="margin-bottom: 0.3rem;">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                <div style="width: 100%; height: 3px; background: #f8d7da; border-radius: 3px; margin-top: 0.8rem; overflow: hidden;">
+                    <div id="errorTimer" style="width: 100%; height: 100%; background: linear-gradient(90deg, #dc3545, #c82333); animation: shrinkWidth 8s linear forwards;"></div>
                 </div>
             </div>
+            <style>
+                @keyframes slideInDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes shrinkWidth {
+                    from { width: 100%; }
+                    to { width: 0%; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; transform: translateY(0); }
+                    to { opacity: 0; transform: translateY(-20px); }
+                }
+            </style>
         @endif
 
                 <form method="POST" action="{{ route('apply.nutritionist.post') }}" id="nutritionistWizard" class="wizard-form" enctype="multipart/form-data">
@@ -136,20 +163,6 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label class="form-label" for="email">Email Address *</label>
-                                    <input type="email" class="form-control" name="email" id="email" 
-                                           placeholder="Enter your professional email" 
-                                           value="{{ old('email') }}" required>
-                                    @error('email')
-                                        <span class="error-text">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
                             <div class="form-col">
                                 <div class="form-group">
                                     <label class="form-label" for="contact_number">Contact Number *</label>
@@ -262,13 +275,41 @@
                         </h3>
                         <p class="step-description">Create your secure account credentials</p>
 
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email Address *</label>
+                            <input type="email" class="form-control" name="email" id="email" 
+                                   placeholder="Enter your professional email" 
+                                   value="{{ old('email') }}" required>
+                            @error('email')
+                                <span class="error-text">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <div class="form-row">
                             <div class="form-col">
                                 <div class="form-group">
                                     <label class="form-label" for="password">Password *</label>
-                                    <input type="password" class="form-control" name="password" id="password" 
-                                           placeholder="Create a strong password" required>
-                                    <small class="form-text">Minimum 6 characters</small>
+                                    <div style="position: relative;">
+                                        <input type="password" class="form-control" name="password" id="password" 
+                                               placeholder="Create a strong password" 
+                                               minlength="8" required
+                                               style="padding-right: 40px;">
+                                        <button type="button" class="toggle-password" data-target="password" 
+                                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div style="margin-top: 0.5rem;">
+                                        <div style="display: flex; gap: 0.25rem; height: 4px; margin-bottom: 0.25rem;">
+                                            <div id="strength-bar-1" style="flex: 1; background: #e0e0e0; border-radius: 2px; transition: background 0.3s;"></div>
+                                            <div id="strength-bar-2" style="flex: 1; background: #e0e0e0; border-radius: 2px; transition: background 0.3s;"></div>
+                                            <div id="strength-bar-3" style="flex: 1; background: #e0e0e0; border-radius: 2px; transition: background 0.3s;"></div>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <small class="form-text">Minimum 8 characters (spaces allowed)</small>
+                                            <small id="password-strength-text" style="font-weight: 600; font-size: 0.75rem;"></small>
+                                        </div>
+                                    </div>
                                     @error('password')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -277,8 +318,16 @@
                             <div class="form-col">
                                 <div class="form-group">
                                     <label class="form-label" for="password_confirmation">Confirm Password *</label>
-                                    <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" 
-                                           placeholder="Confirm your password" required>
+                                    <div style="position: relative;">
+                                        <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" 
+                                               placeholder="Confirm your password" 
+                                               minlength="8" required
+                                               style="padding-right: 40px;">
+                                        <button type="button" class="toggle-password" data-target="password_confirmation" 
+                                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                     @error('password_confirmation')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -319,8 +368,7 @@
     <footer class="main-footer">
         <div class="footer-container">
             <div class="footer-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>Nutrition System</span>
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 60px; width: auto;">
             </div>
             <p class="footer-text">© 2025 Nutrition Management System. All rights reserved.</p>
         </div>
@@ -344,7 +392,109 @@
                 qualOther.style.display = 'block';
             }
         }
+
+        // Password visibility toggle
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+
+        // Password strength checker
+        const passwordInput = document.getElementById('password');
+        const strengthText = document.getElementById('password-strength-text');
+        const strengthBar1 = document.getElementById('strength-bar-1');
+        const strengthBar2 = document.getElementById('strength-bar-2');
+        const strengthBar3 = document.getElementById('strength-bar-3');
+
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const strength = calculatePasswordStrength(password);
+                
+                // Reset bars
+                strengthBar1.style.background = '#e0e0e0';
+                strengthBar2.style.background = '#e0e0e0';
+                strengthBar3.style.background = '#e0e0e0';
+                
+                if (password.length === 0) {
+                    strengthText.textContent = '';
+                    return;
+                }
+                
+                if (strength === 'weak') {
+                    strengthBar1.style.background = '#dc3545';
+                    strengthText.textContent = 'Weak';
+                    strengthText.style.color = '#dc3545';
+                } else if (strength === 'medium') {
+                    strengthBar1.style.background = '#ffc107';
+                    strengthBar2.style.background = '#ffc107';
+                    strengthText.textContent = 'Medium';
+                    strengthText.style.color = '#ffc107';
+                } else if (strength === 'strong') {
+                    strengthBar1.style.background = '#28a745';
+                    strengthBar2.style.background = '#28a745';
+                    strengthBar3.style.background = '#28a745';
+                    strengthText.textContent = 'Strong';
+                    strengthText.style.color = '#28a745';
+                }
+            });
+        }
+
+        // Auto-dismiss error alert after 8 seconds
+        const errorAlert = document.getElementById('errorAlert');
+        if (errorAlert) {
+            setTimeout(function() {
+                dismissError();
+            }, 8000);
+        }
     });
+
+    // Calculate password strength
+    function calculatePasswordStrength(password) {
+        if (password.length < 8) return 'weak';
+        
+        let strength = 0;
+        
+        // Length check
+        if (password.length >= 8) strength++;
+        if (password.length >= 12) strength++;
+        
+        // Character variety checks
+        if (/[a-z]/.test(password)) strength++; // lowercase
+        if (/[A-Z]/.test(password)) strength++; // uppercase
+        if (/[0-9]/.test(password)) strength++; // numbers
+        if (/[^a-zA-Z0-9]/.test(password)) strength++; // special characters
+        
+        // Determine strength level
+        if (strength <= 2) return 'weak';
+        if (strength <= 4) return 'medium';
+        return 'strong';
+    }
+
+    // Function to dismiss error alert
+    function dismissError() {
+        const errorAlert = document.getElementById('errorAlert');
+        if (errorAlert) {
+            errorAlert.style.animation = 'fadeOut 0.3s ease-out forwards';
+            setTimeout(function() {
+                errorAlert.remove();
+            }, 300);
+        }
+    }
     </script>
 </body>
 </html>

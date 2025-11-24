@@ -764,10 +764,13 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
+            // Store application ID in session for success page
+            session(['application_id' => $user->user_id]);
+
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => true]);
             }
-            return redirect()->route('staff.login')->with('success', 'Application submitted successfully! Please wait for admin approval. You will be able to login once your account is activated.');
+            return redirect()->route('registration.success');
 
         } catch (\Exception $e) {
             Log::error('Nutritionist application error: ' . $e->getMessage(), ['exception' => $e]);

@@ -33,11 +33,13 @@
         }
 
         .slide-content {
-            padding: 3rem;
+            padding: 3rem 5rem;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            max-width: 90%;
+            margin: 0 auto;
         }
 
         .slide-icon {
@@ -99,10 +101,10 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -114,22 +116,22 @@
         }
 
         .slide-nav:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.6);
             transform: translateY(-50%) scale(1.1);
         }
 
         .slide-nav i {
             color: white;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .slide-nav.prev {
-            left: 2rem;
+            left: 1rem;
         }
 
         .slide-nav.next {
-            right: 2rem;
+            right: 1rem;
         }
 
         @keyframes fadeIn {
@@ -139,7 +141,7 @@
 
         @media (max-width: 968px) {
             .slide-content {
-                padding: 2rem;
+                padding: 2rem 3rem;
             }
             
             .slide h3 {
@@ -148,6 +150,23 @@
             
             .slide p {
                 font-size: 1rem;
+            }
+
+            .slide-nav {
+                width: 40px;
+                height: 40px;
+            }
+
+            .slide-nav i {
+                font-size: 16px;
+            }
+
+            .slide-nav.prev {
+                left: 0.5rem;
+            }
+
+            .slide-nav.next {
+                right: 0.5rem;
             }
         }
 
@@ -191,8 +210,7 @@
     <nav class="main-nav">
         <div class="nav-container">
             <div class="nav-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>SHARES</span>
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 45px; width: auto;">
             </div>
             <div class="nav-links">
                 <a href="{{ route('login') }}">Parent Portal</a>
@@ -205,47 +223,58 @@
         <div class="hero-content">
             <div class="hero-text">
                 <div class="slideshow-container">
-                    <!-- Slide 1 -->
+                    <!-- Slide 1: Getting Started -->
                     <div class="slide active">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-shield-alt"></i>
+                                <i class="fas fa-user-circle"></i>
                             </div>
-                            <h3>Secure Admin Access</h3>
-                            <p>Manage your nutrition system with comprehensive administrative tools. Monitor users, track inventory, and oversee all system operations from a centralized dashboard.</p>
+                            <h3>Step 1: View Your Patients</h3>
+                            <p>After logging in, you'll see your dashboard showing all children assigned to you. Click on "Patients" in the menu to view their complete information including name, age, weight, height, and parent contact details. You can search for specific children using the search box.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 2 -->
+                    <!-- Slide 2: Conducting Assessments -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-user-md"></i>
+                                <i class="fas fa-clipboard-check"></i>
                             </div>
-                            <h3>Nutritionist Dashboard</h3>
-                            <p>Access patient records, create meal plans, conduct assessments, and provide personalized nutrition guidance. Everything you need to deliver quality care.</p>
+                            <h3>Step 2: Conduct Health Assessments</h3>
+                            <p>Click "Assessments" then "Create New Assessment" to evaluate a child's nutrition status. Simply enter the child's current weight, height, and arm measurement (MUAC). The system automatically calculates if the child is malnourished, normal, or overweight. Results are saved instantly.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 3 -->
+                    <!-- Slide 3: Creating Meal Plans -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-heartbeat"></i>
+                                <i class="fas fa-utensils"></i>
                             </div>
-                            <h3>Health Worker Portal</h3>
-                            <p>Track community health metrics, manage patient data, and collaborate with healthcare teams to improve nutrition outcomes in your area.</p>
+                            <h3>Step 3: Generate Meal Plans</h3>
+                            <p>Go to "Meal Plans" menu, select a child, and click "Generate Meal Plan". You can list available foods in your area, and the system creates a personalized weekly meal schedule with breakfast, lunch, snacks, and dinner recommendations suitable for the child's needs.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 4 -->
+                    <!-- Slide 4: Reports and Monitoring -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-chart-line"></i>
+                                <i class="fas fa-chart-bar"></i>
                             </div>
-                            <h3>Real-Time Analytics</h3>
-                            <p>Access comprehensive reports, visualize data trends, and make informed decisions with powerful analytics tools designed for healthcare professionals.</p>
+                            <h3>Step 4: Track Progress & Reports</h3>
+                            <p>Use "Reports" to download PDF summaries of children's health progress, assessment history, and meal plans. Share these with parents or health coordinators. The dashboard shows colorful charts to help you see trends and which children need more attention.</p>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5: Food Database -->
+                    <div class="slide">
+                        <div class="slide-content">
+                            <div class="slide-icon">
+                                <i class="fas fa-apple-alt"></i>
+                            </div>
+                            <h3>Additional Tool: Food Database</h3>
+                            <p>Access "Food Database" to browse nutritional information for hundreds of local foods. Search by food name or type. If you can't find a food item, you can request to add it using the "Food Requests" menu, and the administrator will review and add it.</p>
                         </div>
                     </div>
 
@@ -263,6 +292,7 @@
                         <span class="indicator" data-slide="1"></span>
                         <span class="indicator" data-slide="2"></span>
                         <span class="indicator" data-slide="3"></span>
+                        <span class="indicator" data-slide="4"></span>
                     </div>
                 </div>
             </div>
@@ -379,11 +409,84 @@
     <!-- Footer -->
     <footer class="main-footer">
         <div class="footer-container">
-            <div class="footer-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>Nutrition System</span>
+            <div class="footer-grid">
+                <!-- About Section -->
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 60px; width: auto;">
+                    </div>
+                    <p class="footer-about">
+                        Smart Health and Recommender System for San Pedro City's Nutrition Program - Building a healthier, food-secure future for all San Pedrenses.
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-list">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#mission">Mission</a></li>
+                        <li><a href="#vision">Vision</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="{{ route('register') }}">Register</a></li>
+                    </ul>
+                </div>
+
+                <!-- Services -->
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">Nutrition Monitoring</a></li>
+                        <li><a href="#">Patient Assessment</a></li>
+                        <li><a href="#">Meal Planning</a></li>
+                        <li><a href="#">Food Inventory</a></li>
+                        <li><a href="#">Health Analytics</a></li>
+                        <li><a href="{{ route('staff.login') }}">Staff Portal</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="footer-section">
+                    <h4>Contact Us</h4>
+                    <ul class="footer-contact">
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>San Pedro City Health Office<br>Laguna, Philippines</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <span>(049) 123-4567</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>nutrition@sanpedro.gov.ph</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            <span>Mon - Fri: 8:00 AM - 5:00 PM</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <p class="footer-text">© 2025 Nutrition Management System. All rights reserved.</p>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 San Pedro City Health Office - Nutrition Program. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy Policy</a>
+                    <span>|</span>
+                    <a href="#">Terms of Service</a>
+                    <span>|</span>
+                    <a href="{{ route('contact.admin') }}">Contact Admin</a>
+                </div>
+            </div>
         </div>
     </footer>
 

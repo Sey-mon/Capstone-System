@@ -103,7 +103,7 @@ python -m uvicorn fastapi_app:app --host 127.0.0.1 --port 8002
 ```bash
 cd RandomForest
 pip install -r requirements.txt
-python api_server.py
+python -m uvicorn api_server:app --host 127.0.0.1 --port 8001 
 ```
 
 ### Default Login Credentials
