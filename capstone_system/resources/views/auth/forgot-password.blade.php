@@ -17,8 +17,7 @@
     <nav class="main-nav">
         <div class="nav-container">
             <div class="nav-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>SHARES</span>
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 45px; width: auto;">
             </div>
         </div>
     </nav>

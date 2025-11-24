@@ -12,13 +12,12 @@
     <!-- Google reCAPTCHA -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
-<body>
+<body>  
     <!-- Navigation Header -->
     <nav class="main-nav">
         <div class="nav-container">
             <div class="nav-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>SHARES</span>
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 45px; width: auto;">
             </div>
             <div class="nav-links">
                 <a href="#home">Home</a>
@@ -34,8 +33,8 @@
     <section id="home" class="hero-section">
         <div class="hero-content">
             <div class="hero-text">
-                <h1 class="hero-title">WELCOME TO<br>SMART HEALTH AND RECOMMENDER SYSTEM </h1>
-                <p class="hero-subtitle">Empowering healthier communities through intelligent nutrition tracking and comprehensive health management</p>
+                <h1 class="hero-title">WELCOME TO<br>SHARES</h1>
+                <p class="hero-subtitle">Smart Health Assessment and Recommender System for Excellence in Nutrition - Transforming San Pedro City into a nutrition-smart community through data-driven insights and intelligent health recommendations</p>
                 <a href="#about" class="learn-more-btn">
                     Learn More
                     <i class="fas fa-arrow-down"></i>
@@ -166,25 +165,25 @@
         <div class="section-container">
             <div class="section-content">
                 <div class="content-text">
-                    <h2 class="section-title">Transform Healthcare Through Data</h2>
+                    <h2 class="section-title">About San Pedro City</h2>
                     <p class="section-description">
-                        Our comprehensive nutrition management system helps healthcare professionals track, assess, and improve patient nutrition outcomes with powerful analytics and comprehensive monitoring tools. We are dedicated to transforming healthcare through intelligent nutrition management.
+                        San Pedro City, located in the province of Laguna, Philippines, is a rapidly growing urban center in the CALABARZON region. As part of the greater Metro Manila area, San Pedro is committed to becoming a nutrition-smart city through innovative healthcare solutions and comprehensive nutrition management systems. Our platform supports the city's healthcare professionals and community health workers in their mission to improve nutritional outcomes for all San Pedrenses, particularly children and vulnerable populations. By leveraging technology and data-driven approaches, we aim to contribute to San Pedro City's transformation into a model of nutrition excellence in the Philippines.
                     </p>
                     <div class="stats-grid">
                         <div class="stat-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <h3>CALABARZON</h3>
+                            <p>Region in Laguna Province</p>
+                        </div>
+                        <div class="stat-item">
                             <i class="fas fa-users"></i>
-                            <h3>1000+</h3>
-                            <p>Healthcare Professionals</p>
+                            <h3>326,001</h3>
+                            <p>Population (2020 Census)</p>
                         </div>
                         <div class="stat-item">
-                            <i class="fas fa-hospital"></i>
-                            <h3>50+</h3>
-                            <p>Partner Clinics</p>
-                        </div>
-                        <div class="stat-item">
-                            <i class="fas fa-chart-line"></i>
-                            <h3>10K+</h3>
-                            <p>Patients Monitored</p>
+                            <i class="fas fa-city"></i>
+                            <h3>Smart City</h3>
+                            <p>Nutrition-Smart Goal by 2032</p>
                         </div>
                     </div>
                 </div>
@@ -206,7 +205,7 @@
                         <i class="fas fa-bullseye"></i>
                     </div>
                     <h3>Our Mission</h3>
-                    <p>To empower communities by providing comprehensive nutrition management tools that promote healthier lifestyles and combat malnutrition through innovative technology and data-driven insights.</p>
+                    <p>To lead San Pedro City toward becoming a nutrition-smart city by 2032—where innovation, data, and inclusive systems drive improved nutritional outcomes for all. Through the effective implementation of the Philippine Plan of Action for Nutrition, the city will promote evidence-based strategies, digital solutions, and multisectoral coordination to ensure food safety, eliminate malnutrition—including micronutrient deficiencies—and guarantee year-round access to safe, nutritious, and affordable food. By integrating nutrition into the core of its smart city agenda, San Pedro commits to building a healthier, more resilient, and food-secure population.</p>
                 </div>
             </div>
         </div>
@@ -221,7 +220,7 @@
                         <i class="fas fa-eye"></i>
                     </div>
                     <h3>Our Vision</h3>
-                    <p>To be the leading platform in nutrition and health management, creating a world where every individual has access to personalized nutrition guidance and support for optimal health and well-being.</p>
+                    <p>By 2032, San Pedro City will be recognized smart city in Calabarzon where 100% of househols have year-around access to safe, nutritious, and affordable food; all children under five are free from stunting and wasting; and every San Pedrense adopts healthy, sustanable diets supported by digital innovations, resilient food systems, and inclusive nutrition services-contributing to a healthier, more productive, and food-secure urban population.</p>
                 </div>
             </div>
         </div>
@@ -230,51 +229,51 @@
     <!-- Features Section -->
     <section id="features" class="content-section light-section">
         <div class="section-container">
-            <h2 class="section-title centered">Why Choose Us</h2>
-            <p class="section-subtitle centered">Comprehensive features designed for healthcare excellence</p>
+            <h2 class="section-title centered">Why Choose San Pedro CHO Nutrition Office</h2>
+            <p class="section-subtitle centered">Empowering San Pedrenses with innovative nutrition solutions</p>
             
             <div class="features-grid">
                 <div class="feature-box">
                     <div class="feature-icon-small">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h4>Advanced Analytics</h4>
-                    <p>Real-time data visualization and comprehensive reporting tools</p>
+                    <h4>Data-Driven Nutrition Monitoring</h4>
+                    <p>Track malnutrition cases and nutritional outcomes across all barangays in San Pedro City</p>
                 </div>
                 <div class="feature-box">
                     <div class="feature-icon-small">
-                        <i class="fas fa-shield-alt"></i>
+                        <i class="fas fa-baby"></i>
                     </div>
-                    <h4>Secure & Private</h4>
-                    <p>Enterprise-grade security with encrypted data storage</p>
+                    <h4>Child Nutrition Focus</h4>
+                    <p>Dedicated programs to eliminate stunting and wasting in children under five years old</p>
                 </div>
                 <div class="feature-box">
                     <div class="feature-icon-small">
                         <i class="fas fa-mobile-alt"></i>
                     </div>
-                    <h4>Easy to Use</h4>
-                    <p>Intuitive interface designed for healthcare professionals</p>
+                    <h4>Mobile-Friendly Access</h4>
+                    <p>Barangay health workers can update patient records anytime, anywhere in San Pedro</p>
                 </div>
                 <div class="feature-box">
                     <div class="feature-icon-small">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-utensils"></i>
                     </div>
-                    <h4>24/7 Access</h4>
-                    <p>Access your data anytime, anywhere, from any device</p>
+                    <h4>Food Security Programs</h4>
+                    <p>Monitor and ensure year-round access to safe, nutritious, and affordable food for all households</p>
                 </div>
                 <div class="feature-box">
                     <div class="feature-icon-small">
                         <i class="fas fa-users-cog"></i>
                     </div>
-                    <h4>Team Collaboration</h4>
-                    <p>Work seamlessly with your healthcare team</p>
+                    <h4>Multi-Sectoral Coordination</h4>
+                    <p>Seamless collaboration between CHO staff, barangay officials, and community health workers</p>
                 </div>
                 <div class="feature-box">
                     <div class="feature-icon-small">
-                        <i class="fas fa-bell"></i>
+                        <i class="fas fa-heartbeat"></i>
                     </div>
-                    <h4>Smart Notifications</h4>
-                    <p>Stay updated with automated alerts and reminders</p>
+                    <h4>PPAN Implementation</h4>
+                    <p>Aligned with Philippine Plan of Action for Nutrition for evidence-based interventions</p>
                 </div>
             </div>
         </div>
@@ -284,10 +283,10 @@
     <section class="cta-section">
         <div class="section-container">
             <div class="cta-content">
-                <h2>Ready to Transform Your Healthcare Practice?</h2>
-                <p>Join thousands of healthcare professionals using our platform</p>
-                <a href="{{ route('register') }}" class="cta-button">
-                    Get Started Now
+                <h2>Are You a Healthcare Professional?</h2>
+                <p>Join San Pedro CHO staff in delivering better nutrition outcomes for our community</p>
+                <a href="{{ route('staff.login') }}" class="cta-button">
+                    Access Staff Portal
                     <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
@@ -297,17 +296,84 @@
     <!-- Footer -->
     <footer class="main-footer">
         <div class="footer-container">
-            <div class="footer-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>Nutrition System</span>
+            <div class="footer-grid">
+                <!-- About Section -->
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 60px; width: auto;">
+                    </div>
+                    <p class="footer-about">
+                        Smart Health and Recommender System for San Pedro City's Nutrition Program - Building a healthier, food-secure future for all San Pedrenses.
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-list">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#mission">Mission</a></li>
+                        <li><a href="#vision">Vision</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="{{ route('register') }}">Register</a></li>
+                    </ul>
+                </div>
+
+                <!-- Services -->
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">Nutrition Monitoring</a></li>
+                        <li><a href="#">Patient Assessment</a></li>
+                        <li><a href="#">Meal Planning</a></li>
+                        <li><a href="#">Food Inventory</a></li>
+                        <li><a href="#">Health Analytics</a></li>
+                        <li><a href="{{ route('staff.login') }}">Staff Portal</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="footer-section">
+                    <h4>Contact Us</h4>
+                    <ul class="footer-contact">
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>San Pedro City Health Office<br>Laguna, Philippines</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <span>(049) 123-4567</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>nutrition@sanpedro.gov.ph</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            <span>Mon - Fri: 8:00 AM - 5:00 PM</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div class="footer-links">
-                <a href="{{ route('staff.login') }}" class="footer-staff-link">
-                    <i class="fas fa-user-shield"></i>
-                    Staff Portal
-                </a>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 San Pedro City Health Office - Nutrition Program. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy Policy</a>
+                    <span>|</span>
+                    <a href="#">Terms of Service</a>
+                    <span>|</span>
+                    <a href="{{ route('contact.admin') }}">Contact Admin</a>
+                </div>
             </div>
-            <p class="footer-text">© 2025 Nutrition Management System. All rights reserved.</p>
         </div>
     </footer>
 
@@ -387,15 +453,6 @@
             if (featuresSection) {
                 featureBoxObserver.observe(featuresSection);
             }
-
-            // Parallax effect for hero section
-            window.addEventListener('scroll', function() {
-                const scrolled = window.pageYOffset;
-                const parallax = document.querySelector('.hero-decoration');
-                if (parallax) {
-                    parallax.style.transform = `translateY(${scrolled * 0.5}px)`;
-                }
-            });
 
             // Add ripple effect to buttons
             const buttons = document.querySelectorAll('.btn-primary, .cta-button, .learn-more-btn');

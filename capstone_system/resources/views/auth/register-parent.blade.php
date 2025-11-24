@@ -15,8 +15,7 @@
     <nav class="main-nav">
         <div class="nav-container">
             <div class="nav-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>SHARES</span>
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 45px; width: auto;">
             </div>
             <div class="nav-links">
                 <a href="{{ route('login') }}">Already have an account? Sign In</a>
@@ -480,8 +479,7 @@
     <footer class="main-footer">
         <div class="footer-container">
             <div class="footer-logo">
-                <i class="fas fa-heartbeat"></i>
-                <span>Nutrition System</span>
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 60px; width: auto;">
             </div>
             <div class="footer-links">
                 <a href="{{ route('staff.login') }}" class="footer-staff-link">

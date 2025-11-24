@@ -3,27 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Account - BMI Malnutrition Monitoring System</title>
+    <title>Verify Your Account - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <!-- Preload fonts for better performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/auth/verification-gate.css') }}">
 </head>
 <body>
     <!-- Display Success Messages -->
     @if(session('success'))
         <div class="alert alert-success alert-floating">
+            <i class="fas fa-check-circle"></i>
             {{ session('success') }}
         </div>
     @endif
@@ -32,126 +24,121 @@
     @if($errors->any())
         <div class="alert alert-danger alert-floating">
             @foreach($errors->all() as $error)
-                <p class="mb-0">{{ $error }}</p>
+                <p class="mb-0"><i class="fas fa-exclamation-circle"></i> {{ $error }}</p>
             @endforeach
         </div>
     @endif
     
-    <!-- Display Session Messages -->
     @if(session('message'))
         <div class="alert alert-info alert-floating">
+            <i class="fas fa-info-circle"></i>
             {{ session('message') }}
         </div>
     @endif
     
     @if(session('error'))
         <div class="alert alert-danger alert-floating">
+            <i class="fas fa-exclamation-circle"></i>
             {{ session('error') }}
         </div>
     @endif
-<div class="verification-wrapper">
-    <div class="verification-gate-card">
-            <div class="card-header text-center">
-                <div class="lock-icon">
-                    <i class="fas fa-lock" style="color: #dc3545;"></i>
-                </div>
-                <h3 class="mt-3 text-danger">Account Verification Required</h3>
+
+    <!-- Navigation Header -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 45px; width: auto;">
             </div>
-            <div class="card-body">
-                <div class="content-container">
-                    <!-- Left Side: User Info & Actions -->
-                    <div class="left-side">
-                        <!-- User info -->
-                        <div class="user-info">
-                            <h5 class="text-success">Welcome, {{ $user->first_name }}!</h5>
-                            <p class="text-muted">
-                                <i class="fas fa-envelope"></i>
-                                Registered email: <strong>{{ $user->email }}</strong>
-                            </p>
+            <div class="nav-links">
+                <a href="{{ route('login') }}">Parent Portal</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text" style="display: flex; align-items: center; justify-content: center;">
+                <div class="verification-gate-wrapper">
+                    <div class="verification-gate-card">
+                        <div class="lock-icon-large">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        
+                        <h2>Account Verification Required</h2>
+                        <p class="subtitle">Please verify your email to continue</p>
+
+                        <div class="user-info-box">
+                            <h5>Welcome, {{ $user->first_name }}!</h5>
+                            <p><i class="fas fa-envelope" style="color: #28a745; margin-right: 0.5rem;"></i><strong>Registered email:</strong></p>
+                            <p style="margin-left: 1.5rem; color: #1f2937; font-weight: 600;">{{ $user->email }}</p>
                         </div>
 
-                        <!-- Verification requirement notice -->
-                        <div class="verification-notice">
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>Account Access Restricted</strong>
-                                <p>You must verify your email address before accessing your dashboard. This security measure protects your account and ensures you receive important notifications.</p>
+                        <div class="alert-box">
+                            <p><i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i><strong>Access Restricted</strong></p>
+                            <p>You must verify your email address before accessing your dashboard. This security measure protects your account and ensures you receive important notifications.</p>
+                        </div>
+
+                        <div class="verification-steps">
+                            <h6><i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>How to Verify Your Account</h6>
+                            <div class="step-item">
+                                <div class="step-icon">1</div>
+                                <div class="step-content">
+                                    <h6>Check Your Email</h6>
+                                    <p>Look for our verification email in your inbox</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-icon">2</div>
+                                <div class="step-content">
+                                    <h6>Click the Link</h6>
+                                    <p>Click the verification link in the email</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-icon">3</div>
+                                <div class="step-content">
+                                    <h6>Access Granted</h6>
+                                    <p>Login again to access your dashboard</p>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Action buttons -->
                         <div class="action-buttons">
-                            <form method="POST" action="{{ route('resend.logout') }}">
+                            <form method="POST" action="{{ route('resend.logout') }}" style="margin: 0;">
                                 @csrf
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-paper-plane"></i> 
-                                    Resend Verification Email & Logout
+                                <button type="submit" class="btn-resend" style="width: 100%;">
+                                    <i class="fas fa-paper-plane"></i> Resend Verification Email & Logout
                                 </button>
                             </form>
-                            
-                            <form method="POST" action="{{ route('logout') }}">
+                            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
                                 @csrf
-                                <button type="submit" class="btn btn-outline-secondary">
-                                    <i class="fas fa-sign-out-alt"></i> 
-                                    Logout Without Resending
+                                <button type="submit" class="btn-logout" style="width: 100%;">
+                                    <i class="fas fa-sign-out-alt"></i> Logout Without Resending
                                 </button>
                             </form>
-                        </div>
-                    </div>
-
-                    <!-- Right Side: Instructions -->
-                    <div class="right-side">
-                        <div class="instructions">
-                            <h6 class="text-success">
-                                <i class="fas fa-check-circle"></i> How to Verify Your Account
-                            </h6>
-                            
-                            <div class="steps">
-                                <div class="step">
-                                    <div class="step-icon">
-                                        <i class="fas fa-envelope-open-text text-primary"></i>
-                                    </div>
-                                    <div class="step-content">
-                                        <h6>1. Check Email</h6>
-                                        <p>Look for our verification email in your inbox</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="step">
-                                    <div class="step-icon">
-                                        <i class="fas fa-mouse-pointer text-info"></i>
-                                    </div>
-                                    <div class="step-content">
-                                        <h6>2. Click Link</h6>
-                                        <p>Click the verification link in the email</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="step">
-                                    <div class="step-icon">
-                                        <i class="fas fa-unlock text-success"></i>
-                                    </div>
-                                    <div class="step-content">
-                                        <h6>3. Access Granted</h6>
-                                        <p>Login again to access your dashboard</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="help-text">
-                                <p>
-                                    <i class="fas fa-question-circle"></i>
-                                    <strong>Didn't receive the email?</strong><br>
-                                    Check your spam folder or click "Resend" above. If you continue having issues, please contact our support team.
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
-    </div>
-</div>
+            </div>
+        </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ asset('js/auth/verification-gate.js') }}"></script>
+        <!-- Decorative Background -->
+        <div class="hero-decoration">
+            <div class="particle-network"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 60px; width: auto;">
+            </div>
+            <p class="footer-text">© 2025 San Pedro City Health Office - Nutrition Program. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="{{ asset('js/auth/verification-gate.js') }}"></script>
 </body>
 </html>
