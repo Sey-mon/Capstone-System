@@ -304,9 +304,9 @@
                                placeholder="Create a strong password (minimum 8 characters)" 
                                value="{{ old('password') }}"
                                required>
-                        <button type="button" class="password-visibility-toggle" data-target="password">
-                            <span class="show-text">👁️</span>
-                            <span class="hide-text" style="display: none;">�</span>
+                        <button type="button" class="password-visibility-toggle" data-target="password" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye show-icon"></i>
+                            <i class="fas fa-eye-slash hide-icon" style="display: none;"></i>
                         </button>
                     </div>
                     <div class="password-strength-info">
@@ -331,9 +331,9 @@
                                placeholder="Confirm your password" 
                                value="{{ old('password_confirmation') }}"
                                required>
-                        <button type="button" class="password-visibility-toggle" data-target="password_confirmation">
-                            <span class="show-text">👁️</span>
-                            <span class="hide-text" style="display: none;">🙈</span>
+                        <button type="button" class="password-visibility-toggle" data-target="password_confirmation" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye show-icon"></i>
+                            <i class="fas fa-eye-slash hide-icon" style="display: none;"></i>
                         </button>
                     </div>
                 </div>
@@ -449,16 +449,20 @@
                 </div>
 
                 <div class="terms-section">
+                    <div class="terms-view-notice" id="termsNotice">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Please click to read: <a href="{{ route('terms') }}" target="_blank" id="termsLink" class="terms-link">Terms and Conditions</a> and <a href="{{ route('privacy') }}" target="_blank" id="privacyLink" class="terms-link">Privacy Policy</a> before proceeding.</p>
+                    </div>
                     <label class="checkbox-label">
-                        <input type="checkbox" name="terms" id="terms" required>
-                        I agree to the <a href="{{ route('terms') }}" target="_blank">Terms and Conditions</a> and <a href="{{ route('privacy') }}" target="_blank">Privacy Policy</a>
+                        <input type="checkbox" name="terms" id="terms" required disabled>
+                        <span>I have read and agree to the <a href="{{ route('terms') }}" target="_blank" class="inline-link">Terms and Conditions</a> and <a href="{{ route('privacy') }}" target="_blank" class="inline-link">Privacy Policy</a></span>
                     </label>
                 </div>
                 
                 <!-- Step 4 Navigation -->
                 <div class="wizard-navigation">
                     <button type="button" class="btn secondary prev-step">Previous</button>
-                    <button type="submit" class="btn primary next-step">Complete Registration</button>
+                    <button type="submit" class="btn primary next-step" id="submitBtn" disabled>Complete Registration</button>
                 </div>
             </div>
         </form>

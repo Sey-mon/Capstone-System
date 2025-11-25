@@ -92,11 +92,11 @@ return [
             'icon' => 'fas fa-database',
             'text' => 'Food Database',
         ],
-        [
-            'route' => 'nutritionist.food-requests.index',
-            'icon' => 'fas fa-clipboard-list',
-            'text' => 'My Food Requests',
-        ],
+        // [
+        //     'route' => 'nutritionist.food-requests.index',
+        //     'icon' => 'fas fa-clipboard-list',
+        //     'text' => 'My Food Requests',
+        // ],
     ],
     
     'parent' => [
