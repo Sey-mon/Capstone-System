@@ -1,11 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Parent registration wizard loaded successfully!");
-    
     // Wizard State Management
     let currentStep = 1;
     const totalSteps = 4;
     let isTransitioning = false;
-    let formData = {};
     
     // Debounce function for performance optimization
     const debounce = (func, wait) => {
@@ -35,6 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
             setupFormValidation();
             setupProgressAnimation();
             setupAccessibility();
+            setupPasswordToggle();
             
                         // Initialize first step
             setTimeout(() => {
@@ -44,7 +42,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }, 500);
             
         } catch (error) {
-            console.error('Error initializing wizard:', error);
             showAlert('Failed to initialize registration form. Please refresh the page.', 'error');
         }
     }
@@ -52,11 +49,14 @@ document.addEventListener("DOMContentLoaded", function () {
     function setupNavigationButtons() {
         // Next buttons
         const nextButtons = document.querySelectorAll('.next-step');
-        nextButtons.forEach(button => {
+        
+        nextButtons.forEach((button, index) => {
             button.addEventListener('click', debounce(function(e) {
                 e.preventDefault();
                 
-                if (isTransitioning) return;
+                if (isTransitioning) {
+                    return;
+                }
                 
                 if (button.type === 'submit') {
                     return; // Let the form submit naturally
@@ -75,7 +75,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             nextStep();
                         }
                     } catch (error) {
-                        console.error('Error during validation:', error);
                         showAlert('An error occurred during validation. Please try again.', 'error');
                     } finally {
                         // Reset button state
@@ -270,14 +269,19 @@ document.addEventListener("DOMContentLoaded", function () {
     
     function validateCurrentStep() {
         const currentStepElement = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
-        if (!currentStepElement) return false;
+        if (!currentStepElement) {
+            return false;
+        }
         
         const requiredFields = currentStepElement.querySelectorAll('input[required], select[required], textarea[required]');
         let isValid = true;
         let firstInvalidField = null;
         
         requiredFields.forEach(field => {
-            if (!field.value.trim()) {
+            const fieldValue = field.value;
+            const isEmpty = !fieldValue || (typeof fieldValue === 'string' && fieldValue.trim() === '');
+            
+            if (isEmpty) {
                 field.style.borderColor = '#dc3545';
                 isValid = false;
                 if (!firstInvalidField) {
@@ -311,15 +315,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 try {
                     firstInvalidField.focus();
                 } catch (e) {
-                    console.warn('Could not focus on invalid field:', e);
+                    // Could not focus on invalid field
                 }
             }
             if (currentStep !== 2) { // Don't show generic message if we already showed password-specific message
-                try {
-                    showAlert('Please fill in all required fields.', 'error');
-                } catch (e) {
-                    console.error('Error showing alert:', e);
-                }
+                showAlert('Please fill in all required fields.', 'error');
             }
         }
         
@@ -350,7 +350,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const targetStep = document.querySelector(`.wizard-step[data-step="${stepNumber}"]`);
         
         if (!targetStep) {
-            console.error(`Step ${stepNumber} not found`);
             isTransitioning = false;
             return;
         }
@@ -410,8 +409,6 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Announce to screen readers
         announceStepChange(stepNumber);
-        
-        console.log(`Showing step ${stepNumber}`);
     }
     
     function updateProgressIndicator(stepNumber) {
@@ -491,8 +488,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Creating Account...';
                 
-                console.log('Form submitted successfully');
-                
                 // Re-enable button after 10 seconds as fallback
                 setTimeout(() => {
                     submitBtn.disabled = false;
@@ -570,11 +565,11 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     }, 300);
                 } catch (e) {
-                    console.warn('Error removing existing alert:', e);
+                    // Error removing existing alert
                 }
             });
         } catch (e) {
-            console.error('Error in showAlert cleanup:', e);
+            // Error in showAlert cleanup
         }
         
         try {
@@ -594,10 +589,15 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
             
             // Insert at top of container
-            const container = document.querySelector('.register-container');
+            const container = document.querySelector('.wizard-container');
             
             if (!container) {
-                console.error('Container not found, falling back to console message:', message);
+                // Try to find the login-card as fallback
+                const fallbackContainer = document.querySelector('.login-card');
+                if (fallbackContainer) {
+                    fallbackContainer.insertAdjacentElement('afterbegin', alert);
+                    return;
+                }
                 return;
             }
             
@@ -651,15 +651,16 @@ document.addEventListener("DOMContentLoaded", function () {
             }, 8000);
             
         } catch (e) {
-            console.error('Error showing alert:', e);
-            // Fallback to console if alert fails
-            console.log(`Alert (${type}): ${message}`);
+            // Error showing alert
         }
     }
     
     // Loading state functions
     function showLoadingState() {
-        const container = document.querySelector('.register-container');
+        const container = document.querySelector('.wizard-container') || document.querySelector('.login-card');
+        if (!container) {
+            return;
+        }
         const loader = document.createElement('div');
         loader.className = 'wizard-loader';
         loader.innerHTML = `
@@ -707,420 +708,132 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(() => announcement.remove(), 1000);
     }
     
-    // Real-time field validation with debouncing
-    function setupRealTimeValidation() {
-        const validateField = debounce((field) => {
-            const value = field.value.trim();
-            const fieldName = field.name;
-            let isValid = true;
-            let message = '';
-            
-            // Field-specific validation
-            switch (fieldName) {
-                case 'email':
-                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    isValid = emailPattern.test(value);
-                    message = isValid ? '' : 'Please enter a valid email address';
-                    break;
-                case 'contact_number':
-                    // Remove all non-digits for validation
-                    const cleanPhone = value.replace(/\D/g, '');
-                    const phonePattern = /^09\d{9}$/;
-                    isValid = phonePattern.test(cleanPhone) && cleanPhone.length === 11;
-                    message = isValid ? '' : 'Please enter a valid 11-digit Philippine mobile number (09XXXXXXXXX)';
-                    break;
-                case 'password':
-                    isValid = value.length >= 8;
-                    message = isValid ? '' : 'Password must be at least 8 characters long';
-                    break;
-            }
-            
-            // Update field styling and message
-            updateFieldValidation(field, isValid, message);
-        }, 500);
-        
-        // Attach to all form fields
-        const formFields = document.querySelectorAll('#parentRegistrationForm input, #parentRegistrationForm select, #parentRegistrationForm textarea');
-        formFields.forEach(field => {
-            if (field.type !== 'hidden' && !field.id.startsWith('hidden_')) {
-                field.addEventListener('input', () => validateField(field));
-                field.addEventListener('blur', () => validateField(field));
-            }
-        });
-    }
-    
-    function updateFieldValidation(field, isValid, message) {
-        // Remove existing validation styling
-        field.classList.remove('field-valid', 'field-invalid');
-        
-        // Add appropriate styling
-        if (field.value.trim()) {
-            field.classList.add(isValid ? 'field-valid' : 'field-invalid');
-        }
-        
-        // Update or create validation message
-        let messageElement = field.parentElement.querySelector('.validation-message');
-        if (!messageElement) {
-            messageElement = document.createElement('div');
-            messageElement.className = 'validation-message';
-            field.parentElement.appendChild(messageElement);
-        }
-        
-        messageElement.textContent = message;
-        messageElement.className = `validation-message ${isValid ? 'valid' : 'invalid'}`;
-    }
-    
-    // Input formatting functions
-    function setupInputFormatting() {
-        // Phone number validation (no auto-formatting, just validation)
-        const phoneInput = document.getElementById('contact_number');
-        if (phoneInput) {
-            phoneInput.addEventListener('input', function(e) {
-                // Only allow numbers
-                let value = e.target.value.replace(/\D/g, '');
-                
-                // Limit to 11 digits maximum
-                if (value.length > 11) {
-                    value = value.slice(0, 11);
-                }
-                
-                e.target.value = value;
-                
-                // Simple validation feedback
-                const isValid = value.length === 11 && value.startsWith('09');
-                if (value.length > 0) {
-                    if (isValid) {
-                        e.target.classList.add('field-valid');
-                        e.target.classList.remove('field-invalid');
-                    } else {
-                        e.target.classList.add('field-invalid');
-                        e.target.classList.remove('field-valid');
-                    }
-                } else {
-                    e.target.classList.remove('field-valid', 'field-invalid');
-                }
-            });
-            
-            phoneInput.addEventListener('blur', function(e) {
-                const value = e.target.value;
-                if (value.length > 0 && (value.length !== 11 || !value.startsWith('09'))) {
-                    // Show validation message
-                    let messageElement = e.target.parentElement.querySelector('.validation-message');
-                    if (!messageElement) {
-                        messageElement = document.createElement('div');
-                        messageElement.className = 'validation-message invalid';
-                        e.target.parentElement.appendChild(messageElement);
-                    }
-                    messageElement.textContent = 'Please enter a valid 11-digit Philippine mobile number starting with 09';
-                } else {
-                    // Remove validation message
-                    const messageElement = e.target.parentElement.querySelector('.validation-message');
-                    if (messageElement) {
-                        messageElement.remove();
-                    }
-                }
-            });
-        }
-        
-        // Name fields - capitalize first letter
-        const nameFields = ['first_name', 'last_name', 'child_first_name', 'child_last_name'];
-        nameFields.forEach(fieldName => {
-            const field = document.getElementById(fieldName);
-            if (field) {
-                field.addEventListener('input', function(e) {
-                    let value = e.target.value;
-                    // Remove numbers and special characters
-                    value = value.replace(/[^a-zA-Z\s]/g, '');
-                    // Capitalize first letter of each word
-                    value = value.replace(/\b\w/g, letter => letter.toUpperCase());
-                    e.target.value = value;
-                });
-            }
-        });
-    }
-    
-    // Enhanced password strength checking
-    function enhancedPasswordValidation() {
-        const passwordField = document.getElementById('password');
-        const confirmField = document.getElementById('password_confirmation');
-        
-        if (!passwordField) return;
-        
-        passwordField.addEventListener('input', debounce(function() {
-            const password = this.value;
-            const strength = calculatePasswordStrength(password);
-            updatePasswordStrengthUI(strength);
-            
-            // Check confirmation match if confirm field has value
-            if (confirmField && confirmField.value) {
-                checkPasswordMatch();
-            }
-        }, 300));
-        
-        if (confirmField) {
-            confirmField.addEventListener('input', debounce(checkPasswordMatch, 300));
-        }
-    }
-    
-    function calculatePasswordStrength(password) {
-        // Handle undefined or null password
-        if (!password || typeof password !== 'string') {
-            return {
-                requirements: {
-                    length: false,
-                    uppercase: false,
-                    lowercase: false,
-                    number: false,
-                    special: false
-                },
-                score: 0,
-                level: 'weak'
-            };
-        }
-        
-        const requirements = {
-            length: password.length >= 8,
-            uppercase: /[A-Z]/.test(password),
-            lowercase: /[a-z]/.test(password),
-            number: /[0-9]/.test(password),
-            special: /[@$!%*?&#]/.test(password)
-        };
-        
-        const score = Object.values(requirements).filter(Boolean).length;
-        const strength = {
-            requirements,
-            score,
-            level: score <= 2 ? 'weak' : score <= 3 ? 'medium' : score <= 4 ? 'strong' : 'excellent'
-        };
-        
-        return strength;
-    }
-    
-    function updatePasswordStrengthUI(strength) {
-        // Update requirement indicators
-        Object.keys(strength.requirements).forEach(req => {
-            const element = document.querySelector(`[data-requirement="${req}"]`);
-            if (element) {
-                element.classList.toggle('met', strength.requirements[req]);
-            }
-        });
-        
-        // Update strength indicator
-        let strengthIndicator = document.querySelector('.password-strength-indicator');
-        if (!strengthIndicator) {
-            strengthIndicator = document.createElement('div');
-            strengthIndicator.className = 'password-strength-indicator';
-            const passwordField = document.getElementById('password');
-            passwordField.parentElement.appendChild(strengthIndicator);
-        }
-        
-        strengthIndicator.className = `password-strength-indicator strength-${strength.level}`;
-        strengthIndicator.textContent = `Password strength: ${strength.level.charAt(0).toUpperCase() + strength.level.slice(1)}`;
-    }
-    
-    function checkPasswordMatch() {
-        const passwordField = document.getElementById('password');
-        const confirmField = document.getElementById('password_confirmation');
-        
-        if (!passwordField || !confirmField) return;
-        
-        const password = passwordField.value;
-        const confirm = confirmField.value;
-        
-        if (!confirm) return;
-        
-        const matches = password === confirm;
-        
-        // Update confirm field styling
-        confirmField.classList.toggle('field-valid', matches);
-        confirmField.classList.toggle('field-invalid', !matches);
-        
-        // Update or create match indicator
-        let matchIndicator = confirmField.parentElement.querySelector('.password-match-indicator');
-        if (!matchIndicator) {
-            matchIndicator = document.createElement('div');
-            matchIndicator.className = 'password-match-indicator';
-            confirmField.parentElement.appendChild(matchIndicator);
-        }
-        
-        matchIndicator.className = `password-match-indicator ${matches ? 'match' : 'no-match'}`;
-        matchIndicator.textContent = matches ? '✓ Passwords match' : '✗ Passwords do not match';
-    }
-    
-    // Additional functionality from Blade template
-    function setupCSRFTokenRefresh() {
-        window.refreshCSRFToken = function() {
-            fetch('/csrf-token', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.csrf_token) {
-                    // Update the CSRF token in the form
-                    const csrfInput = document.querySelector('input[name="_token"]');
-                    if (csrfInput) {
-                        csrfInput.value = data.csrf_token;
-                    }
-                    // Update meta tag
-                    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                    if (csrfMeta) {
-                        csrfMeta.content = data.csrf_token;
-                    }
-                    console.log('CSRF token refreshed');
-                }
-            })
-            .catch(error => {
-                console.error('Failed to refresh CSRF token:', error);
-            });
-        };
-    }
-
-    function setupFormDebugLogging() {
-        const form = document.getElementById('parentRegistrationForm');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                console.log('Form submission intercepted');
-                console.log('Form action:', this.action);
-                console.log('Form method:', this.method);
-                
-                // Verify CSRF token is present
-                const csrfToken = document.querySelector('input[name="_token"]');
-                console.log('CSRF token validation:', csrfToken ? 'OK' : 'Missing');
-                
-                // Check required fields
-                const requiredFields = ['first_name', 'last_name', 'email', 'password'];
-                const missingFields = [];
-                
-                requiredFields.forEach(field => {
-                    const input = document.querySelector(`input[name="${field}"]`);
-                    if (!input || !input.value.trim()) {
-                        missingFields.push(field);
-                    }
-                });
-                
-                if (missingFields.length > 0) {
-                    console.error('Missing required fields:', missingFields);
-                }
-                
-                // Form data validation completed successfully
-                console.log('Form submission proceeding...');
-            });
-        }
-    }
-
-    function setupPasswordVisibilityToggle() {
-        const passwordToggles = document.querySelectorAll('.password-visibility-toggle');
-        passwordToggles.forEach(toggle => {
-            toggle.addEventListener('click', function(e) {
+    // Password visibility toggle
+    function setupPasswordToggle() {
+        const toggleButtons = document.querySelectorAll('.password-visibility-toggle');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
                 const targetId = this.getAttribute('data-target');
-                const targetField = document.getElementById(targetId);
-                const showText = this.querySelector('.show-text');
-                const hideText = this.querySelector('.hide-text');
+                const passwordField = document.getElementById(targetId);
                 
-                if (targetField && showText && hideText) {
-                    if (targetField.type === 'password') {
-                        targetField.type = 'text';
-                        showText.style.display = 'none';
-                        hideText.style.display = 'block';
-                    } else {
-                        targetField.type = 'password';
-                        showText.style.display = 'block';
-                        hideText.style.display = 'none';
-                    }
+                if (!passwordField) return;
+                
+                const showIcon = this.querySelector('.show-icon');
+                const hideIcon = this.querySelector('.hide-icon');
+                
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    showIcon.style.display = 'none';
+                    hideIcon.style.display = 'inline';
+                } else {
+                    passwordField.type = 'password';
+                    showIcon.style.display = 'inline';
+                    hideIcon.style.display = 'none';
                 }
             });
         });
     }
-
-    function setupCustomContactNumberValidation() {
-        const contactNumberField = document.getElementById('contact_number');
-        if (contactNumberField) {
-            // Simple validation without auto-formatting
-            function validateContactNumber(value) {
-                const pattern = /^09[0-9]{9}$/;
-                return pattern.test(value);
-            }
-            
-            contactNumberField.addEventListener('input', function(e) {
-                // Only allow digits, no auto-formatting
-                let value = e.target.value.replace(/\D/g, '');
-                
-                // Limit to 11 digits
-                if (value.length > 11) {
-                    value = value.substring(0, 11);
-                }
-                
-                e.target.value = value;
-                
-                // Visual feedback only
-                if (value.length === 11 && validateContactNumber(value)) {
-                    e.target.classList.add('field-valid');
-                    e.target.classList.remove('field-invalid');
-                    e.target.setCustomValidity('');
-                } else if (value.length > 0) {
-                    e.target.classList.add('field-invalid');
-                    e.target.classList.remove('field-valid');
-                    if (value.length < 11) {
-                        e.target.setCustomValidity('Contact number must be 11 digits long.');
-                    } else if (!value.startsWith('09')) {
-                        e.target.setCustomValidity('Mobile number must start with 09.');
-                    }
-                } else {
-                    e.target.classList.remove('field-valid', 'field-invalid');
-                    e.target.setCustomValidity('');
-                }
+    
+    // Terms and Privacy link tracking
+    function setupTermsAndPrivacy() {
+        let termsViewed = false;
+        let privacyViewed = false;
+        
+        const termsCheckbox = document.getElementById('terms');
+        const termsNotice = document.getElementById('termsNotice');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // Check if elements exist
+        if (!termsCheckbox || !submitBtn) {
+            return;
+        }
+        
+        // Get all Terms and Privacy links (including ones in checkbox label)
+        const allTermsLinks = document.querySelectorAll('a[href*="terms"]');
+        const allPrivacyLinks = document.querySelectorAll('a[href*="privacy"]');
+        
+        // Track when any Terms link is clicked
+        allTermsLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Don't prevent default - let link open
+                termsViewed = true;
+                setTimeout(() => {
+                    checkAndEnableCheckbox();
+                }, 300);
             });
-
-            contactNumberField.addEventListener('blur', function() {
-                const value = this.value;
-                if (value.length === 11 && validateContactNumber(value)) {
-                    this.classList.add('field-valid');
-                    this.classList.remove('field-invalid');
-                    this.setCustomValidity('');
-                } else if (value.length > 0) {
-                    this.classList.add('field-invalid');
-                    this.classList.remove('field-valid');
-                    if (value.length < 11) {
-                        this.setCustomValidity('Contact number must be 11 digits long.');
-                    } else {
-                        this.setCustomValidity('Please enter a valid Philippine mobile number starting with 09.');
-                    }
+        });
+        
+        // Track when any Privacy link is clicked
+        allPrivacyLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Don't prevent default - let link open
+                privacyViewed = true;
+                setTimeout(() => {
+                    checkAndEnableCheckbox();
+                }, 300);
+            });
+        });
+        
+        // Enable checkbox only after both links are clicked
+        function checkAndEnableCheckbox() {
+            if (termsViewed && privacyViewed && termsCheckbox) {
+                termsCheckbox.disabled = false;
+                if (termsNotice) {
+                    termsNotice.style.display = 'none';
+                }
+            }
+        }
+        
+        // Enable submit button only when checkbox is checked
+        function checkSubmitButton() {
+            if (submitBtn && termsCheckbox) {
+                if (termsCheckbox.checked) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.cursor = 'pointer';
+                } else {
+                    submitBtn.disabled = true;
+                    submitBtn.style.cursor = 'not-allowed';
+                }
+            }
+        }
+        
+        // Ensure checkbox value syncs to hidden field and enables submit button
+        if (termsCheckbox) {
+            termsCheckbox.addEventListener('change', function() {
+                const hiddenTerms = document.getElementById('hidden_terms');
+                if (hiddenTerms) {
+                    hiddenTerms.value = this.checked ? '1' : '0';
+                }
+                checkSubmitButton();
+            });
+            
+            // Initial check on page load
+            checkSubmitButton();
+        }
+        
+        // Prevent form submission if checkbox is not checked
+        const form = document.getElementById('parentRegistrationForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!termsCheckbox.checked) {
+                    e.preventDefault();
+                    showAlert('Please check the Terms and Conditions checkbox to continue.', 'error');
+                    return false;
+                }
+                if (!termsViewed || !privacyViewed) {
+                    e.preventDefault();
+                    showAlert('Please read both the Terms and Conditions and Privacy Policy before continuing.', 'error');
+                    return false;
                 }
             });
         }
     }
-
-    function setupEnhancedDateInputStyling() {
-        const dateInputs = document.querySelectorAll('input[type="date"]');
-        dateInputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.style.borderColor = '#66bb6a';
-            });
-            
-            input.addEventListener('blur', function() {
-                if (!this.value) {
-                    this.style.borderColor = '#e2e8f0';
-                }
-            });
-        });
-    }
-
-    // Initialize all enhancements including new functions
+    
+    // Initialize terms and privacy with a small delay to ensure DOM is ready
     setTimeout(() => {
-        setupRealTimeValidation();
-        setupInputFormatting();
-        enhancedPasswordValidation();
-        setupCSRFTokenRefresh();
-        setupFormDebugLogging();
-        setupPasswordVisibilityToggle();
-        setupCustomContactNumberValidation();
-        setupEnhancedDateInputStyling();
-    }, 1000);
+        setupTermsAndPrivacy();
+    }, 500);
 });
