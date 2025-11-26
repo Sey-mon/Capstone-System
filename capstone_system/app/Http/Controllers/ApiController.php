@@ -289,23 +289,37 @@ class ApiController extends Controller
             ->firstOrFail();
 
         try {
+            // Get LLM API URL from config (proper Laravel way)
+            $llmApiUrl = config('services.nutrition_api.base_url');
+            
+            if (empty($llmApiUrl)) {
+                Log::error('LLM API URL is not configured', [
+                    'config_value' => $llmApiUrl,
+                    'env_value' => env('LLM_API_URL')
+                ]);
+                return back()->withErrors(['api_error' => 'Meal plan service is not configured. Please contact administrator.']);
+            }
+            
             // Prepare the data exactly as your FastAPI expects
             $requestData = [
                 'patient_id' => (int) $validated['patient_id'],
                 'available_foods' => $validated['available_foods'] // Keep as string, not array
             ];
 
+            $fullUrl = rtrim($llmApiUrl, '/') . '/generate_meal_plan';
+
             Log::info('Sending request to LLM API', [
-                'url' => env('LLM_API_URL') . '/generate_meal_plan',
-                'data' => $requestData
+                'url' => $fullUrl,
+                'data' => $requestData,
+                'config_base_url' => $llmApiUrl
             ]);
 
-            $response = Http::timeout(30)
+            $response = Http::timeout(config('services.nutrition_api.timeout', 30))
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json'
                 ])
-                ->post(env('LLM_API_URL') . '/generate_meal_plan', $requestData);
+                ->post($fullUrl, $requestData);
 
             Log::info('LLM API Response', [
                 'status' => $response->status(),
@@ -338,9 +352,21 @@ class ApiController extends Controller
                 
                 return back()->withErrors(['api_error' => 'Failed to generate meal plan. API returned status: ' . $response->status()]);
             }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Meal Plan API Connection Error', [
+                'message' => $e->getMessage(),
+                'llm_api_url' => config('services.nutrition_api.base_url'),
+                'env_llm_url' => env('LLM_API_URL'),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->withErrors([
+                'api_error' => 'Unable to connect to meal plan service. Please ensure the API is running.'
+            ]);
         } catch (\Exception $e) {
             Log::error('Meal Plan Generation Error', [
                 'message' => $e->getMessage(),
+                'llm_api_url' => config('services.nutrition_api.base_url'),
                 'trace' => $e->getTraceAsString()
             ]);
             
@@ -661,16 +687,15 @@ class ApiController extends Controller
         $text = preg_replace('/([a-z])\s*(Regular na Obserbahan|Balanseng Pagkain)/i', '$1 $2', $text);
         
         // Filipino observation sections - h4 headings with spacing
-        $text = preg_replace('/REGULAR NA OBSERBAHAN:/i', '<br><br><h4 class="observation-heading">👀 Regular na Obserbahan</h4><div class="observation">', $text);
+        $text = preg_replace('/REGULAR NA OBSERBAHAN:/i', '<br><h4 class="observation-heading">👀 Regular na Obserbahan</h4><div class="observation">', $text);
         
         // Observation frequency headings - simplified patterns
-        $text = preg_replace('/\*\*Araw Araw\*\*\s*(\(MUST include this exact subheader\))?:/i', '<h4 class="observation-subheading">📅 Araw Araw</h4>', $text);
-        $text = preg_replace('/\*\*Araw-Araw\*\*\s*(\(MUST include this exact subheader\))?:/i', '<h4 class="observation-subheading">📅 Araw Araw</h4>', $text);
+        $text = preg_replace('/\*\*Araw-Araw\*\*\s*(\(MUST include this exact subheader\))?:/i', '<h4 class="observation-subheading">📅 Araw-Araw</h4>', $text);
         $text = preg_replace('/\*\*Bawat Linggo\*\*\s*(\(MUST include this exact subheader\))?:/i', '<h4 class="observation-subheading">📊 Bawat Linggo</h4>', $text);
         $text = preg_replace('/\*\*Bawat Buwan\*\*:/i', '<h4 class="observation-subheading">📅 Bawat Buwan</h4>', $text);
         // BALANSENG PAGKAIN section - h3 heading with spacing
-        $text = preg_replace('/BALANSENG PAGKAIN PARA SA BATA:/i', '<br><br><h3 class="balanced-food-heading">🍽️ BALANSENG PAGKAIN PARA SA BATA</h3>', $text);
-        $text = preg_replace('/###\\s*BALANSENG PAGKAIN PARA SA BATA/i', '<br><br><h3 class="balanced-food-heading">🍽️ BALANSENG PAGKAIN PARA SA BATA</h3>', $text);
+        $text = preg_replace('/BALANSENG PAGKAIN PARA SA BATA:/i', '<br><h3 class="balanced-food-heading">🍽️ BALANSENG PAGKAIN PARA SA BATA</h3>', $text);
+        $text = preg_replace('/###\\s*BALANSENG PAGKAIN PARA SA BATA/i', '<br><h3 class="balanced-food-heading">🍽️ BALANSENG PAGKAIN PARA SA BATA</h3>', $text);
         
         // Make "Bawat pagkain dapat may:" an h4 heading
         $text = preg_replace('/Bawat pagkain dapat may:/i', '<h4 class="balanced-food-subheading">Bawat pagkain dapat may:</h4>', $text);
@@ -678,9 +703,6 @@ class ApiController extends Controller
         // Warning sub-sections - h4 headings 
         $text = preg_replace('/KAILANGAN NG AGARANG ATENSYON:/i', '<h4 class="urgent-heading">🚨 Kailangan ng Agarang Atensyon</h4>', $text);
         $text = preg_replace('/MGA DAPAT PANSININ:/i', '<h4 class="notice-heading">👁️ Mga Dapat Pansinin</h4>', $text);
-        $text = preg_replace('/####\s*Mga Importante:/i', '<h4 class="important-heading">⚠️ Mga Importante</h4>', $text);
-        $text = preg_replace('/\*\*Mga Importante\*\*:/i', '<h4 class="important-heading">⚠️ Mga Importante</h4>', $text);
-        $text = preg_replace('/MGA IMPORTANTE:/i', '<h4 class="important-heading">⚠️ Mga Importante</h4>', $text);
         
         $text = nl2br($text); // Convert newlines to <br>
         

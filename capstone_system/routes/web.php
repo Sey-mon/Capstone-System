@@ -271,6 +271,7 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     Route::get('/patients/{id}', [NutritionistController::class, 'getPatient'])->name('patients.get');
     Route::put('/patients/{id}', [NutritionistController::class, 'updatePatient'])->name('patients.update');
     Route::delete('/patients/{id}', [NutritionistController::class, 'deletePatient'])->name('patients.delete');
+    Route::post('/patients/calculate-indicators', [NutritionistController::class, 'calculateNutritionalIndicators'])->name('patients.calculate-indicators');
 
     Route::get('/assessments', [NutritionistController::class, 'assessments'])->name('assessments');
     Route::get('/assessments/create', [NutritionistController::class, 'createAssessment'])->name('assessments.create');

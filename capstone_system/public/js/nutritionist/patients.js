@@ -381,6 +381,7 @@ function openAddPatientModal() {
             const form = Swal.getPopup().querySelector('#patientForm');
             if (form) {
                 form.addEventListener('submit', handlePatientFormSubmit);
+                attachNutritionalCalculators(form);
             }
         },
         preConfirm: () => {
@@ -482,6 +483,7 @@ function editPatient(patientId) {
                     const form = popup.querySelector('#patientForm');
                     if (form) {
                         form.addEventListener('submit', handlePatientFormSubmit);
+                        attachNutritionalCalculators(form);
                     }
                 },
                 preConfirm: () => {
@@ -782,6 +784,117 @@ function deletePatient(patientId) {
             });
         }
     });
+}
+
+// Auto-calculate nutritional indicators
+let calculationTimeout = null;
+
+function attachNutritionalCalculators(form) {
+    const weightInput = form.querySelector('#weight_kg');
+    const heightInput = form.querySelector('#height_cm');
+    const ageInput = form.querySelector('#age_months');
+    const sexInput = form.querySelector('#sex');
+    
+    const weightForAgeInput = form.querySelector('#weight_for_age');
+    const heightForAgeInput = form.querySelector('#height_for_age');
+    const bmiForAgeInput = form.querySelector('#bmi_for_age');
+
+    if (!weightInput || !heightInput || !ageInput || !sexInput) {
+        console.warn('Required inputs not found for nutritional calculation');
+        return;
+    }
+
+    function calculateIndicators() {
+        const weight = parseFloat(weightInput.value);
+        const height = parseFloat(heightInput.value);
+        const age = parseInt(ageInput.value);
+        const sex = sexInput.value;
+
+        // Validate all required fields have values
+        if (!weight || !height || !age || !sex) {
+            return;
+        }
+
+        // Validate ranges
+        if (age < 0 || age > 60 || weight <= 0 || height <= 0) {
+            return;
+        }
+
+        // Show loading state
+        if (weightForAgeInput) weightForAgeInput.value = 'Calculating...';
+        if (heightForAgeInput) heightForAgeInput.value = 'Calculating...';
+        if (bmiForAgeInput) bmiForAgeInput.value = 'Calculating...';
+
+        // Get CSRF token
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+        // Call API to calculate indicators
+        fetch('/nutritionist/patients/calculate-indicators', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                weight_kg: weight,
+                height_cm: height,
+                age_months: age,
+                sex: sex
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Nutritional indicators response:', data); // Debug log
+            
+            if (data.success && data.indicators) {
+                if (weightForAgeInput) weightForAgeInput.value = data.indicators.weight_for_age || '';
+                if (heightForAgeInput) heightForAgeInput.value = data.indicators.height_for_age || '';
+                if (bmiForAgeInput) bmiForAgeInput.value = data.indicators.bmi_for_age || '';
+                
+                // If still showing "Unknown", check debug data
+                if (data.debug) {
+                    console.log('Full API response structure:', data.debug);
+                }
+            } else {
+                // Clear on error
+                if (weightForAgeInput) weightForAgeInput.value = '';
+                if (heightForAgeInput) heightForAgeInput.value = '';
+                if (bmiForAgeInput) bmiForAgeInput.value = '';
+                console.warn('Failed to calculate indicators:', data.message);
+                
+                // Show user-friendly message if API is down
+                if (data.error) {
+                    console.error('API Error:', data.error);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error calculating indicators:', error);
+            // Clear on error
+            if (weightForAgeInput) weightForAgeInput.value = '';
+            if (heightForAgeInput) heightForAgeInput.value = '';
+            if (bmiForAgeInput) bmiForAgeInput.value = '';
+        });
+    }
+
+    function debounceCalculation() {
+        clearTimeout(calculationTimeout);
+        calculationTimeout = setTimeout(calculateIndicators, 800);
+    }
+
+    // Attach listeners to all relevant inputs
+    weightInput.addEventListener('input', debounceCalculation);
+    heightInput.addEventListener('input', debounceCalculation);
+    ageInput.addEventListener('input', debounceCalculation);
+    sexInput.addEventListener('change', debounceCalculation);
+
+    // If all fields are already filled (edit mode), calculate immediately
+    if (weightInput.value && heightInput.value && ageInput.value && sexInput.value) {
+        setTimeout(calculateIndicators, 500);
+    }
 }
 
 // Global functions

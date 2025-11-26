@@ -107,7 +107,7 @@
             <input type="hidden" id="hidden_child_first_name" name="child_first_name" value="{{ old('child_first_name') }}">
             <input type="hidden" id="hidden_child_last_name" name="child_last_name" value="{{ old('child_last_name') }}">
             <input type="hidden" id="hidden_child_age_months" name="child_age_months" value="{{ old('child_age_months') }}">
-            <input type="hidden" id="hidden_terms" name="terms" value="0">
+            <!-- Removed duplicate hidden terms field. The visible checkbox now submits the terms acceptance. -->
 
             <!-- Step 1: Personal Information -->
             <div class="wizard-step active" id="step-1" data-step="1">
@@ -231,13 +231,11 @@
                             <option value="Laram" {{ old('barangay') == 'Laram' ? 'selected' : '' }}>Laram</option>
                             <option value="Magsaysay" {{ old('barangay') == 'Magsaysay' ? 'selected' : '' }}>Magsaysay</option>
                             <option value="Maharlika" {{ old('barangay') == 'Maharlika' ? 'selected' : '' }}>Maharlika</option>
-                            <option value="Natividad" {{ old('barangay') == 'Natividad' ? 'selected' : '' }}>Natividad</option>
                             <option value="Nueva" {{ old('barangay') == 'Nueva' ? 'selected' : '' }}>Nueva</option>
                             <option value="Pacita I" {{ old('barangay') == 'Pacita I' ? 'selected' : '' }}>Pacita I</option>
                             <option value="Pacita II" {{ old('barangay') == 'Pacita II' ? 'selected' : '' }}>Pacita II</option>
                             <option value="Poblacion" {{ old('barangay') == 'Poblacion' ? 'selected' : '' }}>Poblacion</option>
                             <option value="Rosario" {{ old('barangay') == 'Rosario' ? 'selected' : '' }}>Rosario</option>
-                            <option value="Sampaguita Village" {{ old('barangay') == 'Sampaguita Village' ? 'selected' : '' }}>Sampaguita Village</option>
                             <option value="San Antonio" {{ old('barangay') == 'San Antonio' ? 'selected' : '' }}>San Antonio</option>
                             <option value="San Lorenzo Ruiz" {{ old('barangay') == 'San Lorenzo Ruiz' ? 'selected' : '' }}>San Lorenzo Ruiz</option>
                             <option value="San Roque" {{ old('barangay') == 'San Roque' ? 'selected' : '' }}>San Roque</option>
@@ -454,7 +452,7 @@
                         <p>Please click to read: <a href="{{ route('terms') }}" target="_blank" id="termsLink" class="terms-link">Terms and Conditions</a> and <a href="{{ route('privacy') }}" target="_blank" id="privacyLink" class="terms-link">Privacy Policy</a> before proceeding.</p>
                     </div>
                     <label class="checkbox-label">
-                        <input type="checkbox" name="terms" id="terms" required disabled>
+                        <input type="checkbox" name="terms" id="terms" value="1" required>
                         <span>I have read and agree to the <a href="{{ route('terms') }}" target="_blank" class="inline-link">Terms and Conditions</a> and <a href="{{ route('privacy') }}" target="_blank" class="inline-link">Privacy Policy</a></span>
                     </label>
                 </div>
@@ -634,6 +632,21 @@
                     }
                 });
             });
+
+            // Terms checkbox: enable submit button when checked
+            const termsCheckbox = document.getElementById('terms');
+            const submitBtn = document.getElementById('submitBtn');
+
+            function updateSubmitState() {
+                if (!submitBtn) return;
+                submitBtn.disabled = !(termsCheckbox && termsCheckbox.checked);
+            }
+
+            if (termsCheckbox) {
+                termsCheckbox.addEventListener('change', updateSubmitState);
+                // initialize state on load
+                updateSubmitState();
+            }
         });
     </script>
 </body>

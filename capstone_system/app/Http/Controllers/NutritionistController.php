@@ -209,6 +209,72 @@ class NutritionistController extends Controller
         
         return view('nutritionist.patients', compact('patients', 'barangays', 'parents', 'nutritionists'));
     }    /**
+     * Calculate nutritional indicators (Weight for Age, Height for Age, BMI for Age)
+     */
+    public function calculateNutritionalIndicators(Request $request)
+    {
+        $request->validate([
+            'age_months' => 'required|integer|min:0|max:60',
+            'weight_kg' => 'required|numeric|min:0',
+            'height_cm' => 'required|numeric|min:0',
+            'sex' => 'required|in:Male,Female,male,female',
+        ]);
+
+        try {
+            $malnutritionService = app(\App\Services\MalnutritionService::class);
+            
+            // Prepare child data for quick assessment
+            $childData = [
+                'age_months' => $request->age_months,
+                'weight_kg' => $request->weight_kg,
+                'height_cm' => $request->height_cm,
+                'gender' => strtolower($request->sex),
+            ];
+
+            // Perform quick malnutrition assessment to get indicators
+            $result = $malnutritionService->assessMalnutritionOnly($childData);
+            
+            // Log the full response for debugging
+            \Illuminate\Support\Facades\Log::info('API Response for nutritional indicators:', ['result' => $result]);
+            
+            // Try multiple possible response structures
+            $indicators = [
+                'weight_for_age' => $result['indicators']['weight_for_age']['status'] 
+                    ?? $result['weight_for_age']['status'] 
+                    ?? $result['weight_for_age'] 
+                    ?? $result['wfa_status']
+                    ?? 'Unknown',
+                'height_for_age' => $result['indicators']['height_for_age']['status'] 
+                    ?? $result['height_for_age']['status'] 
+                    ?? $result['height_for_age'] 
+                    ?? $result['lhfa_status']
+                    ?? $result['hfa_status']
+                    ?? 'Unknown',
+                'bmi_for_age' => $result['indicators']['bmi_for_age']['status'] 
+                    ?? $result['bmi_for_age']['status'] 
+                    ?? $result['bmi_for_age'] 
+                    ?? $result['bmifa_status']
+                    ?? 'Unknown',
+            ];
+
+            return response()->json([
+                'success' => true,
+                'indicators' => $indicators,
+                'debug' => $result // Include full response for debugging
+            ]);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Nutritional indicators calculation error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to calculate nutritional indicators. Please enter them manually.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Store a new patient
      */
     public function storePatient(Request $request)

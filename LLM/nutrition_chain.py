@@ -203,19 +203,17 @@ def generate_patient_assessment(patient_id):
     query_parts.append("pediatric dietary assessment comprehensive evaluation")
     
     # Add condition-specific queries
-    if allergies and allergies.lower() not in ['none', 'no', 'n/a', 'not specified']:
+    if allergies and str(allergies).lower() not in ['none', 'no', 'n/a', 'not specified']:
         query_parts.append(f"food allergies children {allergies} alternative foods")
-    
-    if medical_problems and medical_problems.lower() not in ['none', 'no', 'n/a', 'not specified']:
+
+    if medical_problems and str(medical_problems).lower() not in ['none', 'no', 'n/a', 'not specified']:
         query_parts.append(f"child nutrition {medical_problems} dietary management")
-    
-    # Growth-related queries
-    if 'underweight' in weight_status.lower() or 'wasted' in weight_status.lower():
+
+    if weight_status and ('underweight' in str(weight_status).lower() or 'wasted' in str(weight_status).lower()):
         query_parts.append("underweight children nutrition dense foods weight gain")
-    elif 'overweight' in weight_status.lower():
+    elif weight_status and 'overweight' in str(weight_status).lower():
         query_parts.append("overweight children healthy eating weight management")
-        
-    if 'stunted' in height_status.lower() or 'short' in height_status.lower():
+    if height_status and ('stunted' in str(height_status).lower() or 'short' in str(height_status).lower()):
         query_parts.append("stunting prevention linear growth nutrition")
     
     query = " ".join(query_parts)
@@ -394,17 +392,13 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
 
     def get_age_specific_guidelines(age_months):
         if age_months <= 6:
-            return "Breast milk exclusively or appropriate infant formula. On-demand feeding (8-12x/day). No solids. Monitor weight gain. FEEDING LEVEL: Thin liquids (milk/breastfeeding) only."
-        elif age_months <= 8:
-            return "Introduce soft, pureed, mashed foods. 3 meals/day + 1 snack + milk. Iron-rich foods, soft fruits/veggies. No honey/nuts. FEEDING LEVEL: Purees (Stage 1) - smooth, single-ingredient purees around 6 months, progressing to thicker purees/mashed foods (Stage 2) at 7-8 months."
-        elif age_months <= 10:
-            return "Soft finger foods, small pieces. 3 meals + 1 snack/day. Continue with soft textures. FEEDING LEVEL: Soft mashed table foods and dissolvable solids (puffs, melts) - food should be easily mashed between fingers."
+            return "Breast milk exclusively or appropriate infant formula. On-demand feeding (8-12x/day). No solids. Monitor weight gain."
         elif age_months <= 12:
-            return "Mechanical soft foods (very soft solids). 3 meals + 1 snack/day. Encourage self-feeding. FEEDING LEVEL: Mechanical soft foods - very soft solids that can be easily chewed, depending on chewing skills development."
-        elif age_months <= 18:
-            return "Soft finger foods, small pieces, family food consistency. 3 meals + 1 snack/day. Encourage self-feeding. FEEDING LEVEL: Transitioning to mechanical soft foods, still avoiding hard pieces."
+            return "Introduce soft, pureed, mashed foods. 2-3 meals/day + milk. Iron-rich foods, soft fruits/veggies. No honey/nuts."
+        elif age_months <= 24:
+            return "Soft finger foods, small pieces, family food consistency. 3 meals + 2-3 snacks/day. Encourage self-feeding."
         else:
-            return "Regular family food textures. 3 meals + 1 snack/day. Encourage independence, social eating, nutrition education. FEEDING LEVEL: Hard mechanicals/regular table foods (18+ months) - depending on individual development and chewing ability."
+            return "Regular family food textures. 3 meals + 1-2 snacks/day. Encourage independence, social eating, nutrition education."
 
     # Helper: Allergy section
     allergy_val = patient_data.get('allergies', 'None')
@@ -640,11 +634,6 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
 
     LANGUAGE INSTRUCTIONS: You may answer in Tagalog, but it's okay to use English if you are unsure of the correct Tagalog word or if there isn't an accurate Tagalog equivalent. Use simple, everyday words that ordinary Filipino parents can understand.
 
-    ## TRADITIONAL FILIPINO MENU PATTERNS (FOLLOW THESE GUIDELINES):
-    - Umaga: Pandesal with filling, champorado, lugaw
-    - Tanghali/Hapunan: Kanin + ulam (adobo, sinigang, tinola) + gulay
-    - Meryenda: Prutas, crackers, local snacks
-
     ## PRIMARY CONSTRAINT
     ONLY recommend foods from the database below. Never mention generic food groups or unlisted foods.
 
@@ -727,61 +716,38 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     1. NEVER repeat the same dish or ingredient across different days (MANDATORY)
     2. Use only foods from the database
     3. All food names and preparation methods MUST be in Tagalog
-    4. Use common, affordable Filipino dishes (pangmasa) - typical meals like gizzard, ginisang repolyo, sardinas, adobo, tilapia (ginataan/sinanglay), pancit, pasta, nilagang mais, pandesal with peanut butter or margarine
-    5. FOLLOW AGE-APPROPRIATE FOOD TEXTURES: 
-       • 0-6 months: Breastfeeding only (thin liquids)
-       • 6-8 months: Purees and mashed foods only (Stage 1-2)
-       • 8-10 months: Soft mashed table foods, dissolvable solids
-       • 10-12 months: Mechanical soft foods (very soft solids)
-       • 12-18 months: Soft finger foods, avoid hard pieces
-       • 18+ months: Regular table foods (depending on chewing development)
-    6. For 6-59 months: All foods must be appropriately textured to avoid choking hazards
-    7. For 0-6 months: State "Breastfeeding lamang" instead of meal plan
-    8. DO NOT include calorie numbers
-    9. Day 1: Prioritize available ingredients: {available_ingredients}
-    10. Use locally available ingredients like tilapia, saluyot, kamoteng kahoy, alugbati especially from Laguna de Bay area
-    11. Consider traditional Filipino menu patterns and local ingredients: hito, kangkong, talbos ng kamote, bulanglang
-    12. Align with Pinggang Pinoy (Go, Grow, Glow + water) for all main meals
-    13. NEVER use the word "fresh" - always specify preparation method (hilaw, lutong, hinog, etc.)
-    14. Include traditional dishes: sinanglay na tilapia, ginataang tilapia, adobong gizzard, ginisang repolyo
-    15. For religious considerations: Adventist families avoid pork and blood-based dishes
+    4. Use common, affordable Filipino dishes (pangmasa)
+    5. For 6-59 months: Use mechanical diet (finely chopped food)
+    6. For 0-6 months: State "Breastfeeding lamang" instead of meal plan
+    7. DO NOT include calorie numbers
+    8. Day 1: Prioritize available ingredients: {available_ingredients}
 
     **FOOD PREPARATION EXAMPLES:**
     - "nilagang mais" NOT "fresh corn"
-    - "lutong kamoteng kahoy" NOT "fresh kamoteng kahoy" (cannot be eaten raw)
-    - "hilaw na pineapple" or "hinog na pineapple" NOT "fresh pineapple"
-    - "hilaw na bell pepper" or "lutong bell pepper" NOT "fresh bell pepper"
-    - "sinanglay na tilapia" or "ginataang tilapia" or "pritong tilapia"
-    - "ginisang kangkong" with "talbos ng kamote"
-    - "adobong manok" or "adobong gizzard"
-    - "ginisang repolyo"
-    - "sardinas with misua" or "sinigang na sardinas"
-    - "pancit canton" or "pancit bihon"
-    - "pandesal with peanut butter" or "pandesal with margarine"
-    - "bulanglang na gulay" (local vegetable soup)
-    - "hito sa gata" (catfish in coconut milk)
-    - "nilasing na hipon" (if available from Laguna de Bay)
-
-    **STRICTLY FORBIDDEN WORDS:**
-    - Never use "fresh" in any meal description
-    - Always specify preparation method: hilaw (raw), lutong (cooked), hinog (ripe), ginisa (sautéed), etc.
-
+    - "pritong tilapia" or "ginataang tilapia"
+    - "ginisang kangkong"
+    - "adobong manok"
 
     ### REGULAR NA OBSERBAHAN (MUST include this exact header)
-    **Araw Araw** (MUST include this exact subheader):
+    
+    **Araw-Araw** (MUST include this exact subheader):
     - Gana kumain (Mabuti/Katamtaman/Hindi mabuti) - Sigla ng bata - Tulog (mahimbing ba?) - Dumi (normal ba?)
 
     **Bawat Linggo** (MUST include this exact subheader):
-    - Timbang - Paglaki - Bagong natututunan - Pag-adjust ng pagkain base sa karamdaman at religious restrictions (halimbawa: kung may diarrhea o kung Adventist, walang baboy o dugo-based dishes)
+    - Timbang - Paglaki - Bagong natututunan
 
     **Bawat Buwan**:
     - Taas - Gustong pagkain - Pagiging independent sa pagkain
 
-    #### Mga Importante: (MUST include this exact header)
-    - Bantayan ang choking hazards - lahat ng pagkain dapat maliit na hiwa
-    - Kung may allergic reaction, tigil kaagad ang pagkain at konsultahin ang doktor
-    - Kung walang gana kumain ng 2 araw, konsultahin ang healthcare provider
-    - Regular checkup para sa timbang at taas
+    ## BALANSENG PAGKAIN PARA SA BATA
+
+    Bawat pagkain dapat may:
+    - Pagkain na nagbibigay lakas at enerhiya (tulad ng kanin, tinapay, mais)
+    - Pagkain na tumutulong sa paglaki ng bata (tulad ng isda, manok, itlog)
+    - Pagkain na nagpapalakas ng katawan (tulad ng gulay, prutas)
+    - Tubig - laging importante
+
+    {filipino_context}
 
     ### FINAL VERIFICATION CHECKLIST:
     ✓ CHILD PROFILE section is included with exact header
@@ -789,7 +755,6 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     ✓ All 7 days (Day 1, Day 2, Day 3, Day 4, Day 5, Day 6, Day 7) are included
     ✓ Each day has Breakfast (Almusal), Lunch (Tanghalian), Snack (Meryenda), Dinner (Hapunan)
     ✓ REGULAR NA OBSERBAHAN section with Araw-Araw and Bawat Linggo subheaders
-    ✓ Age-appropriate food textures based on feeding progression guidelines
     ✓ Entire response is in simple Tagalog
     ✓ Only database foods are recommended
     ✓ No dish/ingredient is repeated across days
