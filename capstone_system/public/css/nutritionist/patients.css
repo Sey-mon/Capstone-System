@@ -666,22 +666,48 @@
     border-bottom-right-radius: 12px;
 }
 
-/* User Info in Table */
-.user-info strong {
-    display: block;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.125rem;
+/* User Info in Table - Scoped to prevent affecting sidebar */
+.table td .user-info,
+.table .user-info,
+.patients-card .user-info {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: baseline !important;
+    flex-wrap: nowrap !important;
+    gap: 0.25rem !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    line-height: 1.5 !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-.user-info .text-muted {
-    font-size: 0.8125rem;
-    font-style: italic;
+.table .user-info strong,
+.patients-card .user-info strong {
+    display: inline !important;
+    flex: 0 0 auto !important;
+    font-weight: 600 !important;
+    color: #1f2937 !important;
+    line-height: inherit !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-.user-info .text-muted {
-    font-size: 0.875rem;
-    color: #6b7280;
+.table .user-info .text-muted,
+.table .user-info small,
+.patients-card .user-info .text-muted,
+.patients-card .user-info small {
+    display: inline !important;
+    flex: 0 0 auto !important;
+    font-size: 0.875rem !important;
+    color: #6b7280 !important;
+    font-style: italic !important;
+    line-height: inherit !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* Action Buttons - Enhanced */
@@ -1015,11 +1041,11 @@
         font-size: 0.75rem;
     }
     
-    .user-info strong {
+    .table .user-info strong {
         font-size: 0.875rem;
     }
     
-    .user-info small {
+    .table .user-info .text-muted {
         font-size: 0.75rem;
     }
 }

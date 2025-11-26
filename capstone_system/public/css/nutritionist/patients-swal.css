@@ -1,15 +1,16 @@
-/* SweetAlert2 Custom Styles for Patient Forms - Green Theme */
+/* SweetAlert2 Custom Styles for Patient Forms - Consistent Green Theme */
 
 /* Remove gray backgrounds from all SweetAlert2 popups */
 .swal2-popup {
     background: #ffffff !important;
     border-radius: 16px !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 10px 40px rgba(46, 125, 50, 0.25) !important;
+    border: 2px solid #e8f5e9 !important;
 }
 
 .swal2-popup.swal2-patient-modal {
-    width: 90vw !important;
-    max-width: 1400px !important;
+    width: 80vw !important;
+    max-width: 1100px !important;
     padding: 0 !important;
 }
 
@@ -25,32 +26,32 @@
     background: #ffffff !important;
 }
 
-/* Modal Header Styling - Modernized */
+/* Modal Header Styling - Compact and Space-Efficient */
 .swal2-title {
-    font-size: 1.5rem !important;
+    font-size: 1.1rem !important;
     font-weight: 700 !important;
     color: white !important;
-    padding: 20px 25px !important;
+    padding: 12px 20px !important;
     margin: 0 !important;
     background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%) !important;
     border-radius: 16px 16px 0 0 !important;
     text-align: left !important;
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 8px !important;
 }
 
 .swal2-title::before {
     content: '\f007';
     font-family: 'Font Awesome 5 Free';
     font-weight: 900;
-    font-size: 1.3rem;
+    font-size: 1rem;
     opacity: 0.9;
 }
 
 /* Form Container - Optimized */
 .patient-form-swal {
-    max-height: 70vh;
+    max-height: 65vh;
     overflow-y: auto;
     padding: 0;
     text-align: left;
@@ -60,20 +61,20 @@
 /* Form Sections - Compact & Modern */
 .patient-form-swal .form-section {
     background: #ffffff;
-    padding: 20px;
-    margin: 15px;
-    border-radius: 12px;
+    padding: 12px;
+    margin: 10px;
+    border-radius: 8px;
     border: 1px solid #e8f5e9;
     box-shadow: 0 2px 6px rgba(46, 125, 50, 0.06);
     transition: all 0.3s ease;
 }
 
 .patient-form-swal .form-section:first-child {
-    margin-top: 20px;
+    margin-top: 12px;
 }
 
 .patient-form-swal .form-section:last-child {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .patient-form-swal .form-section:hover {
@@ -83,23 +84,22 @@
 
 /* Section Titles - Modern Icon Style */
 .patient-form-swal .section-title {
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: white;
-    margin: -20px -20px 18px -20px;
-    padding: 12px 18px;
+    margin: -12px -12px 10px -12px;
+    padding: 8px 12px;
     background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
-    border-radius: 12px 12px 0 0;
+    border-radius: 8px 8px 0 0;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     letter-spacing: 0.3px;
     text-transform: uppercase;
-    font-size: 0.9rem;
 }
 
 .patient-form-swal .section-title i {
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     opacity: 0.95;
 }
 
@@ -257,19 +257,19 @@
 }
 
 .patient-form-swal .mb-3 {
-    margin-bottom: 15px !important;
+    margin-bottom: 12px !important;
 }
 
-/* SweetAlert2 Buttons - Modern with Icons */
+/* SweetAlert2 Buttons - Simple Style without Animations */
 .swal2-confirm {
-    background: linear-gradient(135deg, #52b788 0%, #40916c 100%) !important;
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%) !important;
     border: none !important;
-    padding: 12px 30px !important;
-    font-size: 0.95rem !important;
+    padding: 10px 24px !important;
+    font-size: 0.9rem !important;
     font-weight: 700 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 4px 12px rgba(64, 145, 108, 0.3) !important;
-    transition: all 0.2s ease !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.2) !important;
+    transition: opacity 0.2s ease !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     position: relative;
@@ -283,25 +283,23 @@
 }
 
 .swal2-confirm:hover {
-    background: linear-gradient(135deg, #40916c 0%, #2d6a4f 100%) !important;
-    box-shadow: 0 6px 16px rgba(64, 145, 108, 0.4) !important;
-    transform: translateY(-2px) scale(1.02) !important;
+    opacity: 0.9 !important;
 }
 
 .swal2-confirm:active {
-    transform: translateY(0) scale(0.98) !important;
+    opacity: 0.8 !important;
 }
 
 .swal2-cancel {
     background: #ffffff !important;
     border: 2px solid #dee2e6 !important;
     color: #6c757d !important;
-    padding: 12px 30px !important;
-    font-size: 0.95rem !important;
+    padding: 10px 24px !important;
+    font-size: 0.9rem !important;
     font-weight: 700 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-    transition: all 0.2s ease !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    transition: opacity 0.2s ease !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -314,57 +312,108 @@
 }
 
 .swal2-cancel:hover {
-    background: #f8f9fa !important;
-    border-color: #adb5bd !important;
-    color: #495057 !important;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
-    transform: translateY(-2px) scale(1.02) !important;
+    opacity: 0.8 !important;
 }
 
 .swal2-cancel:active {
-    transform: translateY(0) scale(0.98) !important;
+    opacity: 0.7 !important;
 }
 
 .swal2-actions {
     margin-top: 0 !important;
-    padding: 20px 25px !important;
+    padding: 15px 20px !important;
     background: linear-gradient(180deg, #f8fafb 0%, #ffffff 100%) !important;
     border-radius: 0 0 16px 16px !important;
-    gap: 12px !important;
+    gap: 10px !important;
     border-top: 2px solid #e8f5e9 !important;
 }
 
-/* Delete Button Styling */
-.swal2-confirm.swal2-styled[style*="background-color: rgb(211, 51, 51)"],
-.swal2-confirm.swal2-styled[style*="background-color:#d33"] {
-    background: linear-gradient(135deg, #ef476f 0%, #d62828 100%) !important;
-    box-shadow: 0 4px 12px rgba(239, 71, 111, 0.3) !important;
+/* Delete Button Styling - Keep Red for Danger, Simple Style */
+.swal2-confirm.swal2-styled[style*="background-color: rgb(220, 53, 69)"],
+.swal2-confirm.swal2-styled[style*="background-color:#dc3545"] {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2) !important;
 }
 
-.swal2-confirm.swal2-styled[style*="background-color: rgb(211, 51, 51)"]:hover,
-.swal2-confirm.swal2-styled[style*="background-color:#d33"]:hover {
-    background: linear-gradient(135deg, #d62828 0%, #c1121f 100%) !important;
-    box-shadow: 0 6px 16px rgba(239, 71, 111, 0.4) !important;
+.swal2-confirm.swal2-styled[style*="background-color: rgb(220, 53, 69)"]:hover,
+.swal2-confirm.swal2-styled[style*="background-color:#dc3545"]:hover {
+    opacity: 0.9 !important;
+}
+
+/* Delete Modal Custom Layout - Title Above Icon */
+.delete-modal-custom .swal2-header {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+}
+
+.delete-modal-custom .swal2-title {
+    order: 1 !important;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
+    padding: 16px 24px !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.delete-modal-custom .swal2-title::before {
+    content: '\f071' !important;
+    font-family: 'Font Awesome 5 Free' !important;
+    font-weight: 900 !important;
+    font-size: 1.1rem !important;
+}
+
+.delete-modal-custom .swal2-icon {
+    order: 2 !important;
+    margin: 24px auto 0 auto !important;
+}
+
+.delete-modal-custom .swal2-html-container {
+    order: 3 !important;
+    margin-top: 16px !important;
+}
+
+.delete-modal-custom .swal2-actions {
+    order: 4 !important;
+}
+
+/* Success Icon - Green Theme */
+.swal2-icon.swal2-success {
+    border-color: #2e7d32 !important;
+}
+
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+    background-color: #2e7d32 !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(46, 125, 50, 0.3) !important;
 }
 
 /* Optimized Patient Details View */
 .patient-details-modern {
     text-align: left;
     padding: 0;
-    max-height: 75vh;
+    max-height: 70vh;
     overflow-y: auto;
     background: #f8fafb;
 }
 
-/* Compact Patient Header */
+/* Compact Patient Header - Consistent Green Theme */
 .patient-header-compact {
-    background: linear-gradient(135deg, #40916c 0%, #2d6a4f 100%);
-    padding: 20px 25px;
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -377,18 +426,19 @@
 }
 
 .patient-avatar-sm {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #95d5b2 0%, #74c69d 100%);
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: #2d6a4f;
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    color: #1b5e20;
+    border: 2px solid rgba(255, 255, 255, 0.5);
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .header-info {
@@ -398,7 +448,7 @@
 }
 
 .patient-name-sm {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 700;
     margin: 0;
     color: white;
@@ -460,24 +510,24 @@
     font-weight: 700;
 }
 
-/* Two Column Layout */
+/* Two Column Layout - More Compact */
 .details-container {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 20px;
-    padding: 20px;
+    grid-template-columns: 1fr 280px;
+    gap: 12px;
+    padding: 12px;
 }
 
 .details-main {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
 }
 
 .details-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
 }
 
 /* Compact Info Cards */
@@ -495,26 +545,26 @@
     border-color: #d8f3dc;
 }
 
-/* Card Header - Compact */
+/* Card Header - Compact with Green Theme */
 .card-header-sm {
-    background: linear-gradient(135deg, #52b788 0%, #40916c 100%);
-    padding: 12px 18px;
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    padding: 10px 15px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     color: white;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 700;
     letter-spacing: 0.3px;
 }
 
 .card-header-sm i {
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
-/* Card Content */
+/* Card Content - More Compact */
 .card-content {
-    padding: 18px;
+    padding: 12px;
 }
 
 /* Info Grid - Compact */
@@ -829,7 +879,7 @@
     font-size: 0.9rem;
 }
 
-/* Scrollbar for modern view */
+/* Scrollbar for modern view - Green Theme */
 .patient-details-modern::-webkit-scrollbar {
     width: 8px;
 }
@@ -839,12 +889,30 @@
 }
 
 .patient-details-modern::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #74c69d 0%, #52b788 100%);
+    background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
     border-radius: 4px;
 }
 
 .patient-details-modern::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #52b788 0%, #40916c 100%);
+    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+}
+
+/* Form scrollbar - Green Theme */
+.patient-form-swal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.patient-form-swal::-webkit-scrollbar-track {
+    background: #e8f5e9;
+}
+
+.patient-form-swal::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+    border-radius: 4px;
+}
+
+.patient-form-swal::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
 }
 
 /* Responsive Design - Optimized */
@@ -1099,11 +1167,11 @@
 
 /* Loading spinner - Green Theme with Animation */
 .swal2-loading {
-    border-color: #52b788 transparent #52b788 transparent !important;
+    border-color: #2e7d32 transparent #2e7d32 transparent !important;
 }
 
 .swal2-popup.swal2-loading .swal2-title {
-    background: linear-gradient(135deg, #52b788 0%, #40916c 100%) !important;
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%) !important;
 }
 
 /* Loading Animation for Form Sections */
@@ -1155,14 +1223,14 @@
     height: 30px;
 }
 
-/* Select Dropdown Arrow */
+/* Select Dropdown Arrow - Green Theme */
 .patient-form-swal .form-select {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2340916c' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%232e7d32' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
 }
 
 /* Loading State */
 .swal2-loader {
-    border-color: #52b788 transparent #52b788 transparent !important;
+    border-color: #2e7d32 transparent #2e7d32 transparent !important;
 }
 
 /* Validation Message */
@@ -1217,7 +1285,7 @@
     left: 0;
     width: 100%;
     height: 3px;
-    background: linear-gradient(90deg, #52b788 0%, #40916c 100%);
+    background: linear-gradient(90deg, #2e7d32 0%, #43a047 100%);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.3s ease;

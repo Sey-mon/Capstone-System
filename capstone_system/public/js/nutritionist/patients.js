@@ -70,7 +70,7 @@ function submitPatientForm(form) {
             icon: 'success',
             title: 'Success!',
             text: patientId ? 'Patient updated successfully!' : 'Patient added successfully!',
-            confirmButtonColor: '#40916c',
+            confirmButtonColor: '#2e7d32',
             timer: 2000,
             showConfirmButton: true
         }).then(() => {
@@ -92,7 +92,7 @@ function submitPatientForm(form) {
             icon: 'error',
             title: 'Error',
             text: error.message || 'Failed to save patient.',
-            confirmButtonColor: '#40916c'
+            confirmButtonColor: '#2e7d32'
         });
         return false;
     });
@@ -104,7 +104,7 @@ function showSuccess(message) {
         icon: 'success',
         title: 'Success!',
         text: message,
-        confirmButtonColor: '#40916c'
+        confirmButtonColor: '#2e7d32'
     });
 }
 
@@ -344,7 +344,7 @@ function showError(message) {
         icon: 'error',
         title: 'Error',
         text: message,
-        confirmButtonColor: '#40916c'
+        confirmButtonColor: '#2e7d32'
     });
 }
 
@@ -374,8 +374,8 @@ function openAddPatientModal() {
             confirmButton: 'swal2-confirm',
             cancelButton: 'swal2-cancel'
         },
-        confirmButtonColor: '#40916c',
-        cancelButtonColor: '#7f8c8d',
+        confirmButtonColor: '#2e7d32',
+        cancelButtonColor: '#6c757d',
         width: '90vw',
         didOpen: () => {
             // Attach form submit handler after modal opens
@@ -410,11 +410,12 @@ function editPatient(patientId) {
     isEditing = true;
     currentPatientId = patientId;
     
-    // Show loading
+    // Show loading with green theme
     Swal.fire({
-        title: 'Loading...',
-        text: 'Fetching patient data',
+        title: 'Loading Patient Data...',
+        html: '<div style="color: #2e7d32;"><i class="fas fa-spinner fa-spin"></i> Please wait</div>',
         allowOutsideClick: false,
+        showConfirmButton: false,
         didOpen: () => {
             Swal.showLoading();
         }
@@ -432,7 +433,7 @@ function editPatient(patientId) {
                     icon: 'error',
                     title: 'Error',
                     text: data.message || 'Failed to load patient data for editing.',
-                    confirmButtonColor: '#40916c'
+                    confirmButtonColor: '#2e7d32'
                 });
                 return;
             }
@@ -451,8 +452,8 @@ function editPatient(patientId) {
                     confirmButton: 'swal2-confirm',
                     cancelButton: 'swal2-cancel'
                 },
-                confirmButtonColor: '#40916c',
-                cancelButtonColor: '#7f8c8d',
+                confirmButtonColor: '#2e7d32',
+                cancelButtonColor: '#6c757d',
                 width: '90vw',
                 didOpen: () => {
                     // Fill form fields
@@ -504,17 +505,19 @@ function editPatient(patientId) {
                 icon: 'error',
                 title: 'Error',
                 text: 'Failed to load patient data for editing.',
-                confirmButtonColor: '#40916c'
+                confirmButtonColor: '#2e7d32'
             });
+            console.error('Error fetching patient data:', error);
         });
 }
 
 function viewPatient(patientId) {
-    // Show loading
+    // Show loading with green theme
     Swal.fire({
-        title: 'Loading...',
-        text: 'Fetching patient details',
+        title: 'Loading Patient Details...',
+        html: '<div style="color: #2e7d32;"><i class="fas fa-spinner fa-spin"></i> Please wait</div>',
         allowOutsideClick: false,
+        showConfirmButton: false,
         didOpen: () => {
             Swal.showLoading();
         }
@@ -532,19 +535,19 @@ function viewPatient(patientId) {
                     icon: 'error',
                     title: 'Error',
                     text: data.message || 'Failed to load patient details.',
-                    confirmButtonColor: '#40916c'
+                    confirmButtonColor: '#2e7d32'
                 });
                 return;
             }
             
             const patient = data.patient;
             
-            // Build details HTML
+            // Build details HTML with dynamic data
             function show(val) {
                 return (val !== undefined && val !== null && val !== '') ? val : 'N/A';
             }
             
-            // Helper function to get status badge
+            // Helper function to get status badge with green theme
             function getStatusBadge(value, type = 'default') {
                 if (value === 'N/A' || !value) return '<span class="badge-status badge-na"><i class="fas fa-minus-circle"></i> N/A</span>';
                 
@@ -581,12 +584,19 @@ function viewPatient(patientId) {
                 return `${m}m`;
             }
             
+            // Format date helper
+            function formatDate(dateStr) {
+                if (!dateStr || dateStr === 'N/A') return 'N/A';
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+            
             const calculatedBMI = calculateBMI(patient.weight_kg, patient.height_cm);
             const ageDisplay = getAgeDisplay(patient.age_months);
             
             let html = '<div class="patient-details-modern">';
             
-            // Compact Patient Header
+            // Compact Patient Header with dynamic data
             html += '<div class="patient-header-compact">';
             html += '<div class="header-left">';
             html += `<div class="patient-avatar-sm">${patient.first_name.charAt(0)}${patient.last_name.charAt(0)}</div>`;
@@ -598,7 +608,7 @@ function viewPatient(patientId) {
             html += `<span class="info-chip"><i class="fas fa-map-marker-alt"></i> ${show(patient.barangay?.barangay_name)}</span>`;
             html += '</div></div></div>';
             html += '<div class="header-right">';
-            html += `<div class="admission-date"><i class="fas fa-calendar-check"></i> <span>Admitted</span><strong>${show(patient.date_of_admission)}</strong></div>`;
+            html += `<div class="admission-date"><i class="fas fa-calendar-check"></i> <span>Admitted</span><strong>${formatDate(patient.date_of_admission)}</strong></div>`;
             html += '</div>';
             html += '</div>';
             
@@ -606,7 +616,7 @@ function viewPatient(patientId) {
             html += '<div class="details-container">';
             html += '<div class="details-column details-main">';
             
-            // Contact Information Card - Compact
+            // Contact Information Card - Compact with dynamic data
             html += '<div class="info-card">';
             html += '<div class="card-header-sm"><i class="fas fa-address-card"></i> Contact & Location</div>';
             html += '<div class="card-content">';
@@ -621,7 +631,7 @@ function viewPatient(patientId) {
             html += `</div>`;
             html += '</div></div></div>';
             
-            // Household Information Card - Compact
+            // Household Information Card - Compact with dynamic data
             html += '<div class="info-card">';
             html += '<div class="card-header-sm"><i class="fas fa-home"></i> Household</div>';
             html += '<div class="card-content">';
@@ -635,13 +645,13 @@ function viewPatient(patientId) {
             html += '</div>';
             html += '</div></div>';
             
-            // Health Metrics Card - Compact with visual indicators
+            // Health Metrics Card - Compact with visual indicators and dynamic data
             html += '<div class="info-card metrics-card">';
             html += '<div class="card-header-sm"><i class="fas fa-heartbeat"></i> Health Metrics</div>';
             html += '<div class="card-content">';
             html += '<div class="metrics-row">';
             html += `<div class="metric-box">`;
-            html += `<i class="fas fa-weight-hanging"></i>`;
+            html += `<i class="fas fa-weight"></i>`;
             html += `<div class="metric-data">`;
             html += `<span class="metric-value">${show(patient.weight_kg)}</span>`;
             html += `<span class="metric-unit">kg</span>`;
@@ -679,7 +689,7 @@ function viewPatient(patientId) {
             // Sidebar Column
             html += '<div class="details-column details-sidebar">';
             
-            // Medical Status Card
+            // Medical Status Card with dynamic data
             html += '<div class="info-card status-card">';
             html += '<div class="card-header-sm"><i class="fas fa-stethoscope"></i> Medical Status</div>';
             html += '<div class="card-content">';
@@ -697,7 +707,7 @@ function viewPatient(patientId) {
             html += '</div>';
             html += '</div></div>';
             
-            // Medical Notes if exists
+            // Medical Notes if exists with dynamic data
             if (patient.other_medical_problems && patient.other_medical_problems !== 'N/A' && patient.other_medical_problems.trim() !== '') {
                 html += '<div class="info-card notes-card">';
                 html += '<div class="card-header-sm"><i class="fas fa-clipboard-list"></i> Medical Notes</div>';
@@ -710,24 +720,29 @@ function viewPatient(patientId) {
             html += '</div>'; // End details-container
             html += '</div>'; // End patient-details-modern
             
+            // Display the modal with green theme
             Swal.fire({
                 title: 'Patient Details',
                 html: html,
                 width: '90vw',
                 customClass: {
-                    popup: 'swal2-patient-modal'
+                    popup: 'swal2-patient-modal',
+                    confirmButton: 'swal2-confirm'
                 },
-                confirmButtonText: 'Close',
-                confirmButtonColor: '#40916c'
+                confirmButtonText: '<i class="fas fa-times"></i> Close',
+                confirmButtonColor: '#2e7d32',
+                showCloseButton: true,
+                focusConfirm: false
             });
         })
         .catch(error => {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Failed to load patient details.',
-                confirmButtonColor: '#40916c'
+                text: 'Failed to load patient details. Please try again.',
+                confirmButtonColor: '#2e7d32'
             });
+            console.error('Error fetching patient details:', error);
         });
 }
 
@@ -737,10 +752,14 @@ function deletePatient(patientId) {
         text: "You won't be able to revert this! All patient data will be permanently deleted.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#ef476f',
-        cancelButtonColor: '#7f8c8d',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'Cancel',
+        reverseButtons: false,
+        customClass: {
+            popup: 'delete-modal-custom'
+        },
         showLoaderOnConfirm: true,
         preConfirm: () => {
             // Get CSRF token
@@ -776,7 +795,7 @@ function deletePatient(patientId) {
                 title: 'Deleted!',
                 text: 'Patient has been deleted successfully.',
                 icon: 'success',
-                confirmButtonColor: '#40916c',
+                confirmButtonColor: '#2e7d32',
                 timer: 1500,
                 showConfirmButton: false
             }).then(() => {
