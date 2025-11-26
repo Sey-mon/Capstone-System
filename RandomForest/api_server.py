@@ -348,6 +348,399 @@ async def malnutrition_assessment_only(
             detail=f"Assessment failed: {str(e)}"
         )
 
+# ============================================================================
+# Z-SCORE CALCULATION ENDPOINTS FOR PATIENT REGISTRATION
+# These endpoints are optimized for automatic computation when adding new patients
+# ============================================================================
+
+class ZScoreCalculationRequest(BaseModel):
+    """Request model for z-score calculations"""
+    age_months: int
+    weight_kg: float
+    height_cm: float
+    gender: str
+    
+    @validator('age_months')
+    def validate_age(cls, v):
+        if not 0 <= v <= 60:
+            raise ValueError('Age must be between 0 and 60 months')
+        return v
+    
+    @validator('weight_kg')
+    def validate_weight(cls, v):
+        if not 1.0 <= v <= 50.0:
+            raise ValueError('Weight must be between 1.0 and 50.0 kg')
+        return v
+    
+    @validator('height_cm')
+    def validate_height(cls, v):
+        if not 30.0 <= v <= 150.0:
+            raise ValueError('Height must be between 30.0 and 150.0 cm')
+        return v
+    
+    @validator('gender')
+    def validate_gender(cls, v):
+        if v.lower() not in ['male', 'female', 'm', 'f']:
+            raise ValueError('Gender must be male, female, M, or F')
+        return v.lower()
+
+@app.post("/calculate/weight-for-age")
+async def calculate_weight_for_age(
+    request: ZScoreCalculationRequest,
+    current_user: str = Depends(verify_token)
+):
+    """
+    Calculate Weight-for-Age Z-score
+    
+    Used when registering a new patient to automatically compute WFA z-score.
+    Can be called without full assessment data.
+    
+    Args:
+        age_months: Child's age in months (0-60)
+        weight_kg: Child's weight in kilograms
+        gender: Child's gender (male/female or m/f)
+    
+    Returns:
+        weight_for_age_zscore: Z-score for weight-for-age
+        classification: Nutritional status based on WFA
+        reference_values: WHO reference values at this age
+    """
+    try:
+        logger.info(f"Calculating Weight-for-Age Z-score for age {request.age_months}m, weight {request.weight_kg}kg")
+        
+        # Normalize gender
+        gender = 'male' if request.gender.lower() in ['male', 'm'] else 'female'
+        
+        # Get WHO calculator from the model
+        who_calculator = malnutrition_model.who_calculator
+        
+        # Calculate WFA z-score
+        wfa_zscore = who_calculator.calculate_weight_for_age_zscore(
+            weight=request.weight_kg,
+            age_months=request.age_months,
+            sex=gender
+        )
+        
+        # Classify based on z-score
+        if wfa_zscore < -3:
+            classification = "Severely Underweight"
+        elif wfa_zscore < -2:
+            classification = "Underweight"
+        elif wfa_zscore <= 2:
+            classification = "Normal"
+        else:
+            classification = "Overweight"
+        
+        # Get reference values for this age/gender
+        sex_key = 'boys' if gender == 'male' else 'girls'
+        age_data = who_calculator.who_reference.get('weight_for_age', {}).get(sex_key, {})
+        
+        # Find closest age
+        closest_age = request.age_months
+        if request.age_months not in age_data:
+            closest_age = min(age_data.keys(), key=lambda x: abs(x - request.age_months))
+        
+        reference_values = age_data.get(closest_age, {})
+        
+        result = {
+            "weight_for_age_zscore": wfa_zscore,
+            "classification": classification,
+            "age_months": request.age_months,
+            "weight_kg": request.weight_kg,
+            "gender": gender,
+            "reference_values": {
+                "median": reference_values.get('M'),
+                "SD": reference_values.get('S'),
+                "L": reference_values.get('L'),
+                "SD2neg": reference_values.get('SD2neg'),
+                "SD3neg": reference_values.get('SD3neg')
+            } if reference_values else {},
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"WFA calculation successful: {wfa_zscore}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Weight-for-Age calculation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Calculation failed: {str(e)}"
+        )
+
+@app.post("/calculate/height-for-age")
+async def calculate_height_for_age(
+    request: ZScoreCalculationRequest,
+    current_user: str = Depends(verify_token)
+):
+    """
+    Calculate Height-for-Age Z-score
+    
+    Used when registering a new patient to automatically compute HFA z-score.
+    Can be called without full assessment data.
+    
+    Args:
+        age_months: Child's age in months (0-60)
+        height_cm: Child's height in centimeters
+        gender: Child's gender (male/female or m/f)
+    
+    Returns:
+        height_for_age_zscore: Z-score for height-for-age
+        classification: Nutritional status based on HFA
+        reference_values: WHO reference values at this age
+    """
+    try:
+        logger.info(f"Calculating Height-for-Age Z-score for age {request.age_months}m, height {request.height_cm}cm")
+        
+        # Normalize gender
+        gender = 'male' if request.gender.lower() in ['male', 'm'] else 'female'
+        
+        # Get WHO calculator from the model
+        who_calculator = malnutrition_model.who_calculator
+        
+        # Calculate HFA z-score
+        hfa_zscore = who_calculator.calculate_height_for_age_zscore(
+            height=request.height_cm,
+            age_months=request.age_months,
+            sex=gender
+        )
+        
+        # Classify based on z-score
+        if hfa_zscore < -3:
+            classification = "Severely Stunted"
+        elif hfa_zscore < -2:
+            classification = "Stunted"
+        elif hfa_zscore <= 2:
+            classification = "Normal"
+        else:
+            classification = "Tall"
+        
+        # Get reference values for this age/gender
+        sex_key = 'boys' if gender == 'male' else 'girls'
+        age_data = who_calculator.who_reference.get('height_for_age', {}).get(sex_key, {})
+        
+        # Find closest age
+        closest_age = request.age_months
+        if request.age_months not in age_data:
+            closest_age = min(age_data.keys(), key=lambda x: abs(x - request.age_months))
+        
+        reference_values = age_data.get(closest_age, {})
+        
+        result = {
+            "height_for_age_zscore": hfa_zscore,
+            "classification": classification,
+            "age_months": request.age_months,
+            "height_cm": request.height_cm,
+            "gender": gender,
+            "reference_values": {
+                "median": reference_values.get('M'),
+                "SD": reference_values.get('S'),
+                "L": reference_values.get('L'),
+                "SD2neg": reference_values.get('SD2neg'),
+                "SD3neg": reference_values.get('SD3neg')
+            } if reference_values else {},
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"HFA calculation successful: {hfa_zscore}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Height-for-Age calculation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Calculation failed: {str(e)}"
+        )
+
+@app.post("/calculate/bmi-for-age")
+async def calculate_bmi_for_age(
+    request: ZScoreCalculationRequest,
+    current_user: str = Depends(verify_token)
+):
+    """
+    Calculate BMI and BMI-for-Age classification
+    
+    Used when registering a new patient to automatically compute BMI and status.
+    Can be called without full assessment data.
+    
+    Args:
+        age_months: Child's age in months (0-60)
+        weight_kg: Child's weight in kilograms
+        height_cm: Child's height in centimeters
+        gender: Child's gender (male/female or m/f)
+    
+    Returns:
+        bmi: Body Mass Index value
+        bmi_classification: BMI status (Severely Underweight, Underweight, Normal, Overweight)
+        age_group: Age group classification (Under 2 years or 2-5 years)
+    """
+    try:
+        logger.info(f"Calculating BMI for age {request.age_months}m, weight {request.weight_kg}kg, height {request.height_cm}cm")
+        
+        # Normalize gender
+        gender = 'male' if request.gender.lower() in ['male', 'm'] else 'female'
+        
+        # Get WHO calculator from the model
+        who_calculator = malnutrition_model.who_calculator
+        
+        # Calculate BMI
+        bmi = who_calculator.calculate_bmi(
+            weight=request.weight_kg,
+            height=request.height_cm
+        )
+        
+        # Classify BMI status
+        bmi_classification = who_calculator.classify_bmi_status(
+            bmi=bmi,
+            age_months=request.age_months
+        )
+        
+        # Determine age group
+        age_group = "Under 2 years" if request.age_months < 24 else "2-5 years"
+        
+        # Get reference values based on age group
+        if request.age_months < 24:
+            reference_ranges = {
+                "severely_underweight": {"min": 0, "max": 13},
+                "underweight": {"min": 13, "max": 15},
+                "normal": {"min": 15, "max": 18},
+                "overweight": {"min": 18, "max": 50}
+            }
+        else:
+            reference_ranges = {
+                "severely_underweight": {"min": 0, "max": 13.5},
+                "underweight": {"min": 13.5, "max": 15.5},
+                "normal": {"min": 15.5, "max": 17.5},
+                "overweight": {"min": 17.5, "max": 50}
+            }
+        
+        result = {
+            "bmi": bmi,
+            "bmi_classification": bmi_classification,
+            "age_months": request.age_months,
+            "age_group": age_group,
+            "weight_kg": request.weight_kg,
+            "height_cm": request.height_cm,
+            "gender": gender,
+            "reference_ranges": reference_ranges,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"BMI calculation successful: {bmi}, Classification: {bmi_classification}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"BMI calculation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Calculation failed: {str(e)}"
+        )
+
+@app.post("/calculate/all-indices")
+async def calculate_all_indices(
+    request: ZScoreCalculationRequest,
+    current_user: str = Depends(verify_token)
+):
+    """
+    Calculate all anthropometric indices at once
+    
+    Comprehensive endpoint that calculates Weight-for-Age, Height-for-Age, 
+    and BMI in a single request. Ideal for patient registration form.
+    
+    Args:
+        age_months: Child's age in months (0-60)
+        weight_kg: Child's weight in kilograms
+        height_cm: Child's height in centimeters
+        gender: Child's gender (male/female or m/f)
+    
+    Returns:
+        All three z-scores with their classifications and reference values
+    """
+    try:
+        logger.info(f"Calculating all anthropometric indices for age {request.age_months}m")
+        
+        # Normalize gender
+        gender = 'male' if request.gender.lower() in ['male', 'm'] else 'female'
+        
+        # Get WHO calculator from the model
+        who_calculator = malnutrition_model.who_calculator
+        
+        # Calculate all indices
+        wfa_zscore = who_calculator.calculate_weight_for_age_zscore(
+            weight=request.weight_kg,
+            age_months=request.age_months,
+            sex=gender
+        )
+        
+        hfa_zscore = who_calculator.calculate_height_for_age_zscore(
+            height=request.height_cm,
+            age_months=request.age_months,
+            sex=gender
+        )
+        
+        bmi = who_calculator.calculate_bmi(
+            weight=request.weight_kg,
+            height=request.height_cm
+        )
+        
+        bmi_classification = who_calculator.classify_bmi_status(
+            bmi=bmi,
+            age_months=request.age_months
+        )
+        
+        # Classify WFA
+        if wfa_zscore < -3:
+            wfa_classification = "Severely Underweight"
+        elif wfa_zscore < -2:
+            wfa_classification = "Underweight"
+        elif wfa_zscore <= 2:
+            wfa_classification = "Normal"
+        else:
+            wfa_classification = "Overweight"
+        
+        # Classify HFA
+        if hfa_zscore < -3:
+            hfa_classification = "Severely Stunted"
+        elif hfa_zscore < -2:
+            hfa_classification = "Stunted"
+        elif hfa_zscore <= 2:
+            hfa_classification = "Normal"
+        else:
+            hfa_classification = "Tall"
+        
+        result = {
+            "weight_for_age": {
+                "zscore": wfa_zscore,
+                "classification": wfa_classification
+            },
+            "height_for_age": {
+                "zscore": hfa_zscore,
+                "classification": hfa_classification
+            },
+            "bmi": {
+                "value": bmi,
+                "classification": bmi_classification
+            },
+            "patient_data": {
+                "age_months": request.age_months,
+                "weight_kg": request.weight_kg,
+                "height_cm": request.height_cm,
+                "gender": gender
+            },
+            "timestamp": datetime.utcnow().isoformat(),
+            "api_version": "1.0.0"
+        }
+        
+        logger.info(f"All indices calculated successfully")
+        return result
+        
+    except Exception as e:
+        logger.error(f"All indices calculation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Calculation failed: {str(e)}"
+        )
+
 @app.get("/reference/who-standards/{gender}/{indicator}")
 async def get_who_standards(
     gender: str,

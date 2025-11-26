@@ -195,7 +195,8 @@ function applyFilters() {
     const barangay = document.getElementById('barangayFilter').value;
     const sex = document.getElementById('sexFilter').value;
     const ageRange = document.getElementById('ageRangeFilter').value;
-    const nutritionist = document.getElementById('nutritionistFilter').value;
+    const nutritionistFilter = document.getElementById('nutritionistFilter');
+    const nutritionist = nutritionistFilter ? nutritionistFilter.value : null;
     
     // Add non-empty filters to params
     if (search) params.append('search', search);
@@ -830,7 +831,7 @@ function attachNutritionalCalculators(form) {
         const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
 
         // Call API to calculate indicators
-        fetch('/nutritionist/patients/calculate-indicators', {
+        fetch('/calculate/all-indices', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -847,32 +848,18 @@ function attachNutritionalCalculators(form) {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Nutritional indicators response:', data); // Debug log
-            
             if (data.success && data.indicators) {
                 if (weightForAgeInput) weightForAgeInput.value = data.indicators.weight_for_age || '';
                 if (heightForAgeInput) heightForAgeInput.value = data.indicators.height_for_age || '';
                 if (bmiForAgeInput) bmiForAgeInput.value = data.indicators.bmi_for_age || '';
-                
-                // If still showing "Unknown", check debug data
-                if (data.debug) {
-                    console.log('Full API response structure:', data.debug);
-                }
             } else {
                 // Clear on error
                 if (weightForAgeInput) weightForAgeInput.value = '';
                 if (heightForAgeInput) heightForAgeInput.value = '';
                 if (bmiForAgeInput) bmiForAgeInput.value = '';
-                console.warn('Failed to calculate indicators:', data.message);
-                
-                // Show user-friendly message if API is down
-                if (data.error) {
-                    console.error('API Error:', data.error);
-                }
             }
         })
         .catch(error => {
-            console.error('Error calculating indicators:', error);
             // Clear on error
             if (weightForAgeInput) weightForAgeInput.value = '';
             if (heightForAgeInput) heightForAgeInput.value = '';

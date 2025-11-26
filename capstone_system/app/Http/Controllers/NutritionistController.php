@@ -237,24 +237,23 @@ class NutritionistController extends Controller
             // Log the full response for debugging
             \Illuminate\Support\Facades\Log::info('API Response for nutritional indicators:', ['result' => $result]);
             
-            // Try multiple possible response structures
+            // Extract classification from the new /calculate/all-indices endpoint response
+            // The new endpoint returns objects with 'classification' property for each indicator
+            $extractClassification = function($indicator) {
+                if (is_array($indicator) && isset($indicator['classification'])) {
+                    return $indicator['classification'];
+                } elseif (is_array($indicator) && isset($indicator['status'])) {
+                    return $indicator['status'];
+                } elseif (is_string($indicator)) {
+                    return $indicator;
+                }
+                return 'Unknown';
+            };
+            
             $indicators = [
-                'weight_for_age' => $result['indicators']['weight_for_age']['status'] 
-                    ?? $result['weight_for_age']['status'] 
-                    ?? $result['weight_for_age'] 
-                    ?? $result['wfa_status']
-                    ?? 'Unknown',
-                'height_for_age' => $result['indicators']['height_for_age']['status'] 
-                    ?? $result['height_for_age']['status'] 
-                    ?? $result['height_for_age'] 
-                    ?? $result['lhfa_status']
-                    ?? $result['hfa_status']
-                    ?? 'Unknown',
-                'bmi_for_age' => $result['indicators']['bmi_for_age']['status'] 
-                    ?? $result['bmi_for_age']['status'] 
-                    ?? $result['bmi_for_age'] 
-                    ?? $result['bmifa_status']
-                    ?? 'Unknown',
+                'weight_for_age' => $extractClassification($result['weight_for_age'] ?? null),
+                'height_for_age' => $extractClassification($result['height_for_age'] ?? null),
+                'bmi_for_age' => $extractClassification($result['bmi'] ?? $result['bmi_for_age'] ?? null),
             ];
 
             return response()->json([

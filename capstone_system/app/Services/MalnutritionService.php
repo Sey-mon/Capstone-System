@@ -103,7 +103,7 @@ class MalnutritionService
         try {
             $response = Http::timeout($this->timeout)
                 ->withToken($token)
-                ->post($this->baseUrl . '/assess/malnutrition-only', $childData);
+                ->post($this->baseUrl . '/calculate/all-indices', $childData);
 
             if ($response->successful()) {
                 return $response->json();
