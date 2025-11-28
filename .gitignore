@@ -72,12 +72,26 @@ venv.bak/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Machine Learning models (optional - remove if you want to track models)
+# Machine Learning models
 *.joblib
+*.pkl
 *.h5
 *.model
 
-# Data files (optional - remove if you want to track data)
+# LLM specific - ADD THESE
+capstone_system/LLM/embeddings_cache/
+capstone_system/LLM/__pycache__/
+capstone_system/LLM/*.pyc
+capstone_system/LLM/.env
+
+# RandomForest specific - ADD THESE
+capstone_system/RandomForest/__pycache__/
+capstone_system/RandomForest/*.pyc
+capstone_system/RandomForest/*.pkl
+capstone_system/RandomForest/*.joblib
+capstone_system/RandomForest/.env
+
+# Data files (optional)
 *.xml
 *.xls
 

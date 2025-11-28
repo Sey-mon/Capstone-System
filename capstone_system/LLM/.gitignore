@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Environment
+.env
+.env.local
+
+# Embeddings cache - IMPORTANT
+embeddings_cache/
+*.pkl
+*.idx
+
+# Virtual Environment
+venv/
+env/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
