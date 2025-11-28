@@ -82,21 +82,16 @@ return [
             'icon' => 'fas fa-chart-bar',
             'text' => 'Reports',
         ],
-        // [
-        //     'route' => 'nutritionist.meal-plans',
-        //     'icon' => 'fas fa-utensils',
-        //     'text' => 'Meal Plans',
-        // ],
+        [
+            'route' => 'nutritionist.meal-plans',
+            'icon' => 'fas fa-utensils',
+            'text' => 'Meal Plans',
+        ],
         [
             'route' => 'nutritionist.foods.index',
             'icon' => 'fas fa-database',
             'text' => 'Food Database',
         ],
-        // [
-        //     'route' => 'nutritionist.food-requests.index',
-        //     'icon' => 'fas fa-clipboard-list',
-        //     'text' => 'My Food Requests',
-        // ],
     ],
     
     'parent' => [
@@ -124,11 +119,6 @@ return [
             'route' => 'parent.view-meal-plans',
             'icon' => 'fas fa-book-medical',
             'text' => 'My Meal Plans',
-        ],
-        [
-            'route' => 'parent.profile',
-            'icon' => 'fas fa-user-cog',
-            'text' => 'Profile',
         ],
     ],
 ];

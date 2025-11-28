@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             RolesTableSeeder::class,
             BarangaysTableSeeder::class,
             ItemCategoriesTableSeeder::class,
+            FoodsTableSeeder::class,  // Added Filipino foods seeder
             UsersTableSeeder::class,
             PatientTableSeeder::class,
             AssessmentsTableSeeder::class,

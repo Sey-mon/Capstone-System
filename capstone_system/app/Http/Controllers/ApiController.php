@@ -288,6 +288,52 @@ class ApiController extends Controller
             ->where('parent_id', $parent->user_id)
             ->firstOrFail();
 
+        // Check if a meal plan was generated within the last 7 days
+        $latestMealPlan = MealPlan::where('patient_id', $validated['patient_id'])
+            ->orderBy('generated_at', 'desc')
+            ->first();
+
+        if ($latestMealPlan && $latestMealPlan->generated_at) {
+            $generatedAt = \Carbon\Carbon::parse($latestMealPlan->generated_at);
+            $now = now();
+            
+            // Calculate days and hours
+            $totalHours = $generatedAt->diffInHours($now);
+            $daysSinceLastPlan = floor($totalHours / 24);
+            $hoursSinceLastPlan = $totalHours % 24;
+            
+            if ($daysSinceLastPlan < 7 || ($daysSinceLastPlan == 7 && $hoursSinceLastPlan == 0)) {
+                $daysRemaining = 7 - $daysSinceLastPlan;
+                $hoursRemaining = $hoursSinceLastPlan > 0 ? 24 - $hoursSinceLastPlan : 0;
+                
+                // Build time ago string
+                $timeAgo = "{$daysSinceLastPlan} " . ($daysSinceLastPlan === 1 ? 'day' : 'days');
+                if ($hoursSinceLastPlan > 0) {
+                    $timeAgo .= " and {$hoursSinceLastPlan} " . ($hoursSinceLastPlan === 1 ? 'hour' : 'hours');
+                }
+                
+                // Build time remaining string
+                $timeRemaining = '';
+                if ($daysRemaining > 0) {
+                    $timeRemaining = "{$daysRemaining} " . ($daysRemaining === 1 ? 'day' : 'days');
+                    if ($hoursRemaining > 0) {
+                        $timeRemaining .= " and {$hoursRemaining} " . ($hoursRemaining === 1 ? 'hour' : 'hours');
+                    }
+                } else {
+                    $timeRemaining = "{$hoursRemaining} " . ($hoursRemaining === 1 ? 'hour' : 'hours');
+                }
+                
+                $nextAvailableDate = $generatedAt->copy()->addDays(7)->format('M d, Y \a\t g:i A');
+                
+                return back()->withErrors([
+                    'cooldown' => "You can only generate a new meal plan once every 7 days. A meal plan for {$child->first_name} was generated {$timeAgo} ago. Please wait {$timeRemaining} more (available on {$nextAvailableDate})."
+                ])->with('last_meal_plan', $latestMealPlan->plan_details)
+                  ->with('meal_plan_html', $this->formatMealPlanHtml($latestMealPlan->plan_details))
+                  ->with('child_name', $child->first_name . ' ' . $child->last_name)
+                  ->with('plan_date', $generatedAt->format('M d, Y'));
+            }
+        }
+
         try {
             // Get LLM API URL from config (proper Laravel way)
             $llmApiUrl = config('services.nutrition_api.base_url');

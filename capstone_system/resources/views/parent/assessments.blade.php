@@ -26,12 +26,35 @@
         </div>
         <div class="header-right">
             <div class="header-stats-cards">
+                @php
+                    $totalChildren = isset($children) ? count($children) : 0;
+                    $childrenWithAssessments = 0;
+                    $totalAssessments = 0;
+                    $latestAssessmentDate = null;
+                    
+                    if (isset($children) && $totalChildren > 0) {
+                        foreach ($children as $child) {
+                            $assessmentCount = $child->assessments->count();
+                            if ($assessmentCount > 0) {
+                                $childrenWithAssessments++;
+                                $totalAssessments += $assessmentCount;
+                                
+                                // Get the latest assessment date
+                                $childLatestAssessment = $child->assessments->sortByDesc('created_at')->first();
+                                if ($childLatestAssessment && (!$latestAssessmentDate || $childLatestAssessment->created_at > $latestAssessmentDate)) {
+                                    $latestAssessmentDate = $childLatestAssessment->created_at;
+                                }
+                            }
+                        }
+                    }
+                @endphp
+                
                 <div class="header-stat-item">
                     <div class="header-stat-icon">
                         <i class="fas fa-child"></i>
                     </div>
                     <div class="header-stat-content">
-                        <div class="header-stat-value">{{ count($children ?? []) }}</div>
+                        <div class="header-stat-value">{{ $totalChildren }}</div>
                         <div class="header-stat-label">Registered Children</div>
                     </div>
                 </div>
@@ -40,8 +63,8 @@
                         <i class="fas fa-heart"></i>
                     </div>
                     <div class="header-stat-content">
-                        <div class="header-stat-value">{{ $children ? $children->filter(function($child) { return $child->assessments->isNotEmpty(); })->count() : 0 }}</div>
-                        <div class="header-stat-label">Under Care</div>
+                        <div class="header-stat-value">{{ $childrenWithAssessments }}</div>
+                        <div class="header-stat-label">With Assessments</div>
                     </div>
                 </div>
                 <div class="header-stat-item">
@@ -49,10 +72,21 @@
                         <i class="fas fa-clipboard-check"></i>
                     </div>
                     <div class="header-stat-content">
-                        <div class="header-stat-value">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
+                        <div class="header-stat-value">{{ $totalAssessments }}</div>
                         <div class="header-stat-label">Total Assessments</div>
                     </div>
                 </div>
+                @if($latestAssessmentDate)
+                <div class="header-stat-item">
+                    <div class="header-stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="header-stat-content">
+                        <div class="header-stat-value" style="font-size: 1rem;">{{ $latestAssessmentDate->diffForHumans() }}</div>
+                        <div class="header-stat-label">Last Assessment</div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>

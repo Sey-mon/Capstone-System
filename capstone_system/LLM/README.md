@@ -17,8 +17,11 @@ An advanced nutrition management system for children aged 0-5 years, powered by 
 - 📋 **Role-Based Access**: User, Parent, Nutritionist, and Admin endpoints
 - 📄 **PDF Processing**: Upload and process nutrition guidelines with AI summarization
 - 🇵🇭 **Filipino-Focused**: Built-in Filipino nutrition knowledge and cultural considerations
+- 🍽️ **7-Day Meal Plans**: Non-repeating Filipino traditional dishes across the entire week
+- 🥘 **Authentic Filipino Cuisine**: Traditional dishes like sinigang, adobo, tinola, kare-kare, pancit, etc.
 - 🔐 **Privacy-First**: Medical data only, no personal identifiers in AI processing
 - 📊 **Evidence-Based**: WHO nutrition guidelines integration via PDF knowledge base
+- 🔄 **Diverse Menus**: Automatic variety control ensuring no dish repetition across 7 days
 
 ## 📋 Quick Start
 
@@ -157,6 +160,87 @@ The system provides evidence-based nutrition guidance using semantic search:
 - AI automatically extracts 0-5 year relevant content
 - Semantic chunking with overlap for better context
 - Cached embeddings for fast retrieval
+
+---
+
+## 🇵🇭 Filipino Cuisine Enhancement (Updated)
+
+### **7-Day Meal Plan Improvements**
+
+The meal plan generator has been significantly enhanced to ensure:
+
+#### ✅ **Non-Repeating Dishes**
+- **MANDATORY**: No dish is repeated across the entire 7-day period
+- Each day features completely unique meals for breakfast, lunch, snack, and dinner
+- Ingredients may overlap, but preparation methods and dish names must be different
+- Example: If chicken appears, it's prepared differently each time (Tinola Day 1, Adobo Day 3, Pritong Manok Day 5)
+
+#### 🍽️ **Traditional Filipino Cuisine Categories**
+
+**Breakfast Options (Almusal):**
+- Champorado (chocolate rice porridge)
+- Arroz caldo (chicken rice porridge with ginger)
+- Lugaw na baboy/manok (rice porridge)
+- Sinangag at itlog (fried rice with egg)
+- Pandesal with kesong puti
+- Tuyo at sinangag (dried fish and fried rice)
+- Tapa at itlog (cured beef and egg)
+
+**Main Meals (Tanghalian/Hapunan):**
+- Adobong manok/baboy (chicken/pork adobo)
+- Sinigang na baboy/isda (sour soup)
+- Tinola (ginger chicken soup)
+- Pinakbet (vegetable stew with bagoong)
+- Ginataang kalabasa (squash in coconut milk)
+- Nilagang baka (boiled beef soup)
+- Kare-kare (peanut stew)
+- Pancit canton/bihon (stir-fried noodles)
+- Ginataang hipon (shrimp in coconut milk)
+- Pritong isda (fried fish - tilapia, bangus, galunggong)
+- Tortang talong (eggplant omelette)
+- Menudo, Afritada, Mechado (various stews)
+
+**Snacks (Meryenda):**
+- Turon (banana spring rolls)
+- Banana cue (caramelized banana)
+- Ginataang mais (corn in coconut milk)
+- Puto (steamed rice cake)
+- Suman (sticky rice in banana leaves)
+- Fresh fruits: Saging, mangga, papaya
+
+#### 🔪 **Filipino Cooking Methods (Tagalog)**
+- **Pritong** = Fried
+- **Nilagang** = Boiled
+- **Ginisang** = Sautéed
+- **Ginataang** = Cooked in coconut milk
+- **Inihaw** = Grilled
+- **Haluing** = Mashed/pureed (for babies)
+- **Sinangag** = Fried rice
+
+#### 👶 **Age-Appropriate Textures**
+- **6-8 months**: Lugaw, haluing saging/papaya/kalabasa, sopas with mashed vegetables
+- **9-11 months**: Lugaw with small pieces, mashed rice with ulam, soft pancit
+- **12-23 months**: Kanin with finely chopped ulam, sopas, soft fruits
+- **24-59 months**: Regular family foods, appropriately chopped
+
+#### 🎯 **Diversity Requirements**
+The system enforces:
+- At least 10 different protein sources across 7 days
+- At least 15 different vegetables/fruits across 7 days
+- Varied cooking methods throughout the week
+- Unique breakfast items each day
+- Unique snacks each day
+- Traditional Filipino dishes distributed across different days
+
+#### 📝 **Implementation Details**
+Enhanced prompt in `nutrition_chain.py` includes:
+- Explicit non-repetition rules
+- Comprehensive Filipino dish examples
+- Day-by-day variety checking instructions
+- Cultural appropriateness guidelines
+- Age-specific Filipino food preparations
+
+---
 
 ## 📄 License
 

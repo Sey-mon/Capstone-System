@@ -21,11 +21,12 @@
 /* Desktop Header Section */
 .desktop-header-section {
     background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
-    padding: 2.5rem 3rem;
+    padding: 1.5rem 2rem;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 3rem;
+    gap: 1.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-bottom: 3px solid rgba(255, 255, 255, 0.2);
 }
@@ -33,19 +34,20 @@
 .header-left {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    flex: 1;
+    gap: 1rem;
+    flex: 1 1 300px;
+    min-width: 0;
 }
 
 .page-icon {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: white;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -57,41 +59,47 @@
 }
 
 .page-main-title {
-    font-size: 2rem;
+    font-size: clamp(1.125rem, 2vw, 1.5rem);
     font-weight: 700;
     color: white;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.25rem 0;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     line-height: 1.2;
+    word-break: break-word;
 }
 
 .page-description {
-    font-size: 1rem;
+    font-size: clamp(0.75rem, 1.5vw, 0.875rem);
     color: rgba(255, 255, 255, 0.9);
     margin: 0;
     font-weight: 400;
     line-height: 1.5;
+    word-break: break-word;
 }
 
 .header-right {
-    flex-shrink: 0;
+    flex: 0 1 auto;
+    min-width: 0;
 }
 
 .header-stats-cards {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
 }
 
 .header-stat-item {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
+    border-radius: 10px;
+    padding: 0.75rem 0.875rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    min-width: 160px;
+    gap: 0.625rem;
+    min-width: 120px;
+    flex: 0 1 auto;
     transition: all 0.3s ease;
 }
 
@@ -102,15 +110,15 @@
 }
 
 .header-stat-icon {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 1.25rem;
+    font-size: 1rem;
     flex-shrink: 0;
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
@@ -121,7 +129,7 @@
 }
 
 .header-stat-value {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: white;
     line-height: 1;
@@ -129,7 +137,7 @@
 }
 
 .header-stat-label {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
     text-transform: uppercase;
@@ -138,7 +146,7 @@
 
 /* Desktop Content Area */
 .desktop-content-area {
-    padding: 2.5rem 3rem;
+    padding: 1.5rem 2rem;
     max-width: 1600px;
     margin: 0 auto;
 }
@@ -147,13 +155,13 @@
 .assessments-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 /* Child Card - Horizontal Desktop Layout */
 .child-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-gray);
@@ -169,29 +177,29 @@
 /* Card Header - Horizontal Layout */
 .child-card-header {
     background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
-    padding: 1.5rem 2rem;
+    padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 .child-profile-section {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 1rem;
     flex: 1;
 }
 
 .child-avatar {
-    width: 56px;
-    height: 56px;
+    width: 44px;
+    height: 44px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     color: white;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -203,10 +211,10 @@
 }
 
 .child-name {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 700;
     color: white;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.375rem 0;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -214,7 +222,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: rgba(255, 255, 255, 0.95);
     flex-wrap: wrap;
 }
@@ -241,17 +249,17 @@
 
 /* Card Body */
 .child-card-body {
-    padding: 2rem;
+    padding: 1.5rem;
 }
 
 .view-history-btn {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 0.625rem 1.25rem;
-    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);

@@ -109,57 +109,94 @@ function filterMealPlans(childId) {
     const cards = document.querySelectorAll('.meal-plan-card-premium');
     let visibleCount = 0;
     
+    // Convert childId to string for consistent comparison
+    const filterValue = String(childId).trim();
+    
     cards.forEach((card, index) => {
-        const shouldShow = childId === '' || card.dataset.childId === childId;
+        // Get the child ID from the card and convert to string
+        const cardChildId = String(card.getAttribute('data-child-id')).trim();
+        
+        // Show card if no filter selected or if child ID matches
+        const shouldShow = filterValue === '' || cardChildId === filterValue;
         
         if (shouldShow) {
-            setTimeout(() => {
-                card.style.display = '';
-                card.style.animation = 'none';
-                setTimeout(() => {
-                    card.style.animation = `fadeIn 0.5s ease-out ${index * 0.1}s both`;
-                }, 10);
-            }, 10);
+            card.style.display = 'block';
+            card.style.opacity = '1';
+            card.style.transform = 'scale(1)';
+            card.style.animation = `fadeIn 0.5s ease-out ${index * 0.05}s both`;
             visibleCount++;
         } else {
+            card.style.display = 'none';
             card.style.opacity = '0';
             card.style.transform = 'scale(0.8)';
-            setTimeout(() => {
-                card.style.display = 'none';
-            }, 300);
         }
     });
     
     // Show empty message if no cards visible
     checkEmptyState(visibleCount);
+    
+    // Reapply current sort after filtering
+    const sortFilter = document.getElementById('sortFilter');
+    if (sortFilter && sortFilter.value) {
+        setTimeout(() => sortMealPlans(sortFilter.value), 100);
+    }
 }
 
 // Sort meal plans
 function sortMealPlans(sortBy) {
     const grid = document.getElementById('mealPlansGrid');
+    if (!grid) return;
+    
     const cards = Array.from(document.querySelectorAll('.meal-plan-card-premium'));
     
-    cards.sort((a, b) => {
+    // Filter out hidden cards to avoid sorting issues
+    const visibleCards = cards.filter(card => card.style.display !== 'none');
+    
+    visibleCards.sort((a, b) => {
         switch(sortBy) {
             case 'newest':
-                return b.querySelector('.meta-item')?.textContent.localeCompare(
-                    a.querySelector('.meta-item')?.textContent
-                );
+                // Get the first meta-item which contains the date string
+                const dateStrA = a.querySelector('.meta-item:first-child')?.textContent.trim() || '';
+                const dateStrB = b.querySelector('.meta-item:first-child')?.textContent.trim() || '';
+                
+                // Parse the date strings to actual Date objects for proper comparison
+                // Icon is included, so we need to extract just the date part
+                const dateTextA = dateStrA.replace(/^\s*[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u27FF]+\s*/, '').trim();
+                const dateTextB = dateStrB.replace(/^\s*[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u27FF]+\s*/, '').trim();
+                
+                const parsedDateA = new Date(dateTextA);
+                const parsedDateB = new Date(dateTextB);
+                
+                // Compare dates in reverse order (newest first) - bigger timestamp = newer
+                return parsedDateB.getTime() - parsedDateA.getTime();
+                
             case 'oldest':
-                return a.querySelector('.meta-item')?.textContent.localeCompare(
-                    b.querySelector('.meta-item')?.textContent
-                );
+                // Get the first meta-item which contains the date string
+                const dateOldStrA = a.querySelector('.meta-item:first-child')?.textContent.trim() || '';
+                const dateOldStrB = b.querySelector('.meta-item:first-child')?.textContent.trim() || '';
+                
+                // Parse the date strings to actual Date objects for proper comparison
+                const dateOldTextA = dateOldStrA.replace(/^\s*[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u27FF]+\s*/, '').trim();
+                const dateOldTextB = dateOldStrB.replace(/^\s*[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u27FF]+\s*/, '').trim();
+                
+                const parsedOldDateA = new Date(dateOldTextA);
+                const parsedOldDateB = new Date(dateOldTextB);
+                
+                // Compare dates in normal order (oldest first) - smaller timestamp = older
+                return parsedOldDateA.getTime() - parsedOldDateB.getTime();
+                
             case 'child':
-                return a.querySelector('.child-name')?.textContent.localeCompare(
-                    b.querySelector('.child-name')?.textContent
-                );
+                const nameA = a.querySelector('.child-name')?.textContent.trim() || '';
+                const nameB = b.querySelector('.child-name')?.textContent.trim() || '';
+                return nameA.localeCompare(nameB);
+                
             default:
                 return 0;
         }
     });
     
-    // Re-append sorted cards with animation
-    cards.forEach((card, index) => {
+    // Clear the grid and re-append sorted cards with animation
+    visibleCards.forEach((card, index) => {
         card.style.animation = 'none';
         setTimeout(() => {
             grid.appendChild(card);
@@ -1213,27 +1250,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-// Filter meal plans by child
-function filterMealPlans(childId) {
-    const cards = document.querySelectorAll('.meal-plan-card');
-    
-    cards.forEach(card => {
-        if (childId === '' || card.dataset.childId === childId) {
-            card.style.display = '';
-            setTimeout(() => {
-                card.style.opacity = '1';
-                card.style.transform = 'scale(1)';
-            }, 10);
-        } else {
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                card.style.display = 'none';
-            }, 300);
-        }
-    });
-}
 
 // Initialize view toggle (grid/list)
 function initializeViewToggle() {

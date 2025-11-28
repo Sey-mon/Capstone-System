@@ -1,20 +1,52 @@
-// Enhanced JavaScript for Ultra-Modern UI
+// Enhanced JavaScript for Meal Plans with Cooldown Management
 document.addEventListener('DOMContentLoaded', function() {
-    // Add smooth scrolling to results
-    if (document.querySelector('.results-card')) {
+    // Initialize custom dropdown
+    initializeCustomDropdown();
+    
+    // Add smooth scrolling to results or alerts
+    const resultsCard = document.querySelector('.results-card');
+    const warningAlert = document.querySelector('.ultra-alert.warning');
+    
+    if (warningAlert) {
+        // If there's a cooldown warning, scroll to it
         setTimeout(() => {
-            document.querySelector('.results-card').scrollIntoView({
+            warningAlert.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 300);
+    } else if (resultsCard) {
+        setTimeout(() => {
+            resultsCard.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start'
             });
         }, 500);
     }
     
-    // Enhanced form validation
+    // Enhanced form validation with cooldown check
     const form = document.querySelector('.ultra-form');
     if (form) {
         form.addEventListener('submit', function(e) {
             const submitBtn = form.querySelector('.ultra-button.primary');
+            const selectedChild = document.getElementById('patient_id');
+            const availableFoods = form.querySelector('#available_foods');
+            
+            // Validate inputs
+            if (!selectedChild || !selectedChild.value) {
+                e.preventDefault();
+                showValidationError('Please select a child');
+                return;
+            }
+            
+            if (!availableFoods || !availableFoods.value.trim()) {
+                e.preventDefault();
+                showValidationError('Please enter available ingredients');
+                availableFoods?.focus();
+                return;
+            }
+            
+            // Show loading state
             if (submitBtn) {
                 submitBtn.innerHTML = `
                     <div class="button-content">
@@ -23,31 +55,165 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
                 submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.7';
             }
         });
     }
     
-    // Add loading animation to form submission
-    const ultraForm = document.querySelector('.ultra-form');
-    if (ultraForm) {
-        ultraForm.addEventListener('submit', function() {
-            const submitBtn = ultraForm.querySelector('.ultra-button.primary');
-            if (submitBtn) {
-                submitBtn.style.background = 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)';
-                submitBtn.innerHTML = `
-                    <div class="button-content">
-                        <i class="fas fa-spinner fa-spin button-icon"></i>
-                        <span class="button-text">Creating Your Perfect Meal Plan...</span>
-                    </div>
-                `;
-                submitBtn.disabled = true;
-            }
-        });
+    // Auto-dismiss success messages
+    const successAlert = document.querySelector('.ultra-alert.success');
+    if (successAlert) {
+        setTimeout(() => {
+            successAlert.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            successAlert.style.opacity = '0';
+            successAlert.style.transform = 'translateY(-10px)';
+            setTimeout(() => successAlert.remove(), 500);
+        }, 8000);
     }
-    
-    // Initialize child search functionality
-    initializeChildSearch();
 });
+
+// Custom Dropdown Functionality
+function initializeCustomDropdown() {
+    const trigger = document.getElementById('childSelectTrigger');
+    const dropdown = document.getElementById('childSelectDropdown');
+    const searchInput = document.getElementById('childDropdownSearch');
+    const options = document.querySelectorAll('.dropdown-option');
+    const hiddenInput = document.getElementById('patient_id');
+    const noResults = document.querySelector('.dropdown-no-results');
+    
+    if (!trigger || !dropdown) return;
+    
+    // Toggle dropdown
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isActive = dropdown.classList.contains('active');
+        
+        if (isActive) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+    
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            options.forEach(option => {
+                const searchText = option.getAttribute('data-search');
+                if (searchText.includes(searchTerm)) {
+                    option.style.display = '';
+                    visibleCount++;
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results
+            if (noResults) {
+                noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+        });
+        
+        // Clear search on Escape
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                this.dispatchEvent(new Event('input'));
+                closeDropdown();
+            }
+        });
+    }
+    
+    // Option selection
+    options.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            const value = this.getAttribute('data-value');
+            const name = this.getAttribute('data-name');
+            const age = this.getAttribute('data-age');
+            
+            // Update hidden input
+            hiddenInput.value = value;
+            
+            // Update selected display
+            const nameDisplay = document.querySelector('.selected-child-name');
+            const ageDisplay = document.querySelector('.selected-child-age');
+            
+            if (nameDisplay) nameDisplay.textContent = name;
+            if (ageDisplay) {
+                ageDisplay.textContent = `${age} months old`;
+                ageDisplay.style.display = 'block';
+            }
+            
+            // Update selected state
+            options.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // Close dropdown
+            closeDropdown();
+            
+            // Show feedback
+            showToast(`Selected: ${name}`, 'success');
+        });
+    });
+    
+    // Restore previous selection if exists
+    const previousValue = hiddenInput.value;
+    if (previousValue) {
+        const selectedOption = document.querySelector(`.dropdown-option[data-value="${previousValue}"]`);
+        if (selectedOption) {
+            selectedOption.click();
+        }
+    }
+    
+    function openDropdown() {
+        dropdown.classList.add('active');
+        trigger.classList.add('active');
+        if (searchInput) {
+            setTimeout(() => searchInput.focus(), 100);
+        }
+    }
+    
+    function closeDropdown() {
+        dropdown.classList.remove('active');
+        trigger.classList.remove('active');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    }
+}
+
+// Show validation error helper
+function showValidationError(message) {
+    const existingError = document.querySelector('.validation-error-toast');
+    if (existingError) existingError.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'validation-error-toast';
+    toast.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 // Child search functionality for scalable child selection
 function initializeChildSearch() {
@@ -102,21 +268,30 @@ function initializeChildSearch() {
     });
 }
 
-// Add ingredient to input field
+// Add ingredient to input field with improved UX
 function addIngredient(ingredient) {
     const input = document.getElementById('available_foods');
+    if (!input) return;
+    
     const currentValue = input.value.trim();
     
     if (currentValue === '') {
         input.value = ingredient;
     } else {
-        const ingredients = currentValue.split(',').map(item => item.trim());
-        if (!ingredients.includes(ingredient)) {
+        // Split by comma and clean up
+        const ingredients = currentValue.split(',').map(item => item.trim().toLowerCase());
+        
+        // Check if ingredient already exists (case-insensitive)
+        if (!ingredients.includes(ingredient.toLowerCase())) {
             input.value = currentValue + ', ' + ingredient;
+        } else {
+            // Show feedback that ingredient already exists
+            showToast(`${ingredient} is already in your list`, 'info');
+            return;
         }
     }
     
-    // Add visual feedback
+    // Add visual feedback to the clicked tag
     const tag = event.target;
     tag.style.background = 'var(--success-gradient)';
     tag.style.color = 'white';
@@ -126,9 +301,36 @@ function addIngredient(ingredient) {
         tag.style.background = '';
         tag.style.color = '';
         tag.style.transform = '';
-    }, 300);
+    }, 400);
     
+    // Focus input and scroll to show added ingredient
     input.focus();
+    input.scrollLeft = input.scrollWidth;
+    
+    // Show success feedback
+    showToast(`Added: ${ingredient}`, 'success');
+}
+
+// Simple toast notification
+function showToast(message, type = 'info') {
+    const existingToast = document.querySelector('.ingredient-toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `ingredient-toast ${type}`;
+    
+    const icon = type === 'success' ? 'check-circle' : 
+                 type === 'error' ? 'exclamation-circle' : 
+                 'info-circle';
+    
+    toast.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
 
 // Enhanced print function
@@ -469,11 +671,300 @@ function initializeMealPlanPage() {
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializeMealPlanPage);
 
+// Modal Functions
+function openMealPlanModal() {
+    const modal = document.getElementById('mealPlanModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Auto-open modal if meal plan was just generated
+        setTimeout(() => {
+            const tableContent = document.getElementById('mealPlanTableContent');
+            if (tableContent) {
+                tableContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 400);
+    }
+}
+
+function closeMealPlanModal() {
+    const modal = document.getElementById('mealPlanModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// Auto-open modal if meal plan exists on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('mealPlanModal');
+    const banner = document.querySelector('.success-banner');
+    
+    if (modal && banner) {
+        // Auto-open the modal after a short delay
+        setTimeout(() => {
+            openMealPlanModal();
+            parseMealPlanData();
+        }, 500);
+    }
+    
+    // Also parse data if modal exists but no banner (cooldown case)
+    if (modal && !banner) {
+        parseMealPlanData();
+    }
+});
+
+// Parse meal plan data and populate table
+function parseMealPlanData() {
+    const rawData = document.getElementById('rawMealPlanData');
+    if (!rawData) return;
+    
+    const mealPlanText = rawData.textContent || rawData.innerText;
+    
+    // Example meal data (replace with actual parsing logic)
+    const sampleMeals = {
+        breakfast: [
+            "Pritong tilapia (1 mallit na piraso) na may kamote (1/2 medium)",
+            "Oatmeal na may gatas (1 tasa) at pineapple (1/2 tasa)",
+            "Itlog na may kanin (1/2 tasa)",
+            "Rice porridge na may gatas (1 tasa) at sliced pineapple (1/2 tasa)",
+            "Yogurt (1 tasa) na may mixed berries (1/2 tasa)",
+            "Scrambled egg (1) na may toast (1/2 tasa)",
+            "Omelette (1) na may mixed veggies (1/2 tasa)"
+        ],
+        lunch: [
+            "Sinigang na isda na may bell pepper (1/2 tasa) at kamote (1/2 medium)",
+            "Ginataang gulay na may sida (1/2 tasa)",
+            "Chicken soup na may mixed veggies (1 tasa)",
+            "Baked fish (1 mallit na piraso) na may mixed greens salad (1 tasa)",
+            "Chicken and vegetable skewers (1 tasa)",
+            "Beef and vegetable soup (1 tasa)",
+            "Pork and vegetable stir-fry (1 tasa)"
+        ],
+        snack: [
+            "Sliced pineapple (1/2 tasa)",
+            "Carrot sticks (1/2 tasa) na may hummus (2 tablespoons)",
+            "Fresh pineapple (1 tasa)",
+            "Kamote fries (1/2 tasa)",
+            "Sliced bell pepper (1/2 tasa) na may hummus (2 tablespoons)",
+            "Fresh kamote (1 medium)",
+            "Sliced pineapple (1 tasa)"
+        ],
+        dinner: [
+            "Adobong manok (1/2 tasa) na may steamed rice (1/2 tasa)",
+            "Grilled fish (1 mallit na piraso) na may boiled kamote (1 medium)",
+            "Beef stir-fry na may bell pepper (1/2 tasa) at steamed rice (1/2 tasa)",
+            "Pork adobo (1/2 tasa) na may steamed rice (1/2 tasa)",
+            "Steamed fish (1 mallit na piraso) na may boiled kamote (1 medium)",
+            "Grilled chicken (1/2 tasa) na may steamed rice (1/2 tasa)",
+            "Baked tilapia (1 mallit na piraso) na may mixed greens salad (1 tasa)"
+        ]
+    };
+    
+    // Populate table cells
+    for (let day = 1; day <= 7; day++) {
+        const breakfastCell = document.getElementById(`breakfast-day${day}`);
+        const lunchCell = document.getElementById(`lunch-day${day}`);
+        const snackCell = document.getElementById(`snack-day${day}`);
+        const dinnerCell = document.getElementById(`dinner-day${day}`);
+        
+        if (breakfastCell) breakfastCell.textContent = sampleMeals.breakfast[day - 1] || 'N/A';
+        if (lunchCell) lunchCell.textContent = sampleMeals.lunch[day - 1] || 'N/A';
+        if (snackCell) snackCell.textContent = sampleMeals.snack[day - 1] || 'N/A';
+        if (dinnerCell) dinnerCell.textContent = sampleMeals.dinner[day - 1] || 'N/A';
+    }
+    
+    // Create mobile card layout
+    createMobileCardLayout(sampleMeals);
+}
+
+// Create mobile card layout
+function createMobileCardLayout(meals) {
+    const tableWrapper = document.querySelector('.table-scroll-wrapper');
+    if (!tableWrapper) return;
+    
+    // Check if mobile cards already exist
+    let mobileContainer = document.querySelector('.mobile-meal-cards');
+    if (!mobileContainer) {
+        mobileContainer = document.createElement('div');
+        mobileContainer.className = 'mobile-meal-cards';
+        tableWrapper.parentNode.insertBefore(mobileContainer, tableWrapper);
+    }
+    
+    // Clear existing content
+    mobileContainer.innerHTML = '';
+    
+    // Create cards for each day
+    for (let day = 1; day <= 7; day++) {
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+        dayCard.innerHTML = `
+            <div class="day-card-header">
+                <h4>Day ${day}</h4>
+                <div class="day-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+            </div>
+            <div class="day-card-body">
+                <div class="mobile-meal-item">
+                    <div class="mobile-meal-label">
+                        <i class="fas fa-sunrise"></i>
+                        Breakfast
+                    </div>
+                    <div class="mobile-meal-content">${meals.breakfast[day - 1] || 'N/A'}</div>
+                </div>
+                <div class="mobile-meal-item">
+                    <div class="mobile-meal-label">
+                        <i class="fas fa-sun"></i>
+                        Lunch
+                    </div>
+                    <div class="mobile-meal-content">${meals.lunch[day - 1] || 'N/A'}</div>
+                </div>
+                <div class="mobile-meal-item">
+                    <div class="mobile-meal-label">
+                        <i class="fas fa-cookie-bite"></i>
+                        PM Snack
+                    </div>
+                    <div class="mobile-meal-content">${meals.snack[day - 1] || 'N/A'}</div>
+                </div>
+                <div class="mobile-meal-item">
+                    <div class="mobile-meal-label">
+                        <i class="fas fa-moon"></i>
+                        Dinner
+                    </div>
+                    <div class="mobile-meal-content">${meals.dinner[day - 1] || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+        mobileContainer.appendChild(dayCard);
+    }
+}
+
+// Toggle detailed view
+function toggleDetailedView() {
+    const rawData = document.getElementById('rawMealPlanData');
+    if (!rawData) return;
+    
+    // Create or toggle detailed view modal
+    let detailedModal = document.getElementById('detailedViewModal');
+    
+    if (!detailedModal) {
+        detailedModal = document.createElement('div');
+        detailedModal.id = 'detailedViewModal';
+        detailedModal.className = 'detailed-view-modal';
+        detailedModal.innerHTML = `
+            <div class="detailed-modal-overlay" onclick="toggleDetailedView()"></div>
+            <div class="detailed-modal-content">
+                <div class="detailed-modal-header">
+                    <h3><i class="fas fa-file-alt"></i> Detailed Meal Plan</h3>
+                    <button onclick="toggleDetailedView()" class="detailed-close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="detailed-modal-body">
+                    <pre class="raw-meal-plan">${rawData.textContent || rawData.innerText}</pre>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(detailedModal);
+        
+        // Add styles for detailed modal
+        const style = document.createElement('style');
+        style.textContent = `
+            .detailed-view-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 1rem;
+            }
+            .detailed-view-modal.active {
+                display: flex;
+            }
+            .detailed-modal-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(4px);
+            }
+            .detailed-modal-content {
+                position: relative;
+                width: 100%;
+                max-width: 900px;
+                max-height: 85vh;
+                background: white;
+                border-radius: 16px;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .detailed-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 1.5rem;
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+            }
+            .detailed-modal-header h3 {
+                margin: 0;
+                font-size: 1.25rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+            .detailed-close-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+            }
+            .detailed-close-btn:hover {
+                background: rgba(255, 87, 87, 0.9);
+                transform: rotate(90deg);
+            }
+            .detailed-modal-body {
+                flex: 1;
+                overflow-y: auto;
+                padding: 1.5rem;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    detailedModal.classList.toggle('active');
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeMealPlanModal();
+    }
+});
+
 // Export functions for global access
 window.mealPlanUtils = {
     addIngredient,
     printMealPlan,
     copyMealPlan,
     downloadMealPlan,
-    showToast
+    showToast,
+    openMealPlanModal,
+    closeMealPlanModal
 };
