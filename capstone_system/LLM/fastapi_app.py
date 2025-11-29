@@ -5,8 +5,13 @@ from pydantic import BaseModel
 from nutrition_ai import ChildNutritionAI
 from data_manager import data_manager
 from nutrition_chain import get_meal_plan_with_langchain, generate_patient_assessment
+from feeding_program_chain import (
+    generate_feeding_program_meal_plan,
+    generate_feeding_program_assessment,
+    calculate_batch_nutritional_needs
+)
 from embedding_utils import embedding_searcher, get_contextual_nutrition_guidance
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import pdfplumber
 from io import BytesIO
 
@@ -55,6 +60,20 @@ class SaveMealPlanRequest(BaseModel):
     duration_days: int
     parent_id: int
 
+# Feeding Program Models (Nutritionist)
+class FeedingProgramMealPlanRequest(BaseModel):
+    target_age_group: str = 'all'  # 'all', '0-12months', '12-24months', '24-60months'
+    program_duration_days: int = 7  # Max 7 days
+    budget_level: str = 'moderate'  # 'low', 'moderate', or 'high'
+    available_ingredients: Optional[str] = None
+    barangay: Optional[str] = None
+    total_children: Optional[int] = None
+
+class FeedingProgramAssessmentRequest(BaseModel):
+    target_age_group: str = 'all'
+    barangay: Optional[str] = None
+    total_children: Optional[int] = None
+
 # Admin Role Models
 class SaveAdminLogRequest(BaseModel):
     action: str
@@ -86,7 +105,7 @@ def root():
         "endpoints": {
             "user": ["/get_foods_data"],
             "parent": ["/generate_meal_plan", "/get_children_by_parent", "/get_meal_plans_by_child", "/get_meal_plan_detail"],
-            "nutritionist": ["/nutrition/analysis", "/assessment"],
+            "nutritionist": ["/nutrition/analysis", "/assessment", "/feeding_program/meal_plan", "/feeding_program/assessment"],
             "admin": ["/process_embeddings", "/embedding_status", "/get_knowledge_base", "/upload_pdf"]
         }
     }
@@ -389,6 +408,92 @@ def generate_assessment(request: AssessmentRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# =============================================================================
+# FEEDING PROGRAM ENDPOINTS (Nutritionist)
+# =============================================================================
+
+@app.post("/feeding_program/meal_plan")
+def generate_feeding_program_meal_plan_endpoint(request: FeedingProgramMealPlanRequest):
+    """
+    Generate a GENERIC batch meal plan for a Filipino children feeding program.
+    
+    This endpoint creates standardized meal plans suitable for community feeding programs
+    without requiring specific patient data. Perfect for nutritionists planning programs.
+    """
+    try:
+        # Validate budget level
+        if request.budget_level not in ['low', 'moderate', 'high']:
+            raise HTTPException(status_code=400, detail="Budget level must be 'low', 'moderate', or 'high'")
+        
+        # Validate age group
+        valid_age_groups = ['all', '0-12months', '12-24months', '24-60months']
+        if request.target_age_group not in valid_age_groups:
+            raise HTTPException(status_code=400, detail=f"Age group must be one of: {', '.join(valid_age_groups)}")
+        
+        # Generate feeding program meal plan
+        result = generate_feeding_program_meal_plan(
+            target_age_group=request.target_age_group,
+            program_duration_days=request.program_duration_days,
+            budget_level=request.budget_level,
+            available_ingredients=request.available_ingredients,
+            barangay=request.barangay,
+            total_children=request.total_children
+        )
+        
+        if not result['success']:
+            raise HTTPException(status_code=500, detail=result.get('error', 'Failed to generate meal plan'))
+        
+        return {
+            "success": True,
+            "meal_plan": result['meal_plan'],
+            "program_duration_days": result['program_duration_days'],
+            "budget_level": result['budget_level'],
+            "target_age_group": result.get('target_age_group', request.target_age_group),
+            "generated_at": result['generated_at']
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating feeding program meal plan: {str(e)}")
+
+
+@app.post("/feeding_program/assessment")
+def generate_feeding_program_assessment_endpoint(request: FeedingProgramAssessmentRequest):
+    """
+    Generate a generic assessment report for a Filipino children feeding program.
+    
+    Provides general nutritional needs assessment and recommendations for
+    community feeding programs serving Filipino children.
+    """
+    try:
+        # Validate age group
+        valid_age_groups = ['all', '0-12months', '12-24months', '24-60months']
+        if request.target_age_group not in valid_age_groups:
+            raise HTTPException(status_code=400, detail=f"Age group must be one of: {', '.join(valid_age_groups)}")
+        
+        # Generate feeding program assessment
+        result = generate_feeding_program_assessment(
+            target_age_group=request.target_age_group,
+            barangay=request.barangay,
+            total_children=request.total_children
+        )
+        
+        if not result['success']:
+            raise HTTPException(status_code=500, detail=result.get('error', 'Failed to generate assessment'))
+        
+        return {
+            "success": True,
+            "assessment": result['assessment'],
+            "target_age_group": result.get('target_age_group', request.target_age_group),
+            "generated_at": result['generated_at']
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating feeding program assessment: {str(e)}")
 
 # =============================================================================
 # ADMIN ROLE ENDPOINTS

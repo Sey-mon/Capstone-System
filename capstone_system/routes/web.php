@@ -309,6 +309,9 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     Route::get('/nutrition/knowledge-base', [ApiController::class, 'getKnowledgeBase'])->name('nutrition.knowledge-base');
     Route::post('/nutrition/meal-plan-detail', [ApiController::class, 'getMealPlanDetail'])->name('nutrition.meal-plan-detail');
     Route::get('/nutrition/test-api', [ApiController::class, 'testNutritionAPI'])->name('nutrition.test-api');
+    
+    // Feeding Program routes
+    Route::post('/feeding-program/save', [NutritionistController::class, 'saveFeedingProgramPlan'])->name('feeding-program.save');
 
     // Food Database View (Nutritionist - Read Only)
     Route::get('/foods', [NutritionistController::class, 'viewFoods'])->name('foods.index');

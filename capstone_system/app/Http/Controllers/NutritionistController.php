@@ -7,6 +7,7 @@ use App\Models\Assessment;
 use App\Models\User;
 use App\Models\Barangay;
 use App\Models\Food;
+use App\Models\FeedingProgramPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -1252,6 +1253,48 @@ class NutritionistController extends Controller
         
         $filename = 'monthly-progress-report-' . $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Save feeding program meal plan
+     */
+    public function saveFeedingProgramPlan(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'target_age_group' => 'required|string',
+                'total_children' => 'nullable|integer',
+                'program_duration_days' => 'required|integer|min:1|max:7',
+                'budget_level' => 'required|string|in:low,moderate,high',
+                'barangay' => 'nullable|string',
+                'available_ingredients' => 'nullable|string',
+                'meal_plan' => 'required',
+            ]);
+
+            $plan = FeedingProgramPlan::create([
+                'target_age_group' => $validated['target_age_group'],
+                'total_children' => $validated['total_children'],
+                'program_duration_days' => $validated['program_duration_days'],
+                'budget_level' => $validated['budget_level'],
+                'barangay' => $validated['barangay'],
+                'available_ingredients' => $validated['available_ingredients'],
+                'plan_details' => $validated['meal_plan'], // Will auto-encode to JSON
+                'generated_at' => now(),
+                'created_by' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Feeding program meal plan saved successfully',
+                'plan_id' => $plan->program_plan_id
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save meal plan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 
