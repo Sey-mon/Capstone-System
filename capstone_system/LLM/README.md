@@ -9,7 +9,8 @@ An advanced nutrition management system for children aged 0-5 years, powered by 
 2. **AI Nutrition Engine** (`nutrition_ai.py`) - Modern LangChain-powered nutrition analysis
 3. **Embedding System** (`embedding_utils.py`) - FAISS + Sentence Transformers for contextual guidance
 4. **Data Management** (`data_manager.py`) - MySQL database layer with text chunking
-5. **Nutrition Chain** (`nutrition_chain.py`) - LangChain meal planning and assessment generation
+5. **Nutrition Chain** (`nutrition_chain.py`) - LangChain meal planning for parents (individual children)
+6. **Feeding Program Chain** (`feeding_program_chain.py`) - LangChain meal planning for nutritionists (feeding programs)
 
 ### **Key Features:**
 - 🤖 **AI-Powered**: Groq LLM (Llama) with modern LangChain integration
@@ -17,11 +18,13 @@ An advanced nutrition management system for children aged 0-5 years, powered by 
 - 📋 **Role-Based Access**: User, Parent, Nutritionist, and Admin endpoints
 - 📄 **PDF Processing**: Upload and process nutrition guidelines with AI summarization
 - 🇵🇭 **Filipino-Focused**: Built-in Filipino nutrition knowledge and cultural considerations
-- 🍽️ **7-Day Meal Plans**: Non-repeating Filipino traditional dishes across the entire week
+- 🍽️ **Individual Meal Plans**: 7-day personalized meal plans for parents (via `nutrition_chain.py`)
+- 👥 **Feeding Program Plans**: Batch meal planning for community feeding programs (via `feeding_program_chain.py`)
 - 🥘 **Authentic Filipino Cuisine**: Traditional dishes like sinigang, adobo, tinola, kare-kare, pancit, etc.
+- 💰 **Budget-Conscious**: Cost-effective ingredient selection for feeding programs
 - 🔐 **Privacy-First**: Medical data only, no personal identifiers in AI processing
 - 📊 **Evidence-Based**: WHO nutrition guidelines integration via PDF knowledge base
-- 🔄 **Diverse Menus**: Automatic variety control ensuring no dish repetition across 7 days
+- 🔄 **Diverse Menus**: Automatic variety control ensuring no dish repetition
 
 ## 📋 Quick Start
 
@@ -66,7 +69,7 @@ uvicorn fastapi_app:app --reload --port 8000
 - `POST /get_foods_data` - Get all available foods from database
 
 ### **👨‍👩‍👧‍👦 Parent Role Endpoints**
-- `POST /generate_meal_plan` - AI-generated meal plans with contextual guidance
+- `POST /generate_meal_plan` - AI-generated 7-day personalized meal plans with contextual guidance
 - `POST /get_children_by_parent` - Get children for specific parent
 - `POST /get_meal_plans_by_child` - Get meal plan history for child
 - `POST /get_meal_plan_detail` - Get specific meal plan details
@@ -74,6 +77,8 @@ uvicorn fastapi_app:app --reload --port 8000
 ### **👩‍⚕️ Nutritionist Role Endpoints**
 - `POST /nutrition/analysis` - Comprehensive nutrition analysis with evidence-based guidance
 - `POST /assessment` - Generate structured pediatric dietary assessments
+- `POST /feeding_program/meal_plan` - Generate batch meal plans for feeding programs
+- `POST /feeding_program/assessment` - Generate feeding program assessment reports
 
 ### **🛠️ Admin Role Endpoints**
 - `POST /upload_pdf` - Upload and process nutrition PDFs with AI summarization
@@ -98,17 +103,18 @@ uvicorn fastapi_app:app --reload --port 8000
 ## 📁 Project Structure
 
 ```
-Groq_Meal_Plan/
-├── fastapi_app.py           # Main FastAPI application with role-based endpoints
-├── nutrition_ai.py          # Core AI nutrition analysis (modern LangChain)
-├── nutrition_chain.py       # LangChain meal planning & assessment generation
-├── embedding_utils.py       # FAISS + Sentence Transformers semantic search
-├── data_manager.py          # MySQL database operations with chunking
-├── db.py                    # Database connection utilities
-├── requirements.txt         # All dependencies with versions
-├── .env                     # Environment variables (GROQ_API_KEY)
-├── README.md               # This file
-└── embeddings_cache/       # FAISS index and chunks cache (auto-created)
+LLM/
+├── fastapi_app.py              # Main FastAPI application with role-based endpoints
+├── nutrition_ai.py             # Core AI nutrition analysis (modern LangChain)
+├── nutrition_chain.py          # LangChain meal planning for parents (individual children)
+├── feeding_program_chain.py    # LangChain meal planning for nutritionists (feeding programs)
+├── embedding_utils.py          # FAISS + Sentence Transformers semantic search
+├── data_manager.py             # MySQL database operations with chunking
+├── db.py                       # Database connection utilities
+├── requirements.txt            # All dependencies with versions
+├── .env                        # Environment variables (GROQ_API_KEY)
+├── README.md                   # This file
+└── embeddings_cache/          # FAISS index and chunks cache (auto-created)
     ├── faiss_index.idx
     ├── chunks.pkl
     ├── metadata.pkl
@@ -239,6 +245,80 @@ Enhanced prompt in `nutrition_chain.py` includes:
 - Day-by-day variety checking instructions
 - Cultural appropriateness guidelines
 - Age-specific Filipino food preparations
+
+---
+
+## 🔄 Dual Meal Planning Systems
+
+### **1. Parent Meal Plans (`nutrition_chain.py`)**
+**Purpose:** Individual, personalized 7-day meal plans for parents
+
+**Features:**
+- ✅ Personalized for single child
+- ✅ Considers home cooking environment
+- ✅ Based on available home ingredients
+- ✅ Detailed nutritional analysis per child
+- ✅ Age-specific texture adaptations
+- ✅ Allergy and religious considerations
+
+**Use Case:** Parents generating meal plans at home via the parent dashboard
+
+**Example:**
+```python
+from nutrition_chain import get_meal_plan_with_langchain
+
+meal_plan = get_meal_plan_with_langchain(
+    patient_id=123,
+    available_ingredients="manok, saging, kangkong",
+    religion="Catholic"
+)
+```
+
+### **2. Feeding Program Plans (`feeding_program_chain.py`)**
+**Purpose:** Batch meal planning for community feeding programs managed by nutritionists
+
+**Features:**
+- ✅ Designed for multiple children (batch cooking)
+- ✅ Budget-conscious ingredient selection (low/moderate/high)
+- ✅ Community-level food availability focus
+- ✅ Age group adaptations (not individual children)
+- ✅ Group nutritional assessments
+- ✅ Weekly shopping lists for bulk purchasing
+- ✅ Batch cooking preparation tips
+- ✅ Cost-effectiveness tracking
+
+**Use Case:** Nutritionists managing barangay feeding programs with multiple enrolled children
+
+**Example:**
+```python
+from feeding_program_chain import generate_feeding_program_meal_plan
+
+# Get patients enrolled in feeding program
+patients_data = get_feeding_program_patients(barangay="Barangay 1")
+
+# Generate 4-week feeding program meal plan
+result = generate_feeding_program_meal_plan(
+    patients_data=patients_data,
+    program_duration_weeks=4,
+    budget_level='moderate',
+    available_ingredients="manok, bangus, monggo, kangkong, saging",
+    barangay="Barangay 1"
+)
+```
+
+**Key Differences:**
+
+| Feature | Parent Plans | Feeding Program Plans |
+|---------|-------------|---------------------|
+| **Target** | Individual child | Multiple children (batch) |
+| **User Role** | Parent | Nutritionist |
+| **Focus** | Personalization | Cost-effectiveness & scalability |
+| **Portions** | Single child portions | Batch portions per age group |
+| **Budget** | Not primary concern | Primary consideration |
+| **Ingredients** | Home availability | Community/bulk availability |
+| **Duration** | 7 days (weekly) | 4+ weeks (program duration) |
+| **Shopping List** | Individual ingredients | Bulk shopping list |
+| **Analysis** | Individual nutrition | Group assessment |
 
 ---
 
