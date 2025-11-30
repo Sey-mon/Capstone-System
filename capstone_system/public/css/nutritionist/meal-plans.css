@@ -1144,6 +1144,74 @@
 .feeding-program-results .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+.feeding-program-results .meal-plan-section {
+    width: 100%;
+    overflow: visible;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.feeding-program-results .meal-plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    background: white;
+}
+
+.feeding-program-results .meal-plan-table thead {
+    background: linear-gradient(135deg, #2d7a4f, #3d8f5f);
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+.feeding-program-results .meal-plan-table thead th {
+    padding: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.feeding-program-results .meal-plan-table thead th:first-child {
+    text-align: center;
+    width: 8%;
+}
+
+.feeding-program-results .meal-plan-table thead th:nth-child(2) {
+    text-align: center;
+    width: 12%;
+}
+
+.feeding-program-results .meal-plan-table tbody td {
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.feeding-program-results .meal-plan-table tbody td:first-child {
+    text-align: center;
+    font-weight: 600;
+    background-color: #e8f5e9;
+    color: #2d7a4f;
+}
+
+.feeding-program-results .meal-plan-table tbody td:nth-child(2) {
+    text-align: center;
+    font-weight: 600;
+}
+
+.feeding-program-results .meal-plan-table tbody td:nth-child(3) {
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.feeding-program-results .meal-plan-table tbody td:nth-child(4) > div {
+    max-height: 120px;
+    overflow-y: auto;
 }
 
 .feeding-program-results table {
@@ -1694,4 +1762,200 @@
 .empty-plans-state p {
     margin: 0;
     font-size: 0.9375rem;
+}
+
+/* ===================================
+   Meal Plan Table Styling
+   =================================== */
+
+.meal-plan-section {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.meal-plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    font-size: 0.9rem;
+}
+
+.meal-plan-table thead {
+    background: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
+    color: var(--white);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.meal-plan-table thead th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+}
+
+.meal-plan-table thead th:first-child {
+    text-align: center;
+    width: 8%;
+}
+
+.meal-plan-table thead th:nth-child(2) {
+    text-align: center;
+    width: 12%;
+}
+
+.meal-plan-table thead th:nth-child(3) {
+    width: 25%;
+}
+
+.meal-plan-table thead th:nth-child(4) {
+    width: 55%;
+}
+
+.meal-plan-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.meal-plan-table tbody tr:hover {
+    background-color: #f8fafb;
+}
+
+.meal-plan-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.meal-plan-table td {
+    padding: 14px 12px;
+    border: 1px solid var(--border-color);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.meal-plan-table td:first-child {
+    text-align: center;
+    font-weight: 600;
+    background-color: #e8f5e9;
+    color: var(--primary-green);
+    vertical-align: middle;
+}
+
+.meal-plan-table td:nth-child(2) {
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-dark);
+    vertical-align: top;
+}
+
+.meal-plan-table td:nth-child(3) {
+    font-weight: 500;
+    color: var(--text-dark);
+    vertical-align: top;
+}
+
+.meal-plan-table td:nth-child(4) {
+    color: var(--text-muted);
+    vertical-align: top;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* Ingredients list styling */
+.meal-plan-table td:nth-child(4) > div {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    background: var(--light-bg);
+    max-height: 160px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.meal-plan-table td:nth-child(4) > div > div {
+    padding: 5px 8px;
+    margin: 3px 0;
+    border-bottom: 1px solid #e8e8e8;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.meal-plan-table td:nth-child(4) > div > div:last-child {
+    border-bottom: none;
+}
+
+/* Scrollbar styling for ingredient lists */
+.meal-plan-table td:nth-child(4) > div::-webkit-scrollbar {
+    width: 6px;
+}
+
+.meal-plan-table td:nth-child(4) > div::-webkit-scrollbar-track {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.meal-plan-table td:nth-child(4) > div::-webkit-scrollbar-thumb {
+    background: var(--primary-green);
+    border-radius: 3px;
+}
+
+.meal-plan-table td:nth-child(4) > div::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-green-dark);
+}
+
+/* Scrollbar styling for main table */
+.meal-plan-section::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.meal-plan-section::-webkit-scrollbar-track {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+.meal-plan-section::-webkit-scrollbar-thumb {
+    background: var(--primary-green);
+    border-radius: 10px;
+}
+
+.meal-plan-section::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-green-dark);
+}
+
+/* Responsive table adjustments */
+@media (max-width: 1200px) {
+    .meal-plan-table thead th:nth-child(3),
+    .meal-plan-table thead th:nth-child(4) {
+        font-size: 0.85rem;
+    }
+    
+    .meal-plan-table td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .meal-plan-table thead th {
+        padding: 10px 6px;
+        font-size: 0.8rem;
+    }
+    
+    .meal-plan-table td {
+        padding: 8px 6px;
+        font-size: 0.8rem;
+    }
+    
+    .meal-plan-table thead th:nth-child(3),
+    .meal-plan-table thead th:nth-child(4) {
+        width: auto;
+    }
 }

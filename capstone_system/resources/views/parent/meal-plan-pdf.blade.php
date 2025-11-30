@@ -166,11 +166,58 @@
     @endif
     
     <div class="section-title">
-        🍽️ Detailed Meal Plan
+        🍽️ Weekly Meal Schedule
     </div>
     
     <div class="content-section">
-        {!! $plan->plan_details !!}
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <thead>
+                <tr style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white;">
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600;">MEAL</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600;">DAY 1</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600;">DAY 2</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600;">DAY 3</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600;">DAY 4</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600;">DAY 5</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600;">DAY 6</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600;">DAY 7</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color: #f9fafb;">
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: 600; background-color: #f3f4f6;">🍳 Breakfast</td>
+                    @for($day = 0; $day < 7; $day++)
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+                            {{ $parsedMeals['breakfast'][$day] ?? 'No meal specified' }}
+                        </td>
+                    @endfor
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: 600; background-color: #f3f4f6;">🍽️ Lunch</td>
+                    @for($day = 0; $day < 7; $day++)
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+                            {{ $parsedMeals['lunch'][$day] ?? 'No meal specified' }}
+                        </td>
+                    @endfor
+                </tr>
+                <tr style="background-color: #f9fafb;">
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: 600; background-color: #f3f4f6;">🍪 PM Snack</td>
+                    @for($day = 0; $day < 7; $day++)
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+                            {{ $parsedMeals['snack'][$day] ?? 'No meal specified' }}
+                        </td>
+                    @endfor
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: 600; background-color: #f3f4f6;">🌙 Dinner</td>
+                    @for($day = 0; $day < 7; $day++)
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+                            {{ $parsedMeals['dinner'][$day] ?? 'No meal specified' }}
+                        </td>
+                    @endfor
+                </tr>
+            </tbody>
+        </table>
     </div>
     
     <div class="tips-box">

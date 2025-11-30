@@ -300,6 +300,8 @@ class MealPlansManager {
             });
 
             if (response.success) {
+
+                
                 // Save to database
                 await this.saveFeedingProgramToDatabase(formData, response);
                 
@@ -463,123 +465,193 @@ class MealPlansManager {
     }
 
     parseMealPlanToTable(mealPlanText, days) {
+        
         let html = `
-            <div class="meal-plan-section" style="margin-top: 20px;">
-                <h4 style="color: #2d7a4f;"><i class="fas fa-calendar-alt"></i> Daily Meal Plan</h4>
+            <div class="meal-plan-section" style="margin-top: 20px; max-height: 600px; overflow-y: auto;">
+                <h4 style="color: #2d7a4f; margin-bottom: 15px;"><i class="fas fa-calendar-alt"></i> Daily Meal Plan</h4>
                 <div class="table-responsive" style="margin-top: 15px;">
-                    <table class="table table-bordered" style="background: white; border: 2px solid #2d7a4f;">
-                        <thead style="background-color: #2d7a4f; color: white;">
+                    <table class="meal-plan-table" style="width: 100%; background: white; border-collapse: collapse; border: 1px solid #ddd;">
+                        <thead style="background-color: #2d7a4f; color: white; position: sticky; top: 0;">
                             <tr>
-                                <th style="width: 10%;">Day</th>
-                                <th style="width: 15%;">Meal Type</th>
-                                <th style="width: 30%;">Dish Name</th>
-                                <th style="width: 45%;">Ingredients & Details</th>
+                                <th style="width: 8%; padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: 600;">Day</th>
+                                <th style="width: 12%; padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: 600;">Meal Type</th>
+                                <th style="width: 25%; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: 600;">Dish Name</th>
+                                <th style="width: 55%; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: 600;">Ingredients & Details</th>
                             </tr>
                         </thead>
                         <tbody>
         `;
 
-        // Parse the meal plan text
-        const lines = mealPlanText.split('\n');
-        let currentDay = '';
         let mealEntries = [];
 
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i].trim();
+        // Handle if mealPlanText is already an object or array
+        let parsedData = mealPlanText;
+        if (typeof mealPlanText === 'string') {
+            // First, try to extract JSON from markdown code blocks
+            let jsonString = mealPlanText.trim();
             
-            // Match day headers (Day 1, Monday, etc.)
-            const dayMatch = line.match(/^#+\s*(?:day\s+(\d+)|(\w+day))/i) || 
-                           line.match(/^(?:day\s+(\d+)|(\w+day))\s*:?\s*$/i);
-            if (dayMatch) {
-                currentDay = dayMatch[1] || dayMatch[2] || '';
-                if (!currentDay.match(/\d/)) {
-                    // Convert day name to number
-                    const dayNames = {'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 7};
-                    currentDay = dayNames[currentDay.toLowerCase()] || currentDay;
+            // Check if it's wrapped in markdown code blocks (```json ... ```)
+            const codeBlockMatch = jsonString.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+            if (codeBlockMatch) {
+                jsonString = codeBlockMatch[1].trim();
+            }
+            
+            // Now try to parse the JSON
+            try {
+                parsedData = JSON.parse(jsonString);
+            } catch (e) {
+                // Keep as string for markdown parsing
+                parsedData = mealPlanText;
+            }
+        }
+
+        // If it's an object or array, try to extract meal_plan data
+        if (typeof parsedData === 'object' && parsedData !== null) {
+            try {
+                let mealPlanArray = null;
+                
+                // Check if there's a nested meal_plan property
+                if (parsedData.meal_plan && Array.isArray(parsedData.meal_plan)) {
+                    mealPlanArray = parsedData.meal_plan;
+                } else if (Array.isArray(parsedData)) {
+                    mealPlanArray = parsedData;
                 }
-                continue;
+                
+                // Parse JSON format if it's an array
+                if (Array.isArray(mealPlanArray) && mealPlanArray.length > 0) {
+                    
+                    mealPlanArray.forEach(dayData => {
+                        
+                        if (dayData.meals && Array.isArray(dayData.meals)) {
+                            dayData.meals.forEach(meal => {
+                                // Build ingredients string from array or object
+                                let ingredientsStr = '';
+                                if (Array.isArray(meal.ingredients)) {
+                                    ingredientsStr = meal.ingredients.join(', ');
+                                } else if (typeof meal.ingredients === 'object' && meal.ingredients !== null) {
+                                    // Handle if ingredients is an object (e.g., {0: "item1", 1: "item2"})
+                                    ingredientsStr = Object.values(meal.ingredients).join(', ');
+                                } else if (typeof meal.ingredients === 'string') {
+                                    ingredientsStr = meal.ingredients;
+                                }
+                                
+                                mealEntries.push({
+                                    day: `Day ${dayData.day}`,
+                                    mealType: this.normalizeMealType(meal.meal_type || meal.mealType || ''),
+                                    dishName: meal.dish_name || meal.dishName || 'N/A',
+                                    ingredients: ingredientsStr
+                                });
+                            });
+                        }
+                    });
+                    
+                }
+            } catch (e) {
+            }
+        }
+        
+        // If no entries found and we have a string, try markdown parsing
+        if (mealEntries.length === 0 && typeof parsedData === 'string') {
+            
+            const lines = mealPlanText.split('\n');
+            let currentDay = '';
+            let currentMealType = '';
+            let currentDishName = '';
+            let currentIngredients = [];
+            let inIngredientsSection = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmedLine = line.trim();
+                
+                if (!trimmedLine || trimmedLine.startsWith('---') || trimmedLine.startsWith('===')) {
+                    continue;
+                }
+
+                if (trimmedLine.match(/^##\s+Day\s+\d+/i)) {
+                    if (currentMealType && currentDay) {
+                        mealEntries.push({
+                            day: currentDay,
+                            mealType: this.normalizeMealType(currentMealType),
+                            dishName: currentDishName || 'N/A',
+                            ingredients: currentIngredients.join(', ')
+                        });
+                    }
+                    
+                    currentDay = trimmedLine.replace(/^##\s+/i, '').trim();
+                    currentMealType = '';
+                    currentDishName = '';
+                    currentIngredients = [];
+                    inIngredientsSection = false;
+                    continue;
+                }
+
+                const mealMatch = trimmedLine.match(/^\*\*(almusal|breakfast|tanghalian|lunch|meryenda|snack|hapunan|dinner)(?:\s*\([^)]*\))?\s*:\*\*/i);
+                if (mealMatch && currentDay) {
+                    if (currentMealType) {
+                        mealEntries.push({
+                            day: currentDay,
+                            mealType: this.normalizeMealType(currentMealType),
+                            dishName: currentDishName || 'N/A',
+                            ingredients: currentIngredients.join(', ')
+                        });
+                    }
+                    
+                    currentMealType = mealMatch[1];
+                    currentDishName = '';
+                    currentIngredients = [];
+                    inIngredientsSection = false;
+                    continue;
+                }
+
+                if (currentMealType && !currentDishName) {
+                    const dishMatch = trimmedLine.match(/^-\s*(?:main\s+dish|snack)\s*:\s*(.+)$/i);
+                    if (dishMatch) {
+                        currentDishName = dishMatch[1].trim();
+                        continue;
+                    }
+                }
+
+                if (trimmedLine.match(/^-\s*ingredients?\s*(?:\([^)]*\))?\s*:?\s*$/i)) {
+                    inIngredientsSection = true;
+                    continue;
+                }
+
+                if (trimmedLine.match(/^-\s*(preparation|age\s+adaptations?|portions?|description|approximate)/i)) {
+                    inIngredientsSection = false;
+                    continue;
+                }
+
+                if (inIngredientsSection && line.match(/^\s{2,}-\s+/)) {
+                    const ingredient = line.replace(/^\s{2,}-\s+/, '').trim();
+                    if (ingredient && ingredient.length > 0) {
+                        currentIngredients.push(ingredient);
+                    }
+                }
             }
 
-            // Match meal entries - supports both English and Tagalog
-            const mealMatch = line.match(/^\*\*?(almusal|breakfast|tanghalian|lunch|meryenda|am snack|pm snack|hapunan|dinner)\s*(?:\([^)]*\))?\s*:?\*\*?\s*$/i);
-            if (mealMatch && currentDay) {
-                const mealType = mealMatch[1];
-                let dishName = '';
-                let ingredients = '';
-                let details = [];
-
-                // Look ahead for dish details
-                for (let j = i + 1; j < lines.length && j < i + 15; j++) {
-                    const nextLine = lines[j].trim();
-                    
-                    // Stop if we hit another meal type or day
-                    if (nextLine.match(/^\*\*?(almusal|breakfast|tanghalian|lunch|meryenda|am snack|pm snack|hapunan|dinner|day\s+\d+|\w+day)/i)) {
-                        break;
-                    }
-
-                    // Match "Main Dish:" or "- Main Dish:" or just dish after meal type
-                    const dishMatch = nextLine.match(/^-?\s*(?:main\s+dish|dish\s*name|ulam)?\s*:?\s*(.+)/i);
-                    if (dishMatch && !dishName && !nextLine.match(/^-?\s*(ingredients?|age|portions?|preparation)/i)) {
-                        dishName = dishMatch[1].replace(/\*\*/g, '').replace(/^[-•]\s*/, '').trim();
-                        continue;
-                    }
-
-                    // Match ingredients
-                    const ingredientsMatch = nextLine.match(/^-?\s*ingredients?\s*:?\s*(.+)/i);
-                    if (ingredientsMatch) {
-                        ingredients = ingredientsMatch[1].trim();
-                        // Collect multi-line ingredients
-                        for (let k = j + 1; k < lines.length && k < j + 5; k++) {
-                            const ingLine = lines[k].trim();
-                            if (ingLine && !ingLine.match(/^-?\s*(age|portions?|preparation|main)/i) && !ingLine.match(/^\*\*/)) {
-                                ingredients += ' ' + ingLine;
-                            } else {
-                                break;
-                            }
-                        }
-                        continue;
-                    }
-
-                    // Collect other details (age adaptations, portions, etc.)
-                    if (nextLine && !nextLine.match(/^#+/) && nextLine.length > 2) {
-                        details.push(nextLine);
-                    }
-                }
-
-                // Normalize meal type
-                let normalizedMealType = mealType.toLowerCase();
-                if (normalizedMealType.includes('almusal') || normalizedMealType.includes('breakfast')) {
-                    normalizedMealType = 'Breakfast';
-                } else if (normalizedMealType.includes('tanghalian') || normalizedMealType.includes('lunch')) {
-                    normalizedMealType = 'Lunch';
-                } else if (normalizedMealType.includes('meryenda') || normalizedMealType.includes('snack')) {
-                    normalizedMealType = normalizedMealType.includes('am') ? 'AM Snack' : 'PM Snack';
-                } else if (normalizedMealType.includes('hapunan') || normalizedMealType.includes('dinner')) {
-                    normalizedMealType = 'Dinner';
-                }
-
+            if (currentMealType && currentDay) {
                 mealEntries.push({
                     day: currentDay,
-                    mealType: normalizedMealType,
-                    dishName: dishName || 'See details',
-                    ingredients: ingredients,
-                    details: details.join('<br>')
+                    mealType: this.normalizeMealType(currentMealType),
+                    dishName: currentDishName || 'N/A',
+                    ingredients: currentIngredients.join(', ')
                 });
             }
         }
 
-        // If no meals found, try simpler parsing
+        // Render table
         if (mealEntries.length === 0) {
-            // Fallback: just show the text in a single row
             html += `
                 <tr>
-                    <td colspan="4" style="padding: 20px;">
-                        <div style="white-space: pre-wrap; font-family: monospace; font-size: 0.9em;">${mealPlanText}</div>
+                    <td colspan="4" style="padding: 20px; text-align: center;">
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <p style="color: #856404; margin: 0;"><i class="fas fa-info-circle"></i> Unable to parse meal plan</p>
+                        </div>
                     </td>
                 </tr>
             `;
         } else {
-            // Group by day
             const mealsByDay = {};
             mealEntries.forEach(entry => {
                 if (!mealsByDay[entry.day]) {
@@ -588,39 +660,32 @@ class MealPlansManager {
                 mealsByDay[entry.day].push(entry);
             });
 
-            // Generate table rows
-            Object.keys(mealsByDay).sort((a, b) => {
-                const aNum = parseInt(a) || 0;
-                const bNum = parseInt(b) || 0;
-                return aNum - bNum;
-            }).forEach(day => {
+            Object.keys(mealsByDay).forEach((day, dayIndex) => {
                 const meals = mealsByDay[day];
-                meals.forEach((meal, index) => {
-                    const isFirstMeal = index === 0;
+                
+                meals.forEach((meal, mealIndex) => {
+                    const isFirstMeal = mealIndex === 0;
                     const rowspan = meals.length;
                     
-                    html += '<tr>';
+                    html += '<tr style="border-bottom: 1px solid #ddd;">';
                     
                     if (isFirstMeal) {
-                        html += `<td rowspan="${rowspan}" style="background-color: #f1f8f4; text-align: center; font-weight: bold; vertical-align: middle; color: #2d7a4f; font-size: 1.1em;">Day ${day}</td>`;
+                        html += `<td rowspan="${rowspan}" style="background-color: #e8f5e9; text-align: center; font-weight: bold; vertical-align: middle; color: #2d7a4f; font-size: 0.95em; padding: 12px; border: 1px solid #ddd;">${day}</td>`;
                     }
                     
-                    const combinedDetails = [meal.ingredients, meal.details].filter(d => d).join('<br><br>');
+                    const ingredientsList = meal.ingredients ? meal.ingredients.split(',').map(ing => ing.trim()).filter(ing => ing) : [];
                     
                     html += `
-                        <td data-label="Meal Type" style="font-weight: 600; color: #2c3e50;">${meal.mealType}</td>
-                        <td data-label="Dish Name" style="color: #34495e;"><strong>${meal.dishName}</strong></td>
-                        <td data-label="Details" style="font-size: 0.9em; color: #555;">
-                            ${combinedDetails ? 
-                                `<details style="cursor: pointer;" open>
-                                    <summary style="color: #2d7a4f; font-weight: 500;">
-                                        <i class="fas fa-chevron-down" style="font-size: 0.8em;"></i> View Details
-                                    </summary>
-                                    <div style="margin-top: 8px; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #52c785; max-height: 200px; overflow-y: auto;">
-                                        ${combinedDetails}
-                                    </div>
-                                </details>` 
-                                : '<em style="color: #999;">No details available</em>'}
+                        <td style="font-weight: 600; color: #2c3e50; padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 0.95em;">${meal.mealType}</td>
+                        <td style="color: #34495e; padding: 12px; border: 1px solid #ddd; font-size: 0.95em; word-break: break-word;">
+                            <strong>${meal.dishName}</strong>
+                        </td>
+                        <td style="color: #555; padding: 12px; border: 1px solid #ddd; font-size: 0.9em;">
+                            ${ingredientsList.length > 0 ? `
+                                <div style="max-height: 140px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 10px; background: #fafafa; border-radius: 4px; line-height: 1.6;">
+                                    ${ingredientsList.map(ing => `<div style="margin: 5px 0; padding: 5px 8px; border-bottom: 1px solid #e8e8e8; word-wrap: break-word;">• ${ing}</div>`).join('')}
+                                </div>
+                            ` : '<em style="color: #999;">—</em>'}
                         </td>
                     `;
                     
@@ -637,6 +702,25 @@ class MealPlansManager {
         `;
 
         return html;
+    }
+
+    normalizeMealType(mealType) {
+        const normalized = mealType.toLowerCase();
+        if (normalized.includes('almusal') || normalized.includes('breakfast')) {
+            return 'Breakfast';
+        } else if (normalized.includes('tanghalian') || normalized.includes('lunch')) {
+            return 'Lunch';
+        } else if (normalized.includes('meryenda') || normalized.includes('snack')) {
+            return 'Snack';
+        } else if (normalized.includes('hapunan') || normalized.includes('dinner')) {
+            return 'Dinner';
+        }
+        return mealType.charAt(0).toUpperCase() + mealType.slice(1);
+    }
+
+    extractDishName(dishName) {
+        if (!dishName) return '';
+        return dishName.replace(/\*\*/g, '').replace(/^[-•]\s*/, '').trim();
     }
 
     formatMealPlanMarkdown(text) {
@@ -870,7 +954,6 @@ class MealPlansManager {
     // Utility methods
     showNotification(message, type = 'info') {
         // You can implement a notification system here
-        console.log(`${type}: ${message}`);
     }
 }
 
@@ -1086,27 +1169,20 @@ function viewFeedingProgramPlan(planId) {
             if (response.success) {
                 const plan = response.plan;
                 
-                // Extract the actual meal plan text
-                // plan_details is auto-decoded from JSON, so it's an object
-                let mealPlanText = plan.plan_details;
+                // plan_details is auto-decoded from JSON by Laravel
+                let mealPlanData = plan.plan_details;
                 
-                // If it's an object with a meal_plan property, extract it
-                if (typeof mealPlanText === 'object' && mealPlanText !== null) {
-                    if (mealPlanText.meal_plan) {
-                        mealPlanText = mealPlanText.meal_plan;
-                    } else {
-                        // If it's the whole plan_details object, stringify it for display
-                        mealPlanText = JSON.stringify(mealPlanText, null, 2);
-                    }
-                }
+
                 
-                // Now parse the meal plan
+                // Parse the meal plan - parseMealPlanToTable handles both JSON and string formats
                 let mealPlanHtml;
-                if (window.mealPlansManager && typeof window.mealPlansManager.parseMealPlanToTable === 'function' && typeof mealPlanText === 'string') {
-                    mealPlanHtml = window.mealPlansManager.parseMealPlanToTable(mealPlanText, plan.program_duration_days);
+                if (window.mealPlansManager && typeof window.mealPlansManager.parseMealPlanToTable === 'function') {
+                    // Pass the data as-is, whether it's an object, array, or string
+                    mealPlanHtml = window.mealPlansManager.parseMealPlanToTable(mealPlanData, plan.program_duration_days);
                 } else {
                     // Fallback: display raw content
-                    mealPlanHtml = `<div class="feeding-program-results"><pre style="white-space: pre-wrap; font-family: inherit;">${mealPlanText}</pre></div>`;
+                    const displayText = typeof mealPlanData === 'object' ? JSON.stringify(mealPlanData, null, 2) : mealPlanData;
+                    mealPlanHtml = `<div class="feeding-program-results"><pre style="white-space: pre-wrap; font-family: inherit;">${displayText}</pre></div>`;
                 }
                 
                 // Create metadata display

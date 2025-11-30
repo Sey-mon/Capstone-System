@@ -471,14 +471,12 @@
                         </table>
                     </div>
 
-                    <!-- Raw Meal Plan Data -->
-                    <div id="rawMealPlanData">
-                        @if(session('meal_plan_html'))
-                            {!! session('meal_plan_html') !!}
+                    <!-- Hidden Raw Meal Plan Data for JavaScript parsing -->
+                    <div id="rawMealPlanData" style="display: none;">
+                        @if(session('meal_plan'))
+                            {{ session('meal_plan') }}
                         @elseif(session('last_meal_plan'))
                             {{ session('last_meal_plan') }}
-                        @else
-                            {{ session('meal_plan') }}
                         @endif
                     </div>
                 </div>

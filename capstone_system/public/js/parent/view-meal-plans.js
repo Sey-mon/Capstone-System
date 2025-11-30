@@ -569,11 +569,6 @@ function printMealPlanFromSwal(planId, data) {
                 ${weeklyTableHtml}
             </div>
             
-            <div style="margin-top: 30px; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                <h3 style="color: #055b25; margin-bottom: 15px;">Full Meal Plan Details</h3>
-                ${formatMealPlanDetails(data.plan.plan_details)}
-            </div>
-            
             <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #718096; font-size: 11px;">
                 <p><strong>Capstone Nutrition System</strong> - Evidence-Based Nutritional Guidance</p>
                 <p>Printed on ${new Date().toLocaleDateString()}</p>

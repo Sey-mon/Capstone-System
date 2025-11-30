@@ -150,24 +150,24 @@ def get_feeding_program_budget_context(budget_level='moderate'):
     budget_contexts = {
         'low': {
             'proteins': ['itlog', 'monggo', 'galunggong', 'tuyo', 'dilis', 'tokwa'],
-            'vegetables': ['kangkong', 'kamote tops', 'malunggay', 'ampalaya', 'sitaw'],
-            'grains': ['bigas', 'mais', 'miswa', 'sotanghon'],
-            'fruits': ['saging', 'papaya', 'kamote'],
-            'focus': 'Cost-effective, locally available ingredients'
+            'vegetables': ['kangkong', 'kamote tops', 'malunggay', 'ampalaya', 'sitaw', 'talong', 'kalabasa'],
+            'grains': ['bigas', 'mais', 'whole grain miswa', 'sotanghon'],
+            'fruits': ['saging', 'papaya', 'kamote', 'mango (in season)', 'watermelon'],
+            'focus': 'Cost-effective, locally available, whole ingredients'
         },
         'moderate': {
-            'proteins': ['manok', 'bangus', 'tilapia', 'itlog', 'monggo', 'baboy (select cuts)'],
-            'vegetables': ['kangkong', 'malunggay', 'kalabasa', 'talong', 'sitaw', 'repolyo', 'carrots'],
-            'grains': ['bigas', 'oatmeal', 'pandesal', 'miswa'],
-            'fruits': ['saging', 'papaya', 'mangga (in season)', 'dalandan'],
-            'focus': 'Balanced nutrition with reasonable cost'
+            'proteins': ['manok', 'bangus', 'tilapia', 'itlog', 'monggo', 'baboy (select cuts)', 'beef'],
+            'vegetables': ['kangkong', 'malunggay', 'kalabasa', 'talong', 'sitaw', 'repolyo', 'carrots', 'sayote'],
+            'grains': ['bigas', 'whole grain oatmeal', 'whole wheat pandesal', 'brown rice'],
+            'fruits': ['saging', 'papaya', 'mangga (in season)', 'dalandan', 'bayabas', 'pineapple'],
+            'focus': 'Balanced nutrition with minimally processed ingredients'
         },
         'high': {
-            'proteins': ['manok', 'bangus', 'tilapia', 'salmon', 'baka', 'baboy', 'hipon', 'itlog'],
-            'vegetables': ['all varieties including broccoli', 'carrots', 'bell peppers', 'lettuce'],
-            'grains': ['brown rice', 'whole wheat bread', 'oatmeal', 'quinoa'],
-            'fruits': ['imported fruits', 'berries', 'avocado', 'all local fruits'],
-            'focus': 'Optimal nutrition without budget constraints'
+            'proteins': ['manok', 'bangus', 'tilapia', 'salmon', 'baka', 'baboy', 'hipon', 'itlog', 'organic meats'],
+            'vegetables': ['all varieties including broccoli', 'carrots', 'bell peppers', 'lettuce', 'organic vegetables'],
+            'grains': ['brown rice', 'whole wheat bread', 'whole grain oatmeal', 'quinoa'],
+            'fruits': ['imported fruits', 'berries', 'avocado', 'all local fruits', 'organic fruits'],
+            'focus': 'Optimal nutrition using whole, minimally processed ingredients'
         }
     }
     
@@ -378,20 +378,31 @@ CRITICAL REQUIREMENTS:
    - Minimize food waste through smart planning
    - Cost-effective protein sources (monggo, itlog, galunggong)
 
+6.5. **🚫 PROHIBITED INGREDIENTS - STRICTLY AVOID:**
+   - **NO processed meats:** hotdog, spam, luncheon meat, ham, bacon, sausage
+   - **NO canned goods:** canned sardines, canned tuna, canned corned beef, canned pork and beans
+   - **NO instant/processed foods:** instant noodles, instant mami, cup noodles, 3-in-1 beverages
+   - **NO processed snacks:** chips, crackers, cookies, candy, instant pancit canton
+   - **NO artificial drinks:** powdered juice drinks, soda, artificial flavored beverages
+   - **NO MSG-heavy seasonings:** magic sarap, ajinomoto, artificial bouillon cubes
+   - **EXCEPTION:** Traditional preserved foods (tuyo, dilis, bagoong) are acceptable in moderation as traditional Filipino ingredients
+   - **USE INSTEAD:** Whole meats, whole fish, whole grains, natural seasonings (garlic, onion, ginger, herbs)
+   - **FOCUS ON:** Whole, unprocessed ingredients prepared from scratch
+
 7. **FILIPINO CUISINE FOCUS - SPECIFIC COMPLETE DISHES ONLY:**
    - Use ONLY traditional, complete Filipino dishes with proper names
    - **AVOID generic descriptions** like "sinangag na kanin na may hito" or "sinangag na itlog"
    - **USE SPECIFIC DISH NAMES** with complete preparations:
    
    **Breakfast Examples:**
-   - Lugaw (not just "lugaw", specify: Arroz Caldo, Goto, Lugaw with Tokwa't Baboy)
-   - Champorado with Tuyo or Dilis
-   - Tocilog (Tocino, sinangag, itlog)
+   - Lugaw (specify: Arroz Caldo with Chicken, Goto with Beef Tripe, Lugaw with Tokwa)
+   - Champorado with Tuyo or Dilis (traditional preserved fish acceptable)
+   - Tocilog (homemade Tocino, sinangag, itlog)
    - Tapsilog (Beef Tapa, sinangag, itlog)
-   - Longsilog (Longganisa, sinangag, itlog)
+   - Longsilog (homemade Longganisa, sinangag, itlog)
    - Bangsilog (Bangus, sinangag, itlog)
-   - Cornsilog (Corned Beef, sinangag, itlog)
-   - Pandesal with Palaman (specify: cheese, liver spread, or peanut butter)
+   - Whole Wheat Pandesal with Palaman (peanut butter, cheese)
+   - ❌ AVOID: Cornsilog (uses canned corned beef), instant breakfast items
    
    **Lunch/Dinner Examples:**
    - Adobong Manok (chicken adobo with complete sauce)
@@ -442,41 +453,102 @@ CRITICAL REQUIREMENTS:
 ❌ "Sinangag na itlog" (incomplete dish name)
 ❌ "Kanin at isda" (not a specific dish)
 ❌ "Pritong itlog with rice" (use proper silog name instead)
+❌ "Cornsilog" (uses canned corned beef - PROHIBITED)
+❌ "Instant Pancit Canton" (processed - PROHIBITED)
+❌ "Spam Fried Rice" (processed meat - PROHIBITED)
+❌ "Sardinas con Huevo" (canned sardines - PROHIBITED)
+❌ "Hotsilog" (processed hotdog - PROHIBITED)
 
 **CORRECT OUTPUT EXAMPLES (USE THESE):**
 ✅ "Bangsilog (Pritong Bangus, Sinangag, Itlog)"
 ✅ "Arroz Caldo with Chicken and Egg"
 ✅ "Adobong Manok sa Gata"
 ✅ "Sinigang na Tilapia sa Miso"
-✅ "Tocilog (Tocino, Garlic Fried Rice, Sunny-Side Up Egg)"
+✅ "Tocilog (Homemade Tocino, Garlic Fried Rice, Sunny-Side Up Egg)"
+✅ "Lugaw with Tokwa and Egg"
 
-OUTPUT FORMAT (IN TAGALOG AND ENGLISH):
+OUTPUT FORMAT - JSON STRUCTURE:
 
-# Week [Number] Feeding Program Meal Plan
+🔴 CRITICAL: You MUST respond with VALID JSON ONLY. No markdown, no explanations, just pure JSON.
 
-## Monday
-**Almusal (Breakfast):**
-- Main Dish: [COMPLETE Filipino dish name - e.g., "Tapsilog (Beef Tapa, Sinangag, Itlog)"]
-- Description: [Brief description of the complete dish]
-- Ingredients: [Detailed list with measurements for batch cooking]
-- Preparation Method: [Brief cooking steps]
-- Age Adaptations:
-  * 6-12 months: [Texture modification - e.g., "Shredded beef tapa mixed with soft rice porridge"]
-  * 12-24 months: [Texture modification - e.g., "Small pieces of tapa with soft rice"]
-  * 24-60 months: [Regular serving - e.g., "Regular Tapsilog serving"]
-- Approximate Portions: [Portions per age group per 50 children]
+Return a JSON object with this exact structure:
 
-**Tanghalian (Lunch):**
-- Main Dish: [COMPLETE Filipino dish name - e.g., "Sinigang na Baboy sa Sampalok"]
-- Description: [Brief description]
-- Ingredients: [List with measurements]
-- Preparation Method: [Brief steps]
-- Age Adaptations: [Same format]
-- Approximate Portions: [Portions]
+{{
+  "meal_plan": [
+    {{
+      "day": 1,
+      "meals": [
+        {{
+          "meal_type": "breakfast",
+          "dish_name": "Lugaw with Chicken and Egg",
+          "ingredients": [
+            "5 cups uncooked rice",
+            "1.5 kg chicken breast or thighs, diced",
+            "10 eggs, beaten",
+            "2 cups mixed vegetables (carrots, peas)",
+            "4 cups chicken broth",
+            "2 tablespoons vegetable oil",
+            "Salt and pepper to taste"
+          ]
+        }},
+        {{
+          "meal_type": "lunch",
+          "dish_name": "Adobong Manok",
+          "ingredients": [
+            "1.5 kg chicken breast or thighs, cut into bite-sized pieces",
+            "1/2 cup vinegar",
+            "1/2 cup soy sauce",
+            "4 cloves garlic, minced",
+            "1 tablespoon vegetable oil",
+            "Salt and pepper to taste"
+          ]
+        }},
+        {{
+          "meal_type": "snack",
+          "dish_name": "Turon na Saging",
+          "ingredients": [
+            "50 pieces saba (plantain) sliced",
+            "1 pack spring roll wrappers",
+            "1/2 cup vegetable oil",
+            "1/2 cup sugar"
+          ]
+        }},
+        {{
+          "meal_type": "dinner",
+          "dish_name": "Sinigang na Bangus",
+          "ingredients": [
+            "10 pieces bangus (milkfish)",
+            "2 cups tamarind broth",
+            "1 cup mixed vegetables (sitaw, kangkong)",
+            "Salt and pepper to taste"
+          ]
+        }}
+      ]
+    }},
+    {{
+      "day": 2,
+      "meals": [
+        ... (continue for all {program_duration_days} days)
+      ]
+    }}
+  ],
+  "shopping_list": {{
+    "rice": "15 cups",
+    "chicken": "4.5 kg",
+    "eggs": "20 pieces"
+  }},
+  "nutritional_summary": "Balanced nutrition with protein, carbohydrates, and vegetables for Filipino children."
+}}
 
-**Meryenda (Snack):**
-- Snack: [COMPLETE Filipino snack - e.g., "Ginataang Mais with Sago"]
-- Description: [Brief description]
+⚠️ CRITICAL JSON RULES:
+1. Return ONLY valid JSON - no markdown, no code blocks, no extra text
+2. Use "breakfast", "lunch", "snack", "dinner" for meal_type (lowercase)
+3. Each ingredient is a simple string in the array
+4. Include ALL {program_duration_days} days
+5. Ensure proper JSON escaping for quotes
+6. Keep it clean and parseable
+
+BEGIN JSON OUTPUT:
 - Ingredients: [List]
 - Preparation Method: [Steps]
 - Age Adaptations: [Same format]
@@ -492,8 +564,20 @@ OUTPUT FORMAT (IN TAGALOG AND ENGLISH):
 
 ---
 
-[Repeat for each day - TUESDAY through SUNDAY if 7 days]
-**IMPORTANT:** Ensure each day has DIFFERENT complete dishes. No repetitions across the entire program duration.
+## Day 2
+
+[Continue same format for remaining days]
+
+⚠️ FORMATTING REQUIREMENTS:
+1. Use ## for day headers (## Day 1, ## Day 2, etc.)
+2. Use **Meal Name:** format (Almusal, Tanghalian, Meryenda, Hapunan)
+3. ALWAYS use "- Main Dish:" followed by the dish name
+4. ALWAYS use "- Ingredients (for 50 children):" as header
+5. List each ingredient on separate line with "  - " (2 spaces, dash, space)
+6. Keep ingredient lists clean - just quantity and item name
+7. Use --- to separate days
+8. NO extra asterisks, NO embedded markdown formatting
+9. Keep consistent spacing and indentation
 
 ## Weekly Shopping List
 [Consolidated ingredient list with estimated quantities]

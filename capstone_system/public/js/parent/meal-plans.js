@@ -718,65 +718,129 @@ document.addEventListener('DOMContentLoaded', function() {
 // Parse meal plan data and populate table
 function parseMealPlanData() {
     const rawData = document.getElementById('rawMealPlanData');
-    if (!rawData) return;
+    if (!rawData) {
+        console.error('Raw meal plan data not found');
+        return;
+    }
     
     const mealPlanText = rawData.textContent || rawData.innerText;
+    console.log('Raw meal plan text:', mealPlanText);
     
-    // Example meal data (replace with actual parsing logic)
-    const sampleMeals = {
-        breakfast: [
-            "Pritong tilapia (1 mallit na piraso) na may kamote (1/2 medium)",
-            "Oatmeal na may gatas (1 tasa) at pineapple (1/2 tasa)",
-            "Itlog na may kanin (1/2 tasa)",
-            "Rice porridge na may gatas (1 tasa) at sliced pineapple (1/2 tasa)",
-            "Yogurt (1 tasa) na may mixed berries (1/2 tasa)",
-            "Scrambled egg (1) na may toast (1/2 tasa)",
-            "Omelette (1) na may mixed veggies (1/2 tasa)"
-        ],
-        lunch: [
-            "Sinigang na isda na may bell pepper (1/2 tasa) at kamote (1/2 medium)",
-            "Ginataang gulay na may sida (1/2 tasa)",
-            "Chicken soup na may mixed veggies (1 tasa)",
-            "Baked fish (1 mallit na piraso) na may mixed greens salad (1 tasa)",
-            "Chicken and vegetable skewers (1 tasa)",
-            "Beef and vegetable soup (1 tasa)",
-            "Pork and vegetable stir-fry (1 tasa)"
-        ],
-        snack: [
-            "Sliced pineapple (1/2 tasa)",
-            "Carrot sticks (1/2 tasa) na may hummus (2 tablespoons)",
-            "Fresh pineapple (1 tasa)",
-            "Kamote fries (1/2 tasa)",
-            "Sliced bell pepper (1/2 tasa) na may hummus (2 tablespoons)",
-            "Fresh kamote (1 medium)",
-            "Sliced pineapple (1 tasa)"
-        ],
-        dinner: [
-            "Adobong manok (1/2 tasa) na may steamed rice (1/2 tasa)",
-            "Grilled fish (1 mallit na piraso) na may boiled kamote (1 medium)",
-            "Beef stir-fry na may bell pepper (1/2 tasa) at steamed rice (1/2 tasa)",
-            "Pork adobo (1/2 tasa) na may steamed rice (1/2 tasa)",
-            "Steamed fish (1 mallit na piraso) na may boiled kamote (1 medium)",
-            "Grilled chicken (1/2 tasa) na may steamed rice (1/2 tasa)",
-            "Baked tilapia (1 mallit na piraso) na may mixed greens salad (1 tasa)"
-        ]
+    // Parse the AI-generated meal plan
+    const meals = {
+        breakfast: [],
+        lunch: [],
+        snack: [],
+        dinner: []
     };
     
-    // Populate table cells
+    // Parse each day's meals (supports multiple formats)
+    // Pattern: **Day X** or 📅 Day X or Day X:
+    const dayPattern = /(?:\*\*|📅)?\s*Day\s+(\d+)(?:\*\*)?\s*(?:\([^)]*\))?\s*:?/gi;
+    const days = [];
+    let match;
+    
+    while ((match = dayPattern.exec(mealPlanText)) !== null) {
+        days.push({
+            dayNumber: parseInt(match[1]),
+            startIndex: match.index
+        });
+    }
+    
+    console.log('Found days:', days);
+    
+    // Extract meals for each day
+    for (let i = 0; i < days.length; i++) {
+        const dayInfo = days[i];
+        const dayNumber = dayInfo.dayNumber;
+        const startIndex = dayInfo.startIndex;
+        const endIndex = i < days.length - 1 ? days[i + 1].startIndex : mealPlanText.length;
+        const dayContent = mealPlanText.substring(startIndex, endIndex);
+        
+        console.log(`Day ${dayNumber} content:`, dayContent.substring(0, 200));
+        
+        // Extract breakfast - improved regex to capture meal name before dash or parenthesis
+        const breakfastMatch = dayContent.match(/(?:🍳|🥐)?\s*(?:\*\*)?(?:Breakfast|Almusal)(?:\*\*)?[^\n]*?[:\n]\s*([^\n-]+)/i);
+        if (breakfastMatch) {
+            meals.breakfast[dayNumber - 1] = cleanMealText(breakfastMatch[1]);
+            console.log(`Day ${dayNumber} Breakfast:`, meals.breakfast[dayNumber - 1]);
+        }
+        
+        // Extract lunch
+        const lunchMatch = dayContent.match(/(?:🍽️|🍲)?\s*(?:\*\*)?(?:Lunch|Tanghalian)(?:\*\*)?[^\n]*?[:\n]\s*([^\n-]+)/i);
+        if (lunchMatch) {
+            meals.lunch[dayNumber - 1] = cleanMealText(lunchMatch[1]);
+            console.log(`Day ${dayNumber} Lunch:`, meals.lunch[dayNumber - 1]);
+        }
+        
+        // Extract snack - supports PM Snack, Snack, Meryenda
+        const snackMatch = dayContent.match(/(?:🍪|🥤)?\s*(?:\*\*)?(?:PM\s+Snack|Snack|Meryenda)(?:\*\*)?[^\n]*?[:\n]\s*([^\n-]+)/i);
+        if (snackMatch) {
+            meals.snack[dayNumber - 1] = cleanMealText(snackMatch[1]);
+            console.log(`Day ${dayNumber} Snack:`, meals.snack[dayNumber - 1]);
+        }
+        
+        // Extract dinner
+        const dinnerMatch = dayContent.match(/(?:🌙|🍴)?\s*(?:\*\*)?(?:Dinner|Hapunan)(?:\*\*)?[^\n]*?[:\n]\s*([^\n-]+)/i);
+        if (dinnerMatch) {
+            meals.dinner[dayNumber - 1] = cleanMealText(dinnerMatch[1]);
+            console.log(`Day ${dayNumber} Dinner:`, meals.dinner[dayNumber - 1]);
+        }
+    }
+    
+    // Populate table cells with parsed data
     for (let day = 1; day <= 7; day++) {
         const breakfastCell = document.getElementById(`breakfast-day${day}`);
         const lunchCell = document.getElementById(`lunch-day${day}`);
         const snackCell = document.getElementById(`snack-day${day}`);
         const dinnerCell = document.getElementById(`dinner-day${day}`);
         
-        if (breakfastCell) breakfastCell.textContent = sampleMeals.breakfast[day - 1] || 'N/A';
-        if (lunchCell) lunchCell.textContent = sampleMeals.lunch[day - 1] || 'N/A';
-        if (snackCell) snackCell.textContent = sampleMeals.snack[day - 1] || 'N/A';
-        if (dinnerCell) dinnerCell.textContent = sampleMeals.dinner[day - 1] || 'N/A';
+        if (breakfastCell) breakfastCell.innerHTML = formatMealCell(meals.breakfast[day - 1] || 'N/A');
+        if (lunchCell) lunchCell.innerHTML = formatMealCell(meals.lunch[day - 1] || 'N/A');
+        if (snackCell) snackCell.innerHTML = formatMealCell(meals.snack[day - 1] || 'N/A');
+        if (dinnerCell) dinnerCell.innerHTML = formatMealCell(meals.dinner[day - 1] || 'N/A');
     }
     
     // Create mobile card layout
-    createMobileCardLayout(sampleMeals);
+    createMobileCardLayout(meals);
+}
+
+// Clean meal text by removing emojis and extra formatting
+function cleanMealText(text) {
+    if (!text) return '';
+    
+    // Remove all emojis and special characters
+    let cleaned = text.replace(/[\u{1F000}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+    
+    // Remove **bold** markers
+    cleaned = cleaned.replace(/\*\*/g, '');
+    
+    // Remove benefit text that starts with " - "
+    cleaned = cleaned.split(' - ')[0];
+    
+    // Remove text in parentheses at the end if it's a benefit description (not portion)
+    if (cleaned.includes('(') && (cleaned.toLowerCase().includes('rich in') || cleaned.toLowerCase().includes('mayaman') || cleaned.toLowerCase().includes('high in'))) {
+        cleaned = cleaned.split('(')[0];
+    }
+    
+    // Trim whitespace
+    cleaned = cleaned.trim();
+    
+    return cleaned;
+}
+
+// Format meal cell with proper styling
+function formatMealCell(mealText) {
+    if (!mealText || mealText === 'N/A') {
+        return '<span class="no-meal">No meal specified</span>';
+    }
+    
+    // Split into dish name and portion (if exists)
+    const parts = mealText.split('(');
+    const dishName = parts[0].trim();
+    const portion = parts.length > 1 ? '(' + parts.slice(1).join('(').trim() : '';
+    
+    return `<strong>${dishName}</strong>${portion ? '<br><small class="portion-info">' + portion + '</small>' : ''}`;
 }
 
 // Create mobile card layout
@@ -812,28 +876,28 @@ function createMobileCardLayout(meals) {
                         <i class="fas fa-sunrise"></i>
                         Breakfast
                     </div>
-                    <div class="mobile-meal-content">${meals.breakfast[day - 1] || 'N/A'}</div>
+                    <div class="mobile-meal-content">${formatMealCell(meals.breakfast[day - 1] || 'N/A')}</div>
                 </div>
                 <div class="mobile-meal-item">
                     <div class="mobile-meal-label">
                         <i class="fas fa-sun"></i>
                         Lunch
                     </div>
-                    <div class="mobile-meal-content">${meals.lunch[day - 1] || 'N/A'}</div>
+                    <div class="mobile-meal-content">${formatMealCell(meals.lunch[day - 1] || 'N/A')}</div>
                 </div>
                 <div class="mobile-meal-item">
                     <div class="mobile-meal-label">
                         <i class="fas fa-cookie-bite"></i>
                         PM Snack
                     </div>
-                    <div class="mobile-meal-content">${meals.snack[day - 1] || 'N/A'}</div>
+                    <div class="mobile-meal-content">${formatMealCell(meals.snack[day - 1] || 'N/A')}</div>
                 </div>
                 <div class="mobile-meal-item">
                     <div class="mobile-meal-label">
                         <i class="fas fa-moon"></i>
                         Dinner
                     </div>
-                    <div class="mobile-meal-content">${meals.dinner[day - 1] || 'N/A'}</div>
+                    <div class="mobile-meal-content">${formatMealCell(meals.dinner[day - 1] || 'N/A')}</div>
                 </div>
             </div>
         `;
