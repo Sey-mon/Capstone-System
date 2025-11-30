@@ -411,12 +411,69 @@ class ParentController extends Controller
                 abort(404, 'Meal plan not found');
             }
             
+            // Parse meal plan into structured data
+            $parsedMeals = $this->parseMealPlanForPDF($plan->plan_details);
+            
             // Generate PDF using DomPDF
-            $pdf = \PDF::loadView('parent.meal-plan-pdf', compact('plan'));
+            $pdf = \PDF::loadView('parent.meal-plan-pdf', compact('plan', 'parsedMeals'));
             
             $filename = 'meal-plan-' . $plan->patient->first_name . '-' . $plan->generated_at->format('Y-m-d') . '.pdf';
             
             return $pdf->download($filename);
+        }
+        
+        /**
+         * Parse meal plan text into structured array for PDF table
+         */
+        private function parseMealPlanForPDF($mealPlanText)
+        {
+            $meals = [
+                'breakfast' => [],
+                'lunch' => [],
+                'snack' => [],
+                'dinner' => []
+            ];
+            
+            // Find all day sections
+            preg_match_all('/(?:\*\*|📅)?\s*Day\s+(\d+)(?:\*\*)?\s*(?:\([^)]*\))?\s*:?/i', $mealPlanText, $dayMatches, PREG_OFFSET_CAPTURE);
+            
+            $days = [];
+            foreach ($dayMatches[1] as $index => $match) {
+                $days[] = [
+                    'number' => (int)$match[0],
+                    'position' => $dayMatches[0][$index][1]
+                ];
+            }
+            
+            // Extract meals for each day
+            for ($i = 0; $i < count($days); $i++) {
+                $dayNumber = $days[$i]['number'];
+                $startPos = $days[$i]['position'];
+                $endPos = ($i < count($days) - 1) ? $days[$i + 1]['position'] : strlen($mealPlanText);
+                $dayContent = substr($mealPlanText, $startPos, $endPos - $startPos);
+                
+                // Extract breakfast
+                if (preg_match('/(?:🍳|🥞)?\s*(?:\*\*)?(?:Breakfast|Almusal)(?:\*\*)?[^\n]*?[:\n]\s*([^\n-]+)/i', $dayContent, $match)) {
+                    $meals['breakfast'][$dayNumber - 1] = $this->cleanMealText($match[1]);
+                }
+                
+                // Extract lunch
+                if (preg_match('/(?:🍽️|🍲)?\s*(?:\*\*)?(?:Lunch|Tanghalian)(?:\*\*)?[^\n]*?[:\n]\s*([^\n-]+)/i', $dayContent, $match)) {
+                    $meals['lunch'][$dayNumber - 1] = $this->cleanMealText($match[1]);
+                }
+                
+                // Extract snack
+                if (preg_match('/(?:🍪|🥤)?\s*(?:\*\*)?(?:PM\s+Snack|Snack|Meryenda)(?:\*\*)?[^\n]*?[:\n]\s*([^\n-]+)/i', $dayContent, $match)) {
+                    $meals['snack'][$dayNumber - 1] = $this->cleanMealText($match[1]);
+                }
+                
+                // Extract dinner
+                if (preg_match('/(?:🌙|🍴)?\s*(?:\*\*)?(?:Dinner|Hapunan)(?:\*\*)?[^\n]*?[:\n]\s*([^\n-]+)/i', $dayContent, $match)) {
+                    $meals['dinner'][$dayNumber - 1] = $this->cleanMealText($match[1]);
+                }
+            }
+            
+            return $meals;
         }
 
         /**

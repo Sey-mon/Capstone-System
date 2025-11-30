@@ -71,76 +71,6 @@ def calculate_diversity_score(meal_plan_text):
     }
 
 
-def get_mechanical_diet_level(age_months, medical_conditions=None):
-    """Determine mechanical diet level based on age and medical conditions."""
-    # Check for medical conditions requiring mechanical diet
-    needs_mechanical = False
-    if medical_conditions:
-        mechanical_keywords = ['dysphagia', 'swallowing', 'cleft', 'cerebral palsy', 
-                              'developmental delay', 'feeding difficulty', 'chewing problem']
-        medical_lower = str(medical_conditions).lower()
-        needs_mechanical = any(keyword in medical_lower for keyword in mechanical_keywords)
-    
-    if age_months <= 6:
-        return {
-            'level': 'liquid_only',
-            'description': 'Breast milk or formula only',
-            'tagalog': 'Gatas lamang (breast milk o formula)',
-            'texture': 'Liquid',
-            'preparation': 'Exclusive breastfeeding or appropriate infant formula'
-        }
-    elif age_months <= 8:
-        return {
-            'level': 'pureed',
-            'description': 'Smooth, pureed consistency with no lumps',
-            'tagalog': 'Dinurog na kinis (walang butil)',
-            'texture': 'Pureed/Smooth',
-            'preparation': 'Blend or mash until completely smooth, pudding-like consistency'
-        }
-    elif age_months <= 12:
-        return {
-            'level': 'mashed',
-            'description': 'Mashed with soft lumps, fork-mashable',
-            'tagalog': 'Dinurog na may maliit na piraso',
-            'texture': 'Mashed/Soft lumps',
-            'preparation': 'Mash with fork, small soft lumps okay, potato-like consistency'
-        }
-    elif age_months <= 24 or needs_mechanical:
-        return {
-            'level': 'minced_moist',
-            'description': 'Finely chopped/minced, moist pieces (pea-sized)',
-            'tagalog': 'Pinong tinadtad na basa (laki ng gisantes)',
-            'texture': 'Minced/Chopped',
-            'preparation': 'Chop finely into small moist pieces, size of peas or smaller'
-        }
-    elif age_months <= 36 or needs_mechanical:
-        return {
-            'level': 'soft_bite_sized',
-            'description': 'Soft, bite-sized pieces, easily chewed',
-            'tagalog': 'Malambot na kagat-kagat na laki',
-            'texture': 'Soft bite-sized',
-            'preparation': 'Cut into small pieces (1-2 cm), soft enough to chew easily'
-        }
-    else:
-        # For older children or those with specific medical needs
-        if needs_mechanical:
-            return {
-                'level': 'mechanically_soft',
-                'description': 'Tender, moist foods requiring minimal chewing',
-                'tagalog': 'Malambot at madaling ngumuya',
-                'texture': 'Mechanically soft',
-                'preparation': 'Cook until very tender, cut into manageable pieces'
-            }
-        else:
-            return {
-                'level': 'regular',
-                'description': 'Regular family food textures',
-                'tagalog': 'Normal na pagkain ng pamilya',
-                'texture': 'Regular',
-                'preparation': 'Age-appropriate family foods, appropriately sized'
-            }
-
-
 def get_seasonal_foods():
     """Get currently available seasonal Filipino foods."""
     month = datetime.now().month
@@ -206,7 +136,7 @@ def create_nutrition_llm():
         groq_api_key=api_key,
         model_name="meta-llama/llama-4-scout-17b-16e-instruct",
         temperature=0.1,
-        max_tokens=2000  # Increased from 1500 to allow more detailed responses
+        max_tokens=1500
     )
 
 def get_relevant_pdf_chunks(query, k=4):
@@ -694,55 +624,6 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     else:
         food_list_str = ''
     nutrition_tags_str = ', '.join(sorted(all_nutrition_tags))
-    
-    # === ADAPTIVE MEAL PLANNING LOGIC ===
-    # Check database size and adjust expectations
-    total_foods = len(foods_data)
-    min_foods_needed = 28  # 7 days × 4 meals
-    has_sufficient_variety = total_foods >= min_foods_needed
-    
-    # Count protein sources for realistic expectations
-    protein_foods = [f for f in foods_data if any(x in f.get('food_name_and_description', '').lower() 
-                     for x in ['manok', 'chicken', 'isda', 'fish', 'baboy', 'pork', 'itlog', 'egg', 
-                              'hipon', 'shrimp', 'pusit', 'squid', 'baka', 'beef', 'tahong', 'mussel'])]
-    
-    # Smart constraint adjustment based on database size
-    if not has_sufficient_variety:
-        repetition_rule = f"""
-**4. ADJUSTED VARIETY RULE (Database has {total_foods} foods):**
-   - You may repeat INGREDIENTS but must use DIFFERENT cooking methods
-   - Example: ✅ Day 1: Tinolang manok, Day 3: Adobong manok, Day 5: Pritong manok
-   - Focus on variety in PREPARATION rather than ingredients
-   - Aim for at least {min(total_foods // 4, 7)} different main ingredients across 7 days
-   - Same protein in different dishes is acceptable (Tinola, Adobo, Prito, Sinigang, etc.)
-"""
-        variety_guidance = f"""
-**DATABASE CONTEXT:**
-- Total foods available: {total_foods}
-- Protein sources: {len(protein_foods)}
-- ⚠️ Limited variety - Focus on cooking method diversity
-- Strategy: Use Filipino cooking methods (Adobo, Sinigang, Tinola, Prito, Inihaw, Ginisa, Nilaga, Ginataan) with same ingredients
-"""
-    else:
-        repetition_rule = """
-**4. NO REPETITION RULE (Sufficient database variety):**
-   - Each of 7 days must have DIFFERENT dishes
-   - Same ingredient allowed but DIFFERENT complete dish name
-   - Example: ✅ Day 1: Tinolang manok, Day 4: Adobong manok
-   - Example: ❌ "Tinolang manok" appearing twice across 7 days
-"""
-        variety_guidance = f"""
-**DATABASE CONTEXT:**
-- Total foods available: {total_foods}
-- Protein sources: {len(protein_foods)}
-- ✅ Sufficient variety for 7 unique days
-- Strategy: Create completely different dishes each day
-"""
-    
-    print(f"\n🔍 Meal Plan Database Check:")
-    print(f"   Total foods: {total_foods}")
-    print(f"   Proteins: {len(protein_foods)}")
-    print(f"   Strategy: {'Strict uniqueness' if has_sufficient_variety else 'Method variety'}")
 
     # --- Nutrition analysis
     from nutrition_ai import ChildNutritionAI
@@ -869,200 +750,354 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     seasonal_context += f"- Prutas: {', '.join(seasonal['fruits'])}\n"
     seasonal_context += f"- Gulay: {', '.join(seasonal['vegetables'])}\n"
     
-    # Get mechanical diet requirements
-    mechanical_diet = get_mechanical_diet_level(
-        age_months, 
-        patient_data.get('other_medical_problems')
-    )
-    mechanical_context = f"""\n**MECHANICAL DIET REQUIREMENT (IMPORTANTE):**
-- Level: {mechanical_diet['level']}
-- Description: {mechanical_diet['description']}
-- Sa Tagalog: {mechanical_diet['tagalog']}
-- Texture: {mechanical_diet['texture']}
-- Preparation: {mechanical_diet['preparation']}
-
-**MANDATORY: All foods MUST be prepared according to this texture level!**
-"""
-    
     # Create the streamlined prompt - separate f-string variables from template variables
     age_guidelines = get_age_specific_guidelines(age_months)
     
     prompt_str = """You are a Pediatric Nutritionist specializing in Filipino cuisine for children 0-5 years.
 
-LANGUAGE: Simple Tagalog (or English if needed). Use everyday words Filipino parents understand.
+    LANGUAGE INSTRUCTIONS: You may answer in Tagalog, but it's okay to use English if you are unsure of the correct Tagalog word or if there isn't an accurate Tagalog equivalent. Use simple, everyday words that ordinary Filipino parents can understand.
 
-═══════════════════════════════════════════════════════════════════
-🎯 CRITICAL PRIORITIES (Follow in this EXACT order)
-═══════════════════════════════════════════════════════════════════
+    ## PRIMARY CONSTRAINT
+    ONLY recommend foods from the database below. Never mention generic food groups or unlisted foods.
+    
+    ## CRITICAL VARIETY REQUIREMENT
+    You MUST create a meal plan where NO DISH is repeated across the entire 7 days. This is MANDATORY.
+    - If you use chicken, prepare it differently each time (e.g., Day 1: Tinola, Day 3: Adobo, Day 5: Fried)
+    - Never repeat the same dish name (e.g., don't use "Lugaw" on Day 1 and Day 4)
+    - Ensure maximum variety in vegetables, fruits, proteins, and cooking methods
+    - Think of how Filipino families eat throughout the week - they vary their dishes daily
 
-**1. SAFETY FIRST (Non-negotiable):**
-   - AVOID these allergens completely: {allergies}
-   - Respect religious restrictions: {religion}
-   - Follow mechanical diet level: {mechanical_context}
-   
-**2. USE AVAILABLE INGREDIENTS (Primary Goal):**
-   🏠 Parent has: {available_ingredients}
-   
-   → Build meals around these ingredients
-   → Use them as MAIN components across all 7 days
-   → Prepare them differently each day for variety
-   → Example: If "chicken" → Day 1: Tinola, Day 3: Adobo, Day 5: Pritong
-   
-**3. FOOD DATABASE ONLY:**
-   ✅ Use ONLY foods from this list:
-   {food_list_str}
-   
-   ❌ Never suggest foods not in the database
+    ## FOOD DATABASE
+    {food_list_str}
 
-{variety_guidance}
+    {pdf_context}
 
-{repetition_rule}
-   
-**5. COMPLETE FILIPINO DISH NAMES:**
-   ✅ "Tinolang manok", "Sinigang na baboy", "Paksiw na bangus"
-   ❌ "Rice with fish", "Sinangag na itlog", "Kanin na may ulam"
+    Base your response on {nutrition_analysis}
 
-**6. ADAPTIVE MEAL PLANNING:**
-   - If database limited: Focus on different cooking methods for same ingredients
-   - If available ingredients limited: Maximize their use creatively
-   - If stuck: Use simpler traditional dishes (Sinangag variants, Pritong itlog, Lugaw types)
-   - Quality > Complexity: Simple, nutritious meals are better than elaborate impossible ones
+    ## MANDATORY RESPONSE FORMAT - ALL SECTIONS MUST BE INCLUDED IN THIS EXACT ORDER
 
-═══════════════════════════════════════════════════════════════════
-📋 PATIENT INFORMATION
-═══════════════════════════════════════════════════════════════════
+    ### CHILD PROFILE (MUST include this exact header)
+    **Edad**: {age_months} buwan
+    **Timbang**: {weight_kg} kg
+    **Taas**: {height_cm} cm
+    **BMI**: {bmi_for_age}
+    **Allergy**: {allergies}
+    **Karamdaman**: {other_medical_problems}
+    **Relihiyon**: {religion}
+    **Available Ingredients**: {available_ingredients}
 
-Age: {age_months} months | Weight: {weight_kg} kg | Height: {height_cm} cm
-BMI: {bmi_for_age} | Allergies: {allergies} | Medical: {other_medical_problems}
-Religion: {religion} | Available at home: {available_ingredients}
+    AGE-SPECIFIC GUIDELINES:
+    **Kasalukuyang Edad ({age_months} buwan)**:
+    {age_guidelines}
 
-{age_guidelines}
-{allergy_section}
-{religion_section}
-{pdf_context}
-{nutrition_analysis}
-{filipino_context}
-{seasonal_context}
+    **Allergy**: {allergies} {allergy_section}
 
-═══════════════════════════════════════════════════════════════════
-📝 REQUIRED OUTPUT FORMAT
-═══════════════════════════════════════════════════════════════════
+    **Relihiyon**: {religion} {religion_section}
 
-### CHILD PROFILE
-**Edad**: {age_months} buwan
-**Timbang**: {weight_kg} kg
-**Taas**: {height_cm} cm
-**BMI**: {bmi_for_age}
-**Allergy**: {allergies}
-**Karamdaman**: {other_medical_problems}
-**Relihiyon**: {religion}
-**Available Ingredients**: {available_ingredients}
+    **Karamdaman**: {other_medical_problems} [If none, briefly state "Walang special dietary restrictions." If specified, provide brief dietary guidance.]
 
-### 7-DAY MEAL PLAN
+    ### 7-DAY MEAL PLAN (MUST include this exact header)
+    
+    **MANDATORY: COMPLETE ALL 7 DAYS WITH ALL MEAL CATEGORIES**
+    **CRITICAL: Each day MUST have DIFFERENT dishes - NO REPETITION across all 7 days**
+    
+    **Day 1** (Monday - Lunes):
+    - **Breakfast (Almusal)**: [Specific Filipino dish in Tagalog] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [Different Filipino dish] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [Filipino snack] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [Different Filipino dish] ([portion]) - [benefit in Tagalog]
 
-**Day 1 (Lunes):**
-- **Breakfast (Almusal)**: [Specific Filipino dish] ([portion]) - [benefit]
-- **Lunch (Tanghalian)**: [Different dish] ([portion]) - [benefit]
-- **Snack (Meryenda)**: [Filipino snack] ([portion]) - [benefit]
-- **Dinner (Hapunan)**: [Different dish] ([portion]) - [benefit]
+    **Day 2** (Tuesday - Martes):
+    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Day 1] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Day 1] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Day 1] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Day 1] ([portion]) - [benefit in Tagalog]
 
-**Day 2 (Martes):**
-- **Breakfast (Almusal)**: [NEW dish from available ingredients] ([portion]) - [benefit]
-- **Lunch (Tanghalian)**: [NEW dish] ([portion]) - [benefit]
-- **Snack (Meryenda)**: [NEW snack] ([portion]) - [benefit]
-- **Dinner (Hapunan)**: [NEW dish] ([portion]) - [benefit]
+    **Day 3** (Wednesday - Miyerkules):
+    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-2] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-2] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-2] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-2] ([portion]) - [benefit in Tagalog]
 
-**Day 3 (Miyerkules):**
-- **Breakfast (Almusal)**: [NEW complete dish] ([portion]) - [benefit]
-- **Lunch (Tanghalian)**: [NEW complete dish] ([portion]) - [benefit]
-- **Snack (Meryenda)**: [NEW snack] ([portion]) - [benefit]
-- **Dinner (Hapunan)**: [NEW complete dish] ([portion]) - [benefit]
+    **Day 4** (Thursday - Huwebes):
+    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-3] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-3] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-3] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-3] ([portion]) - [benefit in Tagalog]
 
-**Day 4 (Huwebes):**
-- **Breakfast (Almusal)**: [NEW complete dish] ([portion]) - [benefit]
-- **Lunch (Tanghalian)**: [NEW complete dish] ([portion]) - [benefit]
-- **Snack (Meryenda)**: [NEW snack] ([portion]) - [benefit]
-- **Dinner (Hapunan)**: [NEW complete dish] ([portion]) - [benefit]
+    **Day 5** (Friday - Biyernes):
+    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-4] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-4] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-4] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-4] ([portion]) - [benefit in Tagalog]
 
-**Day 5 (Biyernes):**
-- **Breakfast (Almusal)**: [NEW dish - e.g., "Arroz caldo", "Champorado"] ([portion]) - [benefit]
-- **Lunch (Tanghalian)**: [NEW dish - e.g., "Sinigang na baboy", "Kare-kare"] ([portion]) - [benefit]
-- **Snack (Meryenda)**: [NEW snack - e.g., "Turon", "Puto"] ([portion]) - [benefit]
-- **Dinner (Hapunan)**: [NEW dish - e.g., "Pinakbet", "Tinola"] ([portion]) - [benefit]
+    **Day 6** (Saturday - Sabado):
+    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-5] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-5] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-5] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-5] ([portion]) - [benefit in Tagalog]
 
-**Day 6 (Sabado):**
-- **Breakfast (Almusal)**: [NEW dish - e.g., "Goto", "Tortang talong"] ([portion]) - [benefit]
-- **Lunch (Tanghalian)**: [NEW dish - e.g., "Menudo", "Afritada"] ([portion]) - [benefit]
-- **Snack (Meryenda)**: [NEW snack - e.g., "Bibingka", "Suman"] ([portion]) - [benefit]
-- **Dinner (Hapunan)**: [NEW dish - e.g., "Escabeche", "Paksiw"] ([portion]) - [benefit]
+    **Day 7** (Sunday - Linggo):
+    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-6] ([portion]) - [benefit in Tagalog]
+    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-6] ([portion]) - [benefit in Tagalog]
+    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-6] ([portion]) - [benefit in Tagalog]
+    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-6] ([portion]) - [benefit in Tagalog]
 
-**Day 7 (Linggo):**
-- **Breakfast (Almusal)**: [NEW dish - e.g., "Pandesal with kesong puti"] ([portion]) - [benefit]
-- **Lunch (Tanghalian)**: [NEW dish - e.g., "Pancit canton", "Lomi"] ([portion]) - [benefit]
-- **Snack (Meryenda)**: [NEW snack - e.g., "Maruya", "Palitaw"] ([portion]) - [benefit]
-- **Dinner (Hapunan)**: [NEW dish - e.g., "Pochero", "Ginisang monggo"] ([portion]) - [benefit]
+    **CRITICAL MEAL PLAN RULES:**
+    1. NEVER repeat the same dish or ingredient across different days (MANDATORY)
+    2. Use only foods from the database
+    3. All food names and preparation methods MUST be in Tagalog
+    4. Use common, affordable Filipino dishes (pangmasa)
+    5. For 6-59 months: Use mechanical diet (finely chopped food)
+    6. For 0-6 months: State "Breastfeeding lamang" instead of meal plan
+    7. DO NOT include calorie numbers
+    8. Day 1: Prioritize available ingredients: {available_ingredients}
 
-### REGULAR NA OBSERBAHAN
+    **FILIPINO TRADITIONAL CUISINE EXAMPLES (Use these styles of dishes):**
+    
+    **Breakfast (Almusal) Options - Traditional & Healthy:**
+    - Champorado (chocolate rice porridge)
+    - Ginataang bilo-bilo (sweet rice balls in coconut milk)
+    - Lugaw na baboy/manok (rice porridge with pork/chicken)
+    - Arroz caldo (chicken rice porridge with ginger)
+    - Goto (tripe rice porridge)
+    - Sinangag na itlog (fried rice with egg)
+    - Pandesal with kesong puti
+    - Tuyo at sinangag (dried fish and fried rice)
+    - Bangus at sinangag (milkfish and fried rice)
+    - Tortang talong (eggplant omelette)
+    - Scrambled eggs with tomatoes
+    - Oatmeal/oats with saging
+    - Champorado
+    - Pandesal with peanut butter
+    - Fresh fish with sinangag
+    - Boiled egg with brown rice
+    - Native rice porridge with vegetables
+    
+    **Lunch/Dinner (Tanghalian/Hapunan) Options - Regional Varieties:**
+    
+    *Adobo Varieties:*
+    - Adobong manok (chicken adobo)
+    - Adobong baboy (pork adobo)
+    - Adobong pusit (squid adobo)
+    - Adobong kangkong (water spinach adobo)
+    - Adobong sitaw (string beans adobo)
+    
+    *Sinigang Varieties:*
+    - Sinigang na baboy sa sampalok (pork in tamarind soup)
+    - Sinigang na isda sa bayabas (fish in guava soup)
+    - Sinigang na hipon (shrimp sinigang)
+    - Sinigang na bangus belly
+    - Sinigang na baka (beef sinigang)
+    
+    *Ginataan Dishes:*
+    - Ginataang kalabasa at sitaw (squash and string beans in coconut milk)
+    - Ginataang hipon (shrimp in coconut milk)
+    - Ginataang manok (chicken in coconut milk)
+    - Ginataang gulay (mixed vegetables in coconut milk)
+    - Bicol express (spicy pork in coconut milk)
+    - Laing (taro leaves in coconut milk)
+    - Ginataang langka (jackfruit in coconut milk)
+    
+    *Soup-based:*
+    - Tinola (ginger chicken soup)
+    - Nilagang baka (boiled beef soup)
+    - Bulalo (beef marrow soup)
+    - Sinigang (sour soup varieties)
+    - Pochero (Filipino beef stew)
+    - Molo soup (wonton soup)
+    
+    *Stewed/Braised:*
+    - Kare-kare (peanut stew)
+    - Menudo (pork and liver stew)
+    - Afritada (chicken/pork in tomato sauce)
+    - Mechado (beef stew)
+    - Kaldereta (goat/beef stew)
+    - Asado (sweet braised pork)
+    - Humba (Visayan pork stew)
+    - Paksiw na isda/baboy (fish/pork in vinegar)
+    
+    *Grilled/Baked/Lightly Fried:*
+    - Pritong isda (pan-fried fish - tilapia, bangus, galunggong)
+    - Pritong manok (pan-fried chicken)
+    - Inihaw na liempo (grilled pork)
+    - Inihaw na manok (grilled chicken)
+    - Inihaw na isda (grilled fish)
+    - Pinaputok na bangus (steamed-grilled milkfish)
+    - Baked chicken
+    - Grilled seafood
+    
+    *Sautéed (Ginisa):*
+    - Ginisang ampalaya at itlog (sauteed bitter melon with egg)
+    - Ginisang monggo (sauteed mung beans)
+    - Ginisang kangkong (sauteed water spinach)
+    - Ginisang sitaw at kalabasa (sauteed string beans and squash)
+    - Ginisang repolyo (sauteed cabbage)
+    - Ginisang togue (sauteed bean sprouts)
+    - Chopsuey (mixed vegetables stir-fry)
+    
+    *Vegetables:*
+    - Pinakbet (vegetable stew with bagoong)
+    - Dinengdeng (vegetable soup with bagoong)
+    - Bulanglang (vegetable soup)
+    - Ensaladang talong (eggplant salad)
+    - Ensaladang mangga (green mango salad)
+    - Atchara (pickled papaya)
+    
+    *Egg Dishes (Torta):*
+    - Tortang talong (eggplant omelette)
+    - Tortang giniling (ground meat omelette)
+    - Tortang alamang (shrimp paste omelette)
+    - Tortang dulong (silverfish omelette)
+    - Pritong itlog (fried egg)
+    
+    *Noodle Dishes:*
+    - Pancit canton (stir-fried wheat noodles)
+    - Pancit bihon (rice noodles)
+    - Pancit palabok (noodles with shrimp sauce)
+    - Pancit malabon (seafood noodles)
+    - Lomi (thick egg noodle soup)
+    - Sotanghon (glass noodles)
+    - Pancit luglog (similar to palabok)
+    
+    *Modern Filipino Fusion:*
+    - Chicken curry (Filipino-style)
+    - Sweet and sour fish/pork
+    - Baked tahong (baked mussels)
+    - Rellenong bangus (stuffed milkfish)
+    - Embutido (Filipino meatloaf)
+    - Morcon (beef roll)
+    - Fish fillet (breaded/fried)
+    
+    **Snacks (Meryenda) Options - Sweet & Savory:**
+    
+    *Sweet Snacks (Natural & Healthy):*
+    - Turon (banana spring rolls)
+    - Banana cue (caramelized banana - moderate sugar)
+    - Kamote cue (caramelized sweet potato - moderate sugar)
+    - Maruya (banana fritters)
+    - Ginataang mais (corn in coconut milk)
+    - Ginataang saging (banana in coconut milk)
+    - Puto (steamed rice cake)
+    - Kutsinta (brown rice cake)
+    - Sapin-sapin (layered rice cake)
+    - Suman (sticky rice wrapped in banana leaves)
+    - Biko (sweet rice cake)
+    - Palitaw (sweet rice cakes)
+    - Bibingka (rice cake)
+    - Puto bumbong (purple rice cake)
+    - Maja blanca (coconut pudding)
+    - Ube halaya (purple yam jam)
+    - Ginataan (various fruits/vegetables in coconut milk)
+    - Buko salad (young coconut salad)
+    - Fresh fruits: Saging, mangga, papaya, suha, dalandan, pakwan, melon
+    - Pinaupong saging (steamed banana)
+    - Nilupak (mashed cassava/sweet potato/banana)
+    - Fresh fruit salad
+    - Steamed sweet potato
+    - Boiled saging na saba
+    
+    *Savory Snacks (Healthy Options):*
+    - Lugaw (rice porridge)
+    - Arroz caldo (chicken porridge)
+    - Pancit (various noodle dishes)
+    - Lumpia (spring rolls - fresh/fried)
+    - Okoy (shrimp fritters)
+    - Ukoy (vegetable fritters)
+    - Sopas (Filipino chicken macaroni soup)
+    - Champorado with tuyo
+    - Pandesal with various healthy fillings
+    - Monay (bread)
+    - Steamed siopao (if homemade)
+    - Vegetable lumpia
+    - Fresh lumpia with peanut sauce
+    
+    **PREPARATION METHODS IN TAGALOG (Comprehensive List):**
+    - **Pritong** = Fried (e.g., pritong tilapia, pritong itlog, pritong manok)
+    - **Nilagang** = Boiled (e.g., nilagang saging, nilagang mais, nilagang baka)
+    - **Ginisang** = Sautéed (e.g., ginisang kangkong, ginisang monggo, ginisang gulay)
+    - **Ginataang** = Cooked in coconut milk (e.g., ginataang kalabasa, ginataang hipon)
+    - **Inihaw** = Grilled (e.g., inihaw na manok, inihaw na liempo, inihaw na isda)
+    - **Haluing** = Mashed/pureed (e.g., haluing saging para sa bata, haluing kalabasa)
+    - **Sinangag** = Fried rice
+    - **Hinog** = Ripe (e.g., hinog na saging, hinog na mangga)
+    - **Piniritong** = Deep-fried (e.g., piniritong lumpia, piniritong manok)
+    - **Pinakuluang** = Boiled/simmered (e.g., pinakuluang itlog, pinakuluang saging)
+    - **Sinaing** = Steamed/cooked (e.g., sinaing na isda, sinaing na kanin)
+    - **Ihaw/Inihaw** = Grilled/charcoal-grilled
+    - **Pinaksiw** = Cooked in vinegar (e.g., paksiw na isda, paksiw na lechon)
+    - **Binalot** = Wrapped (e.g., binalot na suman)
+    - **Nilasing** = Cooked with alcohol (e.g., nilasing na hipon)
+    - **Pinaupong** = Steamed upright (e.g., pinaupong saging)
+    - **Sinabawan** = In broth/soupy (e.g., sinabawang gulay)
+    - **Tinapa** = Smoked (e.g., tinapa na bangus)
+    - **Tuyong** = Dried (e.g., tuyong isda, tuyong pusit)
+    - **Sinaligang** = Made into sinigang/sour soup
+    - **Inadobo** = Made into adobo
+    - **Kinare-kare** = Made into kare-kare style
+    - **Rebosado** = Battered (e.g., rebosadong isda)
+    - **Relleno/Rellenong** = Stuffed (e.g., rellenong bangus, rellenong manok)
+    - **Escabetse/Eskabetse** = Sweet and sour style
+    - **Binabad** = Marinated
+    - **Sinangkutsa** = With tomato sauce
+    - **Sinarsahan** = With sarsang sauce
+    - **Kinamatisan** = With tomatoes
+    
+    **AGE-APPROPRIATE FILIPINO FOOD TEXTURES:**
+    - 6-8 months: Lugaw, haluing saging/papaya/kalabasa, sopas na may durog na gulay
+    - 9-11 months: Lugaw with small pieces, mashed rice with ulam, soft pancit
+    - 12-23 months: Kanin with finely chopped ulam, sopas, soft fruits
+    - 24-59 months: Regular family foods, chopped to appropriate size
 
-**Araw-Araw**:
-- Gana kumain - Sigla ng bata - Tulog - Dumi
+    ### REGULAR NA OBSERBAHAN (MUST include this exact header)
+    
+    **Araw-Araw** (MUST include this exact subheader):
+    - Gana kumain (Mabuti/Katamtaman/Hindi mabuti) - Sigla ng bata - Tulog (mahimbing ba?) - Dumi (normal ba?)
 
-**Bawat Linggo**:
-- Timbang - Paglaki - Bagong natututunan
+    **Bawat Linggo** (MUST include this exact subheader):
+    - Timbang - Paglaki - Bagong natututunan
 
-**Bawat Buwan**:
-- Taas - Gustong pagkain - Independence sa pagkain
+    **Bawat Buwan**:
+    - Taas - Gustong pagkain - Pagiging independent sa pagkain
 
-═══════════════════════════════════════════════════════════════════
-📚 FILIPINO DISH REFERENCE (Use for inspiration)
-═══════════════════════════════════════════════════════════════════
+    ## BALANSENG PAGKAIN PARA SA BATA
 
-**BREAKFAST:** Lugaw, Arroz caldo, Goto, Champorado, Tortang talong, Sinangag with tuyo/bangus, Pandesal with kesong puti
+    Bawat pagkain dapat may:
+    - Pagkain na nagbibigay lakas at enerhiya (tulad ng kanin, tinapay, mais)
+    - Pagkain na tumutulong sa paglaki ng bata (tulad ng isda, manok, itlog)
+    - Pagkain na nagpapalakas ng katawan (tulad ng gulay, prutas)
+    - Tubig - laging importante
 
-**LUNCH/DINNER:** 
-- Soups: Tinola, Sinigang (baboy/isda/hipon), Nilagang baka, Bulalo
-- Adobo: manok, baboy, pusit, kangkong
-- Ginataan: kalabasa, hipon, manok, gulay
-- Stews: Kare-kare, Menudo, Afritada, Mechado, Kaldereta, Pochero
-- Fried: Pritong isda (tilapia/bangus/galunggong), pritong manok
-- Grilled: Inihaw na manok/liempo/isda
-- Sautéed: Ginisang monggo/kangkong/ampalaya/sitaw
-- Vegetables: Pinakbet, Dinengdeng, Chopsuey
-- Noodles: Pancit canton/bihon/palabok, Lomi, Sotanghon
-- Others: Paksiw na isda, Escabeche, Rellenong bangus
+    {filipino_context}
+    
+    {seasonal_context}
 
-**SNACKS:** Turon, Banana/Kamote cue, Puto, Kutsinta, Suman, Bibingka, Palitaw, Maruya, Ginataang mais/saging, Fresh fruits, Lumpia
-
-**AGE TEXTURES:**
-- 0-6mo: Breastmilk only
-- 6-8mo: Pureed (haluing lugaw/saging/kalabasa)
-- 9-12mo: Mashed with soft lumps
-- 13-24mo: Finely chopped (pinong tinadtad)
-- 25-59mo: Bite-sized family foods
-
-═══════════════════════════════════════════════════════════════════
-✅ FINAL CHECKLIST BEFORE SUBMITTING
-═══════════════════════════════════════════════════════════════════
-
-□ Avoided allergens: {allergies}
-□ Respected religion: {religion}
-□ Used available ingredients ({available_ingredients}) as main components
-□ All 7 days complete with 4 meals each
-□ NO dish repeated across any day
-□ All dishes are COMPLETE Filipino names (not generic)
-□ Only database foods used
-□ All in Tagalog
-□ No calorie numbers
-□ Days 5-7 same quality as Days 1-3
-□ Variety: 10+ proteins, 15+ vegetables/fruits
-□ Different cooking methods used
-
-═══════════════════════════════════════════════════════════════════
-
-NOW GENERATE THE MEAL PLAN following ALL priorities above."""
+    ### FINAL VERIFICATION CHECKLIST:
+    ✓ CHILD PROFILE section is included with exact header
+    ✓ 7-DAY MEAL PLAN section is included with exact header
+    ✓ All 7 days (Day 1 Monday, Day 2 Tuesday, Day 3 Wednesday, Day 4 Thursday, Day 5 Friday, Day 6 Saturday, Day 7 Sunday) are included
+    ✓ Each day has Breakfast (Almusal), Lunch (Tanghalian), Snack (Meryenda), Dinner (Hapunan)
+    ✓ REGULAR NA OBSERBAHAN section with Araw-Araw and Bawat Linggo subheaders
+    ✓ Entire response is in simple Tagalog
+    ✓ Only database foods are recommended
+    ✓ NO SINGLE DISH OR MAIN INGREDIENT IS REPEATED ACROSS ANY OF THE 7 DAYS (MANDATORY - Double check this!)
+    ✓ All dishes are Filipino traditional cuisine that ordinary Filipinos eat regularly
+    ✓ All dishes use Tagalog names and preparation methods
+    ✓ No calorie numbers included
+    ✓ Allergies ({allergies}) are avoided
+    ✓ Religious restrictions ({religion}) are respected
+    
+    **DIVERSITY REQUIREMENTS:**
+    - Use at least 10 different protein sources across 7 days (e.g., manok, baboy, isda, itlog, hipon, pusit, baka, etc.)
+    - Use at least 15 different vegetables/fruits across 7 days
+    - Vary cooking methods: adobo, sinigang, tinola, ginisa, prito, inihaw, nilaga, ginataan
+    - Each breakfast should be unique (no repeating lugaw, champorado, etc.)
+    - Each snack should be unique (turon one day, banana cue another, puto another, etc.)
+    - Ensure traditional Filipino dishes like sinigang, adobo, tinola, kare-kare, pinakbet appear across different days
+    - Main ingredients (like chicken, pork, fish) should be prepared differently each time they appear"""
         
     prompt_template = PromptTemplate(
-        input_variables=["food_list_str", "pdf_context", "nutrition_analysis", "age_months", "weight_kg", "height_cm", "bmi_for_age", "allergies", "other_medical_problems", "religion", "available_ingredients", "nutrition_tags", "age_guidelines", "allergy_section", "religion_section", "filipino_context", "seasonal_context", "mechanical_context", "variety_guidance", "repetition_rule"],
+        input_variables=["food_list_str", "pdf_context", "nutrition_analysis", "age_months", "weight_kg", "height_cm", "bmi_for_age", "allergies", "other_medical_problems", "religion", "available_ingredients", "nutrition_tags", "age_guidelines", "allergy_section", "religion_section", "filipino_context", "seasonal_context"],
         template=prompt_str
     )
 
@@ -1083,10 +1118,7 @@ NOW GENERATE THE MEAL PLAN following ALL priorities above."""
         "allergy_section": allergy_section,
         "religion_section": religion_section,
         "filipino_context": filipino_context,
-        "seasonal_context": seasonal_context,
-        "mechanical_context": mechanical_context,
-        "variety_guidance": variety_guidance,
-        "repetition_rule": repetition_rule
+        "seasonal_context": seasonal_context
     }
 
     llm = create_nutrition_llm()

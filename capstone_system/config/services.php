@@ -46,17 +46,6 @@ return [
         'timeout' => env('LLM_API_TIMEOUT', 30),
     ],
 
-    // Aliases for easier access
-    'llm' => [
-        'api_url' => env('LLM_API_URL', 'http://127.0.0.1:8002'),
-        'timeout' => env('LLM_API_TIMEOUT', 30),
-    ],
-
-    'random_forest' => [
-        'api_url' => env('RANDOM_FOREST_API_URL', 'http://127.0.0.1:8001'),
-        'timeout' => env('RANDOM_FOREST_API_TIMEOUT', 30),
-    ],
-
     'recaptcha' => [
         'site_key' => env('RECAPTCHA_SITE_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'), // Google's test key
         'secret_key' => env('RECAPTCHA_SECRET_KEY', '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'), // Google's test key

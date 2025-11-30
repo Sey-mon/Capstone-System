@@ -2250,6 +2250,33 @@ main {
     color: #475569;
 }
 
+.meal-content strong {
+    display: block;
+    color: #1e293b;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.meal-content .portion-info {
+    display: block;
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.meal-content .no-meal {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Hide raw meal plan data - only used for parsing */
+#rawMealPlanData {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
 /* Detailed View Section */
 .detailed-view-section {
     display: flex;
