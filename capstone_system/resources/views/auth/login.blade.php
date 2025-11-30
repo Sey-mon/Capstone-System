@@ -34,7 +34,7 @@
         <div class="hero-content">
             <div class="hero-text">
                 <h1 class="hero-title">WELCOME TO<br>SHARES</h1>
-                <p class="hero-subtitle">Smart Health Assessment and Recommender System for Excellence in Nutrition - Transforming San Pedro City into a nutrition-smart community through data-driven insights and intelligent health recommendations</p>
+                <p class="hero-subtitle">Smart Health and Recommender System for Excellence in Nutrition - Transforming San Pedro City into a nutrition-smart community through data-driven insights and intelligent health recommendations</p>
                 <a href="#about" class="learn-more-btn">
                     Learn More
                     <i class="fas fa-arrow-down"></i>
