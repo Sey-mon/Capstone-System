@@ -895,7 +895,16 @@ class NutritionistController extends Controller
             ->with(['parent', 'barangay'])
             ->get();
 
-        return view('nutritionist.meal-plans', compact('patients'));
+        // Get all barangays for feeding program dropdown
+        $barangays = Barangay::orderBy('barangay_name')->get();
+
+        // Get feeding program plans created by this nutritionist
+        $feedingProgramPlans = FeedingProgramPlan::with('creator')
+            ->where('created_by', $nutritionistId)
+            ->orderBy('generated_at', 'desc')
+            ->get();
+
+        return view('nutritionist.meal-plans', compact('patients', 'barangays', 'feedingProgramPlans'));
     }
 
     /**
@@ -1264,7 +1273,7 @@ class NutritionistController extends Controller
             $validated = $request->validate([
                 'target_age_group' => 'required|string',
                 'total_children' => 'nullable|integer',
-                'program_duration_days' => 'required|integer|min:1|max:7',
+                'program_duration_days' => 'required|integer|min:1|max:5',
                 'budget_level' => 'required|string|in:low,moderate,high',
                 'barangay' => 'nullable|string',
                 'available_ingredients' => 'nullable|string',
@@ -1293,6 +1302,55 @@ class NutritionistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to save meal plan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get feeding program plan details
+     */
+    public function getFeedingProgramPlan($id)
+    {
+        try {
+            $plan = FeedingProgramPlan::with('creator')
+                ->where('program_plan_id', $id)
+                ->where('created_by', Auth::id())
+                ->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'plan' => $plan
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Plan not found'
+            ], 404);
+        }
+    }
+
+    /**
+     * Delete feeding program plan
+     */
+    public function deleteFeedingProgramPlan($id)
+    {
+        try {
+            $plan = FeedingProgramPlan::where('program_plan_id', $id)
+                ->where('created_by', Auth::id())
+                ->firstOrFail();
+
+            $plan->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Feeding program plan deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete plan'
             ], 500);
         }
     }

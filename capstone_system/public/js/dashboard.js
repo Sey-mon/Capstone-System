@@ -49,10 +49,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Floating menu button - shows sidebar when hidden
     if (floatingMenuBtn) {
         floatingMenuBtn.addEventListener('click', function() {
-            const isDesktop = window.innerWidth > 768;
+            const isMobile = window.innerWidth <= 768;
             
-            if (isDesktop) {
-                // Show sidebar by removing collapsed class
+            if (isMobile) {
+                // Mobile behavior - show sidebar with overlay
+                sidebar.classList.add('mobile-active');
+                mobileOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } else {
+                // Desktop behavior - show sidebar by removing collapsed class
                 sidebar.classList.remove('collapsed');
                 localStorage.setItem('sidebarCollapsed', false);
                 

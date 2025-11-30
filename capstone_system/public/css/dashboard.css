@@ -577,8 +577,21 @@ body {
     display: none;
 }
 
+/* Show floating button when sidebar is collapsed on desktop */
 .sidebar.collapsed ~ .main-content .floating-menu-btn {
     display: flex;
+}
+
+/* Always show floating button on mobile */
+@media (max-width: 768px) {
+    .floating-menu-btn {
+        display: flex !important;
+    }
+    
+    /* Hide when sidebar is active on mobile */
+    .sidebar.mobile-active ~ .main-content .floating-menu-btn {
+        display: none !important;
+    }
 }
 
 .floating-menu-btn:hover {

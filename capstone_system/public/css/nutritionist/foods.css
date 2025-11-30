@@ -10,8 +10,8 @@
 
 .stat-card {
     background: white;
-    padding: 24px;
-    border-radius: 12px;
+    padding: 16px;
+    border-radius: 10px;
     box-shadow: 0 2px 8px rgba(76, 175, 80, 0.15);
     border: 1px solid #e8f5e9;
     text-align: center;
@@ -24,14 +24,14 @@
 }
 
 .stat-card .stat-icon {
-    width: 60px;
-    height: 60px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 15px;
-    font-size: 28px;
+    margin: 0 auto 12px;
+    font-size: 22px;
 }
 
 .stat-card .stat-icon.pending {
@@ -50,15 +50,15 @@
 }
 
 .stat-card h4 {
-    margin: 0 0 10px 0;
-    font-size: 14px;
+    margin: 0 0 8px 0;
+    font-size: 13px;
     color: #666;
     font-weight: 500;
 }
 
 .stat-card p {
     margin: 0;
-    font-size: 36px;
+    font-size: 28px;
     font-weight: bold;
     color: #2e7d32;
 }
