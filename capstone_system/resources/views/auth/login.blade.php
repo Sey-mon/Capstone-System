@@ -33,8 +33,37 @@
     <section id="home" class="hero-section">
         <div class="hero-content">
             <div class="hero-text">
-                <h1 class="hero-title">WELCOME TO<br>SHARES</h1>
-                <p class="hero-subtitle">Smart Health and Recommender System for Excellence in Nutrition - Transforming San Pedro City into a nutrition-smart community through data-driven insights and intelligent health recommendations</p>
+                <h1 class="hero-title">
+                    <span class="title-line">WELCOME TO</span><br>
+                    <span class="title-highlight">SHARES</span>
+                </h1>
+                <p class="hero-subtitle">
+                    <span class="subtitle-word">Smart</span>
+                    <span class="subtitle-word">Health</span>
+                    <span class="subtitle-word">and</span>
+                    <span class="subtitle-word">Recommender</span>
+                    <span class="subtitle-word">System</span>
+                    <span class="subtitle-word">for</span>
+                    <span class="subtitle-word">Excellence</span>
+                    <span class="subtitle-word">in</span>
+                    <span class="subtitle-word">Nutrition</span>
+                    <span class="subtitle-word">-</span>
+                    <span class="subtitle-word">Transforming</span>
+                    <span class="subtitle-word">San</span>
+                    <span class="subtitle-word">Pedro</span>
+                    <span class="subtitle-word">City</span>
+                    <span class="subtitle-word">into</span>
+                    <span class="subtitle-word">a</span>
+                    <span class="subtitle-word">nutrition-smart</span>
+                    <span class="subtitle-word">community</span>
+                    <span class="subtitle-word">through</span>
+                    <span class="subtitle-word">data-driven</span>
+                    <span class="subtitle-word">insights</span>
+                    <span class="subtitle-word">and</span>
+                    <span class="subtitle-word">intelligent</span>
+                    <span class="subtitle-word">health</span>
+                    <span class="subtitle-word">recommendations</span>
+                </p>
                 <a href="#about" class="learn-more-btn">
                     Learn More
                     <i class="fas fa-arrow-down"></i>
