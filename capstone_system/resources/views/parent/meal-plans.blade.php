@@ -471,16 +471,8 @@
                         </table>
                     </div>
 
-                    <!-- View Detailed Version Button -->
-                    <div class="detailed-view-section">
-                        <button onclick="toggleDetailedView()" class="detailed-view-btn">
-                            <i class="fas fa-file-alt"></i>
-                            View Detailed Version
-                        </button>
-                    </div>
-
-                    <!-- Hidden Raw Meal Plan Data -->
-                    <div id="rawMealPlanData" style="display: none;">
+                    <!-- Raw Meal Plan Data -->
+                    <div id="rawMealPlanData">
                         @if(session('meal_plan_html'))
                             {!! session('meal_plan_html') !!}
                         @elseif(session('last_meal_plan'))

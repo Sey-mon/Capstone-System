@@ -330,22 +330,6 @@ function generateWeeklyMealTable(weeklyFormat) {
     return tableHtml;
 }
 
-// Toggle detailed view
-function toggleDetailedView() {
-    const detailedContent = document.querySelector('.detailed-plan-content');
-    const toggleBtn = document.querySelector('.btn-toggle-details');
-    
-    if (detailedContent && toggleBtn) {
-        if (detailedContent.style.display === 'none') {
-            detailedContent.style.display = 'block';
-            toggleBtn.innerHTML = '<i class="fas fa-table"></i> View Weekly Table';
-        } else {
-            detailedContent.style.display = 'none';
-            toggleBtn.innerHTML = '<i class="fas fa-list-alt"></i> View Detailed Version';
-        }
-    }
-}
-
 // View meal plan details in SweetAlert2 modal
 function viewMealPlan(planId) {
     // Show loading state with SweetAlert2
@@ -410,21 +394,6 @@ function viewMealPlan(planId) {
                                         </div>
                                         <div class="weekly-meal-table-wrapper">
                                             ${weeklyTableHtml}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="view-details-toggle" style="margin-top: 20px;">
-                                        <button class="btn-toggle-details" onclick="toggleDetailedView()">
-                                            <i class="fas fa-list-alt"></i> View Detailed Version
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="detailed-plan-content" style="display: none; margin-top: 20px;">
-                                        <h4 style="color: #055b25; margin-bottom: 15px;">
-                                            <i class="fas fa-file-alt"></i> Full Meal Plan Details
-                                        </h4>
-                                        <div class="plan-content-wrapper">
-                                            ${formatMealPlanDetails(data.plan.plan_details)}
                                         </div>
                                     </div>
                                 </div>

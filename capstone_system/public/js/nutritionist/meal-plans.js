@@ -284,8 +284,9 @@ class MealPlansManager {
         });
 
         try {
+            const apiUrl = window.API_CONFIG?.LLM_API_URL || 'http://127.0.0.1:8002';
             const response = await $.ajax({
-                url: 'http://127.0.0.1:8002/feeding_program/meal_plan',
+                url: `${apiUrl}/feeding_program/meal_plan`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({
@@ -369,8 +370,9 @@ class MealPlansManager {
         });
 
         try {
+            const apiUrl = window.API_CONFIG?.LLM_API_URL || 'http://127.0.0.1:8002';
             const response = await $.ajax({
-                url: `http://127.0.0.1:8002/patients/${patientId}/meal_plan`,
+                url: `${apiUrl}/patients/${patientId}/meal_plan`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({
