@@ -232,8 +232,7 @@
     <script>
         // API Configuration
         window.API_CONFIG = {
-            LLM_API_URL: '{{ config('services.llm.api_url', 'http://127.0.0.1:8002') }}',
-            RANDOM_FOREST_API_URL: '{{ config('services.random_forest.api_url', 'http://127.0.0.1:8001') }}'
+            LLM_API_URL: '{{ config('services.llm.api_url', 'http://127.0.0.1:8002') }}'
         };
     </script>
     
