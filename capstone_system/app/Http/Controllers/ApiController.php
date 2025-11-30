@@ -272,6 +272,43 @@ class ApiController extends Controller
     }
 
     /**
+     * Generate feeding program meal plan
+     */
+    public function generateFeedingProgram(Request $request)
+    {
+        $request->validate([
+            'target_age_group' => 'required|string|in:all,6-12months,12-24months,24-60months',
+            'program_duration_days' => 'required|integer|min:1|max:5',
+            'budget_level' => 'required|string|in:low,moderate,high',
+            'barangay' => 'nullable|string',
+            'total_children' => 'nullable|integer|min:1',
+            'available_ingredients' => 'nullable|string'
+        ]);
+
+        try {
+            $nutritionService = new NutritionService();
+            $result = $nutritionService->generateFeedingProgram(
+                $request->target_age_group,
+                $request->program_duration_days,
+                $request->budget_level,
+                $request->barangay,
+                $request->total_children,
+                $request->available_ingredients
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate feeding program: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Generate meal plan for a child (Parent version)
      */
     public function generateParentMealPlan(Request $request)
