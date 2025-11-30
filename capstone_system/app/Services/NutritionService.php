@@ -93,6 +93,61 @@ class NutritionService
     }
 
     /**
+     * Generate feeding program meal plan
+     */
+    public function generateFeedingProgram(
+        $targetAgeGroup,
+        $programDurationDays,
+        $budgetLevel,
+        $barangay = null,
+        $totalChildren = null,
+        $availableIngredients = null
+    ) {
+        try {
+            $requestData = [
+                'target_age_group' => $targetAgeGroup,
+                'program_duration_days' => $programDurationDays,
+                'budget_level' => $budgetLevel
+            ];
+
+            if (!empty($barangay)) {
+                $requestData['barangay'] = $barangay;
+            }
+
+            if (!empty($totalChildren)) {
+                $requestData['total_children'] = $totalChildren;
+            }
+
+            if (!empty($availableIngredients)) {
+                $requestData['available_ingredients'] = $availableIngredients;
+            }
+
+            $response = Http::timeout($this->timeout)
+                ->post($this->baseUrl . '/feeding_program/meal_plan', $requestData);
+
+            if ($response->successful()) {
+                Log::info('Feeding program meal plan generated', [
+                    'target_age_group' => $targetAgeGroup,
+                    'duration' => $programDurationDays,
+                    'status' => 'success'
+                ]);
+                return $response->json();
+            } else {
+                Log::error('Feeding program generation failed', [
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+                throw new \Exception('Feeding program generation failed: ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error('Feeding program generation error', [
+                'error' => $e->getMessage()
+            ]);
+            throw new \Exception('Feeding program generation error: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Generate patient assessment
      */
     public function generateAssessment($patientId)

@@ -284,10 +284,12 @@ class MealPlansManager {
         });
 
         try {
-            const apiUrl = window.API_CONFIG?.LLM_API_URL || 'http://127.0.0.1:8002';
             const response = await $.ajax({
-                url: `${apiUrl}/feeding_program/meal_plan`,
+                url: '/nutritionist/feeding-program/generate',
                 method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 contentType: 'application/json',
                 data: JSON.stringify({
                     target_age_group: formData.ageGroup,
@@ -300,12 +302,10 @@ class MealPlansManager {
             });
 
             if (response.success) {
-
-                
                 // Save to database
-                await this.saveFeedingProgramToDatabase(formData, response);
+                await this.saveFeedingProgramToDatabase(formData, response.data);
                 
-                const programHtml = this.formatFeedingProgram(response);
+                const programHtml = this.formatFeedingProgram(response.data);
                 Swal.fire({
                     title: '<i class="fas fa-check-circle" style="color: #2d7a4f;"></i> Success!',
                     html: programHtml,
@@ -374,16 +374,17 @@ class MealPlansManager {
         try {
             const apiUrl = window.API_CONFIG?.LLM_API_URL || 'http://127.0.0.1:8002';
             const response = await $.ajax({
-                url: `${apiUrl}/patients/${patientId}/meal_plan`,
+                url: `${apiUrl}/generate_meal_plan`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({
+                    patient_id: patientId,
                     available_foods: availableFoods || null
                 })
             });
 
-            if (response.success) {
-                const mealPlanHtml = this.formatMealPlan(response);
+            if (response.meal_plan) {
+                const mealPlanHtml = this.formatIndividualMealPlan(response.meal_plan);
                 Swal.fire({
                     title: '<i class="fas fa-check-circle" style="color: #2d7a4f;"></i> Meal Plan Generated!',
                     html: mealPlanHtml,
@@ -901,6 +902,54 @@ class MealPlansManager {
         });
         
         html += '</div>';
+        return html;
+    }
+
+    formatIndividualMealPlan(mealPlanText) {
+        // Format individual patient meal plan from FastAPI
+        let html = `
+            <div class="individual-meal-plan-container" style="background: #f8f9fa; padding: 2rem; border-radius: 12px;">
+                <div style="background: linear-gradient(135deg, #2d7a4f 0%, #1e5a3a 100%); color: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.5rem;">
+                        <i class="fas fa-utensils"></i> Personalized Meal Plan
+                    </h3>
+                    <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Customized nutrition plan based on patient's needs</p>
+                </div>
+        `;
+
+        // Parse and display sections
+        const sections = mealPlanText.split(/(?=[A-Z][A-Z\s]*:)/).filter(s => s.trim());
+        
+        sections.forEach(section => {
+            if (section.trim()) {
+                const colonIndex = section.indexOf(':');
+                if (colonIndex > 0) {
+                    const title = section.substring(0, colonIndex).trim();
+                    const content = section.substring(colonIndex + 1).trim();
+                    
+                    html += `
+                        <div class="meal-plan-section" style="background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <h4 style="color: #2d7a4f; margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem; border-bottom: 2px solid #2d7a4f; padding-bottom: 0.5rem;">
+                                ${title}
+                            </h4>
+                            <div style="color: #2c3e50; line-height: 1.8; white-space: pre-wrap;">
+                                ${content}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        });
+
+        html += `
+                <div class="action-buttons" style="margin-top: 1.5rem; text-align: right;">
+                    <button class="btn btn-success" onclick="window.print()" style="background-color: #2d7a4f; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; color: white; font-weight: 500; cursor: pointer;">
+                        <i class="fas fa-print"></i> Print Meal Plan
+                    </button>
+                </div>
+            </div>
+        `;
+        
         return html;
     }
 
