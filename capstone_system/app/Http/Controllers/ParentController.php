@@ -313,45 +313,92 @@ class ParentController extends Controller
                 }
             }
             
-            // Parse each day section (**Day X**: format)
+            // Parse each day section with more flexible patterns
             for ($i = 1; $i <= 7; $i++) {
                 $dayKey = "Day $i";
                 
-                // Updated pattern to match **Day X**: format from nutrition_chain.py
-                $pattern = '/\*\*Day\s+' . $i . '\*\*:?\s*(.*?)(?=\*\*Day\s+\d+\*\*:|REGULAR\s+NA\s+OBSERBAHAN|$)/is';
+                // Multiple patterns to match different day formats
+                $dayPatterns = [
+                    '/\*\*Day\s+' . $i . '\*\*:?\s*(.*?)(?=\*\*Day\s+\d+\*\*:|REGULAR\s+NA\s+OBSERBAHAN|BALANSENG\s+PAGKAIN|$)/is',
+                    '/Day\s+' . $i . '\s*[:\-]?\s*(.*?)(?=Day\s+\d+|REGULAR\s+NA|BALANSENG|$)/is',
+                    '/\b' . $i . '\.\s*(.*?)(?=\d+\.|REGULAR\s+NA|BALANSENG|$)/is'
+                ];
                 
-                if (preg_match($pattern, $plainText, $dayMatches)) {
-                    $dayContent = $dayMatches[1];
+                $dayContent = '';
+                foreach ($dayPatterns as $pattern) {
+                    if (preg_match($pattern, $plainText, $dayMatches)) {
+                        $dayContent = $dayMatches[1];
+                        break;
+                    }
+                }
+                
+                if (!empty($dayContent)) {
+                    // Extract Breakfast with multiple pattern attempts
+                    $breakfastPatterns = [
+                        '/(?:\*\*)?Breakfast\s*\(Almusal\)\*\*:?\s*([^*\n]+?)(?=\*\*Lunch|\*\*Snack|\*\*Dinner|Lunch\s*\(|Snack\s*\(|Dinner\s*\(|$)/is',
+                        '/(?:\*\*)?Breakfast\*\*:?\s*([^*\n]+?)(?=\*\*Lunch|\*\*Snack|\*\*Dinner|Lunch:|Snack:|Dinner:|$)/is',
+                        '/Almusal[:\-]?\s*([^\n]+?)(?=Tanghalian|Meryenda|Hapunan|Lunch|Snack|Dinner|$)/is'
+                    ];
                     
-                    // Extract Breakfast (looking for **Breakfast (Almusal)**: format)
-                    if (preg_match('/\*\*Breakfast\s*\(Almusal\)\*\*:?\s*([^*]+?)(?=\*\*Lunch|\*\*Snack|\*\*Dinner|$)/is', $dayContent, $breakfastMatch)) {
-                        $breakfast = $this->cleanMealText($breakfastMatch[1]);
-                        if (!empty($breakfast)) {
-                            $meals['Breakfast'][$dayKey] = $breakfast;
+                    foreach ($breakfastPatterns as $pattern) {
+                        if (preg_match($pattern, $dayContent, $breakfastMatch)) {
+                            $breakfast = $this->cleanMealText($breakfastMatch[1]);
+                            if (!empty($breakfast)) {
+                                $meals['Breakfast'][$dayKey] = $breakfast;
+                                break;
+                            }
                         }
                     }
                     
-                    // Extract Lunch (looking for **Lunch (Tanghalian)**: format)
-                    if (preg_match('/\*\*Lunch\s*\(Tanghalian\)\*\*:?\s*([^*]+?)(?=\*\*Snack|\*\*Dinner|$)/is', $dayContent, $lunchMatch)) {
-                        $lunch = $this->cleanMealText($lunchMatch[1]);
-                        if (!empty($lunch)) {
-                            $meals['Lunch'][$dayKey] = $lunch;
+                    // Extract Lunch with multiple pattern attempts
+                    $lunchPatterns = [
+                        '/(?:\*\*)?Lunch\s*\(Tanghalian\)\*\*:?\s*([^*\n]+?)(?=\*\*Snack|\*\*Dinner|Snack\s*\(|Dinner\s*\(|$)/is',
+                        '/(?:\*\*)?Lunch\*\*:?\s*([^*\n]+?)(?=\*\*Snack|\*\*Dinner|Snack:|Dinner:|$)/is',
+                        '/Tanghalian[:\-]?\s*([^\n]+?)(?=Meryenda|Hapunan|Snack|Dinner|$)/is'
+                    ];
+                    
+                    foreach ($lunchPatterns as $pattern) {
+                        if (preg_match($pattern, $dayContent, $lunchMatch)) {
+                            $lunch = $this->cleanMealText($lunchMatch[1]);
+                            if (!empty($lunch)) {
+                                $meals['Lunch'][$dayKey] = $lunch;
+                                break;
+                            }
                         }
                     }
                     
-                    // Extract PM Snack (looking for **Snack (Meryenda)**: format)
-                    if (preg_match('/\*\*Snack\s*\(Meryenda\)\*\*:?\s*([^*]+?)(?=\*\*Dinner|$)/is', $dayContent, $pmSnackMatch)) {
-                        $pmSnack = $this->cleanMealText($pmSnackMatch[1]);
-                        if (!empty($pmSnack)) {
-                            $meals['PM Snack'][$dayKey] = $pmSnack;
+                    // Extract PM Snack with multiple pattern attempts
+                    $snackPatterns = [
+                        '/(?:\*\*)?Snack\s*\(Meryenda\)\*\*:?\s*([^*\n]+?)(?=\*\*Dinner|Dinner\s*\(|$)/is',
+                        '/(?:\*\*)?Snack\*\*:?\s*([^*\n]+?)(?=\*\*Dinner|Dinner:|$)/is',
+                        '/Meryenda[:\-]?\s*([^\n]+?)(?=Hapunan|Dinner|$)/is',
+                        '/(?:\*\*)?PM\s*Snack\*\*:?\s*([^*\n]+?)(?=\*\*Dinner|Dinner:|$)/is'
+                    ];
+                    
+                    foreach ($snackPatterns as $pattern) {
+                        if (preg_match($pattern, $dayContent, $snackMatch)) {
+                            $snack = $this->cleanMealText($snackMatch[1]);
+                            if (!empty($snack)) {
+                                $meals['PM Snack'][$dayKey] = $snack;
+                                break;
+                            }
                         }
                     }
                     
-                    // Extract Dinner (looking for **Dinner (Hapunan)**: format)
-                    if (preg_match('/\*\*Dinner\s*\(Hapunan\)\*\*:?\s*([^*]+?)(?=\*\*Day\s+\d+|REGULAR\s+NA|$)/is', $dayContent, $dinnerMatch)) {
-                        $dinner = $this->cleanMealText($dinnerMatch[1]);
-                        if (!empty($dinner)) {
-                            $meals['Dinner'][$dayKey] = $dinner;
+                    // Extract Dinner with multiple pattern attempts
+                    $dinnerPatterns = [
+                        '/(?:\*\*)?Dinner\s*\(Hapunan\)\*\*:?\s*([^*\n]+?)(?=\*\*Day\s+\d+|Day\s+\d+|REGULAR\s+NA|BALANSENG|$)/is',
+                        '/(?:\*\*)?Dinner\*\*:?\s*([^*\n]+?)(?=\*\*Day\s+\d+|Day\s+\d+|REGULAR|BALANSENG|$)/is',
+                        '/Hapunan[:\-]?\s*([^\n]+?)(?=Day\s+\d+|REGULAR|BALANSENG|$)/is'
+                    ];
+                    
+                    foreach ($dinnerPatterns as $pattern) {
+                        if (preg_match($pattern, $dayContent, $dinnerMatch)) {
+                            $dinner = $this->cleanMealText($dinnerMatch[1]);
+                            if (!empty($dinner)) {
+                                $meals['Dinner'][$dayKey] = $dinner;
+                                break;
+                            }
                         }
                     }
                 }
@@ -375,20 +422,33 @@ class ParentController extends Controller
             // Remove leading/trailing dashes, asterisks, or colons
             $text = trim($text, " \t\n\r\0\x0B-:*");
             
-            // Remove benefit descriptions (text after " - " that starts with "Mayaman")
-            $text = preg_replace('/\s*-\s*Mayaman\s+sa\s+.*$/i', '', $text);
+            // Remove markdown formatting (**, *, -, etc.)
+            $text = str_replace('**', '', $text);
+            $text = preg_replace('/^\s*[\*\-]+\s*/', '', $text);
             
-            // Remove calorie information in parentheses at the end
-            $text = preg_replace('/\s*\([^\)]*kcal\)\s*$/i', '', $text);
+            // Remove benefit descriptions (text after " - " that starts with common Filipino descriptors)
+            $text = preg_replace('/\s*-\s*(?:Mayaman|Provides|Good source|Rich in|Helps|Contains).*$/i', '', $text);
             
-            // If text is too long, truncate it
+            // Remove nutritional information in parentheses
+            $text = preg_replace('/\s*\([^\)]*(?:kcal|calories|grams|protein|vitamins)\s*[^\)]*\)\s*/i', '', $text);
+            
+            // Remove any remaining leading/trailing punctuation
+            $text = trim($text, " \t\n\r\0\x0B-:*.,;");
+            
+            // If text is too long, truncate intelligently
             if (strlen($text) > 150) {
-                $text = substr($text, 0, 147) . '...';
+                // Try to cut at a sentence or phrase boundary
+                $text = substr($text, 0, 147);
+                $lastSpace = strrpos($text, ' ');
+                if ($lastSpace !== false && $lastSpace > 100) {
+                    $text = substr($text, 0, $lastSpace);
+                }
+                $text .= '...';
             }
             
-            // Remove "Provides" sections to keep it simple
-            if (preg_match('/^(.*?)\s*-\s*Provides/i', $text, $matches)) {
-                $text = trim($matches[1]);
+            // Return empty string if only dashes or whitespace remain
+            if (preg_match('/^[\s\-\.]+$/', $text)) {
+                return '';
             }
             
             return $text;
