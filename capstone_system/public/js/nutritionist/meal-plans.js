@@ -89,17 +89,18 @@ class MealPlansManager {
 
         // Feeding Program - Open modal
         $(document).on('click', '#open-feeding-program-btn', () => this.showFeedingProgramModal());
-
-        // View all patients
-        $(document).on('click', '#view-all-patients-btn', () => {
-            $('#patient-search').val('');
-            this.filterPatients('');
-            $('#patients-list-container').slideDown(300);
-            $('#patient-search').focus();
-        });
     }
 
     async showFeedingProgramModal() {
+        // Get barangays data from the page
+        const barangaysData = JSON.parse(document.getElementById('barangays-data')?.textContent || '[]');
+        
+        // Build barangay options
+        let barangayOptions = '<option value="">Select barangay (optional)</option>';
+        barangaysData.forEach(barangay => {
+            barangayOptions += `<option value="${barangay.barangay_name}">${barangay.barangay_name}</option>`;
+        });
+        
         const { value: formValues } = await Swal.fire({
             title: '<i class="fas fa-users"></i> Generate Feeding Program',
             html: `
@@ -110,8 +111,8 @@ class MealPlansManager {
                                 <i class="fas fa-child"></i> Target Age Group
                             </label>
                             <select id="swal-age-group" class="swal2-input" style="width: 100%; padding: 0.625rem;">
-                                <option value="all">All Ages (0-5 years) - Mixed group</option>
-                                <option value="0-12months">Infants (0-12 months)</option>
+                                <option value="all">All Ages (6 months - 5 years) - Mixed group</option>
+                                <option value="6-12months">Infants (6-12 months)</option>
                                 <option value="12-24months">Toddlers (12-24 months)</option>
                                 <option value="24-60months">Preschoolers (24-60 months)</option>
                             </select>
@@ -136,9 +137,7 @@ class MealPlansManager {
                                 <option value="2">2 Days</option>
                                 <option value="3">3 Days</option>
                                 <option value="4">4 Days</option>
-                                <option value="5">5 Days</option>
-                                <option value="6">6 Days</option>
-                                <option value="7" selected>7 Days (1 Week)</option>
+                                <option value="5" selected>5 Days (Max)</option>
                             </select>
                         </div>
                         
@@ -158,7 +157,9 @@ class MealPlansManager {
                         <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
                             <i class="fas fa-map-marker-alt"></i> Barangay (Optional)
                         </label>
-                        <input id="swal-barangay" type="text" class="swal2-input" placeholder="Enter barangay name for location-specific recommendations" style="width: 100%;">
+                        <select id="swal-barangay" class="swal2-input" style="width: 100%; padding: 0.625rem;">
+                            ${barangayOptions}
+                        </select>
                     </div>
                     
                     <div style="margin-bottom: 0.5rem;">
@@ -347,7 +348,7 @@ class MealPlansManager {
                     budget_level: formData.budget,
                     barangay: formData.barangay || null,
                     available_ingredients: formData.ingredients || null,
-                    meal_plan: apiResponse.meal_plan
+                    meal_plan: apiResponse.meal_plan  // This is just the string, not the whole response
                 })
             });
             console.log('Feeding program saved to database');
@@ -413,21 +414,33 @@ class MealPlansManager {
         
         // Program Header
         const ageGroupLabels = {
-            'all': 'All Ages (0-5 years)',
-            '0-12months': 'Infants (0-12 months)',
+            'all': 'All Ages (6 months - 5 years)',
+            '6-12months': 'Infants (6-12 months)',
             '12-24months': 'Toddlers (12-24 months)',
             '24-60months': 'Preschoolers (24-60 months)'
         };
         
+        const childrenText = response.total_children ? `${response.total_children} children` : 'Variable';
+        const barangayText = response.barangay || 'General Philippines';
+        const ingredientsText = response.available_ingredients || 'Budget recommendations';
+        
         html += `
             <div class="program-header" style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #2d7a4f;">
                 <h4 style="color: #2d7a4f; margin-bottom: 15px;"><i class="fas fa-users"></i> Generic Feeding Program Details</h4>
-                <div class="row">
-                    <div class="col-md-3"><strong style="color: #2d7a4f;">Target Group:</strong><br>${ageGroupLabels[response.target_age_group] || response.target_age_group}</div>
-                    <div class="col-md-3"><strong style="color: #2d7a4f;">Duration:</strong><br>${response.program_duration_days} days</div>
-                    <div class="col-md-3"><strong style="color: #2d7a4f;">Budget Level:</strong><br>${response.budget_level.charAt(0).toUpperCase() + response.budget_level.slice(1)}</div>
-                    <div class="col-md-3"><strong style="color: #2d7a4f;">Generated:</strong><br>${new Date(response.generated_at).toLocaleDateString()}</div>
+                <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div><strong style="color: #2d7a4f;">Target Group:</strong><br>${ageGroupLabels[response.target_age_group] || response.target_age_group}</div>
+                    <div><strong style="color: #2d7a4f;">Children:</strong><br>${childrenText}</div>
+                    <div><strong style="color: #2d7a4f;">Duration:</strong><br>${response.program_duration_days} days</div>
+                    <div><strong style="color: #2d7a4f;">Budget:</strong><br>${response.budget_level.charAt(0).toUpperCase() + response.budget_level.slice(1)}</div>
+                    <div><strong style="color: #2d7a4f;">Location:</strong><br>${barangayText}</div>
+                    <div><strong style="color: #2d7a4f;">Generated:</strong><br>${new Date(response.generated_at).toLocaleDateString()}</div>
                 </div>
+                ${response.available_ingredients ? `
+                <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 8px; border-left: 3px solid #52c785;">
+                    <strong style="color: #2d7a4f;"><i class="fas fa-shopping-basket"></i> Available Ingredients:</strong><br>
+                    <span style="color: #34495e; font-size: 0.9em;">${response.available_ingredients}</span>
+                </div>
+                ` : ''}
             </div>
         `;
         
@@ -872,6 +885,350 @@ if (typeof jQuery !== 'undefined') {
             window.mealPlansManager = new MealPlansManager();
         } else {
             console.error('jQuery still not available after DOM load.');
+        }
+    });
+}
+
+// ========================================
+// SAVED FEEDING PROGRAM PLANS - VIEW & DELETE
+// ========================================
+
+$(document).ready(function() {
+    // View saved plan
+    $('.view-program-plan-btn').on('click', function() {
+        const planId = $(this).data('plan-id');
+        viewFeedingProgramPlan(planId);
+    });
+
+    // Delete saved plan
+    $('.delete-program-plan-btn').on('click', function() {
+        const planId = $(this).data('plan-id');
+        deleteFeedingProgramPlan(planId);
+    });
+
+    // Program plans search functionality
+    $('#program-search').on('input', function() {
+        // Show container when user starts typing
+        if ($(this).val().length > 0) {
+            $('#program-plans-list-container').show();
+            $('.program-plan-item').show(); // Show all items first
+        } else {
+            // When search is cleared, show only the latest
+            showOnlyLatestProgramPlan();
+        }
+        filterProgramPlans();
+    });
+
+    // Program plans filter functionality
+    $('#program-budget-filter, #program-age-filter').on('change', function() {
+        // Show all items when filter is changed
+        $('#program-plans-list-container').show();
+        $('.program-plan-item').show();
+        filterProgramPlans();
+    });
+
+    // Program plans sort functionality
+    $('#program-sort').on('change', function() {
+        $('#program-plans-list-container').show();
+        $('.program-plan-item').show();
+        sortProgramPlans($(this).val());
+    });
+
+    // Show only the latest program plan on initial load
+    showOnlyLatestProgramPlan();
+
+    // Reset filters button
+    $('#reset-program-filters').on('click', function() {
+        // Clear search input
+        $('#program-search').val('');
+        
+        // Reset all filter selects
+        $('#program-budget-filter').val('');
+        $('#program-age-filter').val('');
+        $('#program-sort').val('newest');
+        
+        // Show only the latest plan
+        showOnlyLatestProgramPlan();
+    });
+});
+
+/**
+ * Show only the most recent program plan
+ */
+function showOnlyLatestProgramPlan() {
+    const $items = $('.program-plan-item');
+    
+    if ($items.length > 0) {
+        // Find the item with the highest timestamp
+        let latestItem = null;
+        let latestTimestamp = 0;
+        
+        $items.each(function() {
+            const timestamp = $(this).data('timestamp');
+            if (timestamp > latestTimestamp) {
+                latestTimestamp = timestamp;
+                latestItem = this;
+            }
+        });
+        
+        // Hide all items
+        $items.hide();
+        
+        // Show only the latest
+        if (latestItem) {
+            $(latestItem).show();
+        }
+        
+        // Show the container
+        $('#program-plans-list-container').show();
+    }
+}
+
+/**
+ * Filter program plans based on search and filters
+ */
+function filterProgramPlans() {
+    const searchTerm = $('#program-search').val().toLowerCase();
+    const budgetFilter = $('#program-budget-filter').val().toLowerCase();
+    const ageFilter = $('#program-age-filter').val().toLowerCase();
+    
+    $('.program-plan-item').each(function() {
+        const $item = $(this);
+        const budget = $item.data('budget').toString().toLowerCase();
+        const ageGroup = $item.data('age-group').toString().toLowerCase();
+        const barangay = $item.data('barangay').toString().toLowerCase();
+        
+        // Check search term
+        const matchesSearch = !searchTerm || 
+            budget.includes(searchTerm) ||
+            ageGroup.includes(searchTerm) ||
+            barangay.includes(searchTerm);
+        
+        // Check budget filter
+        const matchesBudget = !budgetFilter || budget === budgetFilter;
+        
+        // Check age filter
+        const matchesAge = !ageFilter || ageGroup === ageFilter;
+        
+        // Show/hide based on all filters
+        if (matchesSearch && matchesBudget && matchesAge) {
+            $item.show();
+        } else {
+            $item.hide();
+        }
+    });
+    
+    // Show "no results" message if needed
+    const visibleCount = $('.program-plan-item:visible').length;
+    if (visibleCount === 0) {
+        if (!$('#program-no-results').length) {
+            $('#program-plans-list').append(`
+                <div id="program-no-results" class="empty-state" style="padding: 2rem; text-align: center; color: #6c757d;">
+                    <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 1rem; display: block; color: #dee2e6;"></i>
+                    <p style="margin: 0;">No feeding program plans match your search criteria.</p>
+                </div>
+            `);
+        }
+    } else {
+        $('#program-no-results').remove();
+    }
+}
+
+/**
+ * Sort program plans
+ */
+function sortProgramPlans(sortBy) {
+    const $container = $('#program-plans-list');
+    const $items = $container.find('.program-plan-item').get();
+    
+    $items.sort(function(a, b) {
+        const $a = $(a);
+        const $b = $(b);
+        
+        switch(sortBy) {
+            case 'newest':
+                return $b.data('timestamp') - $a.data('timestamp');
+            case 'oldest':
+                return $a.data('timestamp') - $b.data('timestamp');
+            case 'duration-asc':
+                return $a.data('duration') - $b.data('duration');
+            case 'duration-desc':
+                return $b.data('duration') - $a.data('duration');
+            default:
+                return 0;
+        }
+    });
+    
+    $.each($items, function(i, item) {
+        $container.append(item);
+    });
+}
+
+
+/**
+ * View saved feeding program plan
+ */
+function viewFeedingProgramPlan(planId) {
+    Swal.fire({
+        title: 'Loading Plan...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    $.ajax({
+        url: `/nutritionist/feeding-program/${planId}`,
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                const plan = response.plan;
+                
+                // Extract the actual meal plan text
+                // plan_details is auto-decoded from JSON, so it's an object
+                let mealPlanText = plan.plan_details;
+                
+                // If it's an object with a meal_plan property, extract it
+                if (typeof mealPlanText === 'object' && mealPlanText !== null) {
+                    if (mealPlanText.meal_plan) {
+                        mealPlanText = mealPlanText.meal_plan;
+                    } else {
+                        // If it's the whole plan_details object, stringify it for display
+                        mealPlanText = JSON.stringify(mealPlanText, null, 2);
+                    }
+                }
+                
+                // Now parse the meal plan
+                let mealPlanHtml;
+                if (window.mealPlansManager && typeof window.mealPlansManager.parseMealPlanToTable === 'function' && typeof mealPlanText === 'string') {
+                    mealPlanHtml = window.mealPlansManager.parseMealPlanToTable(mealPlanText, plan.program_duration_days);
+                } else {
+                    // Fallback: display raw content
+                    mealPlanHtml = `<div class="feeding-program-results"><pre style="white-space: pre-wrap; font-family: inherit;">${mealPlanText}</pre></div>`;
+                }
+                
+                // Create metadata display
+                const metadata = `
+                    <div class="feeding-program-header">
+                        <div class="program-info-grid">
+                            <div class="program-info-item">
+                                <strong>Age Group</strong>
+                                <span>${getAgeGroupLabel(plan.target_age_group)}</span>
+                            </div>
+                            <div class="program-info-item">
+                                <strong>Duration</strong>
+                                <span>${plan.program_duration_days} Days</span>
+                            </div>
+                            <div class="program-info-item">
+                                <strong>Budget</strong>
+                                <span>${plan.budget_level.charAt(0).toUpperCase() + plan.budget_level.slice(1)}</span>
+                            </div>
+                            ${plan.barangay ? `
+                            <div class="program-info-item">
+                                <strong>Barangay</strong>
+                                <span>${plan.barangay}</span>
+                            </div>
+                            ` : ''}
+                            ${plan.total_children ? `
+                            <div class="program-info-item">
+                                <strong>Children</strong>
+                                <span>${plan.total_children}</span>
+                            </div>
+                            ` : ''}
+                            ${plan.available_ingredients ? `
+                            <div class="program-info-full">
+                                <strong>Available Ingredients</strong>
+                                <div class="ingredients-list">${plan.available_ingredients}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="program-timestamp">
+                            <i class="fas fa-clock"></i> Generated: ${plan.generated_at ? new Date(plan.generated_at).toLocaleString() : 'N/A'}
+                        </div>
+                    </div>
+                `;
+                
+                Swal.fire({
+                    title: 'Feeding Program Meal Plan',
+                    html: metadata + mealPlanHtml,
+                    width: '90%',
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    customClass: {
+                        container: 'feeding-program-modal',
+                        popup: 'feeding-program-popup'
+                    }
+                });
+            } else {
+                Swal.fire('Error', 'Failed to load meal plan', 'error');
+            }
+        },
+        error: function(xhr) {
+            console.error('Error loading plan:', xhr);
+            Swal.fire('Error', 'Failed to load meal plan', 'error');
+        }
+    });
+}
+
+function getAgeGroupLabel(ageGroup) {
+    const labels = {
+        'all': 'All Ages (6 months - 5 years)',
+        '6-12months': 'Infants (6-12 months)',
+        '12-24months': 'Toddlers (12-24 months)',
+        '24-60months': 'Preschoolers (24-60 months)'
+    };
+    return labels[ageGroup] || ageGroup;
+}
+
+/**
+ * Delete saved feeding program plan
+ */
+function deleteFeedingProgramPlan(planId) {
+    Swal.fire({
+        title: 'Delete Meal Plan?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/nutritionist/feeding-program/${planId}`,
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Deleted!', 'Meal plan has been deleted.', 'success')
+                            .then(() => {
+                                // Remove the item from the list
+                                $(`.program-plan-item[data-plan-id="${planId}"]`).fadeOut(300, function() {
+                                    $(this).remove();
+                                    
+                                    // Check if there are any plans left
+                                    if ($('.program-plan-item').length === 0) {
+                                        $('#program-plans-list-container').replaceWith(`
+                                            <div class="empty-plans-state">
+                                                <i class="fas fa-clipboard-list"></i>
+                                                <p>No saved feeding program plans yet. Create one to get started!</p>
+                                            </div>
+                                        `);
+                                    }
+                                });
+                            });
+                    } else {
+                        Swal.fire('Error', response.message || 'Failed to delete meal plan', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error deleting plan:', xhr);
+                    Swal.fire('Error', 'Failed to delete meal plan', 'error');
+                }
+            });
         }
     });
 }

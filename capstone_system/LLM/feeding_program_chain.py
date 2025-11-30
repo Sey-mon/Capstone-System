@@ -16,27 +16,45 @@ Key Differences from Parent Meal Plans (nutrition_chain.py):
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableSequence
 from langchain_groq import ChatGroq
+from pydantic import SecretStr
 import re
 import os
+import logging
+import time
+from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
 from data_manager import data_manager
 from datetime import datetime, timedelta
 
 load_dotenv()
 
+# Configure logging for production
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 
 def create_feeding_program_llm():
     """Create a standardized ChatGroq instance for feeding program functions."""
     api_key = os.getenv('GROQ_API_KEY')
     if not api_key:
+        logger.error("GROQ_API_KEY not found in environment variables")
         raise ValueError("GROQ_API_KEY not found in environment variables")
     
-    return ChatGroq(
-        groq_api_key=api_key,
-        model_name="meta-llama/llama-4-scout-17b-16e-instruct",
-        temperature=0.1,
-        max_tokens=2000  # Increased from 1500 to allow more detailed responses
-    )
+    try:
+        return ChatGroq(
+            api_key=SecretStr(api_key),
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            temperature=0.3,
+            max_tokens=3000,
+            timeout=120,  # 2 minute timeout for production
+            max_retries=2  # Retry failed requests
+        )
+    except Exception as e:
+        logger.error(f"Failed to create ChatGroq instance: {str(e)}")
+        raise
 
 
 def calculate_batch_nutritional_needs(patients_data):
@@ -157,28 +175,57 @@ def get_feeding_program_budget_context(budget_level='moderate'):
 
 
 def generate_feeding_program_meal_plan(
-    target_age_group='all',  # 'all', '0-12months', '12-24months', '24-60months'
-    program_duration_days=7,
-    budget_level='moderate',
-    available_ingredients=None,
-    barangay=None,
-    total_children=None
-):
+    target_age_group: str = 'all',
+    program_duration_days: int = 7,
+    budget_level: str = 'moderate',
+    available_ingredients: Optional[str] = None,
+    barangay: Optional[str] = None,
+    total_children: Optional[int] = None
+) -> Dict[str, Any]:
     """
     Generate a GENERIC meal plan for a feeding program focused on Filipino children.
     This creates a standardized meal plan suitable for community feeding programs.
     
     Args:
-        target_age_group: Age group focus ('all', '0-12months', '12-24months', '24-60months')
-        program_duration_days: Number of days for the feeding program (max 7)
+        target_age_group: Age group focus ('all', '6-12months', '12-24months', '24-60months')
+        program_duration_days: Number of days for the feeding program (1-5)
         budget_level: 'low', 'moderate', or 'high'
         available_ingredients: Optional list of available ingredients
         barangay: Barangay name for location-specific recommendations
         total_children: Estimated number of children (for shopping list quantities)
         
     Returns:
-        Structured meal plan for the feeding program
+        Dict containing success status, meal plan, and metadata
+        
+    Raises:
+        ValueError: If input parameters are invalid
     """
+    
+    # Input validation
+    valid_age_groups = ['all', '6-12months', '12-24months', '24-60months']
+    valid_budget_levels = ['low', 'moderate', 'high']
+    
+    if target_age_group not in valid_age_groups:
+        logger.warning(f"Invalid age group '{target_age_group}', defaulting to 'all'")
+        target_age_group = 'all'
+    
+    if budget_level not in valid_budget_levels:
+        logger.warning(f"Invalid budget level '{budget_level}', defaulting to 'moderate'")
+        budget_level = 'moderate'
+    
+    if not (1 <= program_duration_days <= 5):
+        logger.error(f"Invalid program duration: {program_duration_days}. Must be 1-5 days")
+        return {
+            'success': False,
+            'error': 'Program duration must be between 1 and 5 days',
+            'meal_plan': None
+        }
+    
+    if total_children is not None and total_children <= 0:
+        logger.warning(f"Invalid total_children: {total_children}, setting to None")
+        total_children = None
+    
+    logger.info(f"Generating meal plan: age={target_age_group}, days={program_duration_days}, budget={budget_level}, barangay={barangay}")
     
     # Create generic batch analysis based on age group
     batch_analysis = {
@@ -217,8 +264,9 @@ def generate_feeding_program_meal_plan(
         pdf_context = ""
         if unique_chunks:
             pdf_context = f"\nEVIDENCE-BASED FEEDING PROGRAM GUIDANCE:\n" + "\n---\n".join(unique_chunks[:5])
+            logger.info(f"Retrieved {len(unique_chunks)} relevant guidance chunks")
     except Exception as e:
-        print(f"Error retrieving feeding program guidance: {str(e)}")
+        logger.error(f"Error retrieving feeding program guidance: {str(e)}")
         pdf_context = ""
     
     # Get food database
@@ -228,8 +276,8 @@ def generate_feeding_program_meal_plan(
     
     # Age group descriptions
     age_group_info = {
-        'all': 'Mixed age groups (0-5 years) - provide adaptations for all',
-        '0-12months': 'Infants (0-12 months) - focus on pureed/mashed foods',
+        'all': 'Mixed age groups (6 months - 5 years) - provide adaptations for all',
+        '6-12months': 'Infants (6-12 months) - focus on pureed/mashed foods',
         '12-24months': 'Toddlers (12-24 months) - soft, small pieces',
         '24-60months': 'Preschoolers (24-60 months) - regular textures'
     }
@@ -248,15 +296,35 @@ FEEDING PROGRAM OVERVIEW:
 - Budget Level: {budget_level.upper()}
 - Location: {barangay or 'General Philippines'}
 
+═══════════════════════════════════════════════════════════════════
+🔴 INGREDIENT PRIORITIZATION RULES
+═══════════════════════════════════════════════════════════════════
+
+AVAILABLE INGREDIENTS:
+{available_ingredients if available_ingredients else '❌ None specified'}
+
+{'⚠️ MANDATORY REQUIREMENT - AVAILABLE INGREDIENTS HAVE ABSOLUTE PRIORITY:' if available_ingredients else '✅ NO SPECIFIC INGREDIENTS PROVIDED:'}
+{'''- You MUST use the available ingredients listed above as the PRIMARY ingredients
+- Build ALL meals around the available ingredients listed above
+- Every meal MUST prominently feature available ingredients as main components
+- Design dishes specifically to showcase the available ingredients
+- Examples:
+  * If "manok, kangkong, kamote" → Plan "Tinolang Manok with Kangkong" 
+  * If "bangus, sitaw, kalabasa" → Plan "Sinigang na Bangus with Sitaw and Kalabasa"
+- Only supplement with budget recommendations if available ingredients alone are insufficient
+- DO NOT ignore available ingredients in favor of budget recommendations
+- Track which available ingredients you've used to ensure all are utilized''' if available_ingredients else '''- Use the budget recommendations below as your ingredient guide
+- Select ingredients appropriate for the budget level
+- Focus on cost-effective, nutritious, locally available Filipino ingredients
+- Prioritize seasonal ingredients for better value
+- Design varied meals using the recommended ingredient categories'''}
+
 BUDGET CONSTRAINTS ({budget_level}):
 - Focus: {budget_context['focus']}
 - Recommended Proteins: {', '.join(budget_context['proteins'])}
 - Recommended Vegetables: {', '.join(budget_context['vegetables'])}
 - Recommended Grains: {', '.join(budget_context['grains'])}
 - Recommended Fruits: {', '.join(budget_context['fruits'])}
-
-AVAILABLE INGREDIENTS:
-{available_ingredients or 'Use budget-recommended ingredients above'}
 
 FOOD DATABASE:
 {food_list_str}
@@ -269,55 +337,118 @@ YOUR TASK: Create a {program_duration_days}-day GENERIC FEEDING PROGRAM meal pla
 
 CRITICAL REQUIREMENTS:
 
-1. **NO DISH REPETITION (MANDATORY):**
+1. **🔴 PRIORITIZE AVAILABLE INGREDIENTS (ABSOLUTE PRIORITY):**
+   - If available ingredients are specified, they are the FOUNDATION of your meal plan
+   - Each meal MUST prominently feature available ingredients as main components
+   - Design dishes specifically around the available ingredients
+   - Examples:
+     * If "manok, kangkong, kamote" are available → Plan "Tinolang Manok with Kangkong" NOT generic chicken dishes
+     * If "bangus, sitaw, kalabasa" are available → Plan "Sinigang na Bangus with Sitaw and Kalabasa"
+   - Only use budget recommendations as SUPPLEMENTS, not replacements
+   - Track which available ingredients you've used to ensure all are utilized throughout the program
+
+2. **NO DISH REPETITION (MANDATORY):**
    - Each meal across the ENTIRE {program_duration_days}-day period must be UNIQUE
    - Example: If "Tinolang Manok" appears on Day 1, it CANNOT appear anywhere else
    - Track all dishes to ensure zero repetition
    - Use different cooking methods for same ingredients (Adobo, Sinigang, Tinola, Prito, Ginisa, etc.)
 
-2. **BATCH FEEDING FORMAT:**
+3. **BATCH FEEDING FORMAT:**
    - Design meals for large-scale preparation (50-100+ children)
    - Simple cooking methods suitable for community kitchens
    - Ingredients that are easy to purchase in bulk
    - Scalable portions (provide quantities per 50 children)
 
-3. **AGE-APPROPRIATE VARIATIONS:**
+4. **AGE-APPROPRIATE VARIATIONS:**
    - Provide texture modifications for each meal:
      * 6-12 months: Pureed/mashed consistency
      * 12-24 months: Soft, small pieces (finger foods)
      * 24-60 months: Regular family food texture
-   - Note: 0-6 months receive breast milk/formula only
 
-4. **NUTRITIONAL BALANCE:**
+5. **NUTRITIONAL BALANCE:**
    - Meet general nutritional needs for Filipino children
    - Include iron-rich foods (e.g., malunggay, liver, monggo)
    - Include calcium sources (e.g., milk, dilis, malunggay)
    - Include Vitamin A sources (e.g., kalabasa, carrots, papaya)
    - Ensure adequate protein, carbohydrates, and healthy fats
 
-5. **BUDGET CONSCIOUSNESS:**
+6. **BUDGET CONSCIOUSNESS:**
    - Prioritize ingredients from the budget-recommended list
    - Use seasonal, locally available ingredients
    - Minimize food waste through smart planning
    - Cost-effective protein sources (monggo, itlog, galunggong)
 
-6. **FILIPINO CUISINE FOCUS:**
-   - Use ONLY traditional Filipino dishes
-   - Common breakfast: Lugaw, Champorado, Sinangag, Pandesal
-   - Common lunch/dinner: Adobo, Sinigang, Tinola, Nilaga, Ginataang gulay
-   - Common snacks: Turon, Banana cue, Ginataang mais, Puto
-   - Use Filipino cooking methods and flavors
+7. **FILIPINO CUISINE FOCUS - SPECIFIC COMPLETE DISHES ONLY:**
+   - Use ONLY traditional, complete Filipino dishes with proper names
+   - **AVOID generic descriptions** like "sinangag na kanin na may hito" or "sinangag na itlog"
+   - **USE SPECIFIC DISH NAMES** with complete preparations:
+   
+   **Breakfast Examples:**
+   - Lugaw (not just "lugaw", specify: Arroz Caldo, Goto, Lugaw with Tokwa't Baboy)
+   - Champorado with Tuyo or Dilis
+   - Tocilog (Tocino, sinangag, itlog)
+   - Tapsilog (Beef Tapa, sinangag, itlog)
+   - Longsilog (Longganisa, sinangag, itlog)
+   - Bangsilog (Bangus, sinangag, itlog)
+   - Cornsilog (Corned Beef, sinangag, itlog)
+   - Pandesal with Palaman (specify: cheese, liver spread, or peanut butter)
+   
+   **Lunch/Dinner Examples:**
+   - Adobong Manok (chicken adobo with complete sauce)
+   - Sinigang na Baboy sa Sampalok
+   - Tinolang Manok with Malunggay
+   - Nilagang Baka with Vegetables
+   - Ginataang Kalabasa at Sitaw
+   - Pakbet (Pinakbet)
+   - Bicol Express
+   - Kare-Kare
+   - Menudo
+   - Afritada
+   - Mechado
+   
+   **Snacks Examples:**
+   - Turon na Saging (banana spring rolls)
+   - Banana Cue
+   - Ginataang Mais with Sago
+   - Puto Pao
+   - Puto with Cheese
+   - Palitaw
+   - Biko
+   - Sapin-Sapin
+   
+   **Fish Dishes (complete preparations):**
+   - Pritong Bangus (fried milkfish)
+   - Sinigang na Bangus
+   - Rellenong Bangus (stuffed milkfish)
+   - Inihaw na Tilapia
+   - Paksiw na Isda
+   - Escabeche
 
-7. **MEAL VARIETY & DIVERSITY:**
+8. **MEAL VARIETY & DIVERSITY:**
    - Rotate proteins: Manok, Isda (bangus, tilapia, galunggong), Itlog, Monggo, Baboy
    - Rotate vegetables: Kangkong, Malunggay, Kalabasa, Sitaw, Talong, Ampalaya
-   - Vary cooking methods each day
-   - Different dishes for breakfast, lunch, snack, and dinner EVERY DAY
+   - Vary cooking methods each day (Adobo, Sinigang, Tinola, Pritong, Ginisa, Nilaga, Ginataang)
+   - Different **COMPLETE DISHES** for breakfast, lunch, snack, and dinner EVERY DAY
+   - Each dish must be a recognized Filipino recipe, not a combination of ingredients
 
-7. **PRACTICAL IMPLEMENTATION:**
+9. **PRACTICAL IMPLEMENTATION:**
    - Include simple preparation instructions
    - Consider food safety for batch cooking
    - Specify storage and reheating guidelines if needed
+   - Each meal must be a **complete, recognizable Filipino dish**
+
+**FORBIDDEN OUTPUT EXAMPLES (DO NOT USE):**
+❌ "Sinangag na kanin na may hito" (too generic)
+❌ "Sinangag na itlog" (incomplete dish name)
+❌ "Kanin at isda" (not a specific dish)
+❌ "Pritong itlog with rice" (use proper silog name instead)
+
+**CORRECT OUTPUT EXAMPLES (USE THESE):**
+✅ "Bangsilog (Pritong Bangus, Sinangag, Itlog)"
+✅ "Arroz Caldo with Chicken and Egg"
+✅ "Adobong Manok sa Gata"
+✅ "Sinigang na Tilapia sa Miso"
+✅ "Tocilog (Tocino, Garlic Fried Rice, Sunny-Side Up Egg)"
 
 OUTPUT FORMAT (IN TAGALOG AND ENGLISH):
 
@@ -325,24 +456,44 @@ OUTPUT FORMAT (IN TAGALOG AND ENGLISH):
 
 ## Monday
 **Almusal (Breakfast):**
-- Main Dish: [Dish name in Tagalog and English]
-- Ingredients: [List]
+- Main Dish: [COMPLETE Filipino dish name - e.g., "Tapsilog (Beef Tapa, Sinangag, Itlog)"]
+- Description: [Brief description of the complete dish]
+- Ingredients: [Detailed list with measurements for batch cooking]
+- Preparation Method: [Brief cooking steps]
 - Age Adaptations:
-  * 6-12 months: [Texture modification]
-  * 12-24 months: [Texture modification]
-  * 24-60 months: [Regular serving]
-- Approximate Portions: [Portions per age group]
+  * 6-12 months: [Texture modification - e.g., "Shredded beef tapa mixed with soft rice porridge"]
+  * 12-24 months: [Texture modification - e.g., "Small pieces of tapa with soft rice"]
+  * 24-60 months: [Regular serving - e.g., "Regular Tapsilog serving"]
+- Approximate Portions: [Portions per age group per 50 children]
 
 **Tanghalian (Lunch):**
-[Same format as breakfast]
+- Main Dish: [COMPLETE Filipino dish name - e.g., "Sinigang na Baboy sa Sampalok"]
+- Description: [Brief description]
+- Ingredients: [List with measurements]
+- Preparation Method: [Brief steps]
+- Age Adaptations: [Same format]
+- Approximate Portions: [Portions]
 
 **Meryenda (Snack):**
-[Same format]
+- Snack: [COMPLETE Filipino snack - e.g., "Ginataang Mais with Sago"]
+- Description: [Brief description]
+- Ingredients: [List]
+- Preparation Method: [Steps]
+- Age Adaptations: [Same format]
+- Portions: [Amount]
 
 **Hapunan (Dinner):**
-[Same format]
+- Main Dish: [COMPLETE Filipino dish name - e.g., "Tinolang Manok with Malunggay and Papaya"]
+- Description: [Brief description]
+- Ingredients: [List with measurements]
+- Preparation Method: [Brief steps]
+- Age Adaptations: [Same format]
+- Approximate Portions: [Portions]
 
-[Repeat for each day of the week]
+---
+
+[Repeat for each day - TUESDAY through SUNDAY if 7 days]
+**IMPORTANT:** Ensure each day has DIFFERENT complete dishes. No repetitions across the entire program duration.
 
 ## Weekly Shopping List
 [Consolidated ingredient list with estimated quantities]
@@ -356,31 +507,73 @@ OUTPUT FORMAT (IN TAGALOG AND ENGLISH):
 BEGIN MEAL PLAN:
 """
     
-    # Create LLM and generate
-    llm = create_feeding_program_llm()
+    # Create LLM and generate with retry logic
+    max_retries = 3
+    retry_delay = 2  # seconds
     
-    try:
-        response = llm.invoke(prompt_template)
-        meal_plan_content = response.content if hasattr(response, 'content') else str(response)
+    for attempt in range(max_retries):
+        try:
+            logger.info(f"Attempting meal plan generation (attempt {attempt + 1}/{max_retries})")
+            llm = create_feeding_program_llm()
+            
+            start_time = time.time()
+            response = llm.invoke(prompt_template)
+            generation_time = time.time() - start_time
+            
+            meal_plan_content = response.content if hasattr(response, 'content') else str(response)
+            
+            # Validate response
+            if not meal_plan_content or len(meal_plan_content) < 100:
+                logger.warning(f"Generated meal plan too short ({len(meal_plan_content)} chars)")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    continue
+            
+            logger.info(f"Meal plan generated successfully in {generation_time:.2f}s")
+            
+            return {
+                'success': True,
+                'meal_plan': meal_plan_content,
+                'batch_analysis': batch_analysis,
+                'target_age_group': target_age_group,
+                'program_duration_days': program_duration_days,
+                'budget_level': budget_level,
+                'barangay': barangay,
+                'total_children': total_children,
+                'available_ingredients': available_ingredients,
+                'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'generation_time_seconds': round(generation_time, 2)
+            }
         
-        return {
-            'success': True,
-            'meal_plan': meal_plan_content,
-            'batch_analysis': batch_analysis,
-            'program_duration_days': program_duration_days,
-            'budget_level': budget_level,
-            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
+        except Exception as e:
+            logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
+            
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+            else:
+                logger.error(f"All {max_retries} attempts failed")
+                return {
+                    'success': False,
+                    'error': f'Failed after {max_retries} attempts: {str(e)}',
+                    'meal_plan': None
+                }
     
-    except Exception as e:
-        return {
-            'success': False,
-            'error': str(e),
-            'meal_plan': None
-        }
+    # Fallback return (should never reach here, but ensures all paths return)
+    logger.error("Unexpected code path - no meal plan generated")
+    return {
+        'success': False,
+        'error': 'Unexpected error: meal plan generation failed',
+        'meal_plan': None
+    }
 
 
-def generate_feeding_program_assessment(target_age_group='all', barangay=None, total_children=None):
+def generate_feeding_program_assessment(
+    target_age_group: str = 'all',
+    barangay: Optional[str] = None,
+    total_children: Optional[int] = None
+) -> Dict[str, Any]:
     """
     Generate a generic assessment report for a feeding program.
     
@@ -390,8 +583,10 @@ def generate_feeding_program_assessment(target_age_group='all', barangay=None, t
         total_children: Estimated number of children
         
     Returns:
-        Assessment report with insights and recommendations
+        Dict containing success status and assessment content
     """
+    
+    logger.info(f"Generating feeding program assessment for {target_age_group}")
     
     # Get knowledge base context
     from embedding_utils import embedding_searcher
@@ -401,13 +596,14 @@ def generate_feeding_program_assessment(target_age_group='all', barangay=None, t
     try:
         search_results = embedding_searcher.search_similar_chunks(query, k=4)
         pdf_context = "\n".join([chunk for chunk, score, _ in search_results if score > 0.4])
+        logger.info("Successfully retrieved assessment guidance from knowledge base")
     except Exception as e:
-        print(f"Error retrieving assessment guidance: {str(e)}")
+        logger.error(f"Error retrieving assessment guidance: {str(e)}")
         pdf_context = ""
     
     age_group_info = {
-        'all': 'Mixed age groups (0-5 years)',
-        '0-12months': 'Infants (0-12 months)',
+        'all': 'Mixed age groups (6 months - 5 years)',
+        '6-12months': 'Infants (6-12 months)',
         '12-24months': 'Toddlers (12-24 months)',
         '24-60months': 'Preschoolers (24-60 months)'
     }
@@ -476,20 +672,27 @@ OUTPUT FORMAT:
 BEGIN ASSESSMENT:
 """
     
-    llm = create_feeding_program_llm()
-    
     try:
+        llm = create_feeding_program_llm()
+        start_time = time.time()
+        
         response = llm.invoke(prompt_template)
+        generation_time = time.time() - start_time
+        
         assessment_content = response.content if hasattr(response, 'content') else str(response)
+        
+        logger.info(f"Assessment generated successfully in {generation_time:.2f}s")
         
         return {
             'success': True,
             'assessment': assessment_content,
             'target_age_group': target_age_group,
-            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'generation_time_seconds': round(generation_time, 2)
         }
     
     except Exception as e:
+        logger.error(f"Failed to generate assessment: {str(e)}")
         return {
             'success': False,
             'error': str(e),

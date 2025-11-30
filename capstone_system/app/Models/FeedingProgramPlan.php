@@ -11,7 +11,9 @@ class FeedingProgramPlan extends Model
 
     protected $table = 'feeding_program_plans';
     protected $primaryKey = 'program_plan_id';
-    public $timestamps = false;
+    public $timestamps = true; // Enable timestamps for created_at/updated_at
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
 
     protected $fillable = [
         'target_age_group',

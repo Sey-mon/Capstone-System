@@ -312,6 +312,8 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     
     // Feeding Program routes
     Route::post('/feeding-program/save', [NutritionistController::class, 'saveFeedingProgramPlan'])->name('feeding-program.save');
+    Route::get('/feeding-program/{id}', [NutritionistController::class, 'getFeedingProgramPlan'])->name('feeding-program.show');
+    Route::delete('/feeding-program/{id}', [NutritionistController::class, 'deleteFeedingProgramPlan'])->name('feeding-program.delete');
 
     // Food Database View (Nutritionist - Read Only)
     Route::get('/foods', [NutritionistController::class, 'viewFoods'])->name('foods.index');

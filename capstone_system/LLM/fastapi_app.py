@@ -63,7 +63,7 @@ class SaveMealPlanRequest(BaseModel):
 # Feeding Program Models (Nutritionist)
 class FeedingProgramMealPlanRequest(BaseModel):
     target_age_group: str = 'all'  # 'all', '0-12months', '12-24months', '24-60months'
-    program_duration_days: int = 7  # Max 7 days
+    program_duration_days: int = 5  # Max 5 days (optimal for token limits and cost)
     budget_level: str = 'moderate'  # 'low', 'moderate', or 'high'
     available_ingredients: Optional[str] = None
     barangay: Optional[str] = None

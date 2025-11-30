@@ -41,7 +41,109 @@
                     <p>No patient-specific data required - perfect for community programs. Generate meal plans with no dish repetition across the entire program duration.</p>
                 </div>
             </div>
+            <h2></h2>
+            <!-- Saved Feeding Program Plans -->
+            @if($feedingProgramPlans->count() > 0)
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="program-search" class="search-input" placeholder="Search by barangay, age group, or budget level">
+                </div>
+                <button type="button" class="btn-reset-filter" id="reset-program-filters">
+                    <i class="fas fa-redo"></i>
+                    Reset Filters
+                </button>
+            </div>
+            
+            <div class="filter-controls-row">
+                <div class="filter-controls">
+                    <select id="program-budget-filter" class="filter-select">
+                        <option value="">All Budget Levels</option>
+                        <option value="low">Low Budget</option>
+                        <option value="moderate">Moderate Budget</option>
+                        <option value="high">High Budget</option>
+                    </select>
+                    <select id="program-age-filter" class="filter-select">
+                        <option value="">All Age Groups</option>
+                        <option value="all">All Ages (6mo-5y)</option>
+                        <option value="6-12months">Infants (6-12mo)</option>
+                        <option value="12-24months">Toddlers (12-24mo)</option>
+                        <option value="24-60months">Preschoolers (24-60mo)</option>
+                    </select>
+                    <select id="program-sort" class="filter-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="duration-asc">Duration (Low to High)</option>
+                        <option value="duration-desc">Duration (High to Low)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="program-plans-list-container" id="program-plans-list-container">
+                <div class="program-plans-scrollable" id="program-plans-list">
+                    @foreach($feedingProgramPlans as $plan)
+                    <div class="program-plan-item" 
+                         data-plan-id="{{ $plan->program_plan_id }}"
+                         data-budget="{{ $plan->budget_level }}"
+                         data-age-group="{{ $plan->target_age_group }}"
+                         data-barangay="{{ strtolower($plan->barangay ?? '') }}"
+                         data-duration="{{ $plan->program_duration_days }}"
+                         data-timestamp="{{ $plan->generated_at ? $plan->generated_at->timestamp : 0 }}">
+                        <div class="program-plan-item-badge">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="program-plan-item-info">
+                            <h4 class="program-plan-item-title">
+                                {{ ucfirst($plan->budget_level) }} Budget - 
+                                @if($plan->target_age_group === 'all')
+                                    All Ages (6mo-5y)
+                                @elseif($plan->target_age_group === '6-12months')
+                                    Infants (6-12mo)
+                                @elseif($plan->target_age_group === '12-24months')
+                                    Toddlers (12-24mo)
+                                @else
+                                    Preschoolers (24-60mo)
+                                @endif
+                            </h4>
+                            <div class="program-plan-item-meta">
+                                <span><i class="fas fa-hourglass-half"></i> {{ $plan->program_duration_days }} Days</span>
+                                @if($plan->barangay)
+                                <span><i class="fas fa-map-marker-alt"></i> {{ $plan->barangay }}</span>
+                                @endif
+                                @if($plan->total_children)
+                                <span><i class="fas fa-users"></i> {{ $plan->total_children }} Children</span>
+                                @endif
+                                <span><i class="fas fa-clock"></i> {{ $plan->generated_at ? $plan->generated_at->format('M d, Y h:i A') : 'N/A' }}</span>
+                            </div>
+                            @if($plan->available_ingredients)
+                            <div class="program-plan-item-ingredients">
+                                <i class="fas fa-carrot"></i> 
+                                <span>{{ Str::limit($plan->available_ingredients, 80) }}</span>
+                            </div>
+                            @endif
+                        </div>
+                        <div class="program-plan-item-actions">
+                            <button type="button" class="item-action-btn view-btn view-program-plan-btn" 
+                                    data-plan-id="{{ $plan->program_plan_id }}" title="View Plan">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" class="item-action-btn delete-btn delete-program-plan-btn" 
+                                    data-plan-id="{{ $plan->program_plan_id }}" title="Delete Plan">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @else
+            <div class="empty-plans-state">
+                <i class="fas fa-clipboard-list"></i>
+                <p>No saved feeding program plans yet. Create one to get started!</p>
+            </div>
+            @endif
         </div>
+        <h2></h2>
 
         <!-- Individual Patient Meal Plans Section -->
         <div class="patients-section">
@@ -50,19 +152,13 @@
                     <h2 class="section-title">Individual Patient Meal Plans</h2>
                     <p class="section-subtitle">Search and manage patient meal plans</p>
                 </div>
-                <div class="header-actions">
-                    <button type="button" class="btn-primary" id="view-all-patients-btn">
-                        <i class="fas fa-users"></i>
-                        View All Patients
-                    </button>
-                </div>
             </div>
 
             @if($patients->count() > 0)
             <div class="search-container">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="patient-search" class="search-input" placeholder="Search patients by name, age, or location...">
+                    <input type="text" id="patient-search" class="search-input" placeholder="Search patients by name">
                 </div>
             </div>
 
@@ -135,6 +231,10 @@
     <!-- Hidden data for JavaScript -->
     <script id="patients-data" type="application/json">
         @json($patients)
+    </script>
+    
+    <script id="barangays-data" type="application/json">
+        @json($barangays)
     </script>
 @endsection
 

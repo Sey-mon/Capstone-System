@@ -259,10 +259,14 @@
 /* Search Container */
 .search-container {
     margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }
 
 .search-box {
     position: relative;
+    flex: 1;
     max-width: 600px;
 }
 
@@ -721,6 +725,77 @@
     font-size: 1.25rem;
 }
 
+/* Feeding Program Modal Header */
+.feeding-program-header {
+    margin-bottom: 1.5rem;
+}
+
+.program-info-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: #f8fafb;
+    padding: 1.25rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.program-info-item {
+    flex: 1 1 calc(33.333% - 1rem);
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.program-info-item strong {
+    color: var(--primary-green);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.program-info-item span {
+    color: var(--text-dark);
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+.program-info-full {
+    flex: 1 1 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.program-info-full strong {
+    color: var(--primary-green);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.program-info-full .ingredients-list {
+    color: #555;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.program-timestamp {
+    text-align: right;
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+    color: #6c757d;
+}
+
+.program-timestamp i {
+    margin-right: 0.375rem;
+}
+
 .modal-body {
     padding: 2rem;
 }
@@ -816,6 +891,11 @@
         margin-bottom: 1.25rem;
     }
     
+    .program-info-item {
+        flex: 1 1 calc(50% - 0.5rem);
+        min-width: 120px;
+    }
+    
     .section-header {
         flex-direction: column;
         align-items: flex-start;
@@ -847,6 +927,12 @@
     
     .patient-actions {
         flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .program-info-item {
+        flex: 1 1 100%;
     }
     
     .action-btn {
@@ -1037,15 +1123,22 @@
     width: 100%;
 }
 
+.feeding-program-results .program-header {
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border-left: 4px solid #2d7a4f;
+}
+
 .feeding-program-results .program-header .row {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
-    flex-wrap: wrap;
 }
 
 .feeding-program-results .program-header .row > div {
-    flex: 1;
-    min-width: 150px;
+    padding: 0.5rem 0;
 }
 
 .feeding-program-results .table-responsive {
@@ -1161,14 +1254,17 @@
         font-size: 1.125rem !important;
     }
     
-    .feeding-program-results .program-header .row > div {
-        font-size: 0.875rem;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #e1e8ed;
+    .feeding-program-results .program-header .row {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
     }
     
-    .feeding-program-results .program-header .row > div:last-child {
-        border-bottom: none;
+    .feeding-program-results .program-header .row > div {
+        font-size: 0.875rem;
+        padding: 0.75rem !important;
+        background: white;
+        border-radius: 6px;
+        border-left: 3px solid #52c785;
     }
     
     .feeding-program-results table {
@@ -1271,4 +1367,331 @@
         font-size: 0.8125rem;
         padding: 5px 8px;
     }
+}
+
+/* ===================================
+   Saved Feeding Program Plans - List Layout
+   =================================== */
+
+.program-plans-list-container {
+    margin-top: 1.5rem;
+}
+
+.program-plans-scrollable {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.program-plan-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.program-plan-item:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-green);
+    transform: translateX(4px);
+}
+
+.program-plan-item-badge {
+    flex-shrink: 0;
+    width: 3.5rem;
+    height: 3.5rem;
+    background: linear-gradient(135deg, var(--primary-green), var(--accent-green));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.program-plan-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.program-plan-item-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0 0 0.5rem 0;
+}
+
+.program-plan-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.program-plan-item-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.program-plan-item-meta i {
+    color: var(--primary-green);
+}
+
+.program-plan-item-ingredients {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    background: var(--light-bg);
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.program-plan-item-ingredients i {
+    color: var(--accent-green);
+}
+
+.program-plan-item-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.btn-reset-filter {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+}
+
+.btn-reset-filter:hover {
+    background: linear-gradient(135deg, var(--primary-green-dark), var(--primary-green));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(45, 122, 79, 0.3);
+}
+
+.btn-reset-filter i {
+    font-size: 14px;
+}
+
+.filter-controls-row {
+    margin-top: 12px;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.filter-select {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: white;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-select:hover {
+    border-color: var(--primary-green);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(45, 122, 79, 0.1);
+}
+
+/* ===================================
+   Saved Feeding Program Plans Cards (OLD - DEPRECATED)
+   =================================== */
+
+.saved-plans-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.saved-plans-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.saved-plans-title i {
+    color: var(--primary-green);
+}
+
+.saved-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+}
+
+.saved-plan-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.saved-plan-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.plan-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.plan-card-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--accent-green);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.plan-card-age {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.plan-card-age i {
+    color: var(--primary-green);
+    margin-right: 0.25rem;
+}
+
+.plan-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+}
+
+.plan-card-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+}
+
+.plan-card-info i {
+    color: var(--primary-green);
+    width: 1rem;
+}
+
+.plan-card-info strong {
+    color: var(--primary-green);
+    font-weight: 600;
+}
+
+.plan-card-date {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.plan-card-actions {
+    display: flex;
+    gap: 0.625rem;
+}
+
+.plan-action-btn {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+}
+
+.plan-action-btn.view-plan-btn {
+    background: var(--primary-green);
+    color: white;
+}
+
+.plan-action-btn.view-plan-btn:hover {
+    background: var(--primary-green-dark);
+}
+
+.plan-action-btn.delete-plan-btn {
+    background: #f8f9fa;
+    color: #dc3545;
+    flex: 0 0 auto;
+    padding: 0.625rem;
+}
+
+.plan-action-btn.delete-plan-btn:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.empty-plans-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--text-muted);
+    background: var(--light-bg);
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+
+.empty-plans-state i {
+    font-size: 3rem;
+    color: var(--border-color);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.empty-plans-state p {
+    margin: 0;
+    font-size: 0.9375rem;
 }
