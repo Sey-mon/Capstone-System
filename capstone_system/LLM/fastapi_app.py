@@ -62,7 +62,7 @@ class SaveMealPlanRequest(BaseModel):
 
 # Feeding Program Models (Nutritionist)
 class FeedingProgramMealPlanRequest(BaseModel):
-    target_age_group: str = 'all'  # 'all', '0-12months', '12-24months', '24-60months'
+    target_age_group: str = 'all'  # 'all', '6-12months', '12-24months', '24-60months'
     program_duration_days: int = 5  # Max 5 days (optimal for token limits and cost)
     budget_level: str = 'moderate'  # 'low', 'moderate', or 'high'
     available_ingredients: Optional[str] = None
@@ -426,8 +426,8 @@ def generate_feeding_program_meal_plan_endpoint(request: FeedingProgramMealPlanR
         if request.budget_level not in ['low', 'moderate', 'high']:
             raise HTTPException(status_code=400, detail="Budget level must be 'low', 'moderate', or 'high'")
         
-        # Validate age group
-        valid_age_groups = ['all', '0-12months', '12-24months', '24-60months']
+        # Validate age group (match feeding_program_chain.py valid groups)
+        valid_age_groups = ['all', '6-12months', '12-24months', '24-60months']
         if request.target_age_group not in valid_age_groups:
             raise HTTPException(status_code=400, detail=f"Age group must be one of: {', '.join(valid_age_groups)}")
         
@@ -468,8 +468,8 @@ def generate_feeding_program_assessment_endpoint(request: FeedingProgramAssessme
     community feeding programs serving Filipino children.
     """
     try:
-        # Validate age group
-        valid_age_groups = ['all', '0-12months', '12-24months', '24-60months']
+        # Validate age group (match feeding_program_chain.py valid groups)
+        valid_age_groups = ['all', '6-12months', '12-24months', '24-60months']
         if request.target_age_group not in valid_age_groups:
             raise HTTPException(status_code=400, detail=f"Age group must be one of: {', '.join(valid_age_groups)}")
         
