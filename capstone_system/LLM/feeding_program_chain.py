@@ -471,7 +471,7 @@ OUTPUT FORMAT - JSON STRUCTURE:
 
 🔴 CRITICAL: You MUST respond with VALID JSON ONLY. No markdown, no explanations, just pure JSON.
 
-Return a JSON object with this exact structure:
+Return a JSON object with this EXACT structure:
 
 {{
   "meal_plan": [
@@ -479,116 +479,68 @@ Return a JSON object with this exact structure:
       "day": 1,
       "meals": [
         {{
-          "meal_type": "breakfast",
-          "dish_name": "Lugaw with Chicken and Egg",
-          "ingredients": [
-            "5 cups uncooked rice",
-            "1.5 kg chicken breast or thighs, diced",
-            "10 eggs, beaten",
-            "2 cups mixed vegetables (carrots, peas)",
-            "4 cups chicken broth",
-            "2 tablespoons vegetable oil",
-            "Salt and pepper to taste"
-          ]
+          "meal_name_tagalog": "Almusal",
+          "dish_name": "Champorado with Tuyo",
+          "ingredients": ["5 cups glutinous rice", "1 cup cocoa powder", "1 cup sugar", "50 pieces tuyo"],
+          "portions": "1 cup champorado, 1 piece tuyo per child"
         }},
         {{
-          "meal_type": "lunch",
-          "dish_name": "Adobong Manok",
-          "ingredients": [
-            "1.5 kg chicken breast or thighs, cut into bite-sized pieces",
-            "1/2 cup vinegar",
-            "1/2 cup soy sauce",
-            "4 cloves garlic, minced",
-            "1 tablespoon vegetable oil",
-            "Salt and pepper to taste"
-          ]
+          "meal_name_tagalog": "Tanghalian",
+          "dish_name": "Tinolang Manok with Malunggay",
+          "ingredients": ["2.5 kg chicken", "5 pieces ginger", "3 bundles malunggay", "10 cups rice"],
+          "portions": "1 piece chicken, 1 cup soup, 1 cup rice per child"
         }},
         {{
-          "meal_type": "snack",
-          "dish_name": "Turon na Saging",
-          "ingredients": [
-            "50 pieces saba (plantain) sliced",
-            "1 pack spring roll wrappers",
-            "1/2 cup vegetable oil",
-            "1/2 cup sugar"
-          ]
+          "meal_name_tagalog": "Meryenda",
+          "dish_name": "Banana Cue",
+          "ingredients": ["50 pieces saba", "1 cup brown sugar", "oil for frying"],
+          "portions": "1 piece per child"
         }},
         {{
-          "meal_type": "dinner",
-          "dish_name": "Sinigang na Bangus",
-          "ingredients": [
-            "10 pieces bangus (milkfish)",
-            "2 cups tamarind broth",
-            "1 cup mixed vegetables (sitaw, kangkong)",
-            "Salt and pepper to taste"
-          ]
+          "meal_name_tagalog": "Hapunan",
+          "dish_name": "Ginataang Kalabasa with Sitaw",
+          "ingredients": ["3 kg kalabasa", "2 kg sitaw", "5 cups coconut milk", "10 cups rice"],
+          "portions": "1 cup vegetables, 1 cup rice per child"
         }}
-      ]
-    }},
-    {{
-      "day": 2,
-      "meals": [
-        ... (continue for all {program_duration_days} days)
       ]
     }}
   ],
   "shopping_list": {{
-    "rice": "15 cups",
-    "chicken": "4.5 kg",
-    "eggs": "20 pieces"
+    "rice": "50 cups",
+    "chicken": "2.5 kg",
+    "glutinous_rice": "5 cups",
+    "cocoa_powder": "1 cup",
+    "sugar": "2 cups",
+    "tuyo": "50 pieces",
+    "ginger": "5 pieces",
+    "malunggay": "3 bundles",
+    "saba_bananas": "50 pieces",
+    "kalabasa": "3 kg",
+    "sitaw": "2 kg",
+    "coconut_milk": "5 cups"
   }},
-  "nutritional_summary": "Balanced nutrition with protein, carbohydrates, and vegetables for Filipino children."
+  "nutritional_summary": "This {program_duration_days}-day meal plan provides balanced nutrition for Filipino children with adequate protein, carbohydrates, vitamins and minerals. Each meal is designed for batch cooking serving 50 children."
 }}
 
-⚠️ CRITICAL JSON RULES:
-1. Return ONLY valid JSON - no markdown, no code blocks, no extra text
-2. Use "breakfast", "lunch", "snack", "dinner" for meal_type (lowercase)
-3. Each ingredient is a simple string in the array
-4. Include ALL {program_duration_days} days
-5. Ensure proper JSON escaping for quotes
-6. Keep it clean and parseable
+⚠️ CRITICAL JSON FORMATTING RULES:
+1. Return ONLY valid JSON - no markdown, no code blocks, no extra text before or after
+2. Use exact field names: "meal_name_tagalog", "dish_name", "ingredients", "portions"
+3. meal_name_tagalog values MUST be in this order: "Almusal", "Tanghalian", "Meryenda", "Hapunan" (4 meals per day)
+4. ingredients: array of strings, each string is "quantity + ingredient name"
+5. CRITICAL: Generate {program_duration_days} days following the EXACT SAME FORMAT as Day 1 shown above
+6. Each day MUST have 4 meals: Almusal, Tanghalian, Meryenda, Hapunan (in that order)
+7. NO DISH REPETITION across all {program_duration_days} days - every dish must be unique
+8. Each day must have DIFFERENT dishes than all other days
+9. Start response with {{ and end with }}
+10. Use proper JSON escaping for quotes and special characters
+11. DO NOT use markdown formatting (no **, no ##, no ---)
+12. DO NOT wrap in code blocks (no ```json)
 
-BEGIN JSON OUTPUT:
-- Ingredients: [List]
-- Preparation Method: [Steps]
-- Age Adaptations: [Same format]
-- Portions: [Amount]
+🔴 CRITICAL: Follow Day 1 format exactly for all {program_duration_days} days. Each day should have the same structure with 4 meals (Almusal, Tanghalian, Meryenda, Hapunan) but different dishes.
 
-**Hapunan (Dinner):**
-- Main Dish: [COMPLETE Filipino dish name - e.g., "Tinolang Manok with Malunggay and Papaya"]
-- Description: [Brief description]
-- Ingredients: [List with measurements]
-- Preparation Method: [Brief steps]
-- Age Adaptations: [Same format]
-- Approximate Portions: [Portions]
+🔴 CRITICAL: Your response must be PURE JSON starting with {{ and ending with }}. NO markdown, NO text before or after.
 
----
-
-## Day 2
-
-[Continue same format for remaining days]
-
-⚠️ FORMATTING REQUIREMENTS:
-1. Use ## for day headers (## Day 1, ## Day 2, etc.)
-2. Use **Meal Name:** format (Almusal, Tanghalian, Meryenda, Hapunan)
-3. ALWAYS use "- Main Dish:" followed by the dish name
-4. ALWAYS use "- Ingredients (for 50 children):" as header
-5. List each ingredient on separate line with "  - " (2 spaces, dash, space)
-6. Keep ingredient lists clean - just quantity and item name
-7. Use --- to separate days
-8. NO extra asterisks, NO embedded markdown formatting
-9. Keep consistent spacing and indentation
-
-## Weekly Shopping List
-[Consolidated ingredient list with estimated quantities]
-
-## Preparation Tips for Batch Cooking
-[Practical tips for feeding program staff]
-
-## Nutritional Summary
-[Brief overview of how the week's menu addresses the group's nutritional needs]
-
-BEGIN MEAL PLAN:
+BEGIN JSON OUTPUT NOW:
 """
     
     # Create LLM and generate with retry logic
@@ -606,18 +558,53 @@ BEGIN MEAL PLAN:
             
             meal_plan_content = response.content if hasattr(response, 'content') else str(response)
             
-            # Validate response
+            # Validate response length
             if not meal_plan_content or len(meal_plan_content) < 100:
                 logger.warning(f"Generated meal plan too short ({len(meal_plan_content)} chars)")
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay)
                     continue
             
+            # Clean the response - remove any text before first { and after last }
+            cleaned_content = meal_plan_content.strip()
+            
+            # Try to extract JSON if wrapped in markdown or has extra text
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', cleaned_content)
+            if json_match:
+                cleaned_content = json_match.group(0)
+                logger.info("Extracted JSON from response")
+            
+            # Validate it's valid JSON by attempting to parse
+            try:
+                import json
+                parsed_json = json.loads(cleaned_content)
+                
+                # Validate structure
+                if not isinstance(parsed_json, dict):
+                    raise ValueError("Response is not a JSON object")
+                
+                if 'meal_plan' not in parsed_json:
+                    logger.warning("Response missing 'meal_plan' key, using original content")
+                    cleaned_content = meal_plan_content  # Fall back to original
+                else:
+                    logger.info("Response validated as proper JSON structure")
+                    # Use the cleaned JSON string
+                    cleaned_content = json.dumps(parsed_json, ensure_ascii=False)
+                    
+            except json.JSONDecodeError as je:
+                logger.warning(f"Response is not valid JSON (will use as-is for markdown parsing): {str(je)[:100]}")
+                # Keep original content for markdown parsing
+                cleaned_content = meal_plan_content
+            except Exception as ve:
+                logger.warning(f"JSON validation issue: {str(ve)}")
+                cleaned_content = meal_plan_content
+            
             logger.info(f"Meal plan generated successfully in {generation_time:.2f}s")
             
             return {
                 'success': True,
-                'meal_plan': meal_plan_content,
+                'meal_plan': cleaned_content,
                 'batch_analysis': batch_analysis,
                 'target_age_group': target_age_group,
                 'program_duration_days': program_duration_days,
