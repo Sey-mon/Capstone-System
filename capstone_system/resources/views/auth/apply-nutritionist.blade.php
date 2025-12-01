@@ -115,7 +115,7 @@
             </style>
         @endif
 
-                <form method="POST" action="{{ route('apply.nutritionist.post') }}" id="nutritionistWizard" class="wizard-form" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('apply.nutritionist.post') }}" id="nutritionistWizard" class="wizard-form" enctype="multipart/form-data" novalidate>
                     @csrf
 
                     <!-- Step 1: Personal Information -->
@@ -132,7 +132,11 @@
                                     <label class="form-label" for="first_name">First Name *</label>
                                     <input type="text" class="form-control" name="first_name" id="first_name" 
                                            placeholder="Enter your first name" 
-                                           value="{{ old('first_name') }}" required autofocus>
+                                           value="{{ old('first_name') }}" 
+                                           maxlength="255"
+                                           pattern="[a-zA-Z\s\-\.]+"
+                                           title="Only letters, spaces, hyphens, and periods are allowed"
+                                           required autofocus>
                                     @error('first_name')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -140,10 +144,13 @@
                             </div>
                             <div class="form-col">
                                 <div class="form-group">
-                                    <label class="form-label" for="middle_name">Middle Name</label>
+                                    <label class="form-label" for="middle_name">Middle Name (Optional)</label>
                                     <input type="text" class="form-control" name="middle_name" id="middle_name" 
                                            placeholder="Enter your middle name" 
-                                           value="{{ old('middle_name') }}">
+                                           value="{{ old('middle_name') }}"
+                                           maxlength="255"
+                                           pattern="[a-zA-Z\s\-\.]+"
+                                           title="Only letters, spaces, hyphens, and periods are allowed">
                                     @error('middle_name')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -157,7 +164,11 @@
                                     <label class="form-label" for="last_name">Last Name *</label>
                                     <input type="text" class="form-control" name="last_name" id="last_name" 
                                            placeholder="Enter your last name" 
-                                           value="{{ old('last_name') }}" required>
+                                           value="{{ old('last_name') }}" 
+                                           maxlength="255"
+                                           pattern="[a-zA-Z\s\-\.]+"
+                                           title="Only letters, spaces, hyphens, and periods are allowed"
+                                           required>
                                     @error('last_name')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -167,8 +178,14 @@
                                 <div class="form-group">
                                     <label class="form-label" for="contact_number">Contact Number *</label>
                                     <input type="tel" class="form-control" name="contact_number" id="contact_number" 
-                                           placeholder="Enter your contact number" 
-                                           value="{{ old('contact_number') }}" required>
+                                           placeholder="09123456789" 
+                                           value="{{ old('contact_number') }}" 
+                                           maxlength="11"
+                                           pattern="09[0-9]{9}"
+                                           inputmode="numeric"
+                                           title="Enter a valid 11-digit Philippine mobile number (format: 09XXXXXXXXX)"
+                                           required>
+                                    <small class="form-text">Enter your 11-digit Philippine mobile number (format: 09XXXXXXXXX)</small>
                                     @error('contact_number')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -176,7 +193,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="sex">Gender</label>
+                            <label class="form-label" for="sex">Gender (Optional)</label>
                             <select class="form-control form-select" name="sex" id="sex">
                                 <option value="">Select Gender</option>
                                 <option value="male" {{ old('sex') === 'male' ? 'selected' : '' }}>Male</option>
@@ -212,7 +229,9 @@
                                     <label class="form-label" for="license_number">Professional License Number *</label>
                                     <input type="text" class="form-control" name="license_number" id="license_number" 
                                            placeholder="Enter your nutritionist license number" 
-                                           value="{{ old('license_number') }}" required>
+                                           value="{{ old('license_number') }}" 
+                                           maxlength="255"
+                                           required>
                                     @error('license_number')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -220,9 +239,9 @@
                             </div>
                             <div class="form-col">
                                 <div class="form-group">
-                                    <label class="form-label" for="years_experience">Years of Experience</label>
+                                    <label class="form-label" for="years_experience">Years of Experience (Optional)</label>
                                     <input type="number" class="form-control" name="years_experience" id="years_experience" 
-                                           placeholder="0" min="0" max="50"
+                                           placeholder="0" min="0" max="50" step="1"
                                            value="{{ old('years_experience') }}">
                                     @error('years_experience')
                                         <span class="error-text">{{ $message }}</span>
@@ -250,8 +269,10 @@
 
                         <div class="form-group">
                             <label class="form-label" for="professional_experience">Professional Experience *</label>
-                            <input type="text" class="form-control" name="professional_experience" id="professional_experience" 
-                                   placeholder="e.g. Nutritionist at ABC Clinic, 3 years" required value="{{ old('professional_experience') }}">
+                            <textarea class="form-control" name="professional_experience" id="professional_experience" 
+                                   placeholder="e.g. Nutritionist at ABC Clinic, 3 years" 
+                                   minlength="10" maxlength="1000" rows="3" required>{{ old('professional_experience') }}</textarea>
+                            <small class="form-text">Briefly describe your work experience (minimum 10 characters)</small>
                             @error('professional_experience')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
@@ -279,7 +300,10 @@
                             <label class="form-label" for="email">Email Address *</label>
                             <input type="email" class="form-control" name="email" id="email" 
                                    placeholder="Enter your professional email" 
-                                   value="{{ old('email') }}" required>
+                                   value="{{ old('email') }}" 
+                                   maxlength="255"
+                                   autocomplete="email"
+                                   required>
                             @error('email')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
@@ -292,7 +316,9 @@
                                     <div style="position: relative;">
                                         <input type="password" class="form-control" name="password" id="password" 
                                                placeholder="Create a strong password" 
-                                               minlength="8" required
+                                               minlength="8" 
+                                               autocomplete="new-password"
+                                               required
                                                style="padding-right: 40px;">
                                         <button type="button" class="toggle-password" data-target="password" 
                                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
@@ -306,7 +332,7 @@
                                             <div id="strength-bar-3" style="flex: 1; background: #e0e0e0; border-radius: 2px; transition: background 0.3s;"></div>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <small class="form-text">Minimum 8 characters (spaces allowed)</small>
+                                            <small class="form-text">Minimum 8 characters</small>
                                             <small id="password-strength-text" style="font-weight: 600; font-size: 0.75rem;"></small>
                                         </div>
                                     </div>
@@ -321,7 +347,9 @@
                                     <div style="position: relative;">
                                         <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" 
                                                placeholder="Confirm your password" 
-                                               minlength="8" required
+                                               minlength="8" 
+                                               autocomplete="new-password"
+                                               required
                                                style="padding-right: 40px;">
                                         <button type="button" class="toggle-password" data-target="password_confirmation" 
                                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">

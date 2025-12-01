@@ -45,6 +45,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 prevStep();
             });
         });
+        
+        // Form submission
+        const form = document.getElementById('nutritionistWizard');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Validate final step before submission
+                if (!validateCurrentStep()) {
+                    e.preventDefault();
+                    return false;
+                }
+                // All validation passed, allow form to submit
+            });
+        }
     }
     
     function validateCurrentStep() {
@@ -60,15 +73,46 @@ document.addEventListener("DOMContentLoaded", function () {
             const errorSpan = field.parentElement.querySelector('.error-message');
             if (errorSpan) errorSpan.remove();
             
+            let errorMessage = '';
+            
             // Check if field is empty
             if (!field.value.trim()) {
                 isValid = false;
+                errorMessage = 'This field is required';
+            }
+            // Check pattern validation
+            else if (field.hasAttribute('pattern')) {
+                const pattern = new RegExp(field.getAttribute('pattern'));
+                if (!pattern.test(field.value)) {
+                    isValid = false;
+                    // Use custom title if available, otherwise generic message
+                    errorMessage = field.getAttribute('title') || 'Invalid format';
+                }
+            }
+            // Check minlength validation
+            else if (field.hasAttribute('minlength')) {
+                const minLength = parseInt(field.getAttribute('minlength'));
+                if (field.value.length < minLength) {
+                    isValid = false;
+                    errorMessage = `Minimum ${minLength} characters required`;
+                }
+            }
+            // Check email validation
+            else if (field.type === 'email') {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(field.value)) {
+                    isValid = false;
+                    errorMessage = 'Please enter a valid email address';
+                }
+            }
+            
+            // Display error if validation failed
+            if (errorMessage) {
                 field.classList.add('error');
                 
-                // Add error message
                 const errorMsg = document.createElement('span');
                 errorMsg.className = 'error-message';
-                errorMsg.textContent = 'This field is required';
+                errorMsg.textContent = errorMessage;
                 errorMsg.style.color = '#ef4444';
                 errorMsg.style.fontSize = '0.875rem';
                 errorMsg.style.marginTop = '0.25rem';

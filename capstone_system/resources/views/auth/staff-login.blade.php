@@ -303,6 +303,14 @@
                     <p class="subtitle">For Administrators, Nutritionists & Health Workers</p>
                 </div>
             
+                <!-- Display Success Messages -->
+                @if(session('success'))
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
                 <!-- Display Error Messages -->
                 @if($errors->any())
                     <div class="alert alert-error">

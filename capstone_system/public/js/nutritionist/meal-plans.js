@@ -276,7 +276,14 @@ class MealPlansManager {
 
         Swal.fire({
             title: 'Generating Meal Plan...',
-            html: `Creating ${days}-day feeding program for Filipino children...`,
+            html: `
+                <div style="margin: 20px 0;">
+                    <p>Creating ${days}-day feeding program for Filipino children...</p>
+                    <p style="font-size: 0.9em; color: #6c757d; margin-top: 10px;">
+                        <i class="fas fa-info-circle"></i> This may take 30-60 seconds
+                    </p>
+                </div>
+            `,
             allowOutsideClick: false,
             didOpen: () => {
                 Swal.showLoading();
@@ -291,6 +298,7 @@ class MealPlansManager {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 contentType: 'application/json',
+                timeout: 120000, // 2 minute timeout
                 data: JSON.stringify({
                     target_age_group: formData.ageGroup,
                     total_children: formData.totalChildren ? parseInt(formData.totalChildren) : null,
@@ -302,35 +310,77 @@ class MealPlansManager {
             });
 
             if (response.success) {
+                // Validate the response data
+                if (!response.data || !response.data.meal_plan) {
+                    throw new Error('Invalid response from server: missing meal plan data');
+                }
+                
                 // Save to database
                 await this.saveFeedingProgramToDatabase(formData, response.data);
                 
                 const programHtml = this.formatFeedingProgram(response.data);
-                Swal.fire({
-                    title: '<i class="fas fa-check-circle" style="color: #2d7a4f;"></i> Success!',
-                    html: programHtml,
-                    width: '90%',
-                    confirmButtonText: 'Close',
-                    confirmButtonColor: '#2d7a4f',
-                    customClass: {
-                        popup: 'meal-plan-result'
-                    }
-                });
+                
+                // Check if parsing was successful
+                if (programHtml.includes('Parsing Error')) {
+                    // Show warning but still display the result
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Meal Plan Generated with Issues',
+                        html: programHtml,
+                        width: '90%',
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#2d7a4f',
+                        customClass: {
+                            popup: 'meal-plan-result'
+                        },
+                        footer: '<p style="color: #856404;">The meal plan was created but had formatting issues. Try generating again for better results.</p>'
+                    });
+                } else {
+                    Swal.fire({
+                        title: '<i class="fas fa-check-circle" style="color: #2d7a4f;"></i> Success!',
+                        html: programHtml,
+                        width: '90%',
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#2d7a4f',
+                        customClass: {
+                            popup: 'meal-plan-result'
+                        }
+                    });
+                }
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Generation Failed',
-                    text: 'Failed to generate feeding program meal plan',
+                    text: response.message || 'Failed to generate feeding program meal plan',
                     confirmButtonColor: '#2d7a4f'
                 });
             }
         } catch (error) {
             console.error('Error:', error);
+            
+            let errorMessage = 'Failed to connect to AI service.';
+            
+            if (error.status === 504 || error.statusText === 'timeout') {
+                errorMessage = 'Request timed out. The AI service is taking too long to respond. Please try again.';
+            } else if (error.responseJSON?.detail) {
+                errorMessage = error.responseJSON.detail;
+            } else if (error.responseText) {
+                errorMessage = error.responseText;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: error.responseJSON?.detail || 'Failed to connect to AI service. Check if FastAPI server is running on port 8002.',
-                confirmButtonColor: '#2d7a4f'
+                html: `
+                    <p>${errorMessage}</p>
+                    <p style="font-size: 0.9em; color: #6c757d; margin-top: 10px;">
+                        Check if FastAPI server is running on port 8002.
+                    </p>
+                `,
+                confirmButtonColor: '#2d7a4f',
+                confirmButtonText: 'OK'
             });
         }
     }
@@ -488,19 +538,33 @@ class MealPlansManager {
         // Handle if mealPlanText is already an object or array
         let parsedData = mealPlanText;
         if (typeof mealPlanText === 'string') {
-            // First, try to extract JSON from markdown code blocks
+            // First, try to extract JSON from markdown code blocks or clean the string
             let jsonString = mealPlanText.trim();
             
-            // Check if it's wrapped in markdown code blocks (```json ... ```)
+            // Remove markdown code blocks if present (```json ... ``` or ``` ... ```)
             const codeBlockMatch = jsonString.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
             if (codeBlockMatch) {
                 jsonString = codeBlockMatch[1].trim();
             }
             
+            // Try to find JSON object boundaries if there's extra text
+            const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+            if (jsonMatch && !codeBlockMatch) {
+                jsonString = jsonMatch[0];
+            }
+            
+            // Clean up common LLM output issues
+            jsonString = jsonString
+                .replace(/^[^{]*/, '')  // Remove text before first {
+                .replace(/[^}]*$/, '')  // Remove text after last }
+                .trim();
+            
             // Now try to parse the JSON
             try {
                 parsedData = JSON.parse(jsonString);
+                console.log('Successfully parsed meal plan as JSON');
             } catch (e) {
+                console.warn('JSON parsing failed, falling back to markdown parsing:', e.message);
                 // Keep as string for markdown parsing
                 parsedData = mealPlanText;
             }
@@ -548,11 +612,13 @@ class MealPlansManager {
                     
                 }
             } catch (e) {
+                console.error('Error processing parsed JSON data:', e);
             }
         }
         
         // If no entries found and we have a string, try markdown parsing
         if (mealEntries.length === 0 && typeof parsedData === 'string') {
+            console.log('Attempting markdown parsing as fallback...');
             
             const lines = mealPlanText.split('\n');
             let currentDay = '';
@@ -643,11 +709,22 @@ class MealPlansManager {
 
         // Render table
         if (mealEntries.length === 0) {
+            console.error('Failed to extract meal entries from response');
+            console.log('Raw meal plan text:', typeof parsedData === 'string' ? parsedData.substring(0, 500) : parsedData);
             html += `
                 <tr>
                     <td colspan="4" style="padding: 20px; text-align: center;">
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
-                            <p style="color: #856404; margin: 0;"><i class="fas fa-info-circle"></i> Unable to parse meal plan</p>
+                        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                            <p style="color: #856404; margin: 0 0 10px 0; font-weight: bold;">
+                                <i class="fas fa-exclamation-triangle"></i> Parsing Error
+                            </p>
+                            <p style="color: #856404; margin: 0; font-size: 0.9em;">
+                                The meal plan was generated but couldn't be displayed properly. 
+                                This is a known issue we're working to fix. Please try generating again.
+                            </p>
+                            <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 15px; background-color: #2d7a4f; border: none; padding: 8px 16px; border-radius: 4px; color: white; cursor: pointer;">
+                                <i class="fas fa-redo"></i> Try Again
+                            </button>
                         </div>
                     </td>
                 </tr>
