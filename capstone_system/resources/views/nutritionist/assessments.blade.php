@@ -9,12 +9,20 @@
     @include('partials.nutritionist-navigation')
 @endsection
 
+@push('head')
+    <!-- Preload critical resources for better LCP -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preload" href="{{ asset('img/shares-logo.png') }}" as="image">
+    <link rel="preload" href="{{ asset('css/nutritionist-assessments.css') }}" as="style">
+@endpush
+
 @section('content')
     <!-- Modern Filter Bar -->
-    <div class="modern-filters-container">
+    <div class="modern-filters-container" role="search" aria-label="Patient filters">
         <div class="filter-header">
             <h5 class="filter-title">
-                <i class="fas fa-filter me-2"></i>
+                <i class="fas fa-filter me-2" aria-hidden="true"></i>
                 Filter Patients
                 @php
                     $activeFilters = 0;
@@ -28,43 +36,46 @@
                     <span class="badge bg-primary ms-2">{{ $activeFilters }} active</span>
                 @endif
             </h5>
-            <button class="btn btn-outline-secondary btn-sm" id="clearFilters">
-                <i class="fas fa-times me-1"></i>
+            <button class="btn btn-outline-secondary btn-sm" id="clearFilters" aria-label="Clear all filters">
+                <i class="fas fa-times me-1" aria-hidden="true"></i>
                 Clear All
             </button>
         </div>
         
         <div class="filters-grid">
             <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-search me-1"></i>
+                <label class="filter-label" for="searchInput">
+                    <i class="fas fa-search me-1" aria-hidden="true"></i>
                     Search
                 </label>
                 <input type="text" 
                        id="searchInput" 
                        class="modern-filter-input" 
                        placeholder="Search patients, diagnosis..."
-                       value="{{ request('search') }}">
+                       value="{{ request('search') }}"
+                       aria-label="Search patients by name or diagnosis"
+                       autocomplete="off">
             </div>
             
             <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-clipboard-check me-1"></i>
+                <label class="filter-label" for="statusFilter">
+                    <i class="fas fa-clipboard-check me-1" aria-hidden="true"></i>
                     Status
                 </label>
-                <select id="statusFilter" class="modern-filter-select">
+                <select id="statusFilter" class="modern-filter-select" aria-label="Filter by assessment status">
                     <option value="">All Status</option>
                     <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="no_assessment" {{ request('status') == 'no_assessment' ? 'selected' : '' }}>No Assessment</option>
                 </select>
             </div>
             
             <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-stethoscope me-1"></i>
+                <label class="filter-label" for="diagnosisFilter">
+                    <i class="fas fa-stethoscope me-1" aria-hidden="true"></i>
                     Diagnosis
                 </label>
-                <select id="diagnosisFilter" class="modern-filter-select">
+                <select id="diagnosisFilter" class="modern-filter-select" aria-label="Filter by diagnosis type">
                     <option value="">All Diagnoses</option>
                     <option value="Normal">Normal</option>
                     <option value="Moderate">Moderate</option>
@@ -75,33 +86,35 @@
             </div>
             
             <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-calendar-alt me-1"></i>
+                <label class="filter-label" for="dateFrom">
+                    <i class="fas fa-calendar-alt me-1" aria-hidden="true"></i>
                     Date From
                 </label>
                 <input type="date" 
                        id="dateFrom" 
                        class="modern-filter-input"
-                       value="{{ request('date_from') }}">
+                       value="{{ request('date_from') }}"
+                       aria-label="Filter assessments from date">
             </div>
             
             <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-calendar-alt me-1"></i>
+                <label class="filter-label" for="dateTo">
+                    <i class="fas fa-calendar-alt me-1" aria-hidden="true"></i>
                     Date To
                 </label>
                 <input type="date" 
                        id="dateTo" 
                        class="modern-filter-input"
-                       value="{{ request('date_to') }}">
+                       value="{{ request('date_to') }}"
+                       aria-label="Filter assessments to date">
             </div>
             
             <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-list me-1"></i>
+                <label class="filter-label" for="perPage">
+                    <i class="fas fa-list me-1" aria-hidden="true"></i>
                     Per Page
                 </label>
-                <select id="perPage" class="modern-filter-select">
+                <select id="perPage" class="modern-filter-select" aria-label="Items per page">
                     <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10</option>
                     <option value="15" {{ request('per_page') == '15' || !request('per_page') ? 'selected' : '' }}>15</option>
                     <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25</option>
@@ -112,14 +125,15 @@
     </div>
 
     <!-- Modern Loading Indicator -->
-    <div id="loadingIndicator" class="loading-overlay" style="display: none;">
+    <div id="loadingIndicator" class="loading-overlay" style="display: none;" role="status" aria-live="polite">
         <div class="loading-spinner">
-            <div class="modern-spinner">
+            <div class="modern-spinner" aria-hidden="true">
                 <div class="spinner-ring"></div>
                 <div class="spinner-ring"></div>
                 <div class="spinner-ring"></div>
             </div>
             <p class="loading-text">Loading patient assessments...</p>
+            <span class="visually-hidden">Loading content, please wait</span>
         </div>
     </div>
 
@@ -144,8 +158,8 @@
                         Loading...
                     </span>
                 </div>
-                <button class="btn btn-primary btn-lg" onclick="openPatientSelectionModal()">
-                    <i class="fas fa-plus me-2"></i>
+                <button class="btn btn-primary btn-lg" onclick="openPatientSelectionModal()" aria-label="Create new patient assessment">
+                    <i class="fas fa-plus me-2" aria-hidden="true"></i>
                     New Assessment
                 </button>
             </div>
@@ -177,7 +191,7 @@ window.assessmentsRoutes = {
 window.barangaysData = {!! json_encode(\App\Models\Barangay::all(['barangay_id', 'barangay_name'])) !!};
 window.parentsData = {!! json_encode(\App\Models\User::where('role_id', 4)->get(['user_id', 'first_name', 'last_name'])) !!};
 </script>
-<script src="{{ asset('js/nutritionist-assessments.js') }}"></script>
+<script src="{{ asset('js/nutritionist-assessments.js') }}" defer></script>
 
 <script>
 // Pagination keyboard navigation

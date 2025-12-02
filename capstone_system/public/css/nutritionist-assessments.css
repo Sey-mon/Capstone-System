@@ -1,11 +1,38 @@
 /* Modern Green & White Theme - Clean & Professional */
+
+/* Prevent body scroll - only content should scroll */
+html, body {
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-layout {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.main-content {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.page-content {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem;
+}
+
 :root {
     /* Primary Green Palette */
-    --primary-color: #22c55e;
-    --primary-light: #4ade80;
-    --primary-lighter: #86efac;
-    --primary-dark: #16a34a;
-    --primary-darker: #15803d;
+    --primary-color: #43A047;
+    --primary-light: #66BB6A;
+    --primary-lighter: #81C784;
+    --primary-dark: #388E3C;
+    --primary-darker: #2E7D32;
     
     /* Green Backgrounds */
     --green-50: #f0fdf4;
@@ -106,12 +133,36 @@
     padding: 0 !important;
 }
 
+/* Patient Selection Modal Centering */
+.patient-selection-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+}
+
 .patient-selection-popup {
     max-width: 950px !important;
+    width: 90% !important;
+    margin: auto !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
 }
 
 .patient-selection-popup .swal2-html-container {
     overflow: visible !important;
+    max-height: none !important;
+    flex: 1 1 auto !important;
 }
 
 .patient-item {
@@ -353,102 +404,110 @@
 }
 
 /* Assessment Details Modal Styling */
+.assessment-details-modal-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+}
+
 .swal-assessment-details-modal {
-    padding: 2rem !important;
-    border-radius: 24px !important;
+    padding: 1rem !important;
+    border-radius: 16px !important;
     background: var(--off-white) !important;
+    max-height: 90vh !important;
+    margin: auto !important;
+    overflow: hidden !important;
 }
 
 .swal-assessment-title {
-    font-size: 2rem !important;
-    font-weight: 800 !important;
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
     color: var(--text-primary) !important;
     text-align: center !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
 }
 
 .swal-assessment-details-modal .btn-success {
-    background-color: var(--primary-color) !important;
+    background-color: #10b981 !important;
     border: none !important;
-    padding: 0.875rem 2rem !important;
-    font-weight: 700 !important;
-    border-radius: 12px !important;
+    padding: 0.5rem 1.25rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
     transition: all 0.3s ease !important;
-    font-size: 0.95rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
+    font-size: 0.85rem !important;
+    color: white !important;
 }
 
 .swal-assessment-details-modal .btn-success:hover {
-    background-color: var(--primary-dark) !important;
-    transform: translateY(-3px) !important;
-    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.5) !important;
+    background-color: #059669 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
 }
 
 .swal-assessment-details-modal .btn-secondary {
     background-color: var(--white) !important;
     color: var(--text-primary) !important;
-    border: 2px solid var(--border-color) !important;
-    padding: 0.875rem 2rem !important;
-    font-weight: 700 !important;
-    border-radius: 12px !important;
+    border: 1.5px solid var(--border-color) !important;
+    padding: 0.5rem 1.25rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
     transition: all 0.3s ease !important;
-    font-size: 0.95rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
+    font-size: 0.85rem !important;
 }
 
 .swal-assessment-details-modal .btn-secondary:hover {
     background-color: var(--green-50) !important;
     border-color: var(--primary-color) !important;
     color: var(--primary-color) !important;
-    transform: translateY(-3px) !important;
+    transform: translateY(-2px) !important;
 }
 
 /* Enhanced Card Styling */
 .swal-assessment-details-modal .card {
     border: none;
-    border-radius: 18px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-    margin-bottom: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    margin-bottom: 0.75rem;
     transition: all 0.3s ease;
     background: var(--white);
     overflow: hidden;
 }
 
 .swal-assessment-details-modal .card:hover {
-    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.18);
-    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+    transform: translateY(-2px);
 }
 
 .swal-assessment-details-modal .card-header {
     background: #22c55e !important;
     border-bottom: none;
-    border-radius: 18px 18px 0 0;
-    padding: 1.25rem 1.75rem;
-    box-shadow: 0 4px 8px rgba(34, 197, 94, 0.15);
+    border-radius: 8px 8px 0 0;
+    padding: 0.5rem 0.875rem;
+    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.15);
 }
 
 .swal-assessment-details-modal .card-header h6 {
     color: #ffffff !important;
-    font-weight: 800 !important;
+    font-weight: 600 !important;
     margin: 0 !important;
-    font-size: 1.125rem !important;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 0.8rem !important;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    gap: 0.4rem;
 }
 
 .swal-assessment-details-modal .card-header i {
-    font-size: 1.25rem;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    font-size: 0.95rem;
 }
 
 .swal-assessment-details-modal .card-body {
-    padding: 2rem 1.75rem;
+    padding: 0.875rem 1rem;
 }
 
 /* Scrollbar Styling */
@@ -474,20 +533,20 @@
 /* Assessment Details Content */
 .assessment-details-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
 .detail-info-box {
     background: var(--white);
-    border: 2px solid var(--green-300);
-    border-radius: 14px;
-    padding: 1.5rem 1.25rem;
+    border: 1.5px solid var(--green-300);
+    border-radius: 10px;
+    padding: 0.75rem 0.875rem;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .detail-info-box::before {
@@ -495,58 +554,58 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 5px;
+    width: 3px;
     height: 100%;
     background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-dark) 100%);
 }
 
 .detail-info-box:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.2);
-    transform: translateY(-3px);
+    box-shadow: 0 3px 8px rgba(34, 197, 94, 0.15);
+    transform: translateY(-2px);
 }
 
 .detail-info-label {
-    font-size: 0.7rem;
-    font-weight: 800;
+    font-size: 0.65rem;
+    font-weight: 700;
     text-transform: uppercase;
     color: var(--primary-dark);
-    letter-spacing: 0.8px;
-    margin-bottom: 0.75rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.35rem;
 }
 
 .detail-info-label i {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: var(--primary-color);
 }
 
 .detail-info-value {
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: var(--text-primary);
-    line-height: 1.4;
+    line-height: 1.3;
     word-break: break-word;
 }
 
 /* Measurement Cards */
 .measurements-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
 }
 
 .measurement-card {
     background: var(--white);
-    border: 3px solid var(--green-300);
-    border-radius: 18px;
-    padding: 2rem 1.5rem;
+    border: 2px solid var(--green-300);
+    border-radius: 12px;
+    padding: 0.875rem 0.75rem;
     text-align: center;
     transition: all 0.3s ease;
     position: relative;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .measurement-card::before {
@@ -556,52 +615,52 @@
     left: 50%;
     transform: translateX(-50%);
     width: 80%;
-    height: 4px;
+    height: 3px;
     background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
-    border-radius: 0 0 6px 6px;
+    border-radius: 0 0 4px 4px;
 }
 
 .measurement-card:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.25);
-    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+    transform: translateY(-3px);
 }
 
 .measurement-icon {
-    width: 60px;
-    height: 60px;
+    width: 42px;
+    height: 42px;
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.25rem;
+    margin: 0 auto 0.6rem;
     color: var(--white);
-    font-size: 1.75rem;
-    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.35);
+    font-size: 1.15rem;
+    box-shadow: 0 3px 8px rgba(34, 197, 94, 0.3);
 }
 
 .measurement-label {
-    font-size: 0.7rem;
-    font-weight: 800;
+    font-size: 0.65rem;
+    font-weight: 700;
     text-transform: uppercase;
     color: var(--primary-dark);
-    letter-spacing: 0.8px;
-    margin-bottom: 0.75rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
 }
 
 .measurement-value {
-    font-size: 2.25rem;
-    font-weight: 800;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: var(--primary-color);
     line-height: 1;
 }
 
 .measurement-unit {
-    font-size: 0.875rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
-    font-weight: 600;
-    margin-top: 0.5rem;
+    font-weight: 500;
+    margin-top: 0.3rem;
 }
 
 /* Enhanced List Styling */
@@ -613,39 +672,42 @@
 
 .modern-list-item {
     background: var(--white);
-    border: 2px solid var(--green-200);
-    border-left: 5px solid var(--primary-color);
-    padding: 1.125rem 1.5rem;
-    margin-bottom: 1rem;
-    border-radius: 10px;
+    border: 1.5px solid var(--green-200);
+    border-left: 3px solid var(--primary-color);
+    padding: 0.6rem 0.875rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
     transition: all 0.3s ease;
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    gap: 0.6rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-size: 0.85rem;
+    line-height: 1.4;
 }
 
 .modern-list-item::before {
     content: '✓';
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
+    width: 20px;
+    height: 20px;
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     color: var(--white);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 1rem;
-    box-shadow: 0 3px 8px rgba(34, 197, 94, 0.25);
+    font-weight: 700;
+    font-size: 0.75rem;
+    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+    margin-top: 0.1rem;
 }
 
 .modern-list-item:hover {
     background: var(--green-50);
     border-color: var(--primary-color);
-    transform: translateX(6px);
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+    transform: translateX(4px);
+    box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15);
 }
 
 /* Phase Cards */
@@ -842,10 +904,10 @@
 /* Modern Filter Container */
 .modern-filters-container {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    border: 2px solid var(--primary-darker);
-    border-radius: 16px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
+    border: 1px solid var(--primary-darker);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
     box-shadow: var(--shadow-green);
     color: var(--white);
 }
@@ -858,8 +920,8 @@
 }
 
 .filter-title {
-    font-size: 1.125rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 600;
     margin: 0;
     color: var(--white);
 }
@@ -884,8 +946,8 @@
 
 .filters-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem;
 }
 
 .filter-group {
@@ -906,15 +968,15 @@
 
 .modern-filter-input,
 .modern-filter-select {
-    padding: 0.625rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 10px;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
     background: var(--white);
     color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 500;
     transition: all 0.3s ease;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
 }
 
 .modern-filter-input::placeholder {
@@ -966,18 +1028,18 @@
 
 .modern-card-header {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    padding: 1.25rem 1.75rem;
+    padding: 0.85rem 1.25rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid var(--primary-darker);
+    border-bottom: 2px solid var(--primary-darker);
 }
 
 .header-left .modern-title {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--white);
-    margin: 0 0 0.35rem 0;
+    margin: 0 0 0.25rem 0;
 }
 
 .header-left .modern-title i {
@@ -985,9 +1047,9 @@
 }
 
 .header-left .modern-subtitle {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.85);
     margin: 0;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
 }
 
 .header-right {
@@ -1002,13 +1064,13 @@
 }
 
 .modern-badge {
-    padding: 0.5rem 1.25rem;
-    border-radius: 30px;
-    font-size: 0.875rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
     transition: all 0.3s ease;
 }
 
@@ -1038,24 +1100,24 @@
 }
 
 .modern-card-content {
-    padding: 2rem;
+    padding: 1rem;
     background: var(--gray-100);
 }
 
 /* Modern Patient Cards Grid */
 .patients-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
 }
 
 .patient-card {
     background: var(--white);
-    border: 2px solid var(--border-light);
-    border-radius: 14px;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
     overflow: hidden;
     transition: all 0.3s ease;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-sm);
 }
 
 .patient-card:hover {
@@ -1065,24 +1127,24 @@
 }
 
 .patient-card-header {
-    padding: 1.25rem;
+    padding: 0.85rem;
     background: linear-gradient(135deg, var(--green-50) 0%, var(--white) 100%);
-    border-bottom: 2px solid var(--green-200);
+    border-bottom: 1px solid var(--green-200);
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .patient-avatar {
-    width: 48px;
-    height: 48px;
+    width: 38px;
+    height: 38px;
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--white);
-    font-size: 1.125rem;
+    font-size: 0.9rem;
     font-weight: 700;
     flex-shrink: 0;
     box-shadow: var(--shadow-green);
@@ -1094,10 +1156,10 @@
 }
 
 .patient-name {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 0.2rem 0;
 }
 
 .patient-details {
@@ -1149,7 +1211,7 @@
 }
 
 .patient-card-body {
-    padding: 1.25rem;
+    padding: 0.85rem;
     background: var(--white);
 }
 
@@ -1168,10 +1230,10 @@
 .info-item {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    padding: 0.75rem;
+    gap: 0.25rem;
+    padding: 0.5rem;
     background: var(--white);
-    border-radius: 10px;
+    border-radius: 6px;
     transition: all 0.3s ease;
 }
 
@@ -1200,13 +1262,13 @@
 }
 
 .info-value {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     color: var(--text-primary);
-    font-weight: 700;
-    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.5rem;
     background: linear-gradient(135deg, var(--green-50) 0%, var(--white) 100%);
-    border-radius: 8px;
-    border: 2px solid var(--green-200);
+    border-radius: 5px;
+    border: 1px solid var(--green-200);
     display: inline-block;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -1229,17 +1291,17 @@
 }
 
 .modern-diagnosis-badge {
-    padding: 0.4rem 0.75rem;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 0.65rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.2rem;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: none;
 }
 
 .modern-diagnosis-badge::before {
@@ -1336,19 +1398,19 @@
 }
 
 .patient-card-actions {
-    padding: 1rem 1.25rem;
+    padding: 0.65rem 0.85rem;
     background: var(--green-50);
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
-    border-top: 2px solid var(--green-100);
+    border-top: 1px solid var(--green-100);
 }
 
 .action-btn {
-    padding: 0.6rem 0.85rem;
+    padding: 0.45rem 0.65rem;
     border: none;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1357,7 +1419,7 @@
     text-decoration: none;
     flex: 1;
     justify-content: center;
-    min-width: 100px;
+    min-width: 90px;
 }
 
 .action-btn:hover {
@@ -1852,59 +1914,78 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.97);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(3px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: none;
+}
+
+.loading-overlay.show {
+    opacity: 1;
+    pointer-events: all;
 }
 
 .loading-spinner {
     text-align: center;
     color: var(--primary-color);
+    background: white;
+    padding: 2rem 3rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    transform: scale(0.9);
+    transition: transform 0.2s ease-in-out;
+}
+
+.loading-overlay.show .loading-spinner {
+    transform: scale(1);
 }
 
 .modern-spinner {
     position: relative;
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 2rem;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1.5rem;
 }
 
 .spinner-ring {
     position: absolute;
     width: 100%;
     height: 100%;
-    border: 4px solid transparent;
-    border-top: 4px solid var(--primary-color);
+    border: 3px solid transparent;
+    border-top: 3px solid var(--primary-color);
     border-radius: 50%;
     animation: spin 1.2s linear infinite;
 }
 
 .spinner-ring:nth-child(2) {
-    width: 60px;
-    height: 60px;
-    top: 10px;
-    left: 10px;
+    width: 45px;
+    height: 45px;
+    top: 7.5px;
+    left: 7.5px;
     border-top-color: var(--primary-light);
     animation-duration: 1s;
 }
 
 .spinner-ring:nth-child(3) {
-    width: 40px;
-    height: 40px;
-    top: 20px;
-    left: 20px;
+    width: 30px;
+    height: 30px;
+    top: 15px;
+    left: 15px;
     border-top-color: var(--primary-lighter);
     animation-duration: 0.8s;
 }
 
 .loading-text {
-    color: var(--gray-700);
-    font-size: 1.1rem;
+    color: var(--gray-600);
+    font-size: 0.95rem;
     font-weight: 500;
     margin: 0;
+    opacity: 0.9;
 }
 
 @keyframes spin {
@@ -1995,6 +2076,13 @@
     
     .header-right {
         justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    
+    .info-badges {
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
     }
     
     .filters-grid {
@@ -2003,18 +2091,51 @@
     
     .patients-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
     
     .info-row {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
     
     .patient-card-actions {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
     .action-btn {
         min-width: auto;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Touch-friendly buttons */
+    .action-btn {
+        min-height: 44px;
+        font-size: 0.95rem;
+    }
+    
+    .btn {
+        min-height: 44px;
+    }
+    
+    /* Simplified card layout for mobile */
+    .patient-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .patient-basic-info {
+        flex: 1;
+        width: 100%;
+    }
+    
+    .patient-status {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
     }
 }
 
@@ -2034,4 +2155,92 @@
     .patient-card-body {
         padding: 1rem;
     }
+    
+    .modern-title {
+        font-size: 1.5rem;
+    }
+    
+    .modern-subtitle {
+        font-size: 0.85rem;
+    }
+    
+    .patient-name {
+        font-size: 1.1rem;
+    }
+    
+    .filter-group label {
+        font-size: 0.85rem;
+    }
+    
+    .modern-filter-input,
+    .modern-filter-select {
+        font-size: 0.9rem;
+    }
+    
+    /* Stack filter controls vertically on very small screens */
+    .filter-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
 }
+
+/* Performance optimizations */
+* {
+    /* Use hardware acceleration for animations */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Optimize image rendering */
+img.logo-img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* Contain layout shifts */
+.patient-card,
+.modern-filters-container,
+.modern-assessments-card {
+    contain: layout style paint;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Improve focus visibility for keyboard navigation */
+.action-btn:focus-visible,
+.modern-filter-input:focus-visible,
+.modern-filter-select:focus-visible,
+button:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Skip to content link for accessibility */
+.skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    z-index: 100;
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
+

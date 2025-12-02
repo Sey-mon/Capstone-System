@@ -23,6 +23,14 @@ class Barangay extends Model
     ];
 
     /**
+     * Get the name attribute (alias for barangay_name)
+     */
+    public function getNameAttribute()
+    {
+        return $this->barangay_name;
+    }
+
+    /**
      * Get the patients that belong to this barangay.
      */
     public function patients()

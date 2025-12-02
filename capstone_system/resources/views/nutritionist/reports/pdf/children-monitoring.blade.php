@@ -11,18 +11,20 @@
         }
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #333;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #1f2937;
+            background: #ffffff;
         }
         
         /* Professional Document Header */
         .document-header {
-            background: white;
+            background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
             color: #000;
             padding: 20px 30px 15px 30px;
-            margin-bottom: 25px;
-            border-bottom: 4px solid #1e40af;
+            margin-bottom: 20px;
+            border-bottom: 4px solid #10b981;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .header-top {
             display: table;
@@ -98,65 +100,79 @@
         .header-divider {
             width: 100%;
             height: 3px;
-            background: linear-gradient(to right, #1e40af, #3b82f6, #1e40af);
+            background-color: #10b981;
             margin-top: 12px;
         }
         
         .report-title-section {
             text-align: center;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f3f4f6;
-            border-radius: 8px;
+            margin: 15px 0;
+            padding: 18px;
+            background-color: #ecfdf5;
+            border: 2px solid #10b981;
         }
         .report-title-section h1 {
-            font-size: 18px;
-            color: #10b981;
+            font-size: 20px;
+            color: #047857;
             margin-bottom: 5px;
+            font-weight: bold;
         }
         .report-title-section h2 {
             font-size: 14px;
-            color: #059669;
-            margin-bottom: 10px;
+            color: #065f46;
+            margin-bottom: 8px;
+            font-weight: bold;
         }
         .report-info {
-            background: #f3f4f6;
-            padding: 10px;
+            background-color: #f0fdf4;
+            padding: 12px 15px;
             margin-bottom: 15px;
-            border-radius: 5px;
+            border: 1px solid #a7f3d0;
         }
         .report-info table {
             width: 100%;
         }
         .report-info td {
-            padding: 3px 5px;
+            padding: 5px 8px;
             font-size: 11px;
         }
         .report-info strong {
-            color: #059669;
+            color: #047857;
+            font-weight: bold;
+        }
+        .filter-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 3px 10px;
+            font-size: 9px;
+            font-weight: bold;
+            margin-left: 5px;
         }
         .summary-stats {
             display: table;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            border-spacing: 5px;
         }
         .stat-box {
             display: table-cell;
             width: 25%;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
-            border: 1px solid #d1d5db;
-            background: #f9fafb;
+            border: 1px solid #10b981;
+            background-color: #ecfdf5;
         }
         .stat-value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            color: #10b981;
+            color: #047857;
         }
         .stat-label {
-            font-size: 10px;
-            color: #6b7280;
+            font-size: 8px;
+            color: #065f46;
             margin-top: 2px;
+            font-weight: bold;
         }
         table.data-table {
             width: 100%;
@@ -164,40 +180,50 @@
             margin-top: 10px;
         }
         table.data-table th {
-            background: #10b981;
-            color: white;
-            padding: 6px 4px;
+            background-color: #10b981;
+            color: #ffffff;
+            padding: 10px 5px;
             font-size: 10px;
             font-weight: bold;
-            text-align: left;
+            text-align: center;
             border: 1px solid #059669;
         }
         table.data-table td {
-            padding: 5px 4px;
+            padding: 8px 5px;
             font-size: 10px;
             border: 1px solid #d1d5db;
+            text-align: center;
         }
-        table.data-table tr:nth-child(even) {
-            background: #f9fafb;
+        table.data-table tbody tr:nth-child(even) {
+            background-color: #f0fdf4;
+        }
+        table.data-table tbody tr:nth-child(odd) {
+            background-color: #ffffff;
         }
         .status-badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 9px;
-            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
         }
         .status-normal {
-            background: #d1fae5;
-            color: #065f46;
+            background: #10b981;
+            color: white;
         }
         .status-at-risk {
-            background: #fed7aa;
-            color: #92400e;
+            background: #f59e0b;
+            color: white;
         }
         .status-malnourished {
-            background: #fee2e2;
-            color: #991b1b;
+            background: #ef4444;
+            color: white;
+        }
+        .status-pending {
+            background: #6b7280;
+            color: white;
         }
         .footer {
             position: fixed;
@@ -211,6 +237,16 @@
         }
         .page-break {
             page-break-after: always;
+        }
+        .section-title-bar {
+            font-size: 11px;
+            margin-top: 10px;
+            margin-bottom: 8px;
+            color: #047857;
+            font-weight: bold;
+            padding: 6px 10px;
+            background-color: #d1fae5;
+            border-left: 3px solid #10b981;
         }
         .signature-section {
             margin-top: 30px;
@@ -274,16 +310,40 @@
     <div class="report-info">
         <table>
             <tr>
-                <td><strong>Nutritionist:</strong> {{ $nutritionist->name }}</td>
-                <td><strong>Professional ID:</strong> {{ $nutritionist->professional_id ?? 'N/A' }}</td>
+                <td style="width: 50%;"><strong>Nutritionist:</strong> {{ $nutritionist->first_name }} {{ $nutritionist->middle_name ? substr($nutritionist->middle_name, 0, 1) . '.' : '' }} {{ $nutritionist->last_name }}</td>
+                <td style="width: 50%;"><strong>Professional ID:</strong> {{ $nutritionist->professional_id ?? 'N/A' }}</td>
             </tr>
             <tr>
                 <td><strong>Email:</strong> {{ $nutritionist->email }}</td>
                 <td><strong>Contact:</strong> {{ $nutritionist->contact_number ?? 'N/A' }}</td>
             </tr>
             <tr>
-                <td><strong>Report Generated:</strong> {{ $generatedDate }} at {{ $generatedTime }}</td>
+                <td><strong>Barangay Coverage:</strong> 
+                    @if($selectedBarangay)
+                        <span style="color: #047857; font-weight: 600;">{{ $selectedBarangay->name }}</span>
+                    @elseif($barangays && $barangays->count() > 0)
+                        <span style="color: #047857; font-weight: 600;">{{ $barangays->pluck('name')->unique()->sort()->join(', ') }}</span>
+                    @elseif(count($patients) > 0)
+                        <span style="color: #047857; font-weight: 600;">{{ $patients->pluck('barangay.name')->unique()->filter()->sort()->join(', ') }}</span>
+                    @else
+                        <span style="color: #6b7280;">All Barangays</span>
+                    @endif
+                </td>
                 <td><strong>Total Children:</strong> {{ count($patients) }}</td>
+            </tr>
+            <tr>
+                <td><strong>Report Generated:</strong> {{ $generatedDate }} at {{ $generatedTime }}</td>
+                <td><strong>Filters Applied:</strong> 
+                    @if($selectedBarangay)
+                        <span class="filter-badge">{{ $selectedBarangay->name }}</span>
+                    @endif
+                    @if($filterStatus)
+                        <span class="filter-badge">{{ $filterStatus }}</span>
+                    @endif
+                    @if(!$selectedBarangay && !$filterStatus)
+                        None
+                    @endif
+                </td>
             </tr>
         </table>
     </div>
@@ -307,7 +367,7 @@
         </div>
     </div>
 
-    <h3 style="font-size: 12px; margin-top: 15px; margin-bottom: 10px; color: #059669;">Children Details</h3>
+    <div class="section-title-bar">📋 Children Details</div>
     
     <table class="data-table">
         <thead>
@@ -322,7 +382,7 @@
                 <th style="width: 10%;">Latest Assessment</th>
                 <th style="width: 13%;">Status</th>
                 <th style="width: 7%;">4Ps</th>
-                <th style="width: 15%;">Remarks</th>
+                <th style="width: 15%;">Nutrition Status</th>
             </tr>
         </thead>
         <tbody>
@@ -353,16 +413,37 @@
                     @if($latestAssessment && $latestAssessment->recovery_status)
                         <span class="status-badge {{ $statusClass }}">{{ $latestAssessment->recovery_status }}</span>
                     @else
-                        <span class="status-badge">Pending</span>
+                        <span class="status-badge status-pending">Pending</span>
                     @endif
                 </td>
                 <td>{{ $patient->is_4ps_beneficiary ? 'Yes' : 'No' }}</td>
                 <td style="font-size: 7px;">
-                    @if($latestAssessment && $latestAssessment->notes)
-                        {{ Str::limit($latestAssessment->notes, 50) }}
-                    @else
-                        -
-                    @endif
+                    @php
+                        $treatmentData = null;
+                        $displayText = '-';
+                        
+                        if ($latestAssessment) {
+                            if ($latestAssessment->treatment) {
+                                $treatmentData = is_string($latestAssessment->treatment) ? json_decode($latestAssessment->treatment, true) : $latestAssessment->treatment;
+                                
+                                if (is_array($treatmentData)) {
+                                    // Try to get notes from various possible locations in the treatment JSON
+                                    if (isset($treatmentData['notes']) && !empty($treatmentData['notes'])) {
+                                        $displayText = $treatmentData['notes'];
+                                    } elseif (isset($treatmentData['treatment_notes']) && !empty($treatmentData['treatment_notes'])) {
+                                        $displayText = $treatmentData['treatment_notes'];
+                                    } elseif (isset($treatmentData['recommendations']) && !empty($treatmentData['recommendations'])) {
+                                        $displayText = is_array($treatmentData['recommendations']) ? implode(', ', $treatmentData['recommendations']) : $treatmentData['recommendations'];
+                                    } elseif (isset($treatmentData['patient_info']['diagnosis']) && !empty($treatmentData['patient_info']['diagnosis'])) {
+                                        $displayText = $treatmentData['patient_info']['diagnosis'];
+                                    }
+                                }
+                            } elseif ($latestAssessment->notes) {
+                                $displayText = $latestAssessment->notes;
+                            }
+                        }
+                    @endphp
+                    {{ Str::limit($displayText, 50) }}
                 </td>
             </tr>
             @empty
@@ -378,17 +459,17 @@
     @if(count($patients) > 0)
     <div class="signature-section">
         <div class="signature-box">
-            <div style="font-size: 9px; margin-bottom: 5px;"><strong>Prepared by:</strong></div>
+            <div style="font-size: 10px; margin-bottom: 5px; color: #065f46;"><strong>Prepared by:</strong></div>
             <div class="signature-line">
-                <strong>{{ $nutritionist->name }}</strong><br>
-                <span style="font-size: 8px;">Nutritionist</span>
+                <strong>{{ strtoupper($nutritionist->first_name . ' ' . ($nutritionist->middle_name ? substr($nutritionist->middle_name, 0, 1) . '. ' : '') . $nutritionist->last_name) }}</strong>
             </div>
         </div>
         <div class="signature-box">
-            <div style="font-size: 9px; margin-bottom: 5px;"><strong>Received by:</strong></div>
+            <div style="font-size: 10px; margin-bottom: 5px; color: #065f46;"><strong>Received by:</strong></div>
             <div class="signature-line">
                 <strong>_______________________________</strong><br>
-                <span style="font-size: 8px;">Main Office Representative</span>
+                <span style="font-size: 9px; color: #047857;">City Health Office Representative</span><br>
+                <span style="font-size: 8px; color: #6b7280;">Date: _______________________</span>
             </div>
         </div>
     </div>

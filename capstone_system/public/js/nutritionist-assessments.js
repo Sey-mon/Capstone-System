@@ -68,7 +68,7 @@ function openPatientSelectionModal() {
                     </button>
                 </div>
             </div>
-            <div id="swal-patientListContainer" class="patient-list" style="max-height: 600px; overflow-y: auto; border: 2px solid var(--border-color); border-radius: 12px; background: white; padding: 1rem;">
+            <div id="swal-patientListContainer" class="patient-list" style="max-height: 400px; overflow-y: auto; border: 2px solid var(--border-color); border-radius: 12px; background: white; padding: 1rem;">
                 <div class="text-center p-4">
                     <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
                         <span class="visually-hidden">Loading...</span>
@@ -78,10 +78,16 @@ function openPatientSelectionModal() {
             </div>
         `,
         width: '90%',
+        maxWidth: '950px',
         showCancelButton: true,
         showConfirmButton: false,
         cancelButtonText: '<i class="fas fa-times me-2"></i>Close',
         cancelButtonColor: '#6c757d',
+        scrollbarPadding: false,
+        backdrop: true,
+        allowOutsideClick: true,
+        heightAuto: false,
+        position: 'center',
         customClass: {
             container: 'patient-selection-modal',
             popup: 'patient-selection-popup',
@@ -89,6 +95,10 @@ function openPatientSelectionModal() {
             cancelButton: 'btn-lg'
         },
         didOpen: () => {
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = '0px';
+            
             loadPatientsForSelection();
             
             // Add filter functionality
@@ -161,6 +171,11 @@ function openPatientSelectionModal() {
             if (sexFilter) sexFilter.addEventListener('change', applyFilters);
             if (ageFilter) ageFilter.addEventListener('change', applyFilters);
             if (barangayFilter) barangayFilter.addEventListener('change', applyFilters);
+        },
+        willClose: () => {
+            // Restore body scroll when modal closes
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
     });
 }
@@ -412,7 +427,10 @@ window.addNewPatient = function() {
 
 function loadPatientsForSelection() {
     const container = document.getElementById('swal-patientListContainer');
-    if (!container) return;
+    if (!container) {
+        console.error('Patient list container not found');
+        return;
+    }
     
     // Add CSRF token and proper headers
     fetch(window.assessmentsRoutes.patientsForAssessment + '?ajax=1', {
@@ -459,19 +477,22 @@ function loadPatientsForSelection() {
                          data-sex="${patient.sex || ''}"
                          data-age="${patient.age_months || 0}"
                          data-barangay="${patient.barangay ? patient.barangay.barangay_name : ''}"
-                         style="cursor: pointer; transition: all 0.2s;">
+                         style="cursor: pointer; transition: all 0.2s;"
+                         role="button"
+                         tabindex="0"
+                         aria-label="Select ${patient.first_name} ${patient.last_name} for assessment">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="flex-grow-1">
                                 <h6 class="mb-1 fw-bold">${patient.first_name} ${patient.last_name}</h6>
                                 <small class="text-muted">
-                                    <i class="fas fa-calendar me-1"></i>${patient.age_months} months
+                                    <i class="fas fa-calendar me-1" aria-hidden="true"></i>${patient.age_months} months
                                     <span class="mx-1">•</span>
-                                    <i class="fas fa-${patient.sex === 'Male' ? 'mars' : 'venus'} me-1"></i>${patient.sex}
-                                    ${patient.barangay ? '<span class="mx-1">•</span><i class="fas fa-map-marker-alt me-1"></i>' + patient.barangay.barangay_name : ''}
+                                    <i class="fas fa-${patient.sex === 'Male' ? 'mars' : 'venus'} me-1" aria-hidden="true"></i>${patient.sex}
+                                    ${patient.barangay ? '<span class="mx-1">•</span><i class="fas fa-map-marker-alt me-1" aria-hidden="true"></i>' + patient.barangay.barangay_name : ''}
                                 </small>
                             </div>
-                            <button class="btn btn-success btn-sm">
-                                <i class="fas fa-clipboard-check me-1"></i>
+                            <button class="btn btn-success btn-sm" aria-label="Assess ${patient.first_name} ${patient.last_name}">
+                                <i class="fas fa-clipboard-check me-1" aria-hidden="true"></i>
                                 Assess
                             </button>
                         </div>
@@ -481,10 +502,10 @@ function loadPatientsForSelection() {
                 // Update patient count
                 const countElement = document.getElementById('swal-patientCount');
                 if (countElement) {
-                    countElement.textContent = `Showing ${data.patients.length} of ${data.patients.length} patients`;
+                    countElement.innerHTML = `<i class="fas fa-users me-2" aria-hidden="true"></i>Showing ${data.patients.length} of ${data.patients.length} patients`;
                 }
                 
-                // Add hover effect
+                // Add hover effect and keyboard navigation
                 const patientItems = container.querySelectorAll('.patient-item');
                 patientItems.forEach(item => {
                     item.addEventListener('mouseenter', () => {
@@ -495,31 +516,72 @@ function loadPatientsForSelection() {
                         item.style.backgroundColor = '';
                         item.style.transform = 'translateX(0)';
                     });
+                    
+                    // Add keyboard support
+                    item.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            item.click();
+                        }
+                    });
                 });
             } else {
                 container.innerHTML = `
-                    <div class="text-center p-4">
-                        <i class="fas fa-user-slash text-muted mb-2" style="font-size: 2rem;"></i>
+                    <div class="text-center p-4" role="status" aria-live="polite">
+                        <i class="fas fa-user-slash text-muted mb-2" style="font-size: 2rem;" aria-hidden="true"></i>
                         <p class="text-muted">No patients available for assessment</p>
+                        <small class="text-muted d-block mt-2">Add a new patient to get started</small>
                     </div>
                 `;
                 
                 // Update count
                 const countElement = document.getElementById('swal-patientCount');
                 if (countElement) {
-                    countElement.textContent = 'No patients found';
+                    countElement.innerHTML = '<i class="fas fa-info-circle me-2" aria-hidden="true"></i>No patients found';
                 }
             }
         })
         .catch(error => {
             console.error('Error loading patients:', error);
+            
+            // User-friendly error messages
+            let errorMessage = 'Unable to load patients';
+            let errorDetails = error.message;
+            
+            if (error.message.includes('HTTP error! status: 401') || error.message.includes('log in again')) {
+                errorMessage = 'Session Expired';
+                errorDetails = 'Please refresh the page and log in again.';
+            } else if (error.message.includes('HTTP error! status: 403')) {
+                errorMessage = 'Access Denied';
+                errorDetails = 'You do not have permission to view this data.';
+            } else if (error.message.includes('HTTP error! status: 500')) {
+                errorMessage = 'Server Error';
+                errorDetails = 'The server encountered an error. Please try again later.';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network Error';
+                errorDetails = 'Please check your internet connection and try again.';
+            }
+            
             container.innerHTML = `
-                <div class="text-center p-4 text-danger">
-                    <i class="fas fa-exclamation-triangle mb-2" style="font-size: 2rem;"></i>
-                    <p>Error loading patients: ${error.message}</p>
-                    <small class="d-block mt-2">Please check the console for more details.</small>
+                <div class="text-center p-4" role="alert" aria-live="assertive">
+                    <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 2.5rem;" aria-hidden="true"></i>
+                    <h5 class="text-danger mb-2">${errorMessage}</h5>
+                    <p class="text-muted">${errorDetails}</p>
+                    <button class="btn btn-primary mt-3" onclick="loadPatientsForSelection()">
+                        <i class="fas fa-redo me-2"></i>Try Again
+                    </button>
+                    <small class="d-block mt-3 text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Technical details: ${error.message}
+                    </small>
                 </div>
             `;
+            
+            // Update count element
+            const countElement = document.getElementById('swal-patientCount');
+            if (countElement) {
+                countElement.innerHTML = '<i class="fas fa-exclamation-triangle me-2 text-warning" aria-hidden="true"></i>Error loading data';
+            }
         });
 }
 
@@ -539,7 +601,7 @@ function showAssessmentForm(patientId) {
     Swal.fire({
         title: '<i class="fas fa-stethoscope me-2"></i> New Assessment',
         html: `
-            <div id="swal-assessmentFormContent" style="max-height: 700px; overflow-y: auto;">
+            <div id="swal-assessmentFormContent" style="max-height: 65vh; overflow-y: auto; padding: 0 0.5rem;">
                 <div class="text-center p-4">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
@@ -548,12 +610,17 @@ function showAssessmentForm(patientId) {
                 </div>
             </div>
         `,
-        width: '90%',
+        width: '95%',
+        maxWidth: '1200px',
         showCancelButton: true,
         showConfirmButton: true,
         confirmButtonText: '<i class="fas fa-save me-1"></i> Submit Assessment',
         cancelButtonText: 'Cancel',
+        scrollbarPadding: false,
+        heightAuto: false,
         customClass: {
+            container: 'assessment-modal-container',
+            popup: 'assessment-modal-popup',
             confirmButton: 'btn btn-primary',
             cancelButton: 'btn btn-secondary'
         },
@@ -701,7 +768,7 @@ function viewAssessment(assessmentId) {
     Swal.fire({
         title: '<i class="fas fa-file-medical me-2" style="color: #4ade80;"></i> Assessment Details',
         html: `
-            <div id="swal-assessmentDetailsContent" style="max-height: 70vh; overflow-y: auto; text-align: left; padding: 0 1rem;">
+            <div id="swal-assessmentDetailsContent" style="max-height: 65vh; overflow-y: auto; text-align: left; padding: 0 0.5rem;">
                 <div class="text-center p-5">
                     <div class="modern-spinner mb-3">
                         <div class="spinner-ring"></div>
@@ -712,12 +779,16 @@ function viewAssessment(assessmentId) {
                 </div>
             </div>
         `,
-        width: '1200px',
+        width: '95%',
+        maxWidth: '1200px',
         showCancelButton: true,
         showConfirmButton: true,
-        confirmButtonText: '<i class="fas fa-print me-2"></i> Print Assessment',
-        cancelButtonText: '<i class="fas fa-times me-2"></i> Close',
+        confirmButtonText: '<i class="fas fa-download me-1"></i> Save as PDF',
+        cancelButtonText: '<i class="fas fa-times me-1"></i> Close',
+        scrollbarPadding: false,
+        heightAuto: false,
         customClass: {
+            container: 'assessment-details-modal-container',
             confirmButton: 'btn btn-success',
             cancelButton: 'btn btn-secondary',
             htmlContainer: 'text-start',
@@ -730,7 +801,11 @@ function viewAssessment(assessmentId) {
             return false; // Prevent modal from closing
         },
         didOpen: () => {
+            document.body.style.overflow = 'hidden';
             loadAssessmentDetails(assessmentId);
+        },
+        willClose: () => {
+            document.body.style.overflow = '';
         }
     });
 }
@@ -1163,36 +1238,6 @@ function displayAssessmentDetails(assessment) {
             </div>
             ` : ''}
 
-            <!-- Follow-up Plan -->
-            ${treatmentPlan && treatmentPlan.follow_up_plan ? `
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0">
-                        <i class="fas fa-clock"></i>
-                        Follow-up Plan
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="assessment-details-grid">
-                        <div class="detail-info-box">
-                            <div class="detail-info-label">
-                                <i class="fas fa-calendar-plus"></i>
-                                Initial Follow-up
-                            </div>
-                            <div class="detail-info-value">${treatmentPlan.follow_up_plan.initial_followup}</div>
-                        </div>
-                        <div class="detail-info-box">
-                            <div class="detail-info-label">
-                                <i class="fas fa-calendar-week"></i>
-                                Ongoing Schedule
-                            </div>
-                            <div class="detail-info-value">${treatmentPlan.follow_up_plan.ongoing_schedule}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            ` : ''}
-
             <!-- Family Education -->
             ${treatmentPlan && treatmentPlan.family_education ? `
             <div class="card mb-3">
@@ -1362,12 +1407,51 @@ function getDiagnosisClass(diagnosis) {
 }
 
 function printAssessmentDetails(assessmentId) {
-    const printUrl = window.assessmentsRoutes.assessmentPdf.replace(':assessmentId', assessmentId);
-    window.open(printUrl, '_blank');
+    const pdfUrl = window.assessmentsRoutes.assessmentPdf.replace(':assessmentId', assessmentId);
+    
+    // Open PDF in new tab (browser will handle download based on headers)
+    window.open(pdfUrl, '_blank');
 }
 
 // Modern UI Functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize results info on page load
+    updateResultsInfo();
+    
+    // Initialize date constraints if dates are already set
+    const dateFromInput = document.getElementById('dateFrom');
+    const dateToInput = document.getElementById('dateTo');
+    
+    // Set max date to today for both inputs
+    const today = new Date().toISOString().split('T')[0];
+    if (dateFromInput) {
+        dateFromInput.setAttribute('max', today);
+    }
+    if (dateToInput) {
+        dateToInput.setAttribute('max', today);
+    }
+    
+    // Set constraints based on existing values
+    if (dateFromInput && dateToInput) {
+        if (dateFromInput.value && dateToInput.value) {
+            // Validate existing date range
+            if (new Date(dateFromInput.value) > new Date(dateToInput.value)) {
+                // Clear invalid date range
+                dateFromInput.value = '';
+                dateToInput.value = '';
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Date Range',
+                    text: 'The saved date range was invalid and has been cleared.',
+                    confirmButtonColor: '#22c55e'
+                });
+            } else {
+                dateToInput.setAttribute('min', dateFromInput.value);
+                dateFromInput.setAttribute('max', dateToInput.value < today ? dateToInput.value : today);
+            }
+        }
+    }
+    
     // Patient search functionality in modal
     const modalSearchInput = document.getElementById('patientSearchInput');
     if (modalSearchInput) {
@@ -1402,42 +1486,64 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
     
-    // Function to apply filters and reload data
+    // Function to apply filters and reload data via AJAX
     function applyFiltersAndFetch() {
-        const url = new URL(window.location.href);
-        const searchParams = new URLSearchParams();
-        
-        // Add filter parameters
-        if (searchInput && searchInput.value) {
-            searchParams.set('search', searchInput.value);
+        try {
+            // Validate date range before applying filters
+            if (dateFrom && dateTo && dateFrom.value && dateTo.value) {
+                const fromDate = new Date(dateFrom.value);
+                const toDate = new Date(dateTo.value);
+                
+                if (fromDate > toDate) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Date Range',
+                        text: 'Date From cannot be later than Date To. Please adjust your date range.',
+                        confirmButtonColor: '#22c55e',
+                        confirmButtonText: 'OK'
+                    });
+                    return; // Don't apply filters
+                }
+            }
+            
+            const url = new URL(window.location.href);
+            const searchParams = new URLSearchParams();
+            
+            // Add filter parameters
+            if (searchInput && searchInput.value) {
+                searchParams.set('search', searchInput.value.trim());
+            }
+            if (statusFilter && statusFilter.value) {
+                searchParams.set('status', statusFilter.value);
+            }
+            if (diagnosisFilter && diagnosisFilter.value) {
+                searchParams.set('diagnosis', diagnosisFilter.value);
+            }
+            if (dateFrom && dateFrom.value) {
+                searchParams.set('date_from', dateFrom.value);
+            }
+            if (dateTo && dateTo.value) {
+                searchParams.set('date_to', dateTo.value);
+            }
+            if (perPageFilter && perPageFilter.value) {
+                searchParams.set('per_page', perPageFilter.value);
+            }
+            
+            // Reset to first page when filters change
+            searchParams.set('page', '1');
+            
+            // Build URL and fetch results
+            const fetchUrl = url.pathname + '?' + searchParams.toString();
+            loadAssessmentsFromUrl(fetchUrl);
+        } catch (error) {
+            console.error('Error applying filters:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Filter Error',
+                text: 'Unable to apply filters. Please try again.',
+                confirmButtonColor: '#22c55e'
+            });
         }
-        if (statusFilter && statusFilter.value) {
-            searchParams.set('status', statusFilter.value);
-        }
-        if (diagnosisFilter && diagnosisFilter.value) {
-            searchParams.set('diagnosis', diagnosisFilter.value);
-        }
-        if (dateFrom && dateFrom.value) {
-            searchParams.set('date_from', dateFrom.value);
-        }
-        if (dateTo && dateTo.value) {
-            searchParams.set('date_to', dateTo.value);
-        }
-        if (perPageFilter && perPageFilter.value) {
-            searchParams.set('per_page', perPageFilter.value);
-        }
-        
-        // Reset to first page when filters change
-        searchParams.set('page', '1');
-        
-        // Show loading indicator
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        if (loadingIndicator) {
-            loadingIndicator.style.display = 'flex';
-        }
-        
-        // Navigate to filtered URL
-        window.location.href = url.pathname + '?' + searchParams.toString();
     }
     
     // Debounced version for search input (wait 500ms after user stops typing)
@@ -1492,6 +1598,42 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (dateFrom) {
         dateFrom.addEventListener('change', function() {
+            // Validate date range
+            if (dateTo && dateTo.value && this.value) {
+                if (new Date(this.value) > new Date(dateTo.value)) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Date Range',
+                        text: 'Date From cannot be later than Date To',
+                        confirmButtonColor: '#22c55e'
+                    });
+                    this.value = ''; // Clear the invalid date
+                    return;
+                }
+            }
+            // Check if date is in the future
+            const today = new Date().toISOString().split('T')[0];
+            if (this.value > today) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Date',
+                    text: 'Date From cannot be in the future',
+                    confirmButtonColor: '#22c55e'
+                });
+                this.value = '';
+                return;
+            }
+            // Set min attribute on dateTo
+            if (dateTo) {
+                dateTo.setAttribute('min', this.value);
+                // Update dateTo max to be the lesser of today or its current max
+                const maxDate = dateTo.getAttribute('max') || today;
+                dateTo.setAttribute('max', maxDate);
+            }
+            // Update dateFrom max to be dateTo value or today
+            if (dateTo && dateTo.value) {
+                this.setAttribute('max', dateTo.value < today ? dateTo.value : today);
+            }
             updateFilterHighlight(this);
             applyFiltersAndFetch();
         });
@@ -1499,6 +1641,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (dateTo) {
         dateTo.addEventListener('change', function() {
+            // Validate date range
+            if (dateFrom && dateFrom.value && this.value) {
+                if (new Date(this.value) < new Date(dateFrom.value)) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Date Range',
+                        text: 'Date To cannot be earlier than Date From',
+                        confirmButtonColor: '#22c55e'
+                    });
+                    this.value = ''; // Clear the invalid date
+                    return;
+                }
+            }
+            // Check if date is in the future
+            const today = new Date().toISOString().split('T')[0];
+            if (this.value > today) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Date',
+                    text: 'Date To cannot be in the future',
+                    confirmButtonColor: '#22c55e'
+                });
+                this.value = '';
+                return;
+            }
+            // Set max attribute on dateFrom
+            if (dateFrom) {
+                dateFrom.setAttribute('max', this.value);
+                // Ensure dateFrom min stays valid
+                if (dateFrom.value && new Date(dateFrom.value) > new Date(this.value)) {
+                    dateFrom.value = '';
+                }
+            }
+            // Update dateTo min to be dateFrom value
+            if (dateFrom && dateFrom.value) {
+                this.setAttribute('min', dateFrom.value);
+            }
             updateFilterHighlight(this);
             applyFiltersAndFetch();
         });
@@ -1515,28 +1694,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearFiltersBtn = document.getElementById('clearFilters');
     const clearFiltersEmptyBtn = document.getElementById('clearFiltersEmpty');
     
-    function clearAllFilters() {
-        const filters = {
-            searchInput: document.getElementById('searchInput'),
-            statusFilter: document.getElementById('statusFilter'),
-            diagnosisFilter: document.getElementById('diagnosisFilter'),
-            dateFrom: document.getElementById('dateFrom'),
-            dateTo: document.getElementById('dateTo'),
-            perPage: document.getElementById('perPage')
-        };
-        
-        // Clear only existing filters
-        if (filters.searchInput) filters.searchInput.value = '';
-        if (filters.statusFilter) filters.statusFilter.value = '';
-        if (filters.diagnosisFilter) filters.diagnosisFilter.value = '';
-        if (filters.dateFrom) filters.dateFrom.value = '';
-        if (filters.dateTo) filters.dateTo.value = '';
-        if (filters.perPage) filters.perPage.value = '15';
-        
-        // Reload page without query parameters
-        window.location.href = window.location.pathname;
-    }
-    
     if (clearFiltersBtn) {
         clearFiltersBtn.addEventListener('click', clearAllFilters);
     }
@@ -1544,6 +1701,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clearFiltersEmptyBtn) {
         clearFiltersEmptyBtn.addEventListener('click', clearAllFilters);
     }
+    
+    // Initialize pagination click handlers
+    initializePagination();
 
     // Add hover effects to patient cards
     const patientCards = document.querySelectorAll('.patient-card');
@@ -1571,21 +1731,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Update results info with animation
-    function updateResultsInfo() {
-        const resultsInfo = document.getElementById('resultsInfo');
-        if (resultsInfo) {
-            const cards = document.querySelectorAll('.patient-card');
-            const count = cards.length;
-            resultsInfo.innerHTML = `<i class="fas fa-chart-bar me-1"></i>${count} Patient${count !== 1 ? 's' : ''}`;
-            
-            // Add pulse animation
-            resultsInfo.style.animation = 'pulse 0.5s ease-in-out';
-            setTimeout(() => {
-                resultsInfo.style.animation = '';
-            }, 500);
-        }
-    }
-
     // Call update results info on load
     updateResultsInfo();
 
@@ -1607,18 +1752,12 @@ function changePageSize(size) {
     const url = new URL(window.location.href);
     url.searchParams.set('per_page', size);
     url.searchParams.set('page', '1'); // Reset to first page
-    window.location.href = url.toString();
+    loadAssessmentsFromUrl(url.toString());
 }
 
 function goToPage(page) {
     const url = new URL(window.location.href);
     url.searchParams.set('page', page);
-    
-    // Show loading
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    if (loadingIndicator) {
-        loadingIndicator.style.display = 'flex';
-    }
     
     // Smooth scroll to top
     document.querySelector('.modern-assessments-card').scrollIntoView({
@@ -1626,9 +1765,9 @@ function goToPage(page) {
         block: 'start'
     });
     
-    // Small delay for smooth scroll, then navigate
+    // Small delay for smooth scroll, then load
     setTimeout(() => {
-        window.location.href = url.toString();
+        loadAssessmentsFromUrl(url.toString());
     }, 300);
 }
 
@@ -1644,6 +1783,197 @@ function jumpToPage() {
         setTimeout(() => {
             input.classList.remove('is-invalid');
         }, 2000);
+    }
+}
+
+// Clear all filters function - global scope
+function clearAllFilters() {
+    const filters = {
+        searchInput: document.getElementById('searchInput'),
+        statusFilter: document.getElementById('statusFilter'),
+        diagnosisFilter: document.getElementById('diagnosisFilter'),
+        dateFrom: document.getElementById('dateFrom'),
+        dateTo: document.getElementById('dateTo'),
+        perPage: document.getElementById('perPage')
+    };
+    
+    // Clear only existing filters
+    if (filters.searchInput) filters.searchInput.value = '';
+    if (filters.statusFilter) filters.statusFilter.value = '';
+    if (filters.diagnosisFilter) filters.diagnosisFilter.value = '';
+    if (filters.dateFrom) filters.dateFrom.value = '';
+    if (filters.dateTo) filters.dateTo.value = '';
+    if (filters.perPage) filters.perPage.value = '15';
+    
+    // Reload data without filters via AJAX
+    loadAssessmentsFromUrl(window.location.pathname);
+}
+
+// AJAX function to load assessments without page reload
+function loadAssessmentsFromUrl(url) {
+    // Show loading indicator
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'flex';
+        loadingIndicator.setAttribute('aria-busy', 'true');
+    }
+    
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'text/html',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Your session has expired. Please log in again.');
+            } else if (response.status === 403) {
+                throw new Error('You do not have permission to access this data.');
+            } else if (response.status === 404) {
+                throw new Error('The requested page was not found.');
+            } else if (response.status >= 500) {
+                throw new Error('A server error occurred. Please try again later.');
+            }
+            throw new Error(`Server error: ${response.status}`);
+        }
+        return response.text();
+    })
+    .then(html => {
+        // Update the assessments container
+        const container = document.getElementById('assessmentsContainer');
+        if (container) {
+            container.innerHTML = html;
+            container.setAttribute('aria-live', 'polite');
+        }
+        
+        // Update browser URL without page reload
+        window.history.pushState({}, '', url);
+        
+        // Update results info
+        updateResultsInfo();
+        
+        // Re-attach clear filters button event listener (for empty state)
+        const clearFiltersEmptyBtn = document.getElementById('clearFiltersEmpty');
+        if (clearFiltersEmptyBtn) {
+            clearFiltersEmptyBtn.addEventListener('click', clearAllFilters);
+        }
+        
+        // Re-attach hover effects to new cards
+        const patientCards = document.querySelectorAll('.patient-card');
+        patientCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-4px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Scroll to top of content smoothly
+        const mainContent = document.querySelector('.modern-assessments-card');
+        if (mainContent) {
+            mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading assessments:', error);
+        
+        // Provide context-specific error messages
+        Swal.fire({
+            icon: 'error',
+            title: 'Unable to Load Data',
+            html: `
+                <p class="mb-2">${error.message}</p>
+                <small class="text-muted">
+                    ${error.message.includes('session') ? 
+                        'Please refresh the page and log in again.' : 
+                        'Please try again or contact support if the problem persists.'}
+                </small>
+            `,
+            confirmButtonColor: '#22c55e',
+            confirmButtonText: error.message.includes('session') ? 'Reload Page' : 'OK',
+            showCancelButton: !error.message.includes('session'),
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed && error.message.includes('session')) {
+                window.location.reload();
+            }
+        });
+    })
+    .finally(() => {
+        // Hide loading indicator
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+            loadingIndicator.setAttribute('aria-busy', 'false');
+        }
+    });
+}
+
+// Initialize pagination click handlers (using event delegation, so only needs to run once)
+let paginationInitialized = false;
+function initializePagination() {
+    if (paginationInitialized) return; // Prevent duplicate listeners
+    
+    paginationInitialized = true;
+    
+    // Handle pagination links using event delegation
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.pagination a')) {
+            e.preventDefault();
+            const paginationLink = e.target.closest('.pagination a');
+            const url = paginationLink.getAttribute('href');
+            if (url) {
+                loadAssessmentsFromUrl(url);
+            }
+        }
+    });
+}
+
+// Update results count in header
+function updateResultsInfo() {
+    const resultsInfo = document.getElementById('resultsInfo');
+    if (resultsInfo) {
+        // Try to get total from pagination info (works for both empty and populated states)
+        const totalResults = document.querySelector('.total-results');
+        if (totalResults) {
+            // Extract just the number and "patients" text
+            const text = totalResults.textContent.trim();
+            const match = text.match(/Total:\s*(\d+\s+patients?)/);
+            if (match) {
+                resultsInfo.innerHTML = `<i class="fas fa-chart-bar me-1"></i>${match[1]}`;
+            } else {
+                resultsInfo.innerHTML = '<i class="fas fa-chart-bar me-1"></i>0 patients';
+            }
+        } else {
+            // Fallback: count cards
+            const cards = document.querySelectorAll('.patient-card');
+            const count = cards.length;
+            resultsInfo.innerHTML = `<i class="fas fa-chart-bar me-1"></i>${count} patient${count !== 1 ? 's' : ''}`;
+        }
+    }
+}
+
+// Show/hide loading overlay
+function showLoading() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'flex';
+        // Force reflow
+        void loadingIndicator.offsetWidth;
+        loadingIndicator.classList.add('show');
+    }
+}
+
+function hideLoading() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.classList.remove('show');
+        setTimeout(() => {
+            loadingIndicator.style.display = 'none';
+        }, 200); // Match CSS transition time
     }
 }
 

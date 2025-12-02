@@ -242,17 +242,40 @@
 
 <style>
 .modal-patient-info {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 0.375rem;
-    border: 1px solid #dee2e6;
+    background: linear-gradient(135deg, #43A047 0%, #66BB6A 100%);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.modal-patient-info h6 {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.modal-patient-info .text-muted {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 0.85rem;
+}
+
+.modal-patient-info i {
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .section-title {
-    color: #495057;
-    border-bottom: 2px solid #e9ecef;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+    color: #2e7d32;
+    border-bottom: 2px solid #66BB6A;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.section-title i {
+    color: #43A047;
+    margin-right: 0.4rem;
 }
 
 .form-label.required::after {
@@ -261,9 +284,91 @@
 }
 
 .form-section {
-    border: 1px solid #e9ecef;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    background: #fafafa;
+    margin-bottom: 0.75rem;
+}
+
+.form-section h6 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 0.75rem !important;
+}
+
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    color: #424242;
+}
+
+.form-control, .form-select {
+    font-size: 0.875rem;
+    padding: 0.4rem 0.6rem;
     border-radius: 0.375rem;
-    padding: 1rem;
-    background: #fff;
+    border: 1px solid #d0d0d0;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #43A047;
+    box-shadow: 0 0 0 0.2rem rgba(67, 160, 71, 0.25);
+}
+
+.form-text {
+    font-size: 0.75rem;
+    color: #757575;
+    margin-top: 0.2rem;
+}
+
+.form-check {
+    padding-left: 1.5rem;
+}
+
+.form-check-input {
+    margin-top: 0.15rem;
+}
+
+.form-check-label {
+    font-size: 0.85rem;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Compact spacing for modal */
+#swal-assessmentFormContent .row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+#swal-assessmentFormContent .col-md-6 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Assessment modal specific styles */
+.assessment-modal-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+}
+
+.assessment-modal-popup {
+    max-height: 90vh !important;
+    margin: auto !important;
+    overflow: hidden !important;
 }
 </style>

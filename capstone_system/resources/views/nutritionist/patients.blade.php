@@ -8,8 +8,8 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-swal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-swal.css') }}?v={{ time() }}">
 @endpush
 
 @section('content')

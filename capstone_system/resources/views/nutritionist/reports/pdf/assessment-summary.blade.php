@@ -21,8 +21,8 @@
             background: white;
             color: #000;
             padding: 20px 30px 15px 30px;
-            margin-bottom: 25px;
-            border-bottom: 4px solid #1e40af;
+            margin-bottom: 20px;
+            border-bottom: 4px solid #10b981;
         }
         .header-top {
             display: table;
@@ -44,12 +44,12 @@
         .logo-placeholder {
             width: 85px;
             height: 85px;
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(16, 185, 129, 0.1);
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #1e40af;
+            border: 2px solid #10b981;
             vertical-align: middle;
         }
         .logo-icon {
@@ -79,7 +79,7 @@
             margin: 2px 0;
             letter-spacing: 1.5px;
             text-transform: uppercase;
-            color: #1e40af;
+            color: #10b981;
         }
         .office-name {
             font-size: 18px;
@@ -98,66 +98,71 @@
         .header-divider {
             width: 100%;
             height: 3px;
-            background: linear-gradient(to right, #1e40af, #3b82f6, #1e40af);
+            background-color: #10b981;
             margin-top: 12px;
         }
         
         .report-title-section {
             text-align: center;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f3f4f6;
-            border-radius: 8px;
+            margin: 15px 0;
+            padding: 12px;
+            background-color: #ecfdf5;
+            border: 2px solid #10b981;
         }
         .report-title-section h1 {
-            font-size: 18px;
-            color: #3b82f6;
-            margin-bottom: 5px;
+            font-size: 16px;
+            color: #047857;
+            margin-bottom: 4px;
+            font-weight: bold;
         }
         .report-title-section h2 {
-            font-size: 14px;
-            color: #2563eb;
-            margin-bottom: 10px;
+            font-size: 12px;
+            color: #065f46;
+            margin-bottom: 6px;
+            font-weight: bold;
         }
         
         .report-info {
-            background: #f3f4f6;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
+            background-color: #f0fdf4;
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            border: 1px solid #a7f3d0;
         }
         .report-info table {
             width: 100%;
         }
         .report-info td {
             padding: 3px 5px;
-            font-size: 11px;
+            font-size: 10px;
         }
         .report-info strong {
-            color: #2563eb;
+            color: #047857;
+            font-weight: bold;
         }
         .summary-stats {
             display: table;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            border-spacing: 5px;
         }
         .stat-box {
             display: table-cell;
             width: 20%;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
-            border: 1px solid #d1d5db;
-            background: #f9fafb;
+            border: 1px solid #10b981;
+            background-color: #ecfdf5;
         }
         .stat-value {
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
-            color: #3b82f6;
+            color: #047857;
         }
         .stat-label {
-            font-size: 10px;
-            color: #6b7280;
+            font-size: 8px;
+            color: #065f46;
             margin-top: 2px;
+            font-weight: bold;
         }
         .statistics-grid {
             display: table;
@@ -171,17 +176,18 @@
             vertical-align: top;
         }
         .stat-section {
-            background: #f9fafb;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            background-color: #f0fdf4;
+            padding: 8px;
+            border: 1px solid #a7f3d0;
+            margin-bottom: 8px;
         }
         .stat-section h4 {
-            font-size: 10px;
-            color: #2563eb;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #d1d5db;
-            padding-bottom: 5px;
+            font-size: 9px;
+            color: #047857;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #10b981;
+            padding-bottom: 4px;
+            font-weight: bold;
         }
         .stat-item {
             display: flex;
@@ -202,21 +208,25 @@
             margin-top: 10px;
         }
         table.data-table th {
-            background: #3b82f6;
-            color: white;
-            padding: 6px 4px;
-            font-size: 10px;
+            background-color: #10b981;
+            color: #ffffff;
+            padding: 8px 5px;
+            font-size: 9px;
             font-weight: bold;
-            text-align: left;
-            border: 1px solid #2563eb;
+            text-align: center;
+            border: 1px solid #059669;
         }
         table.data-table td {
-            padding: 5px 4px;
-            font-size: 10px;
+            padding: 6px 4px;
+            font-size: 9px;
             border: 1px solid #d1d5db;
+            text-align: center;
         }
-        table.data-table tr:nth-child(even) {
-            background: #f9fafb;
+        table.data-table tbody tr:nth-child(even) {
+            background-color: #f0fdf4;
+        }
+        table.data-table tbody tr:nth-child(odd) {
+            background-color: #ffffff;
         }
         .status-badge {
             display: inline-block;
@@ -393,7 +403,7 @@
                 <th style="width: 7%;">Weight (kg)</th>
                 <th style="width: 7%;">Height (cm)</th>
                 <th style="width: 13%;">Recovery Status</th>
-                <th style="width: 20%;">Treatment/Notes</th>
+                <th style="width: 20%;">Nutrition Status</th>
             </tr>
         </thead>
         <tbody>
@@ -427,13 +437,30 @@
                     @endif
                 </td>
                 <td style="font-size: 7px;">
-                    @if($assessment->treatment)
-                        {{ Str::limit($assessment->treatment, 60) }}
-                    @elseif($assessment->notes)
-                        {{ Str::limit($assessment->notes, 60) }}
-                    @else
-                        -
-                    @endif
+                    @php
+                        $treatmentData = null;
+                        $displayText = '-';
+                        
+                        if ($assessment->treatment) {
+                            $treatmentData = is_string($assessment->treatment) ? json_decode($assessment->treatment, true) : $assessment->treatment;
+                            
+                            if (is_array($treatmentData)) {
+                                // Try to get notes from various possible locations in the treatment JSON
+                                if (isset($treatmentData['notes']) && !empty($treatmentData['notes'])) {
+                                    $displayText = $treatmentData['notes'];
+                                } elseif (isset($treatmentData['treatment_notes']) && !empty($treatmentData['treatment_notes'])) {
+                                    $displayText = $treatmentData['treatment_notes'];
+                                } elseif (isset($treatmentData['recommendations']) && !empty($treatmentData['recommendations'])) {
+                                    $displayText = is_array($treatmentData['recommendations']) ? implode(', ', $treatmentData['recommendations']) : $treatmentData['recommendations'];
+                                } elseif (isset($treatmentData['patient_info']['diagnosis']) && !empty($treatmentData['patient_info']['diagnosis'])) {
+                                    $displayText = $treatmentData['patient_info']['diagnosis'];
+                                }
+                            }
+                        } elseif ($assessment->notes) {
+                            $displayText = $assessment->notes;
+                        }
+                    @endphp
+                    {{ Str::limit($displayText, 60) }}
                 </td>
             </tr>
             @empty
@@ -451,7 +478,7 @@
         <div class="signature-box">
             <div style="font-size: 9px; margin-bottom: 5px;"><strong>Prepared by:</strong></div>
             <div class="signature-line">
-                <strong>{{ $nutritionist->name }}</strong><br>
+                <strong>{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</strong><br>
                 <span style="font-size: 10px;">Nutritionist</span>
             </div>
         </div>

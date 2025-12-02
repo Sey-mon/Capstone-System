@@ -447,8 +447,8 @@
         const nutritionalCtx = document.getElementById('nutritionalStatusChart').getContext('2d');
         
         const statusColors = {
-            'Severely Wasted': '#e53e3e',
-            'Wasted': '#ed8936',
+            'Severe Wasting': '#e53e3e',
+            'Wasting': '#2240eaff',
             'Normal': '#48bb78',
             'Possible Risk of Overweight': '#ecc94b',
             'Overweight': '#ed8936',

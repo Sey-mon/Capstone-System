@@ -89,6 +89,14 @@ class MealPlansManager {
 
         // Feeding Program - Open modal
         $(document).on('click', '#open-feeding-program-btn', () => this.showFeedingProgramModal());
+        
+        // Download PDF button
+        $(document).on('click', '#download-feeding-pdf, .download-pdf-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('PDF button clicked!');
+            this.downloadPDF();
+        });
     }
 
     async showFeedingProgramModal() {
@@ -104,35 +112,35 @@ class MealPlansManager {
         const { value: formValues } = await Swal.fire({
             title: '<i class="fas fa-users"></i> Generate Feeding Program',
             html: `
-                <div style="text-align: left; padding: 0 1.5rem;">
-                    <div class="row" style="display: flex; gap: 1rem; margin-bottom: 1.25rem;">
-                        <div style="flex: 1;">
-                            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
+                <div style="text-align: left;">
+                    <div class="form-row-2col">
+                        <div class="form-group">
+                            <label>
                                 <i class="fas fa-child"></i> Target Age Group
                             </label>
-                            <select id="swal-age-group" class="swal2-input" style="width: 100%; padding: 0.625rem;">
-                                <option value="all">All Ages (6 months - 5 years) - Mixed group</option>
-                                <option value="6-12months">Infants (6-12 months)</option>
-                                <option value="12-24months">Toddlers (12-24 months)</option>
-                                <option value="24-60months">Preschoolers (24-60 months)</option>
+                            <select id="swal-age-group" class="swal2-select">
+                                <option value="all">All Ages (6mo-5y) - Mixed</option>
+                                <option value="6-12months">Infants (6-12mo)</option>
+                                <option value="12-24months">Toddlers (12-24mo)</option>
+                                <option value="24-60months">Preschoolers (24-60mo)</option>
                             </select>
                         </div>
                         
-                        <div style="flex: 1;">
-                            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
+                        <div class="form-group">
+                            <label>
                                 <i class="fas fa-users"></i> Number of Children
                             </label>
-                            <input id="swal-total-children" type="number" class="swal2-input" placeholder="e.g., 50" min="1" style="width: 100%;">
-                            <small style="color: #6c757d; font-size: 0.75rem; display: block; margin-top: 0.25rem;">For shopping list quantities</small>
+                            <input id="swal-total-children" type="number" class="swal2-input" placeholder="e.g., 50" min="1">
+                            <small>For shopping list quantities</small>
                         </div>
                     </div>
                     
-                    <div class="row" style="display: flex; gap: 1rem; margin-bottom: 1.25rem;">
-                        <div style="flex: 1;">
-                            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
+                    <div class="form-row-2col">
+                        <div class="form-group">
+                            <label>
                                 <i class="fas fa-calendar-alt"></i> Program Duration
                             </label>
-                            <select id="swal-duration" class="swal2-input" style="width: 100%; padding: 0.625rem;">
+                            <select id="swal-duration" class="swal2-select">
                                 <option value="1">1 Day</option>
                                 <option value="2">2 Days</option>
                                 <option value="3">3 Days</option>
@@ -141,41 +149,41 @@ class MealPlansManager {
                             </select>
                         </div>
                         
-                        <div style="flex: 1;">
-                            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
+                        <div class="form-group">
+                            <label>
                                 <i class="fas fa-wallet"></i> Budget Level
                             </label>
-                            <select id="swal-budget" class="swal2-input" style="width: 100%; padding: 0.625rem;">
-                                <option value="low">Low - Cost-effective (₱50-100/child/day)</option>
-                                <option value="moderate" selected>Moderate - Balanced (₱100-150/child/day)</option>
-                                <option value="high">High - Optimal (₱150-200/child/day)</option>
+                            <select id="swal-budget" class="swal2-select">
+                                <option value="low">Low Budget (₱50-100/child/day)</option>
+                                <option value="moderate" selected>Moderate (₱100-150/child/day)</option>
+                                <option value="high">High Budget (₱150-200/child/day)</option>
                             </select>
                         </div>
                     </div>
                     
-                    <div style="margin-bottom: 1.25rem;">
-                        <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
+                    <div class="form-group" style="margin-top: 0.5rem;">
+                        <label>
                             <i class="fas fa-map-marker-alt"></i> Barangay (Optional)
                         </label>
-                        <select id="swal-barangay" class="swal2-input" style="width: 100%; padding: 0.625rem;">
+                        <select id="swal-barangay" class="swal2-select">
                             ${barangayOptions}
                         </select>
                     </div>
                     
-                    <div style="margin-bottom: 0.5rem;">
-                        <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label>
                             <i class="fas fa-shopping-basket"></i> Available Ingredients (Optional)
                         </label>
-                        <textarea id="swal-ingredients" class="swal2-textarea" placeholder="List available ingredients from suppliers or donations (e.g., manok, bangus, monggo, kangkong, saging, kalabasa)" style="width: 100%; min-height: 100px; resize: vertical;"></textarea>
-                        <small style="color: #6c757d; font-size: 0.75rem; display: block; margin-top: 0.25rem;">Comma-separated list helps customize meal plans based on what you have</small>
+                        <textarea id="swal-ingredients" class="swal2-textarea" placeholder="List available ingredients from suppliers or donations (e.g., manok, bangus, monggo, kangkong, saging, kalabasa)"></textarea>
+                        <small>Comma-separated list helps customize meal plans based on what you have</small>
                     </div>
                     
-                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%); padding: 1rem; border-radius: 8px; border-left: 4px solid #2d7a4f; margin-top: 1.25rem;">
-                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                            <i class="fas fa-lightbulb" style="color: #2d7a4f; font-size: 1.25rem; margin-top: 0.125rem;"></i>
+                    <div style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); padding: 1.25rem; border-radius: 12px; border-left: 4px solid #10b981; margin-top: 1.5rem;">
+                        <div style="display: flex; align-items: flex-start; gap: 0.875rem;">
+                            <i class="fas fa-lightbulb" style="color: #10b981; font-size: 1.375rem; margin-top: 0.125rem;"></i>
                             <div>
-                                <strong style="color: #2d7a4f; display: block; margin-bottom: 0.5rem;">Benefits:</strong>
-                                <ul style="margin: 0; padding-left: 1.25rem; color: #2c3e50; font-size: 0.875rem; line-height: 1.6;">
+                                <strong style="color: #059669; display: block; margin-bottom: 0.625rem; font-size: 1rem;">Benefits:</strong>
+                                <ul style="margin: 0; padding-left: 1.5rem; color: #374151; font-size: 0.9375rem; line-height: 1.7;">
                                     <li>NO dish repetition across entire program</li>
                                     <li>Budget-conscious Filipino cuisine</li>
                                     <li>Age-appropriate texture adaptations</li>
@@ -187,13 +195,16 @@ class MealPlansManager {
                 </div>
             `,
             width: '900px',
-            padding: '2rem 1rem',
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-check"></i> Generate Plan',
             cancelButtonText: '<i class="fas fa-times"></i> Cancel',
-            confirmButtonColor: '#2d7a4f',
-            cancelButtonColor: '#95a5a6',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
             focusConfirm: false,
+            customClass: {
+                popup: 'feeding-program-modal',
+                htmlContainer: 'feeding-program-form'
+            },
             preConfirm: () => {
                 return {
                     ageGroup: document.getElementById('swal-age-group').value,
@@ -329,22 +340,32 @@ class MealPlansManager {
                         html: programHtml,
                         width: '90%',
                         confirmButtonText: 'Close',
-                        confirmButtonColor: '#2d7a4f',
+                        confirmButtonColor: '#f59e0b',
                         customClass: {
                             popup: 'meal-plan-result'
                         },
                         footer: '<p style="color: #856404;">The meal plan was created but had formatting issues. Try generating again for better results.</p>'
+                    }).then(() => {
+                        // Reload page after closing the modal
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 100);
                     });
                 } else {
                     Swal.fire({
-                        title: '<i class="fas fa-check-circle" style="color: #2d7a4f;"></i> Success!',
+                        title: '<i class="fas fa-check-circle" style="color: #10b981;"></i> Success!',
                         html: programHtml,
                         width: '90%',
                         confirmButtonText: 'Close',
-                        confirmButtonColor: '#2d7a4f',
+                        confirmButtonColor: '#10b981',
                         customClass: {
                             popup: 'meal-plan-result'
                         }
+                    }).then(() => {
+                        // Reload page after closing the modal
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 100);
                     });
                 }
             } else {
@@ -405,6 +426,11 @@ class MealPlansManager {
                 })
             });
             console.log('Feeding program saved to database');
+            
+            // Reload page seamlessly after successful save
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
         } catch (error) {
             console.error('Failed to save to database:', error);
             // Don't show error to user - plan was still generated successfully
@@ -465,6 +491,9 @@ class MealPlansManager {
     }
 
     formatFeedingProgram(response) {
+        // Store response data for PDF generation
+        this.currentProgramData = response;
+        
         let html = '<div class="feeding-program-results">';
         
         // Program Header
@@ -504,9 +533,9 @@ class MealPlansManager {
         
         // Action Buttons
         html += `
-            <div class="action-buttons" style="margin-top: 20px; text-align: right;">
-                <button class="btn btn-success" onclick="window.print()" style="background-color: #2d7a4f; border-color: #2d7a4f;">
-                    <i class="fas fa-print"></i> Print
+            <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-primary download-pdf-btn" id="download-feeding-pdf" style="background: linear-gradient(135deg, #10b981, #34d399); border: none; padding: 10px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-file-pdf"></i> Save as PDF
                 </button>
             </div>
         `;
@@ -753,17 +782,18 @@ class MealPlansManager {
                     
                     const ingredientsList = meal.ingredients ? meal.ingredients.split(',').map(ing => ing.trim()).filter(ing => ing) : [];
                     
+                    // Format ingredients as comma-separated text with proper wrapping
+                    const ingredientsDisplay = ingredientsList.length > 0 
+                        ? ingredientsList.join(', ')
+                        : '<em style="color: #999;">—</em>';
+                    
                     html += `
                         <td style="font-weight: 600; color: #2c3e50; padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 0.95em;">${meal.mealType}</td>
                         <td style="color: #34495e; padding: 12px; border: 1px solid #ddd; font-size: 0.95em; word-break: break-word;">
                             <strong>${meal.dishName}</strong>
                         </td>
-                        <td style="color: #555; padding: 12px; border: 1px solid #ddd; font-size: 0.9em;">
-                            ${ingredientsList.length > 0 ? `
-                                <div style="max-height: 140px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 10px; background: #fafafa; border-radius: 4px; line-height: 1.6;">
-                                    ${ingredientsList.map(ing => `<div style="margin: 5px 0; padding: 5px 8px; border-bottom: 1px solid #e8e8e8; word-wrap: break-word;">• ${ing}</div>`).join('')}
-                                </div>
-                            ` : '<em style="color: #999;">—</em>'}
+                        <td style="color: #555; padding: 12px; border: 1px solid #ddd; font-size: 0.875em; line-height: 1.7; word-wrap: break-word; overflow-wrap: break-word;">
+                            ${ingredientsDisplay}
                         </td>
                     `;
                     
@@ -809,6 +839,134 @@ class MealPlansManager {
             .replace(/### (.*)/g, '<h5 style="color: #7f8c8d;">$1</h5>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>');
+    }
+
+    downloadPDF() {
+        if (!this.currentProgramData) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No meal plan data available. Please generate a meal plan first.',
+            });
+            return;
+        }
+
+        const data = this.currentProgramData;
+        
+        console.log('Starting PDF generation with data:', data);
+        
+        // Show loading
+        Swal.fire({
+            title: 'Generating PDF...',
+            text: 'Please wait while we create your PDF file',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Wait a bit for modal to show
+        setTimeout(() => {
+            try {
+                // Generate filename with date
+                const today = new Date();
+                const dateStr = today.getFullYear() + '-' + 
+                              String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                              String(today.getDate()).padStart(2, '0');
+                const filename = `Feeding-Program-Plan-${dateStr}.pdf`;
+                
+                // Age group labels
+                const ageGroupLabels = {
+                    'all': 'All Ages (6 months - 5 years)',
+                    '6-12months': 'Infants (6-12 months)',
+                    '12-24months': 'Toddlers (12-24 months)',
+                    '24-60months': 'Preschoolers (24-60 months)'
+                };
+                
+                // Get the entire meal plan results div
+                const resultsDiv = document.querySelector('.feeding-program-results');
+                console.log('Found results div:', resultsDiv);
+                
+                if (!resultsDiv) {
+                    throw new Error('Cannot find meal plan content');
+                }
+                
+                // Clone it completely
+                const clonedContent = resultsDiv.cloneNode(true);
+                
+                // Remove action buttons
+                const actionButtons = clonedContent.querySelector('.action-buttons');
+                if (actionButtons) {
+                    actionButtons.remove();
+                }
+                
+                // Create wrapper for PDF
+                const pdfWrapper = document.createElement('div');
+                pdfWrapper.style.cssText = 'font-family: Arial, sans-serif; padding: 15px; background: white; color: black;';
+                
+                // Add title
+                const titleDiv = document.createElement('div');
+                titleDiv.style.cssText = 'text-align: center; margin-bottom: 15px; border-bottom: 2px solid #10b981; padding-bottom: 10px;';
+                titleDiv.innerHTML = '<h1 style="color: #2d7a4f; font-size: 20px; margin: 0;">Feeding Program Meal Plan</h1>';
+                pdfWrapper.appendChild(titleDiv);
+                
+                // Add the cloned content
+                pdfWrapper.appendChild(clonedContent);
+                
+                console.log('PDF wrapper created:', pdfWrapper);
+                console.log('PDF wrapper HTML length:', pdfWrapper.innerHTML.length);
+                
+                // Configure PDF options
+                const opt = {
+                    margin: 10,
+                    filename: filename,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2,
+                        logging: true,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff'
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait'
+                    }
+                };
+                
+                console.log('Starting html2pdf conversion...');
+                
+                // Generate PDF
+                html2pdf().set(opt).from(pdfWrapper).save()
+                    .then(() => {
+                        console.log('PDF generated successfully');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'PDF Downloaded!',
+                            text: `File saved as ${filename}`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('PDF generation error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'PDF Generation Failed',
+                            text: error.message || 'There was an error creating the PDF. Check console for details.'
+                        });
+                    });
+                    
+            } catch (error) {
+                console.error('Error in PDF generation:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to prepare PDF content'
+                });
+            }
+        }, 100);
     }
 
     showLoading(message = 'Processing...') {
@@ -1112,9 +1270,18 @@ $(document).ready(function() {
     });
 
     // Delete saved plan
-    $('.delete-program-plan-btn').on('click', function() {
+    $(document).on('click', '.delete-program-plan-btn', function() {
         const planId = $(this).data('plan-id');
-        deleteFeedingProgramPlan(planId);
+        const $planItem = $(`.program-plan-item[data-plan-id="${planId}"]`);
+        
+        // Extract plan details
+        const planTitle = $planItem.find('.program-plan-item-title').text().trim();
+        const duration = $planItem.data('duration');
+        const budget = $planItem.data('budget');
+        const ageGroup = $planItem.data('age-group');
+        const barangay = $planItem.data('barangay');
+        
+        deleteFeedingProgramPlan(planId, planTitle, duration, budget, ageGroup, barangay);
     });
 
     // Program plans search functionality
@@ -1354,13 +1521,128 @@ function viewFeedingProgramPlan(planId) {
                 
                 Swal.fire({
                     title: 'Feeding Program Meal Plan',
-                    html: metadata + mealPlanHtml,
-                    width: '90%',
-                    showCloseButton: true,
-                    showConfirmButton: false,
+                    html: `
+                        <div id="pdf-content">
+                            ${metadata}
+                            ${mealPlanHtml}
+                        </div>
+                        <div class="action-buttons" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                            <button type="button" class="btn-primary" id="download-pdf-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; padding: 0.75rem 1.5rem; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
+                                <i class="fas fa-file-pdf"></i> Save as PDF
+                            </button>
+                        </div>
+                    `,
+                    width: '90vw',
                     customClass: {
                         container: 'feeding-program-modal',
                         popup: 'feeding-program-popup'
+                    },
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        // Add click handler for PDF download
+                        document.getElementById('download-pdf-btn')?.addEventListener('click', function() {
+                            console.log('PDF button clicked');
+                            
+                            try {
+                                const { jsPDF } = window.jspdf;
+                                const doc = new jsPDF();
+                                
+                                // Add title
+                                doc.setFontSize(18);
+                                doc.setTextColor(45, 122, 79);
+                                doc.text('Feeding Program Meal Plan', 105, 20, { align: 'center' });
+                                
+                                // Add metadata
+                                doc.setFontSize(10);
+                                doc.setTextColor(0, 0, 0);
+                                let yPos = 35;
+                                
+                                const ageLabel = getAgeGroupLabel(plan.target_age_group);
+                                doc.text(`Age Group: ${ageLabel}`, 20, yPos);
+                                yPos += 7;
+                                doc.text(`Duration: ${plan.program_duration_days} Days`, 20, yPos);
+                                yPos += 7;
+                                doc.text(`Budget: ${plan.budget_level}`, 20, yPos);
+                                yPos += 7;
+                                if (plan.barangay) {
+                                    doc.text(`Barangay: ${plan.barangay}`, 20, yPos);
+                                    yPos += 7;
+                                }
+                                if (plan.total_children) {
+                                    doc.text(`Children: ${plan.total_children}`, 20, yPos);
+                                    yPos += 7;
+                                }
+                                
+                                yPos += 5;
+                                
+                                // Get table data
+                                const tableData = [];
+                                const visibleTable = document.querySelector('.meal-plan-table tbody');
+                                if (visibleTable) {
+                                    const rows = visibleTable.querySelectorAll('tr');
+                                    rows.forEach(row => {
+                                        const cells = row.querySelectorAll('td');
+                                        const rowData = [];
+                                        cells.forEach(cell => {
+                                            rowData.push(cell.textContent.trim());
+                                        });
+                                        if (rowData.length > 0) {
+                                            tableData.push(rowData);
+                                        }
+                                    });
+                                }
+                                
+                                // Add table
+                                doc.autoTable({
+                                    head: [['Day', 'Meal Type', 'Dish Name', 'Ingredients']],
+                                    body: tableData,
+                                    startY: yPos,
+                                    theme: 'grid',
+                                    headStyles: {
+                                        fillColor: [45, 122, 79],
+                                        textColor: 255,
+                                        fontSize: 9,
+                                        fontStyle: 'bold'
+                                    },
+                                    bodyStyles: {
+                                        fontSize: 8,
+                                        cellPadding: 3
+                                    },
+                                    columnStyles: {
+                                        0: { cellWidth: 20 },
+                                        1: { cellWidth: 25 },
+                                        2: { cellWidth: 45 },
+                                        3: { cellWidth: 'auto' }
+                                    }
+                                });
+                                
+                                // Save PDF
+                                const today = new Date();
+                                const dateStr = today.getFullYear() + '-' + 
+                                              String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                                              String(today.getDate()).padStart(2, '0');
+                                const filename = `Feeding-Program-Plan-${dateStr}.pdf`;
+                                
+                                doc.save(filename);
+                                
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'PDF Downloaded!',
+                                    text: `File saved as ${filename}`,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                
+                            } catch (error) {
+                                console.error('PDF error:', error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to generate PDF: ' + error.message
+                                });
+                            }
+                        });
                     }
                 });
             } else {
@@ -1387,18 +1669,84 @@ function getAgeGroupLabel(ageGroup) {
 /**
  * Delete saved feeding program plan
  */
-function deleteFeedingProgramPlan(planId) {
+function deleteFeedingProgramPlan(planId, planTitle, duration, budget, ageGroup, barangay) {
+    // Format age group display
+    let ageGroupDisplay = '';
+    switch(ageGroup) {
+        case 'all':
+            ageGroupDisplay = 'All Ages (6mo-5y)';
+            break;
+        case '6-12months':
+            ageGroupDisplay = 'Infants (6-12mo)';
+            break;
+        case '12-24months':
+            ageGroupDisplay = 'Toddlers (12-24mo)';
+            break;
+        case '24-60months':
+            ageGroupDisplay = 'Preschoolers (24-60mo)';
+            break;
+        default:
+            ageGroupDisplay = ageGroup;
+    }
+
+    const barangayText = barangay ? `<div style="margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Location:</strong> ${barangay}</div>` : '';
+
     Swal.fire({
-        title: 'Delete Meal Plan?',
-        text: 'This action cannot be undone.',
-        icon: 'warning',
+        title: '<i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Delete Meal Plan?',
+        html: `
+            <div style="text-align: left; padding: 1rem 0.5rem;">
+                <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 1.25rem; border-radius: 12px; border-left: 4px solid #ef4444; margin-bottom: 1.5rem;">
+                    <h4 style="margin: 0 0 1rem 0; color: #991b1b; font-size: 1rem; font-weight: 700;">
+                        <i class="fas fa-info-circle"></i> Plan Details
+                    </h4>
+                    <div style="color: #7f1d1d; font-size: 0.9375rem; line-height: 1.8;">
+                        <div style="margin-bottom: 0.5rem;"><i class="fas fa-utensils" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Plan:</strong> ${planTitle}</div>
+                        <div style="margin-bottom: 0.5rem;"><i class="fas fa-calendar-alt" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Duration:</strong> ${duration} ${duration > 1 ? 'Days' : 'Day'}</div>
+                        <div style="margin-bottom: 0.5rem;"><i class="fas fa-wallet" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Budget:</strong> ${budget.charAt(0).toUpperCase() + budget.slice(1)}</div>
+                        <div style="margin-bottom: 0.5rem;"><i class="fas fa-child" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Age Group:</strong> ${ageGroupDisplay}</div>
+                        ${barangayText}
+                    </div>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1rem; border-radius: 12px; border-left: 4px solid #f59e0b;">
+                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle" style="color: #d97706; font-size: 1.25rem; margin-top: 0.125rem;"></i>
+                        <div>
+                            <strong style="color: #92400e; display: block; margin-bottom: 0.375rem; font-size: 0.9375rem;">Warning:</strong>
+                            <p style="margin: 0; color: #78350f; font-size: 0.875rem; line-height: 1.6;">
+                                This action cannot be undone. All meal plan data, nutritional information, and shopping lists associated with this program will be permanently deleted.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `,
+        width: '650px',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, delete it',
-        cancelButtonText: 'Cancel'
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete Plan',
+        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+        customClass: {
+            popup: 'delete-confirmation-modal',
+            confirmButton: 'swal2-confirm-delete',
+            cancelButton: 'swal2-cancel-delete'
+        },
+        buttonsStyling: true
     }).then((result) => {
         if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: '<i class="fas fa-spinner fa-spin"></i> Deleting...',
+                text: 'Please wait while we delete the meal plan',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             $.ajax({
                 url: `/nutritionist/feeding-program/${planId}`,
                 method: 'DELETE',
@@ -1407,30 +1755,55 @@ function deleteFeedingProgramPlan(planId) {
                 },
                 success: function(response) {
                     if (response.success) {
-                        Swal.fire('Deleted!', 'Meal plan has been deleted.', 'success')
-                            .then(() => {
-                                // Remove the item from the list
-                                $(`.program-plan-item[data-plan-id="${planId}"]`).fadeOut(300, function() {
-                                    $(this).remove();
-                                    
-                                    // Check if there are any plans left
-                                    if ($('.program-plan-item').length === 0) {
-                                        $('#program-plans-list-container').replaceWith(`
-                                            <div class="empty-plans-state">
-                                                <i class="fas fa-clipboard-list"></i>
-                                                <p>No saved feeding program plans yet. Create one to get started!</p>
-                                            </div>
-                                        `);
-                                    }
-                                });
-                            });
+                        Swal.fire({
+                            title: '<i class="fas fa-check-circle" style="color: #10b981;"></i> Deleted Successfully!',
+                            html: `
+                                <div style="text-align: center; padding: 1rem;">
+                                    <p style="color: #374151; font-size: 1rem; margin: 0;">
+                                        The meal plan has been permanently deleted.
+                                    </p>
+                                </div>
+                            `,
+                            icon: 'success',
+                            confirmButtonColor: '#10b981',
+                            confirmButtonText: '<i class="fas fa-check"></i> OK',
+                            timer: 2500,
+                            timerProgressBar: true
+                        }).then(() => {
+                            // Reload page seamlessly without showing the process
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 100);
+                        });
                     } else {
-                        Swal.fire('Error', response.message || 'Failed to delete meal plan', 'error');
+                        Swal.fire({
+                            title: '<i class="fas fa-times-circle" style="color: #ef4444;"></i> Deletion Failed',
+                            text: response.message || 'Failed to delete meal plan. Please try again.',
+                            icon: 'error',
+                            confirmButtonColor: '#ef4444',
+                            confirmButtonText: '<i class="fas fa-times"></i> Close'
+                        });
                     }
                 },
                 error: function(xhr) {
                     console.error('Error deleting plan:', xhr);
-                    Swal.fire('Error', 'Failed to delete meal plan', 'error');
+                    let errorMessage = 'An unexpected error occurred while deleting the meal plan.';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.status === 404) {
+                        errorMessage = 'Meal plan not found. It may have already been deleted.';
+                    } else if (xhr.status === 403) {
+                        errorMessage = 'You do not have permission to delete this meal plan.';
+                    }
+                    
+                    Swal.fire({
+                        title: '<i class="fas fa-times-circle" style="color: #ef4444;"></i> Error',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444',
+                        confirmButtonText: '<i class="fas fa-times"></i> Close'
+                    });
                 }
             });
         }
