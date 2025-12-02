@@ -314,10 +314,10 @@
 /* Card Header - Enhanced */
 .patients-card .card-header {
     padding: 1.5rem 1.75rem;
-    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
-    color: white;
+    background: linear-gradient(135deg, #388E3C 0%, #348638 100%) !important;
+    color: white !important;
     border-radius: 16px 16px 0 0;
-    border: none;
+    border: none !important;
 }
 
 .header-content {
@@ -334,10 +334,12 @@
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0;
+    color: white !important;
 }
 
 .card-title i {
     font-size: 1.5rem;
+    color: white !important;
 }
 
 .results-info {

@@ -2,188 +2,765 @@
 
 @section('title', 'Parent Profile')
 
+@section('page-title', 'My Profile')
+@section('page-subtitle', 'View and manage your personal information')
+
 @section('navigation')
     @include('partials.navigation')
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/parent/parent-profile.css') }}?v={{ time() }}">
-@endpush
-
-@push('scripts')
-<script src="{{ asset('js/parent/parent-profile.js') }}?v={{ time() }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/parent/profile.css') }}">
 @endpush
 
 @section('content')
-<div class="profile-container">
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="d-flex align-items-center">
-            <div class="profile-avatar">
-                <i class="fas fa-user"></i>
-            </div>
-            <div class="profile-info ms-4">
-                <h1>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h1>
-                <p><i class="fas fa-envelope me-2"></i>{{ Auth::user()->email }}</p>
-            </div>
+    <div class="profile-container">
+        <!-- Profile Banner -->
+        <div class="profile-banner">
+            <div class="banner-overlay"></div>
+            <div class="banner-pattern"></div>
         </div>
-    </div>
 
-    <!-- Profile Tabs -->
-    <div class="profile-tabs">
-        <button class="tab-btn active" onclick="showTab('personal')">
-            <i class="fas fa-user me-2"></i>Personal Information
-        </button>
-        <button class="tab-btn" onclick="showTab('security')">
-            <i class="fas fa-shield-alt me-2"></i>Security
-        </button>
-    </div>
-
-    <!-- Personal Information Tab -->
-    <div id="personal-tab" class="tab-content active">
-        <div class="info-card">
-            @if(session('success'))
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-header-content">
+                <div class="profile-avatar">
+                    <div class="avatar-circle">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="avatar-status {{ Auth::user()->is_active ? 'online' : 'offline' }}"></div>
                 </div>
-            @endif
-
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                <div class="profile-info">
+                    <div class="profile-name-section">
+                        <h1 class="profile-name">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</h1>
+                        @if(Auth::user()->email_verified_at)
+                            <span class="verified-icon" title="Verified Account">
+                                <i class="fas fa-certificate"></i>
+                            </span>
+                        @endif
+                    </div>
+                    <p class="profile-title"><i class="fas fa-users"></i> Parent / Guardian</p>
+                    <div class="profile-meta">
+                        <span class="meta-item">
+                            <i class="fas fa-calendar-check"></i>
+                            Member since {{ Auth::user()->created_at->format('M Y') }}
+                        </span>
+                        @if(Auth::user()->patientsAsParent()->count() > 0)
+                        <span class="meta-item">
+                            <i class="fas fa-child"></i>
+                            {{ Auth::user()->patientsAsParent()->count() }} {{ Str::plural('Child', Auth::user()->patientsAsParent()->count()) }}
+                        </span>
+                        @endif
+                    </div>
                 </div>
-            @endif
-
-            <!-- View Mode -->
-            <div id="view-mode">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">Personal Information</h3>
-                    <button class="btn-modern btn-primary" onclick="toggleEdit()">
-                        <i class="fas fa-edit"></i>Edit Profile
+                <div class="profile-actions">
+                    <button class="btn btn-primary" onclick="editPersonalInfo()">
+                        <i class="fas fa-edit"></i>
+                        Edit Profile
+                    </button>
+                    <button class="btn btn-outline" onclick="window.print()">
+                        <i class="fas fa-print"></i>
+                        Print
                     </button>
                 </div>
+            </div>
+        </div>
 
-                <div class="info-display">
-                    <span class="info-label">First Name</span>
-                    <span class="info-value">{{ Auth::user()->first_name }}</span>
+        <!-- Quick Stats Bar -->
+        <div class="quick-stats-bar">
+            <div class="quick-stat">
+                <div class="quick-stat-icon children">
+                    <i class="fas fa-child"></i>
                 </div>
-                <div class="info-display">
-                    <span class="info-label">Last Name</span>
-                    <span class="info-value">{{ Auth::user()->last_name }}</span>
+                <div class="quick-stat-info">
+                    <div class="quick-stat-value">{{ Auth::user()->patientsAsParent()->count() }}</div>
+                    <div class="quick-stat-label">Total Children</div>
                 </div>
-                <div class="info-display">
-                    <span class="info-label">Email Address</span>
-                    <span class="info-value">{{ Auth::user()->email }}</span>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-icon assessments">
+                    <i class="fas fa-heartbeat"></i>
                 </div>
-                <div class="info-display">
-                    <span class="info-label">Contact Number</span>
-                    <span class="info-value">{{ Auth::user()->contact_number ?? 'Not provided' }}</span>
+                <div class="quick-stat-info">
+                    <div class="quick-stat-value">
+                        {{ Auth::user()->patientsAsParent()->withCount('assessments')->get()->sum('assessments_count') }}
+                    </div>
+                    <div class="quick-stat-label">Assessments</div>
                 </div>
-                <div class="info-display">
-                    <span class="info-label">Address</span>
-                    <span class="info-value">{{ Auth::user()->address ?? 'Not provided' }}</span>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-icon active">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="quick-stat-info">
+                    <div class="quick-stat-value">
+                        {{ Auth::user()->patientsAsParent()->where('nutritionist_id', '!=', null)->count() }}
+                    </div>
+                    <div class="quick-stat-label">Under Care</div>
+                </div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-icon status">
+                    <i class="fas fa-shield-check"></i>
+                </div>
+                <div class="quick-stat-info">
+                    <div class="quick-stat-value">
+                        {{ Auth::user()->is_active ? 'Active' : 'Inactive' }}
+                    </div>
+                    <div class="quick-stat-label">Account Status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="profile-content">
+            <!-- Left Column -->
+            <div class="content-left">
+                <!-- Personal Information Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon personal">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h3 class="card-title">Personal Information</h3>
+                        </div>
+                        <button class="btn-icon" onclick="editPersonalInfo()" title="Edit Personal Information">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-list">
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-signature"></i>
+                                    Full Name
+                                </div>
+                                <div class="info-value">{{ Auth::user()->first_name }} {{ Auth::user()->middle_name }} {{ Auth::user()->last_name }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </div>
+                                <div class="info-value">{{ Auth::user()->email }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-phone"></i>
+                                    Contact Number
+                                </div>
+                                <div class="info-value">{{ Auth::user()->contact_number ?? 'Not provided' }}</div>
+                            </div>
+                            @if(Auth::user()->birth_date)
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-birthday-cake"></i>
+                                    Date of Birth
+                                </div>
+                                <div class="info-value">{{ Auth::user()->birth_date->format('F d, Y') }}</div>
+                            </div>
+                            @endif
+                            @if(Auth::user()->sex)
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-venus-mars"></i>
+                                    Gender
+                                </div>
+                                <div class="info-value">{{ ucfirst(Auth::user()->sex) }}</div>
+                            </div>
+                            @endif
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Address
+                                </div>
+                                <div class="info-value">{{ Auth::user()->address ?? 'Not provided' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Children Information Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon children">
+                                <i class="fas fa-child"></i>
+                            </div>
+                            <h3 class="card-title">My Children</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        @if(Auth::user()->patientsAsParent()->count() > 0)
+                            <div class="children-list">
+                                @foreach(Auth::user()->patientsAsParent as $patient)
+                                <div class="child-item">
+                                    <div class="child-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="child-info">
+                                        <div class="child-name">{{ $patient->first_name }} {{ $patient->last_name }}</div>
+                                        <div class="child-meta">
+                                            <span><i class="fas fa-calendar"></i> {{ $patient->age_months }} months old</span>
+                                            @if($patient->nutritionist)
+                                            <span><i class="fas fa-user-md"></i> {{ $patient->nutritionist->first_name }} {{ $patient->nutritionist->last_name }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="child-status {{ $patient->nutritionist ? 'active' : 'pending' }}">
+                                        {{ $patient->nutritionist ? 'Under Care' : 'Pending' }}
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="empty-state">
+                                <i class="fas fa-child"></i>
+                                <p>No children registered yet</p>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            <!-- Edit Mode -->
-            <div id="edit-mode" class="edit-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">Edit Personal Information</h3>
-                    <button class="btn-modern btn-secondary" onclick="toggleEdit()">
-                        <i class="fas fa-times"></i>Cancel
-                    </button>
+            <!-- Right Column -->
+            <div class="content-right">
+                <!-- Account Status Card -->
+                <div class="content-card status-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon status">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 class="card-title">Account Status</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="status-items">
+                            <div class="status-item {{ Auth::user()->is_active ? 'active' : 'inactive' }}">
+                                <div class="status-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div class="status-details">
+                                    <div class="status-title">Account Status</div>
+                                    <div class="status-value">{{ Auth::user()->is_active ? 'Active' : 'Inactive' }}</div>
+                                </div>
+                            </div>
+                            <div class="status-item {{ Auth::user()->email_verified_at ? 'verified' : 'pending' }}">
+                                <div class="status-icon">
+                                    <i class="fas fa-envelope-circle-check"></i>
+                                </div>
+                                <div class="status-details">
+                                    <div class="status-title">Email Status</div>
+                                    <div class="status-value">{{ Auth::user()->email_verified_at ? 'Verified' : 'Not Verified' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        @if(Auth::user()->email_verified_at)
+                        <div class="status-footer">
+                            <i class="fas fa-check-double"></i>
+                            Verified on {{ Auth::user()->email_verified_at->format('F d, Y') }}
+                        </div>
+                        @endif
+                    </div>
                 </div>
 
-                <form method="POST" action="{{ route('parent.profile.update') }}">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="row">
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">First Name</label>
-                                <input type="text" name="first_name" class="form-control" 
-                                       value="{{ old('first_name', Auth::user()->first_name) }}" required>
+                <!-- Account Security Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon status">
+                                <i class="fas fa-lock"></i>
                             </div>
-                        </div>
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" name="last_name" class="form-control" 
-                                       value="{{ old('last_name', Auth::user()->last_name) }}" required>
-                            </div>
+                            <h3 class="card-title">Account Security</h3>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control" 
-                               value="{{ old('email', Auth::user()->email) }}" required>
+                    <div class="card-content">
+                        <div class="info-list">
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-key"></i>
+                                    Password
+                                </div>
+                                <div class="info-value">
+                                    <button class="btn btn-sm btn-outline" onclick="changePassword()">
+                                        <i class="fas fa-edit"></i>
+                                        Change Password
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </div>
+                                <div class="info-value">{{ Auth::user()->email }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-clock"></i>
+                                    Last Updated
+                                </div>
+                                <div class="info-value">{{ Auth::user()->updated_at->format('M d, Y') }}</div>
+                            </div>
+                        </div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Contact Number</label>
-                        <input type="text" name="contact_number" class="form-control" 
-                               value="{{ old('contact_number', Auth::user()->contact_number) }}">
+                <!-- Activity Timeline Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon activity">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <h3 class="card-title">Recent Activity</h3>
+                        </div>
                     </div>
+                    <div class="card-content">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-marker active"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Profile Viewed</div>
+                                    <div class="timeline-date">Just now</div>
+                                </div>
+                            </div>
+                            @if(Auth::user()->patientsAsParent()->latest()->first())
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Latest Child Registration</div>
+                                    <div class="timeline-date">{{ Auth::user()->patientsAsParent()->latest()->first()->created_at->diffForHumans() }}</div>
+                                </div>
+                            </div>
+                            @endif
+                            @if(Auth::user()->email_verified_at)
+                            <div class="timeline-item">
+                                <div class="timeline-marker success"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Email Verified</div>
+                                    <div class="timeline-date">{{ Auth::user()->email_verified_at->format('M d, Y') }}</div>
+                                </div>
+                            </div>
+                            @endif
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Account Created</div>
+                                    <div class="timeline-date">{{ Auth::user()->created_at->format('M d, Y') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Address</label>
-                        <textarea name="address" class="form-control" rows="3">{{ old('address', Auth::user()->address) }}</textarea>
+                <!-- Quick Actions Card -->
+                <div class="content-card actions-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon actions">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h3 class="card-title">Quick Actions</h3>
+                        </div>
                     </div>
-
-                    <div class="d-flex gap-3">
-                        <button type="submit" class="btn-modern btn-primary">
-                            <i class="fas fa-save"></i>Save Changes
-                        </button>
-                        <button type="button" class="btn-modern btn-secondary" onclick="toggleEdit()">
-                            <i class="fas fa-times"></i>Cancel
-                        </button>
+                    <div class="card-content">
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="window.location.href='{{ route('parent.dashboard') }}'">
+                                <i class="fas fa-child"></i>
+                                <span>View Children</span>
+                            </button>
+                            <button class="action-btn" onclick="editPersonalInfo()">
+                                <i class="fas fa-user-edit"></i>
+                                <span>Edit Profile</span>
+                            </button>
+                            <button class="action-btn" onclick="changePassword()">
+                                <i class="fas fa-key"></i>
+                                <span>Change Password</span>
+                            </button>
+                            <button class="action-btn" onclick="window.print()">
+                                <i class="fas fa-print"></i>
+                                <span>Print Profile</span>
+                            </button>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Security Tab -->
-    <div id="security-tab" class="tab-content">
-        <div class="info-card">
-            <h3 class="mb-4">Change Password</h3>
-            
-            <form method="POST" action="{{ route('parent.password.update') }}">
-                @csrf
-                @method('PUT')
-
-                <div class="form-group">
-                    <label class="form-label">Current Password</label>
-                    <input type="password" name="current_password" class="form-control" required>
-                </div>
-
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label class="form-label">New Password</label>
-                            <input type="password" name="password" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label class="form-label">Confirm New Password</label>
-                            <input type="password" name="password_confirmation" class="form-control" required>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-modern btn-danger">
-                    <i class="fas fa-key"></i>Update Password
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
 @endsection
+
+@push('scripts')
+<script>
+    // Parent data for forms
+    const parentData = {
+        first_name: "{{ Auth::user()->first_name }}",
+        middle_name: "{{ Auth::user()->middle_name }}",
+        last_name: "{{ Auth::user()->last_name }}",
+        contact_number: "{{ Auth::user()->contact_number }}",
+        birth_date: "{{ Auth::user()->birth_date ? Auth::user()->birth_date->format('Y-m-d') : '' }}",
+        sex: "{{ Auth::user()->sex }}",
+        address: `{{ Auth::user()->address }}`
+    };
+
+    // Edit Personal Information
+    function editPersonalInfo() {
+        Swal.fire({
+            title: `
+                <div style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user-edit" style="color: white; font-size: 24px;"></i>
+                    </div>
+                    <div style="text-align: left;">
+                        <h3 style="margin: 0; color: #1f2937; font-size: 24px; font-weight: 700;">Edit Personal Information</h3>
+                        <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">Update your personal details</p>
+                    </div>
+                </div>
+            `,
+            html: `
+                <div style="text-align: left; padding: 20px 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-user" style="color: #10b981; margin-right: 5px;"></i>First Name *
+                            </label>
+                            <input id="swal-first-name" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.first_name}" required>
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-user" style="color: #10b981; margin-right: 5px;"></i>Middle Name
+                            </label>
+                            <input id="swal-middle-name" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.middle_name}">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-user" style="color: #10b981; margin-right: 5px;"></i>Last Name *
+                            </label>
+                            <input id="swal-last-name" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.last_name}" required>
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-phone" style="color: #10b981; margin-right: 5px;"></i>Contact Number
+                            </label>
+                            <input id="swal-contact" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.contact_number}">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-calendar" style="color: #10b981; margin-right: 5px;"></i>Date of Birth
+                            </label>
+                            <input id="swal-birth-date" type="date" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.birth_date}">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-venus-mars" style="color: #10b981; margin-right: 5px;"></i>Gender
+                            </label>
+                            <select id="swal-gender" class="swal2-select" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;">
+                                <option value="">Select Gender</option>
+                                <option value="male" ${parentData.sex === 'male' ? 'selected' : ''}>Male</option>
+                                <option value="female" ${parentData.sex === 'female' ? 'selected' : ''}>Female</option>
+                                <option value="other" ${parentData.sex === 'other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-map-marker-alt" style="color: #10b981; margin-right: 5px;"></i>Address
+                            </label>
+                            <textarea id="swal-address" class="swal2-textarea" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; min-height: 80px;" rows="3">${parentData.address}</textarea>
+                        </div>
+                    </div>
+                </div>
+            `,
+            width: '900px',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-save"></i> Save Changes',
+            cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            customClass: {
+                popup: 'parent-swal-popup',
+                confirmButton: 'parent-swal-confirm',
+                cancelButton: 'parent-swal-cancel'
+            },
+            didOpen: () => {
+                // Focus styling
+                document.querySelectorAll('.swal2-input, .swal2-select, .swal2-textarea').forEach(input => {
+                    input.addEventListener('focus', function() {
+                        this.style.borderColor = '#10b981';
+                        this.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
+                    });
+                    input.addEventListener('blur', function() {
+                        this.style.borderColor = '#e5e7eb';
+                        this.style.boxShadow = 'none';
+                    });
+                });
+            },
+            preConfirm: () => {
+                const firstName = document.getElementById('swal-first-name').value;
+                const lastName = document.getElementById('swal-last-name').value;
+                
+                if (!firstName || !lastName) {
+                    Swal.showValidationMessage('First Name and Last Name are required');
+                    return false;
+                }
+                
+                return {
+                    first_name: firstName,
+                    middle_name: document.getElementById('swal-middle-name').value,
+                    last_name: lastName,
+                    contact_number: document.getElementById('swal-contact').value,
+                    birth_date: document.getElementById('swal-birth-date').value,
+                    sex: document.getElementById('swal-gender').value,
+                    address: document.getElementById('swal-address').value
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                updatePersonalInfo(result.value);
+            }
+        });
+    }
+
+    // Change Password
+    function changePassword() {
+        Swal.fire({
+            title: `
+                <div style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #06b6d4, #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-key" style="color: white; font-size: 24px;"></i>
+                    </div>
+                    <div style="text-align: left;">
+                        <h3 style="margin: 0; color: #1f2937; font-size: 24px; font-weight: 700;">Change Password</h3>
+                        <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">Update your account password</p>
+                    </div>
+                </div>
+            `,
+            html: `
+                <div style="text-align: left; padding: 20px 10px;">
+                    <div style="display: grid; gap: 20px;">
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>Current Password *
+                            </label>
+                            <input id="swal-current-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter current password" required>
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>New Password *
+                            </label>
+                            <input id="swal-new-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter new password (min. 8 characters)" required>
+                            <small style="color: #6b7280; font-size: 12px; margin-top: 5px; display: block;">Password must be at least 8 characters long</small>
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>Confirm New Password *
+                            </label>
+                            <input id="swal-confirm-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Re-enter new password" required>
+                        </div>
+                    </div>
+                </div>
+            `,
+            width: '600px',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-save"></i> Update Password',
+            cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            customClass: {
+                popup: 'parent-swal-popup',
+                confirmButton: 'parent-swal-confirm',
+                cancelButton: 'parent-swal-cancel'
+            },
+            didOpen: () => {
+                // Focus styling
+                document.querySelectorAll('.swal2-input').forEach(input => {
+                    input.addEventListener('focus', function() {
+                        this.style.borderColor = '#10b981';
+                        this.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
+                    });
+                    input.addEventListener('blur', function() {
+                        this.style.borderColor = '#e5e7eb';
+                        this.style.boxShadow = 'none';
+                    });
+                });
+            },
+            preConfirm: () => {
+                const currentPassword = document.getElementById('swal-current-password').value;
+                const newPassword = document.getElementById('swal-new-password').value;
+                const confirmPassword = document.getElementById('swal-confirm-password').value;
+                
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    Swal.showValidationMessage('All fields are required');
+                    return false;
+                }
+                
+                if (newPassword.length < 8) {
+                    Swal.showValidationMessage('New password must be at least 8 characters long');
+                    return false;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    Swal.showValidationMessage('New passwords do not match');
+                    return false;
+                }
+                
+                return {
+                    current_password: currentPassword,
+                    password: newPassword,
+                    password_confirmation: confirmPassword
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                updatePassword(result.value);
+            }
+        });
+    }
+
+    // Update Personal Information
+    function updatePersonalInfo(data) {
+        fetch('{{ route("parent.profile.update") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                ...data,
+                _method: 'PUT'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data.message || 'Personal information updated successfully',
+                    confirmButtonColor: '#10b981',
+                    timer: 2000
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: data.message || 'Failed to update personal information',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'An error occurred while updating personal information',
+                confirmButtonColor: '#ef4444'
+            });
+        });
+    }
+
+    // Update Password
+    function updatePassword(data) {
+        fetch('{{ route("parent.password.update") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                ...data,
+                _method: 'PUT'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Password Updated!',
+                    text: data.message || 'Your password has been updated successfully',
+                    confirmButtonColor: '#10b981',
+                    timer: 2000
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: data.message || 'Failed to update password',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'An error occurred while updating password',
+                confirmButtonColor: '#ef4444'
+            });
+        });
+    }
+</script>
+<script src="{{ asset('js/parent/profile.js') }}"></script>
+
+<style>
+    /* SweetAlert Custom Styling for Parent Profile */
+    .parent-swal-popup {
+        border-radius: 16px !important;
+        padding: 0 !important;
+    }
+
+    .parent-swal-popup .swal2-title {
+        padding: 20px 30px 10px !important;
+        margin: 0 !important;
+    }
+
+    .parent-swal-popup .swal2-html-container {
+        padding: 0 30px 20px !important;
+        margin: 0 !important;
+    }
+
+    .parent-swal-confirm {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 30px !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .parent-swal-confirm:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+    }
+
+    .parent-swal-cancel {
+        background: #f3f4f6 !important;
+        color: #374151 !important;
+        border: 2px solid #d1d5db !important;
+        border-radius: 10px !important;
+        padding: 12px 30px !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .parent-swal-cancel:hover {
+        background: #e5e7eb !important;
+        transform: translateY(-2px) !important;
+    }
+
+    .swal2-actions {
+        gap: 15px !important;
+        padding: 20px 30px 30px !important;
+        margin: 0 !important;
+    }
+</style>
+@endpush

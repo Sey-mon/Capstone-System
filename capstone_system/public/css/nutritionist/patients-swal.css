@@ -33,7 +33,7 @@
     color: white !important;
     padding: 12px 20px !important;
     margin: 0 !important;
-    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%) !important;
+    background: linear-gradient(135deg, #388E3C 0%, #43A047 100%) !important;
     border-radius: 16px 16px 0 0 !important;
     text-align: left !important;
     display: flex !important;
@@ -89,7 +89,7 @@
     color: white;
     margin: -12px -12px 10px -12px;
     padding: 8px 12px;
-    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    background: linear-gradient(135deg, #388E3C 0%, #43A047 100%);
     border-radius: 8px 8px 0 0;
     display: flex;
     align-items: center;
@@ -262,13 +262,13 @@
 
 /* SweetAlert2 Buttons - Simple Style without Animations */
 .swal2-confirm {
-    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%) !important;
+    background: linear-gradient(135deg, #388E3C 0%, #43A047 100%) !important;
     border: none !important;
     padding: 10px 24px !important;
     font-size: 0.9rem !important;
     font-weight: 700 !important;
     border-radius: 8px !important;
-    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.2) !important;
+    box-shadow: 0 2px 6px rgba(67, 160, 71, 0.2) !important;
     transition: opacity 0.2s ease !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -385,15 +385,15 @@
 
 /* Success Icon - Green Theme */
 .swal2-icon.swal2-success {
-    border-color: #2e7d32 !important;
+    border-color: #43A047 !important;
 }
 
 .swal2-icon.swal2-success [class^='swal2-success-line'] {
-    background-color: #2e7d32 !important;
+    background-color: #43A047 !important;
 }
 
 .swal2-icon.swal2-success .swal2-success-ring {
-    border-color: rgba(46, 125, 50, 0.3) !important;
+    border-color: rgba(67, 160, 71, 0.3) !important;
 }
 
 /* Optimized Patient Details View */
@@ -407,13 +407,13 @@
 
 /* Compact Patient Header - Consistent Green Theme */
 .patient-header-compact {
-    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    background: linear-gradient(135deg, #388E3C 0%, #43A047 100%);
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: white;
-    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
+    box-shadow: 0 2px 8px rgba(67, 160, 71, 0.2);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -547,7 +547,7 @@
 
 /* Card Header - Compact with Green Theme */
 .card-header-sm {
-    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    background: linear-gradient(135deg, #388E3C 0%, #43A047 100%);
     padding: 10px 15px;
     display: flex;
     align-items: center;
@@ -889,12 +889,12 @@
 }
 
 .patient-details-modern::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+    background: linear-gradient(135deg, #43A047 0%, #388E3C 100%);
     border-radius: 4px;
 }
 
 .patient-details-modern::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+    background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
 }
 
 /* Form scrollbar - Green Theme */
@@ -907,12 +907,12 @@
 }
 
 .patient-form-swal::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+    background: linear-gradient(135deg, #43A047 0%, #388E3C 100%);
     border-radius: 4px;
 }
 
 .patient-form-swal::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+    background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
 }
 
 /* Responsive Design - Optimized */
@@ -1167,11 +1167,11 @@
 
 /* Loading spinner - Green Theme with Animation */
 .swal2-loading {
-    border-color: #2e7d32 transparent #2e7d32 transparent !important;
+    border-color: #43A047 transparent #43A047 transparent !important;
 }
 
 .swal2-popup.swal2-loading .swal2-title {
-    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%) !important;
+    background: linear-gradient(135deg, #388E3C 0%, #43A047 100%) !important;
 }
 
 /* Loading Animation for Form Sections */

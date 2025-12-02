@@ -26,7 +26,7 @@
                     <p class="province-text">Province of Laguna</p>
                     <h1 class="clinic-name">CITY OF SAN PEDRO</h1>
                     <h2 class="office-name">CITY HEALTH OFFICE</h2>
-                    <p class="clinic-details">📍 4F, New City Hall Bldg, Brgy. Poblacion, San Pedro, Laguna | ☎ (02) 808 – 2020 local 302 | ✉ CHOsanpedro@gmail.com</p>
+                    <p class="clinic-details">4F, New City Hall Bldg, Brgy. Poblacion, San Pedro, Laguna | (02) 808 – 2020 local 302 | CHOsanpedro@gmail.com</p>
                 </div>
                 <div class="logo-section">
                     @if(file_exists(public_path('img/bagong-pilipinas-logo.png')))
@@ -55,62 +55,26 @@
             <div class="patient-title-section">
                 <h1 class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</h1>
                 <div class="assessment-title">Nutritional Assessment Profile</div>
-                <div class="assessment-date">📅 Assessment Date: {{ $assessment->assessment_date->format('F d, Y') }}</div>
+                <div class="assessment-date">Assessment Date: {{ $assessment->assessment_date->format('F d, Y') }}</div>
             </div>
             <div class="status-indicator status-{{ strtolower(str_replace(' ', '-', $assessment->diagnosis)) }}">
                 {{ $assessment->diagnosis }}
             </div>
         </div>
 
-        <div class="contact-info">
-            <h2>Patient Information</h2>
-            <div class="contact-grid">
-                <div class="contact-item">
-                    <span class="contact-label">Full Name:</span>
-                    <span class="contact-value">{{ $patient->first_name }} {{ $patient->last_name }}</span>
-                </div>
-                <div class="contact-item">
-                    <span class="contact-label">Age:</span>
-                    <span class="contact-value">{{ $patient->age_months }} months</span>
-                </div>
-                <div class="contact-item">
-                    <span class="contact-label">Assessment Date:</span>
-                    <span class="contact-value">{{ $assessment->assessment_date->format('M d, Y') }}</span>
-                </div>
-                <div class="contact-item">
-                    <span class="contact-label">Nutritionist:</span>
-                    <span class="contact-value">{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</span>
-                </div>
-            </div>
-        </div>
-
         <div class="main-content">
-            <div class="summary-box">
-                <div class="summary-title">Primary Assessment</div>
-                <div class="summary-diagnosis">{{ $assessment->diagnosis }}</div>
-                <div class="summary-subtitle">Current Nutritional Status</div>
-            </div>
-
             <div class="section">
-                <h3 class="section-title">Key Metrics</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">{{ $assessment->weight_kg }}</div>
-                        <div class="stat-label">Weight (kg)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">{{ $assessment->height_cm }}</div>
-                        <div class="stat-label">Height (cm)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">
-                            @if($assessment->muac_cm)
-                                {{ $assessment->muac_cm }}
-                            @else
-                                N/A
-                            @endif
-                        </div>
-                        <div class="stat-label">MUAC (cm)</div>
+                <h3 class="section-title">Patient Information</h3>
+                <div class="experience-item">
+                    <div class="experience-content">
+                        <p><strong>Name:</strong> {{ $patient->first_name }} {{ $patient->last_name }}</p>
+                        <p><strong>Age months:</strong> {{ $patient->age_months }}</p>
+                        <p><strong>Diagnosis:</strong> {{ $assessment->diagnosis }}</p>
+                        @if($treatmentPlan && isset($treatmentPlan['patient_info']['confidence_level']))
+                        <p><strong>Confidence level:</strong> {{ $treatmentPlan['patient_info']['confidence_level'] }}</p>
+                        @endif
+                        <p><strong>Assessment date:</strong> {{ $assessment->assessment_date->format('Y-m-d') }}</p>
+                        <p><strong>Plan created by:</strong> AI-Enhanced Malnutrition Assessment System</p>
                     </div>
                 </div>
             </div>
@@ -118,16 +82,6 @@
 
             <div class="section">
                 <h3 class="section-title">Complete Treatment & Care Plan</h3>
-                @if(isset($treatmentPlan['patient_info']))
-                <div class="experience-item">
-                    <div class="experience-title">Patient Info</div>
-                    <div class="experience-content">
-                        @foreach($treatmentPlan['patient_info'] as $key => $value)
-                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
 
                 @if(isset($treatmentPlan['immediate_actions']))
                 <div class="experience-item">
@@ -136,7 +90,7 @@
                         @if(is_array($treatmentPlan['immediate_actions']))
                             <ul>
                                 @foreach($treatmentPlan['immediate_actions'] as $action)
-                                <li>{{ is_array($action) ? json_encode($action) : $action }}</li>
+                                <li>{{ is_array($action) ? implode(', ', $action) : $action }}</li>
                                 @endforeach
                             </ul>
                         @else
@@ -146,45 +100,21 @@
                 </div>
                 @endif
 
-                @if(isset($treatmentPlan['nutrition_plan']))
-                <div class="experience-item">
-                    <div class="experience-title">Nutrition Plan</div>
-                    <div class="experience-content">
-                        @foreach($treatmentPlan['nutrition_plan'] as $key => $value)
-                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-
-                @if(isset($treatmentPlan['medical_interventions']))
-                <div class="experience-item">
-                    <div class="experience-title">Medical Interventions</div>
-                    <div class="experience-content">
-                        @foreach($treatmentPlan['medical_interventions'] as $key => $value)
-                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-
                 @if(isset($treatmentPlan['monitoring_schedule']))
                 <div class="experience-item">
                     <div class="experience-title">Monitoring Schedule</div>
                     <div class="experience-content">
                         @foreach($treatmentPlan['monitoring_schedule'] as $key => $value)
-                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-
-                @if(isset($treatmentPlan['follow_up_plan']))
-                <div class="experience-item">
-                    <div class="experience-title">Follow-up Plan</div>
-                    <div class="experience-content">
-                        @foreach($treatmentPlan['follow_up_plan'] as $key => $value)
-                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
+                            @if(is_array($value))
+                                <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong></p>
+                                <ul>
+                                    @foreach($value as $item)
+                                        <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ $value }}</p>
+                            @endif
                         @endforeach
                     </div>
                 </div>
@@ -197,7 +127,7 @@
                         @if(is_array($treatmentPlan['family_education']))
                             <ul>
                                 @foreach($treatmentPlan['family_education'] as $item)
-                                <li>{{ is_array($item) ? json_encode($item) : $item }}</li>
+                                <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
                                 @endforeach
                             </ul>
                         @else
@@ -212,7 +142,16 @@
                     <div class="experience-title">Success Criteria</div>
                     <div class="experience-content">
                         @foreach($treatmentPlan['success_criteria'] as $key => $value)
-                            <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</p>
+                            @if(is_array($value))
+                                <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong></p>
+                                <ul>
+                                    @foreach($value as $item)
+                                        <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ $value }}</p>
+                            @endif
                         @endforeach
                     </div>
                 </div>
@@ -225,7 +164,7 @@
                         @if(is_array($treatmentPlan['discharge_criteria']))
                             <ul>
                                 @foreach($treatmentPlan['discharge_criteria'] as $item)
-                                <li>{{ is_array($item) ? json_encode($item) : $item }}</li>
+                                <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
                                 @endforeach
                             </ul>
                         @else
@@ -242,7 +181,7 @@
                         @if(is_array($treatmentPlan['emergency_signs']))
                             <ul>
                                 @foreach($treatmentPlan['emergency_signs'] as $item)
-                                <li>{{ is_array($item) ? json_encode($item) : $item }}</li>
+                                <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
                                 @endforeach
                             </ul>
                         @else

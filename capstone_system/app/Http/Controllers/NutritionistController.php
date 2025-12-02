@@ -81,6 +81,7 @@ class NutritionistController extends Controller
         // Chart Data: Nutritional Status Distribution (BMI for Age)
         $nutritionalStatus = Patient::where('nutritionist_id', $nutritionistId)
             ->whereNotNull('bmi_for_age')
+            ->where('bmi_for_age', '!=', '')
             ->select('bmi_for_age', DB::raw('count(*) as count'))
             ->groupBy('bmi_for_age')
             ->get();
@@ -499,38 +500,77 @@ class NutritionistController extends Controller
             });
         }
 
-        // Status filter
+        // Status filter - check LATEST assessment only
         if ($request->has('status') && !empty($request->status)) {
             if ($request->status === 'completed') {
+                // Has assessment and latest one is completed
                 $query->whereHas('assessments', function($q) {
-                    $q->whereNotNull('completed_at');
+                    $q->whereRaw('assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)')
+                      ->whereNotNull('completed_at');
                 });
             } elseif ($request->status === 'pending') {
-                $query->where(function($q) {
-                    $q->whereDoesntHave('assessments')
-                      ->orWhereHas('assessments', function($subQ) {
-                          $subQ->whereNull('completed_at');
-                      });
+                // Has assessment but latest one is not completed
+                $query->whereHas('assessments', function($q) {
+                    $q->whereRaw('assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)')
+                      ->whereNull('completed_at');
                 });
+            } elseif ($request->status === 'no_assessment') {
+                // Has no assessments at all
+                $query->whereDoesntHave('assessments');
             }
         }
 
-        // Date range filter
+        // Date range filter - filter by LATEST assessment date only
         if ($request->has('date_from') && !empty($request->date_from)) {
-            $query->whereHas('assessments', function($q) use ($request) {
-                $q->whereDate('assessment_date', '>=', $request->date_from);
+            $dateFrom = $request->date_from;
+            // Validate date format
+            if (!\DateTime::createFromFormat('Y-m-d', $dateFrom)) {
+                return back()->withErrors(['date_from' => 'Invalid date format']);
+            }
+            
+            $query->whereHas('assessments', function($q) use ($dateFrom) {
+                $q->whereRaw('assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)')
+                  ->whereDate('assessment_date', '>=', $dateFrom);
             });
         }
+        
         if ($request->has('date_to') && !empty($request->date_to)) {
-            $query->whereHas('assessments', function($q) use ($request) {
-                $q->whereDate('assessment_date', '<=', $request->date_to);
+            $dateTo = $request->date_to;
+            // Validate date format
+            if (!\DateTime::createFromFormat('Y-m-d', $dateTo)) {
+                return back()->withErrors(['date_to' => 'Invalid date format']);
+            }
+            
+            $query->whereHas('assessments', function($q) use ($dateTo) {
+                $q->whereRaw('assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)')
+                  ->whereDate('assessment_date', '<=', $dateTo);
             });
+        }
+        
+        // Validate date range - date_from should not be after date_to
+        if ($request->has('date_from') && $request->has('date_to') && 
+            !empty($request->date_from) && !empty($request->date_to)) {
+            $dateFrom = new \DateTime($request->date_from);
+            $dateTo = new \DateTime($request->date_to);
+            
+            if ($dateFrom > $dateTo) {
+                if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response('<div class="alert alert-warning">Invalid date range: Date From cannot be later than Date To</div>', 400);
+                }
+                return back()->withErrors(['date_range' => 'Date From cannot be later than Date To']);
+            }
         }
 
-        // Diagnosis filter
+        // Diagnosis filter - filter by LATEST assessment diagnosis only
+        // The diagnosis is stored in the treatment JSON field under patient_info.diagnosis
         if ($request->has('diagnosis') && !empty($request->diagnosis)) {
-            $query->whereHas('assessments', function($q) use ($request) {
-                $q->where('treatment', 'like', "%{$request->diagnosis}%");
+            $diagnosis = $request->diagnosis;
+            $query->whereHas('assessments', function($q) use ($diagnosis) {
+                $q->whereRaw('assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)')
+                  ->where(function($subQ) use ($diagnosis) {
+                      // Search in the JSON path for exact diagnosis match
+                      $subQ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE ?", ["%{$diagnosis}%"]);
+                  });
             });
         }
 
@@ -579,20 +619,9 @@ class NutritionistController extends Controller
         // Append current query parameters to pagination links
         $patients->appends($request->query());
 
-        // If it's an AJAX request, return JSON
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'html' => view('nutritionist.partials.assessments-table', compact('patients'))->render(),
-                'pagination' => [
-                    'current_page' => $patients->currentPage(),
-                    'last_page' => $patients->lastPage(),
-                    'per_page' => $patients->perPage(),
-                    'total' => $patients->total(),
-                    'from' => $patients->firstItem(),
-                    'to' => $patients->lastItem(),
-                ]
-            ]);
+        // If it's an AJAX request, return only the partial view HTML
+        if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return view('nutritionist.partials.assessments-table', compact('patients'))->render();
         }
 
         // For backward compatibility, also pass as 'assessments' but it's actually patients with their latest assessments
@@ -1095,12 +1124,17 @@ class NutritionistController extends Controller
         $barangayId = $request->input('barangay_id');
         $status = $request->input('status');
 
-        // Get filtered patients
+        // Get filtered patients with explicit barangay eager loading
         $patientsQuery = Patient::where('nutritionist_id', $nutritionistId)
-            ->with(['barangay', 'assessments' => function($query) use ($startDate, $endDate) {
-                $query->whereBetween('assessment_date', [$startDate, $endDate])
-                    ->orderBy('assessment_date', 'desc');
-            }]);
+            ->with([
+                'barangay' => function($query) {
+                    $query->select('barangay_id', 'barangay_name');
+                },
+                'assessments' => function($query) use ($startDate, $endDate) {
+                    $query->whereBetween('assessment_date', [$startDate, $endDate])
+                        ->orderBy('assessment_date', 'desc');
+                }
+            ]);
 
         if ($barangayId) {
             $patientsQuery->where('barangay_id', $barangayId);
@@ -1113,8 +1147,19 @@ class NutritionistController extends Controller
             $patients = $patients->filter(function($patient) use ($status) {
                 $latestAssessment = $patient->assessments->first();
                 return $latestAssessment && $latestAssessment->recovery_status === $status;
-            });
+            })->values();
         }
+
+        // Get barangay information if filtered
+        $selectedBarangay = null;
+        if ($barangayId) {
+            $selectedBarangay = \App\Models\Barangay::find($barangayId);
+        }
+
+        // Get unique barangays from the patients (filter out nulls)
+        $barangays = $patients->map(function($patient) {
+            return $patient->barangay;
+        })->filter()->unique('barangay_id')->values();
 
         $data = [
             'title' => 'Children Monitoring Report',
@@ -1124,6 +1169,9 @@ class NutritionistController extends Controller
             'endDate' => $endDate,
             'generatedDate' => now()->format('F d, Y'),
             'generatedTime' => now()->format('h:i A'),
+            'selectedBarangay' => $selectedBarangay,
+            'barangays' => $barangays,
+            'filterStatus' => $status,
         ];
 
         $pdf = PDF::loadView('nutritionist.reports.pdf.children-monitoring', $data);

@@ -131,15 +131,14 @@
                     </button>
                     
                     @if($latestAssessment)
-                        <button class="action-btn print-btn" onclick="printAssessmentDetails({{ $latestAssessment->assessment_id }})" title="Print Assessment">
-                            <i class="fas fa-print me-1"></i>
-                            Print
+                        <button class="action-btn print-btn" onclick="printAssessmentDetails({{ $latestAssessment->assessment_id }})" title="Save as PDF">
+                            <i class="fas fa-download me-1"></i>
+                            Save as PDF
                         </button>
                     @endif
                 </div>
             </div>
         @endforeach
-    </div>
     </div>
 
     <!-- Enhanced Pagination Container -->
@@ -295,19 +294,35 @@
         <div class="empty-content">
             <h3 class="empty-title">No Patients Found</h3>
             <p class="empty-message">
-                {{ request('search') ? 'No patients match your search criteria. Try adjusting your filters.' : 'You don\'t have any assigned patients yet. Contact your administrator to get patients assigned to you.' }}
+                {{ request('search') || request('diagnosis') || request('status') || request('date_from') || request('date_to') 
+                    ? 'No patients match your filter criteria. Try adjusting or clearing your filters.' 
+                    : 'You don\'t have any assigned patients yet. Contact your administrator to get patients assigned to you.' }}
             </p>
             <div class="empty-actions">
-                <a href="{{ route('nutritionist.patients') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-user-plus me-2"></i>
-                    View All Patients
-                </a>
                 @if(request('search') || request()->hasAny(['status', 'diagnosis', 'date_from', 'date_to']))
-                    <button class="btn btn-outline-secondary btn-lg ms-3" id="clearFiltersEmpty">
+                    <button class="btn btn-primary btn-lg" id="clearFiltersEmpty">
                         <i class="fas fa-times me-2"></i>
                         Clear Filters
                     </button>
+                @else
+                    <a href="{{ route('nutritionist.patients') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>
+                        View All Patients
+                    </a>
                 @endif
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pagination info even when empty -->
+    <div class="pagination-container mt-4">
+        <div class="pagination-info-extended">
+            <div class="total-results">
+                <i class="fas fa-users me-1"></i>
+                Total: 0 patients
+            </div>
+            <div class="showing-results">
+                Showing 0 to 0
             </div>
         </div>
     </div>
