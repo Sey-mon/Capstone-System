@@ -442,7 +442,7 @@ function editPatient(patientId) {
             
             // Show the form with data
             Swal.fire({
-                title: 'Edit Patient',
+                title: 'Edit Patient - ID: ' + (patient.custom_patient_id || 'N/A'),
                 html: getFormHTML(),
                 showCancelButton: true,
                 confirmButtonText: 'Update Patient',
@@ -598,6 +598,7 @@ function viewPatient(patientId) {
             
             // Compact Patient Header with dynamic data
             html += '<div class="patient-header-compact">';
+            html += '<div class="patient-id-badge"><i class="fas fa-id-card"></i> ID: <strong>' + show(patient.custom_patient_id) + '</strong></div>';
             html += '<div class="header-left">';
             html += `<div class="patient-avatar-sm">${patient.first_name.charAt(0)}${patient.last_name.charAt(0)}</div>`;
             html += '<div class="header-info">';

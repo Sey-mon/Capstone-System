@@ -125,6 +125,7 @@ class NutritionistController extends Controller
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('contact_number', 'like', "%{$search}%")
+                  ->orWhere('custom_patient_id', 'like', "%{$search}%")
                   ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
             });
         }
@@ -324,7 +325,7 @@ class NutritionistController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Patient added successfully!',
+                'message' => 'Patient added successfully! Patient ID: ' . $patient->custom_patient_id,
                 'patient' => $patient->load(['parent', 'barangay'])
             ]);
         } catch (\Exception $e) {

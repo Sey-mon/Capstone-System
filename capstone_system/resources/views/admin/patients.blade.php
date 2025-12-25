@@ -113,6 +113,7 @@
                         <table class="enhanced-patients-table" id="patientsTable">
                             <thead>
                                 <tr>
+                                    <th>Patient ID</th>
                                     <th class="sortable" data-sort="name">
                                         <span>Patient</span>
                                         <i class="fas fa-sort"></i>
@@ -137,7 +138,6 @@
                                         <span>Nutritionist</span>
                                         <i class="fas fa-sort"></i>
                                     </th>
-                                    <th>Contact</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -151,10 +151,10 @@
                                         data-parent="{{ $patient->parent ? $patient->parent->first_name . ' ' . $patient->parent->last_name : '' }}"
                                         data-nutritionist="{{ $patient->nutritionist ? $patient->nutritionist->first_name . ' ' . $patient->nutritionist->last_name : '' }}"
                                         data-contact="{{ $patient->contact_number }}">
+                                        <td>
+                                            <span class="badge bg-primary">{{ $patient->custom_patient_id }}</span>
+                                        </td>
                                         <td class="patient-info-cell">
-                                            <div class="patient-avatar">
-                                                <i class="fas fa-child"></i>
-                                            </div>
                                             <div class="patient-details">
                                                 <div class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</div>
                                                 @if($patient->middle_name)
@@ -193,7 +193,6 @@
                                                 <span class="text-muted">Not assigned</span>
                                             @endif
                                         </td>
-                                        <td class="contact-cell">{{ $patient->contact_number }}</td>
                                         <td class="actions-cell">
                                             <div class="action-buttons">
                                                 <button class="btn btn-sm btn-outline-primary" data-patient-id="{{ $patient->patient_id }}" title="View Details">
@@ -231,9 +230,6 @@
                                 data-nutritionist="{{ $patient->nutritionist ? $patient->nutritionist->first_name . ' ' . $patient->nutritionist->last_name : '' }}"
                                 data-contact="{{ $patient->contact_number }}">
                                 <div class="card-header">
-                                    <div class="patient-avatar-large">
-                                        <i class="fas fa-child"></i>
-                                    </div>
                                     <div class="patient-info">
                                         <h4 class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</h4>
                                         @if($patient->middle_name)

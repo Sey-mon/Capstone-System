@@ -213,7 +213,7 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Patient added successfully!',
+                'message' => 'Patient added successfully! Patient ID: ' . $patient->custom_patient_id,
                 'patient' => $patient->load(['parent', 'nutritionist', 'barangay'])
             ]);
         } catch (\Exception $e) {
@@ -893,6 +893,7 @@ class AdminController extends Controller
                 $latestAssessment = $patient->assessments()->latest()->first();
                 return [
                     'id' => $patient->patient_id,
+                    'custom_id' => $patient->custom_patient_id,
                     'name' => $patient->first_name . ' ' . $patient->last_name,
                     'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown',
                     'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,

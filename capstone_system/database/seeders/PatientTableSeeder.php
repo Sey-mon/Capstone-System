@@ -3,16 +3,15 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\Patient;
 
 class PatientTableSeeder extends Seeder
 {
     public function run()
     {
-        $patients = [];
         // Parent user_ids from UsersTableSeeder
-    $parent_ids = [5, 6, 7, 8, 9]; // Valid parent user_ids
-    $nutritionist_ids = [2, 3, 4]; // Valid nutritionist user_ids
+        $parent_ids = [5, 6, 7, 8, 9]; // Valid parent user_ids
+        $nutritionist_ids = [2, 3, 4]; // Valid nutritionist user_ids
         $barangay_ids = range(1, 27); // 27 barangays
         $weight_for_age_options = ['Normal', 'Underweight', 'Overweight'];
         $height_for_age_options = ['Normal', 'Stunted', 'Tall'];
@@ -21,13 +20,15 @@ class PatientTableSeeder extends Seeder
         $breastfeeding_options = ['Yes', 'No'];
         $medical_problems = [null, 'Anemia', 'Asthma', 'Diarrhea', 'None'];
 
-    for ($i = 1; $i <= 15; $i++) {
+        // Use Patient::create() to trigger model events and auto-generate custom_patient_id
+        for ($i = 1; $i <= 15; $i++) {
             $age_months = rand(6, 60);
             $sex = $sex_options[array_rand($sex_options)];
             // Reasonable weight/height for age
             $weight_kg = round(2.5 + $age_months * 0.3 + rand(-10, 10) * 0.05, 2);
             $height_cm = round(45 + $age_months * 1.5 + rand(-10, 10) * 0.5, 1);
-            $patients[] = [
+            
+            Patient::create([
                 'parent_id' => $parent_ids[array_rand($parent_ids)],
                 'nutritionist_id' => $nutritionist_ids[array_rand($nutritionist_ids)],
                 'first_name' => 'Patient' . $i,
@@ -50,9 +51,7 @@ class PatientTableSeeder extends Seeder
                 'breastfeeding' => $breastfeeding_options[array_rand($breastfeeding_options)],
                 'other_medical_problems' => $medical_problems[array_rand($medical_problems)],
                 'edema' => rand(0, 1) ? 'Yes' : 'No',
-                'created_at' => now()
-            ];
+            ]);
         }
-        DB::table('patients')->insert($patients);
     }
 }

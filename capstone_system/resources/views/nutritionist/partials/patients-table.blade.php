@@ -3,6 +3,7 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th>Patient ID</th>
                     <th>
                         <a href="#" class="sort-link" data-sort="name">
                             Patient Name 
@@ -36,6 +37,9 @@
             <tbody>
                 @foreach($patients as $patient)
                     <tr>
+                        <td>
+                            <span class="badge bg-primary">{{ $patient->custom_patient_id }}</span>
+                        </td>
                         <td>
                             <div class="user-info">
                                 <strong>{{ $patient->first_name }} {{ $patient->last_name }}</strong>
