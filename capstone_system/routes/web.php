@@ -327,6 +327,9 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
     Route::delete('/food-requests/{id}', [FoodRequestController::class, 'destroy'])->name('food-requests.destroy');
 });
 
+// API Routes for AJAX calls
+Route::get('/api/foods/check-duplicate', [FoodController::class, 'checkDuplicate'])->middleware('auth');
+
 // Parent Routes (Protected by auth, verified email, and role middleware)
 Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('dashboard');

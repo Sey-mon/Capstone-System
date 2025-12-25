@@ -1,12 +1,130 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Login page loaded successfully!");
     
-    // Initialize form functionality
+    // Initialize all functionality
     initializeLoginForm();
     initializePasswordToggle();
     initializeFormValidation();
     initializeAnimations();
+    initializeHoneypotProtection();
+    initializeSmoothScrolling();
+    initializeNavbarScrollEffect();
+    initializeScrollAnimations();
+    initializeRippleEffects();
 });
+
+// Honeypot protection - prevents bot submissions
+function initializeHoneypotProtection() {
+    const form = document.getElementById('loginForm');
+    const honeypot = document.getElementById('website');
+    
+    if (form && honeypot) {
+        form.addEventListener('submit', function(e) {
+            if (honeypot.value) {
+                e.preventDefault();
+                console.log('Bot detected via honeypot');
+                return false;
+            }
+        });
+    }
+}
+
+// Smooth scrolling for navigation links
+function initializeSmoothScrolling() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// Navbar scroll effect
+function initializeNavbarScrollEffect() {
+    window.addEventListener('scroll', function() {
+        const nav = document.querySelector('.main-nav');
+        if (nav) {
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        }
+    });
+}
+
+// Scroll Animation Observer
+function initializeScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate');
+            }
+        });
+    }, observerOptions);
+
+    // Observe all content sections
+    const sections = document.querySelectorAll('.content-section');
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    // Add stagger animation to feature boxes when they come into view
+    const featureBoxObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const boxes = entry.target.querySelectorAll('.feature-box');
+                boxes.forEach((box, index) => {
+                    setTimeout(() => {
+                        box.style.opacity = '1';
+                        box.style.transform = 'translateY(0)';
+                    }, index * 100);
+                });
+            }
+        });
+    }, observerOptions);
+
+    const featuresSection = document.querySelector('#features');
+    if (featuresSection) {
+        featureBoxObserver.observe(featuresSection);
+    }
+}
+
+// Add ripple effect to all interactive buttons
+function initializeRippleEffects() {
+    const buttons = document.querySelectorAll('.btn-primary, .cta-button, .learn-more-btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const rect = button.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+
+            button.appendChild(ripple);
+
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+}
 
 // Password visibility toggle
 function initializePasswordToggle() {

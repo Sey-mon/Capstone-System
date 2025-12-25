@@ -3,8 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Login - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="Login to SHARES - Smart Health and Recommender System for Excellence in Nutrition. Access your San Pedro City nutrition management account.">
+    
+    <!-- Preconnect to external resources for better performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://www.google.com">
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -17,7 +27,7 @@
     <nav class="main-nav">
         <div class="nav-container">
             <div class="nav-logo">
-                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 45px; width: auto;">
+                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo">
             </div>
             <div class="nav-links">
                 <a href="#home">Home</a>
@@ -38,31 +48,7 @@
                     <span class="title-highlight">SHARES</span>
                 </h1>
                 <p class="hero-subtitle">
-                    <span class="subtitle-word">Smart</span>
-                    <span class="subtitle-word">Health</span>
-                    <span class="subtitle-word">and</span>
-                    <span class="subtitle-word">Recommender</span>
-                    <span class="subtitle-word">System</span>
-                    <span class="subtitle-word">for</span>
-                    <span class="subtitle-word">Excellence</span>
-                    <span class="subtitle-word">in</span>
-                    <span class="subtitle-word">Nutrition</span>
-                    <span class="subtitle-word">-</span>
-                    <span class="subtitle-word">Transforming</span>
-                    <span class="subtitle-word">San</span>
-                    <span class="subtitle-word">Pedro</span>
-                    <span class="subtitle-word">City</span>
-                    <span class="subtitle-word">into</span>
-                    <span class="subtitle-word">a</span>
-                    <span class="subtitle-word">nutrition-smart</span>
-                    <span class="subtitle-word">community</span>
-                    <span class="subtitle-word">through</span>
-                    <span class="subtitle-word">data-driven</span>
-                    <span class="subtitle-word">insights</span>
-                    <span class="subtitle-word">and</span>
-                    <span class="subtitle-word">intelligent</span>
-                    <span class="subtitle-word">health</span>
-                    <span class="subtitle-word">recommendations</span>
+                    Smart Health and Recommender System for Excellence in Nutrition - Transforming San Pedro City into a nutrition-smart community through data-driven insights and intelligent health recommendations
                 </p>
                 <a href="#about" class="learn-more-btn">
                     Learn More
@@ -97,7 +83,7 @@
                     @csrf
 
                     <!-- Honeypot Field (Hidden trap for bots) -->
-                    <input type="text" name="website" id="website" style="display:none !important;" tabindex="-1" autocomplete="off">
+                    <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
 
                     <div class="form-group">
                         <label for="email">Email Address</label>
@@ -145,8 +131,7 @@
                     <div class="form-group">
                         <div class="g-recaptcha" 
                              data-sitekey="{{ config('services.recaptcha.site_key', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') }}"
-                             data-theme="light"
-                             style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
+                             data-theme="light">
                         </div>
 
                         @error('g-recaptcha-response')
@@ -156,7 +141,7 @@
 
                     <button type="submit" class="btn-primary" id="loginBtn">
                         <span class="btn-text">Sign In</span>
-                        <div class="loading-spinner" style="display: none;">
+                        <div class="loading-spinner">
                             <i class="fas fa-spinner fa-spin"></i>
                         </div>
                     </button>
@@ -329,7 +314,7 @@
                 <!-- About Section -->
                 <div class="footer-section">
                     <div class="footer-logo">
-                        <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo" style="height: 60px; width: auto;">
+                        <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo">
                     </div>
                     <p class="footer-about">
                         Smart Health and Recommender System for San Pedro City's Nutrition Program - Building a healthier, food-secure future for all San Pedrenses.
@@ -407,105 +392,5 @@
     </footer>
 
     <script src="{{ asset('js/login.js') }}"></script>
-    <script>
-        // Honeypot protection - if bot fills the hidden field, prevent submission
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const honeypot = document.getElementById('website').value;
-            if (honeypot) {
-                e.preventDefault();
-                console.log('Bot detected via honeypot');
-                return false;
-            }
-        });
-
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
-            const nav = document.querySelector('.main-nav');
-            if (window.scrollY > 50) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
-            }
-        });
-
-        // Scroll Animation Observer
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
-        const observer = new IntersectionObserver(function(entries) {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('animate');
-                }
-            });
-        }, observerOptions);
-
-        // Observe all content sections
-        document.addEventListener('DOMContentLoaded', function() {
-            const sections = document.querySelectorAll('.content-section');
-            sections.forEach(section => {
-                observer.observe(section);
-            });
-
-            // Add stagger animation to feature boxes when they come into view
-            const featureBoxObserver = new IntersectionObserver(function(entries) {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const boxes = entry.target.querySelectorAll('.feature-box');
-                        boxes.forEach((box, index) => {
-                            setTimeout(() => {
-                                box.style.opacity = '1';
-                                box.style.transform = 'translateY(0)';
-                            }, index * 100);
-                        });
-                    }
-                });
-            }, observerOptions);
-
-            const featuresSection = document.querySelector('#features');
-            if (featuresSection) {
-                featureBoxObserver.observe(featuresSection);
-            }
-
-            // Add ripple effect to buttons
-            const buttons = document.querySelectorAll('.btn-primary, .cta-button, .learn-more-btn');
-            buttons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    const rect = button.getBoundingClientRect();
-                    const ripple = document.createElement('span');
-                    const size = Math.max(rect.width, rect.height);
-                    const x = e.clientX - rect.left - size / 2;
-                    const y = e.clientY - rect.top - size / 2;
-
-                    ripple.style.width = ripple.style.height = size + 'px';
-                    ripple.style.left = x + 'px';
-                    ripple.style.top = y + 'px';
-                    ripple.classList.add('ripple');
-
-                    button.appendChild(ripple);
-
-                    setTimeout(() => {
-                        ripple.remove();
-                    }, 600);
-                });
-            });
-        });
-    </script>
 </body>
 </html>

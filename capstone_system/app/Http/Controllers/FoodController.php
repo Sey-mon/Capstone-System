@@ -361,4 +361,44 @@ class FoodController extends Controller
             'count' => $foods->count(),
         ]);
     }
+
+    /**
+     * Check if a food already exists in the database (for duplicate prevention)
+     */
+    public function checkDuplicate(Request $request)
+    {
+        $name = $request->input('name', '');
+        
+        if (strlen($name) < 3) {
+            return response()->json([
+                'exists' => false,
+                'message' => 'Search term too short'
+            ]);
+        }
+
+        // Check in existing foods table
+        $existsInFoods = Food::where('food_name_and_description', 'LIKE', '%' . $name . '%')
+            ->orWhere('alternate_common_names', 'LIKE', '%' . $name . '%')
+            ->exists();
+
+        // Check in pending food requests
+        $existsInRequests = FoodRequest::where('status', 'pending')
+            ->where(function($query) use ($name) {
+                $query->where('food_name_and_description', 'LIKE', '%' . $name . '%')
+                      ->orWhere('alternate_common_names', 'LIKE', '%' . $name . '%');
+            })
+            ->exists();
+
+        $exists = $existsInFoods || $existsInRequests;
+
+        return response()->json([
+            'exists' => $exists,
+            'in_database' => $existsInFoods,
+            'in_pending_requests' => $existsInRequests,
+            'message' => $exists 
+                ? 'A similar food item already exists or is pending approval' 
+                : 'Food name is available'
+        ]);
+    }
 }
+

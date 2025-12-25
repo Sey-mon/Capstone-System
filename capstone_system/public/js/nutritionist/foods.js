@@ -41,125 +41,249 @@ function viewFoodDetails(foodId) {
     const modal = document.getElementById('viewFoodModal');
     const content = document.getElementById('foodDetailsContent');
     
-    modal.style.display = 'block';
-    content.innerHTML = '<p style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading...</p>';
+    modal.style.display = 'flex';
+    content.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading food details...</p>
+        </div>
+    `;
     
     fetch(`/admin/foods/${foodId}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch food details');
+            }
+            return response.json();
+        })
         .then(data => {
             content.innerHTML = `
-                <div class="detail-row">
-                    <strong>Food ID:</strong>
-                    <span>${data.food_id}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Food Name & Description:</strong>
-                    <span>${data.food_name_and_description || '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Alternate Names:</strong>
-                    <span>${data.alternate_common_names || '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Energy (kcal):</strong>
-                    <span>${data.energy_kcal ? parseFloat(data.energy_kcal).toFixed(1) : '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Nutrition Tags:</strong>
-                    <span>${data.nutrition_tags || '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Created:</strong>
-                    <span>${data.created_at ? new Date(data.created_at).toLocaleDateString() : '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Last Updated:</strong>
-                    <span>${data.updated_at ? new Date(data.updated_at).toLocaleDateString() : '-'}</span>
+                <div class="modal-details">
+                    <div class="detail-section">
+                        <div class="detail-header">
+                            <i class="fas fa-info-circle"></i>
+                            <h3>Basic Information</h3>
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label><i class="fas fa-hashtag"></i> Food ID</label>
+                                <span class="value">${data.food_id}</span>
+                            </div>
+                            <div class="detail-item full-width">
+                                <label><i class="fas fa-utensils"></i> Food Name & Description</label>
+                                <span class="value">${data.food_name_and_description || '-'}</span>
+                            </div>
+                            <div class="detail-item full-width">
+                                <label><i class="fas fa-tag"></i> Alternate Names</label>
+                                <span class="value">${data.alternate_common_names || 'None'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="detail-header">
+                            <i class="fas fa-fire"></i>
+                            <h3>Nutritional Information</h3>
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label><i class="fas fa-bolt"></i> Energy</label>
+                                <span class="value highlight">${data.energy_kcal ? parseFloat(data.energy_kcal).toFixed(1) + ' kcal' : '-'}</span>
+                            </div>
+                            <div class="detail-item full-width">
+                                <label><i class="fas fa-tags"></i> Nutrition Tags</label>
+                                <span class="value tags">${formatTags(data.nutrition_tags)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${data.created_at || data.updated_at ? `
+                    <div class="detail-section">
+                        <div class="detail-header">
+                            <i class="fas fa-clock"></i>
+                            <h3>Record Information</h3>
+                        </div>
+                        <div class="detail-grid">
+                            ${data.created_at ? `
+                            <div class="detail-item">
+                                <label><i class="fas fa-calendar-plus"></i> Created</label>
+                                <span class="value">${new Date(data.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            ` : ''}
+                            ${data.updated_at ? `
+                            <div class="detail-item">
+                                <label><i class="fas fa-calendar-check"></i> Last Updated</label>
+                                <span class="value">${new Date(data.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
             `;
         })
         .catch(error => {
-            content.innerHTML = '<p style="text-align:center; padding: 20px; color: red;"><i class="fas fa-exclamation-circle"></i> Error loading food details</p>';
+            content.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Unable to Load Food Details</h3>
+                    <p>An error occurred while fetching the food information. Please try again.</p>
+                    <button onclick="viewFoodDetails(${foodId})" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
             console.error('Error:', error);
         });
+}
+
+function formatTags(tags) {
+    if (!tags) return '<span class="no-tags">No tags</span>';
+    const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    if (tagArray.length === 0) return '<span class="no-tags">No tags</span>';
+    return tagArray.map(tag => `<span class="tag-pill">${tag}</span>`).join('');
 }
 
 function closeViewFoodModal() {
     document.getElementById('viewFoodModal').style.display = 'none';
 }
 
-// Request Food using SweetAlert2
+// Request Food using SweetAlert2 with duplicate validation
 function openRequestFoodModal() {
     Swal.fire({
         title: '<span style="color: #2e7d32;">Request New Food</span>',
         html: `
             <form id="requestFoodForm" style="text-align: left;">
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #2e7d32;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2e7d32;">
                         Food Name & Description <span style="color: #dc3545;">*</span>
                     </label>
                     <textarea 
                         id="food_name_and_description" 
                         rows="3" 
                         placeholder="Enter detailed food name and description"
-                        style="width: 100%; padding: 8px; border: 2px solid #e8f5e9; border-radius: 8px; font-size: 14px; font-family: inherit;"
+                        style="width: 100%; padding: 10px; border: 2px solid #e8f5e9; border-radius: 10px; font-size: 14px; font-family: inherit; transition: all 0.3s;"
                         required
                     ></textarea>
+                    <small id="food_name_validation" style="color: #dc3545; font-size: 12px; display: none; margin-top: 4px;">
+                        <i class="fas fa-exclamation-triangle"></i> This food may already exist in the database
+                    </small>
                 </div>
 
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #2e7d32;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2e7d32;">
                         Alternate Names
                     </label>
                     <input 
                         type="text" 
                         id="alternate_common_names" 
                         placeholder="Other common names (comma-separated)"
-                        style="width: 100%; padding: 8px; border: 2px solid #e8f5e9; border-radius: 8px; font-size: 14px;"
+                        style="width: 100%; padding: 10px; border: 2px solid #e8f5e9; border-radius: 10px; font-size: 14px; transition: all 0.3s;"
                     />
                 </div>
 
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #2e7d32;">
-                        Energy (kcal)
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2e7d32;">
+                        Energy (kcal) <span style="color: #dc3545;">*</span>
                     </label>
                     <input 
                         type="number" 
                         id="energy_kcal" 
                         step="0.1" 
+                        min="0"
                         placeholder="Caloric content per serving"
-                        style="width: 100%; padding: 8px; border: 2px solid #e8f5e9; border-radius: 8px; font-size: 14px;"
+                        style="width: 100%; padding: 10px; border: 2px solid #e8f5e9; border-radius: 10px; font-size: 14px; transition: all 0.3s;"
+                        required
                     />
                 </div>
 
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #2e7d32;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2e7d32;">
                         Nutrition Tags
                     </label>
                     <input 
                         type="text" 
                         id="nutrition_tags" 
                         placeholder="e.g., high-protein, low-fat (comma-separated)"
-                        style="width: 100%; padding: 8px; border: 2px solid #e8f5e9; border-radius: 8px; font-size: 14px;"
+                        style="width: 100%; padding: 10px; border: 2px solid #e8f5e9; border-radius: 10px; font-size: 14px; transition: all 0.3s;"
                     />
+                </div>
+                
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin-top: 15px;">
+                    <small style="color: #2e7d32; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;">
+                        <i class="fas fa-info-circle" style="margin-top: 2px;"></i>
+                        <span>All fields marked with <strong>*</strong> are required. Your request will be reviewed by an admin before being added to the database.</span>
+                    </small>
                 </div>
             </form>
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-paper-plane"></i> Submit Request',
-        cancelButtonText: 'Cancel',
+        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
         confirmButtonColor: '#4caf50',
         cancelButtonColor: '#6c757d',
-        width: '600px',
+        width: '650px',
         focusConfirm: false,
-        preConfirm: () => {
-            const foodName = document.getElementById('food_name_and_description').value;
-            const alternateName = document.getElementById('alternate_common_names').value;
-            const energy = document.getElementById('energy_kcal').value;
-            const tags = document.getElementById('nutrition_tags').value;
+        didOpen: () => {
+            // Add real-time duplicate checking
+            const foodNameInput = document.getElementById('food_name_and_description');
+            const validationMsg = document.getElementById('food_name_validation');
+            let checkTimeout;
 
-            if (!foodName.trim()) {
-                Swal.showValidationMessage('Please enter food name and description');
+            foodNameInput.addEventListener('input', function() {
+                clearTimeout(checkTimeout);
+                const value = this.value.trim();
+                
+                if (value.length < 3) {
+                    validationMsg.style.display = 'none';
+                    this.style.borderColor = '#e8f5e9';
+                    return;
+                }
+
+                checkTimeout = setTimeout(() => {
+                    checkDuplicateFood(value, validationMsg, this);
+                }, 500);
+            });
+
+            // Add focus effects
+            const inputs = document.querySelectorAll('#requestFoodForm input, #requestFoodForm textarea');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.borderColor = '#4caf50';
+                    this.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
+                });
+                input.addEventListener('blur', function() {
+                    if (!this.value) {
+                        this.style.borderColor = '#e8f5e9';
+                        this.style.boxShadow = 'none';
+                    }
+                });
+            });
+        },
+        preConfirm: () => {
+            const foodName = document.getElementById('food_name_and_description').value.trim();
+            const alternateName = document.getElementById('alternate_common_names').value.trim();
+            const energy = document.getElementById('energy_kcal').value;
+            const tags = document.getElementById('nutrition_tags').value.trim();
+
+            // Enhanced validation
+            if (!foodName) {
+                Swal.showValidationMessage('<i class=\"fas fa-exclamation-circle\"></i> Please enter food name and description');
+                return false;
+            }
+
+            if (foodName.length < 3) {
+                Swal.showValidationMessage('<i class=\"fas fa-exclamation-circle\"></i> Food name must be at least 3 characters');
+                return false;
+            }
+
+            if (!energy || energy <= 0) {
+                Swal.showValidationMessage('<i class=\"fas fa-exclamation-circle\"></i> Please enter a valid energy value (kcal)');
+                return false;
+            }
+
+            if (energy > 10000) {
+                Swal.showValidationMessage('<i class=\"fas fa-exclamation-circle\"></i> Energy value seems too high. Please verify.');
                 return false;
             }
 
@@ -175,6 +299,26 @@ function openRequestFoodModal() {
             submitFoodRequest(result.value);
         }
     });
+}
+
+// Check for duplicate food in database
+function checkDuplicateFood(foodName, validationMsg, inputElement) {
+    fetch(`/api/foods/check-duplicate?name=${encodeURIComponent(foodName)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists) {
+                validationMsg.style.display = 'block';
+                inputElement.style.borderColor = '#ff9800';
+            } else {
+                validationMsg.style.display = 'none';
+                inputElement.style.borderColor = '#4caf50';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking duplicate:', error);
+            validationMsg.style.display = 'none';
+            inputElement.style.borderColor = '#e8f5e9';
+        });
 }
 
 // Submit food request
@@ -238,63 +382,111 @@ function viewRequestDetails(requestId) {
     const modal = document.getElementById('viewRequestModal');
     const content = document.getElementById('requestDetailsContent');
     
-    modal.style.display = 'block';
-    content.innerHTML = '<p style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading...</p>';
+    modal.style.display = 'flex';
+    content.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading request details...</p>
+        </div>
+    `;
     
     fetch(`/nutritionist/food-requests/${requestId}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch request details');
+            }
+            return response.json();
+        })
         .then(data => {
-            const statusColors = {
-                pending: '#ffc107',
-                approved: '#4caf50',
-                rejected: '#dc3545'
+            const statusConfig = {
+                pending: { color: '#ffc107', icon: 'fa-clock', label: 'Pending Review' },
+                approved: { color: '#4caf50', icon: 'fa-check-circle', label: 'Approved' },
+                rejected: { color: '#dc3545', icon: 'fa-times-circle', label: 'Rejected' }
             };
             
+            const status = statusConfig[data.status] || statusConfig.pending;
+            
             content.innerHTML = `
-                <div class="detail-row">
-                    <strong>Request ID:</strong>
-                    <span>#${data.id}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Status:</strong>
-                    <span style="color: ${statusColors[data.status]}; font-weight: bold;">${data.status.toUpperCase()}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Food Name & Description:</strong>
-                    <span>${data.food_name_and_description}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Alternate Names:</strong>
-                    <span>${data.alternate_common_names || '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Energy (kcal):</strong>
-                    <span>${data.energy_kcal || '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Nutrition Tags:</strong>
-                    <span>${data.nutrition_tags || '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <strong>Requested On:</strong>
-                    <span>${new Date(data.created_at).toLocaleDateString()}</span>
-                </div>
-                ${data.admin_notes ? `
-                    <div class="detail-row">
-                        <strong>Admin Notes:</strong>
-                        <span>${data.admin_notes}</span>
+                <div class="modal-details">
+                    <div class="status-banner" style="background: linear-gradient(135deg, ${status.color}15 0%, ${status.color}25 100%); border-left: 4px solid ${status.color};">
+                        <i class="fas ${status.icon}" style="color: ${status.color};"></i>
+                        <div>
+                            <h3 style="margin: 0; color: ${status.color};">${status.label}</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; color: #666;">Request #${data.id}</p>
+                        </div>
                     </div>
-                ` : ''}
-                ${data.reviewed_at ? `
-                    <div class="detail-row">
-                        <strong>Reviewed On:</strong>
-                        <span>${new Date(data.reviewed_at).toLocaleDateString()}</span>
+
+                    <div class="detail-section">
+                        <div class="detail-header">
+                            <i class="fas fa-info-circle"></i>
+                            <h3>Request Information</h3>
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item full-width">
+                                <label><i class="fas fa-utensils"></i> Food Name & Description</label>
+                                <span class="value">${data.food_name_and_description}</span>
+                            </div>
+                            <div class="detail-item full-width">
+                                <label><i class="fas fa-tag"></i> Alternate Names</label>
+                                <span class="value">${data.alternate_common_names || 'None'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fas fa-fire"></i> Energy</label>
+                                <span class="value highlight">${data.energy_kcal ? parseFloat(data.energy_kcal).toFixed(1) + ' kcal' : '-'}</span>
+                            </div>
+                            <div class="detail-item full-width">
+                                <label><i class="fas fa-tags"></i> Nutrition Tags</label>
+                                <span class="value tags">${formatTags(data.nutrition_tags)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label><i class="fas fa-calendar-plus"></i> Requested On</label>
+                                <span class="value">${new Date(data.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                        </div>
                     </div>
-                ` : ''}
+
+                    ${data.admin_notes || data.reviewed_at ? `
+                    <div class="detail-section">
+                        <div class="detail-header">
+                            <i class="fas fa-user-shield"></i>
+                            <h3>Admin Review</h3>
+                        </div>
+                        <div class="detail-grid">
+                            ${data.admin_notes ? `
+                            <div class="detail-item full-width">
+                                <label><i class="fas fa-comment-alt"></i> Admin Notes</label>
+                                <div class="admin-notes">${data.admin_notes}</div>
+                            </div>
+                            ` : ''}
+                            ${data.reviewed_at ? `
+                            <div class="detail-item">
+                                <label><i class="fas fa-calendar-check"></i> Reviewed On</label>
+                                <span class="value">${new Date(data.reviewed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            ` : ''}
+                            ${data.reviewer ? `
+                            <div class="detail-item">
+                                <label><i class="fas fa-user-check"></i> Reviewed By</label>
+                                <span class="value">${data.reviewer.first_name} ${data.reviewer.last_name}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
             `;
         })
         .catch(error => {
-            content.innerHTML = '<p style="text-align:center; padding: 20px; color: red;"><i class="fas fa-exclamation-circle"></i> Error loading request details</p>';
+            content.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Unable to Load Request Details</h3>
+                    <p>An error occurred while fetching the request information. Please try again.</p>
+                    <button onclick="viewRequestDetails(${requestId})" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
             console.error('Error:', error);
         });
 }
