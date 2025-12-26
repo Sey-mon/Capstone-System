@@ -465,19 +465,12 @@ class AuthController extends Controller
                 'string',
                 'regex:/^09\d{9}$/' // Updated to match new format: 09XXXXXXXXX (11 digits, no dashes)
             ],
-            'child_first_name' => [
+            'custom_patient_id' => [
                 'nullable',
                 'string',
-                'max:255',
-                'regex:/^[a-zA-Z\s\-\.]+$/'
+                'regex:/^\d{4}-SP-\d{4}-\d{2}$/', // Format: YYYY-SP-####-CC
+                'exists:patients,custom_patient_id'
             ],
-            'child_last_name' => [
-                'nullable',
-                'string',
-                'max:255',
-                'regex:/^[a-zA-Z\s\-\.]+$/'
-            ],
-            'child_age_months' => 'nullable|integer|min:0|max:60',
         ], [
             // Custom error messages
             'first_name.regex' => 'First name can only contain letters, spaces, hyphens, and periods.',
@@ -489,8 +482,8 @@ class AuthController extends Controller
             'barangay.required' => 'Please select your barangay.',
             'city.required' => 'City is required.',
             'province.required' => 'Province is required.',
-            'child_first_name.regex' => 'Child\'s first name can only contain letters, spaces, hyphens, and periods.',
-            'child_last_name.regex' => 'Child\'s last name can only contain letters, spaces, hyphens, and periods.',
+            'custom_patient_id.regex' => 'Please enter a valid Patient ID in the format: YYYY-SP-####-CC (e.g., 2025-SP-0001-01)',
+            'custom_patient_id.exists' => 'Patient ID not found. Please check the ID and try again, or contact your nutritionist.',
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).',
             'contact_number.regex' => 'Contact number must be an 11-digit Philippine mobile number starting with 09.',
             'birth_date.before' => 'Birth date must be in the past.',
@@ -536,9 +529,10 @@ class AuthController extends Controller
                 'contact_number' => $request->contact_number,
             ]);
 
-            // If child information is provided, attempt to find and create a pending connection
-            if ($request->filled('child_first_name') && $request->filled('child_last_name') && $request->filled('child_age_months')) {
-                $this->attemptChildLinking($user, $request);
+            // If custom patient ID is provided, link immediately
+            $linkedPatient = null;
+            if ($request->filled('custom_patient_id')) {
+                $linkedPatient = $this->linkChildByPatientId($user, $request->custom_patient_id);
             }
 
             // Log the registration
@@ -546,7 +540,7 @@ class AuthController extends Controller
                 'user_id' => $user->user_id,
                 'action' => 'registration',
                 'description' => 'Parent account registered successfully' . 
-                    ($request->filled('child_first_name') ? ' with child linking request' : ''),
+                    ($linkedPatient ? " and linked to patient {$linkedPatient->custom_patient_id}" : ''),
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -628,47 +622,55 @@ class AuthController extends Controller
     }
 
     /**
-     * Attempt to link child to parent account
+     * Link child to parent account using custom patient ID
+     * More efficient and accurate than name/age matching
      */
-    private function attemptChildLinking($parent, $request)
+    private function linkChildByPatientId($parent, $customPatientId)
     {
-        // Get age in months directly from the form
-        $ageInMonths = (int) $request->child_age_months;
-        
-        // Search for existing patient with matching information
-        // Allow for ±2 months tolerance in age matching
-        $potentialMatches = \App\Models\Patient::where('first_name', 'LIKE', '%' . $request->child_first_name . '%')
-            ->where('last_name', 'LIKE', '%' . $request->child_last_name . '%')
-            ->whereBetween('age_months', [$ageInMonths - 2, $ageInMonths + 2]) // ±2 months tolerance
-            ->whereNull('parent_id') // Only unlinked patients
-            ->get();
+        try {
+            // Find patient by custom ID
+            $patient = \App\Models\Patient::where('custom_patient_id', $customPatientId)
+                ->whereNull('parent_id') // Only unlinked patients
+                ->first();
 
-        // Create audit log for linking attempt
-        $description = "Parent linking request: Child name: {$request->child_first_name} {$request->child_last_name}, Age: {$ageInMonths} months";
-        
-        if ($potentialMatches->count() > 0) {
-            $description .= ". Found {$potentialMatches->count()} potential match(es) - requires admin verification.";
-            
-            // Store the potential matches for admin review (you could create a separate table for this)
-            foreach ($potentialMatches as $match) {
+            if (!$patient) {
+                // Patient already has a parent or doesn't exist
                 AuditLog::create([
                     'user_id' => $parent->user_id,
-                    'action' => 'child_link_request',
-                    'description' => $description . " Patient ID: {$match->patient_id} (Patient age: {$match->age_months} months)",
+                    'action' => 'child_link_failed',
+                    'description' => "Failed to link patient {$customPatientId} - patient not found or already linked to another parent",
                     'ip_address' => request()->ip(),
                     'user_agent' => request()->userAgent(),
                 ]);
+                return null;
             }
-        } else {
-            $description .= ". No matches found - child may need to be registered first.";
-            
+
+            // Link the patient to the parent
+            $patient->parent_id = $parent->user_id;
+            $patient->save();
+
+            // Log successful linking
             AuditLog::create([
                 'user_id' => $parent->user_id,
-                'action' => 'child_link_request',
-                'description' => $description,
+                'action' => 'child_linked',
+                'description' => "Successfully linked to patient {$customPatientId} ({$patient->first_name} {$patient->last_name})",
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
+
+            return $patient;
+        } catch (\Exception $e) {
+            \Log::error('Child linking error: ' . $e->getMessage());
+            
+            AuditLog::create([
+                'user_id' => $parent->user_id,
+                'action' => 'child_link_error',
+                'description' => "Error linking patient {$customPatientId}: {$e->getMessage()}",
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+            
+            return null;
         }
     }
 

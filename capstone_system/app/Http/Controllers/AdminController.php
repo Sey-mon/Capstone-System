@@ -213,7 +213,7 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Patient added successfully!',
+                'message' => 'Patient added successfully! Patient ID: ' . $patient->custom_patient_id,
                 'patient' => $patient->load(['parent', 'nutritionist', 'barangay'])
             ]);
         } catch (\Exception $e) {
@@ -893,6 +893,7 @@ class AdminController extends Controller
                 $latestAssessment = $patient->assessments()->latest()->first();
                 return [
                     'id' => $patient->patient_id,
+                    'custom_id' => $patient->custom_patient_id,
                     'name' => $patient->first_name . ' ' . $patient->last_name,
                     'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown',
                     'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
@@ -1653,12 +1654,12 @@ class AdminController extends Controller
 
             DB::beginTransaction();
 
-            // Activate account and verify email for staff members
+            // Activate account and verify email for staff members and parents
             $updateData = ['is_active' => true];
             
-            // For staff roles (Nutritionist, Health Worker, BHW), auto-verify email when activated
-            $staffRoles = ['Nutritionist', 'Health Worker', 'BHW'];
-            if ($user->role && in_array($user->role->role_name, $staffRoles)) {
+            // For staff roles (Nutritionist, Health Worker, BHW) and Parents, auto-verify email when activated
+            $autoVerifyRoles = ['Nutritionist', 'Health Worker', 'BHW', 'Parent'];
+            if ($user->role && in_array($user->role->role_name, $autoVerifyRoles)) {
                 $updateData['email_verified_at'] = now();
             }
             

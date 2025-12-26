@@ -75,9 +75,9 @@ class FoodRequestController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'food_name_and_description' => 'required|string|max:5000',
+            'food_name_and_description' => 'required|string|min:3|max:5000',
             'alternate_common_names' => 'nullable|string|max:5000',
-            'energy_kcal' => 'nullable|numeric|min:0',
+            'energy_kcal' => 'required|numeric|min:0|max:10000',
             'nutrition_tags' => 'nullable|string|max:5000',
         ]);
 
@@ -94,6 +94,39 @@ class FoodRequestController extends Controller
         }
 
         try {
+            // Check for duplicate in existing foods
+            $existsInFoods = Food::where('food_name_and_description', 'LIKE', '%' . $request->food_name_and_description . '%')
+                ->exists();
+
+            if ($existsInFoods) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'A similar food item already exists in the database. Please check the existing foods before requesting.'
+                    ], 422);
+                }
+                return redirect()->back()
+                    ->with('error', 'A similar food item already exists in the database.')
+                    ->withInput();
+            }
+
+            // Check for duplicate in pending requests
+            $existsInRequests = FoodRequest::where('status', 'pending')
+                ->where('food_name_and_description', 'LIKE', '%' . $request->food_name_and_description . '%')
+                ->exists();
+
+            if ($existsInRequests) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'A similar food request is already pending review. Please wait for it to be processed.'
+                    ], 422);
+                }
+                return redirect()->back()
+                    ->with('error', 'A similar food request is already pending review.')
+                    ->withInput();
+            }
+
             DB::beginTransaction();
 
             $foodRequest = FoodRequest::create([

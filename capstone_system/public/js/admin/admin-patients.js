@@ -101,6 +101,11 @@ function editPatient(patientId) {
             return null;
         }
         populateEditForm(data.patient);
+        // Update modal title with patient ID
+        const modalTitle = document.querySelector('#editPatientModal .modal-title');
+        if (modalTitle && data.patient.custom_patient_id) {
+            modalTitle.textContent = 'Edit Patient - ID: ' + data.patient.custom_patient_id;
+        }
         showEditPatientModal();
     })
     .catch(error => {
@@ -257,6 +262,14 @@ function displayPatientDetails(patient) {
     
     const html = `
         <div class="patient-details-grid">
+            <div class="detail-section">
+                <h6>Patient ID</h6>
+                <div class="detail-group">
+                    <div class="detail-value" style="font-size: 1.2em; color: #007bff; font-weight: bold;">
+                        ${patient.custom_patient_id || 'N/A'}
+                    </div>
+                </div>
+            </div>
             <div class="detail-section">
                 <h6>Basic Information</h6>
                 <div class="detail-group">
