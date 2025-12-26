@@ -1654,12 +1654,12 @@ class AdminController extends Controller
 
             DB::beginTransaction();
 
-            // Activate account and verify email for staff members
+            // Activate account and verify email for staff members and parents
             $updateData = ['is_active' => true];
             
-            // For staff roles (Nutritionist, Health Worker, BHW), auto-verify email when activated
-            $staffRoles = ['Nutritionist', 'Health Worker', 'BHW'];
-            if ($user->role && in_array($user->role->role_name, $staffRoles)) {
+            // For staff roles (Nutritionist, Health Worker, BHW) and Parents, auto-verify email when activated
+            $autoVerifyRoles = ['Nutritionist', 'Health Worker', 'BHW', 'Parent'];
+            if ($user->role && in_array($user->role->role_name, $autoVerifyRoles)) {
                 $updateData['email_verified_at'] = now();
             }
             

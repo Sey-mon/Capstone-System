@@ -104,9 +104,7 @@
             <input type="hidden" id="hidden_email" name="email" value="{{ old('email') }}">
             <input type="hidden" id="hidden_password" name="password" value="">
             <input type="hidden" id="hidden_password_confirmation" name="password_confirmation" value="">
-            <input type="hidden" id="hidden_child_first_name" name="child_first_name" value="{{ old('child_first_name') }}">
-            <input type="hidden" id="hidden_child_last_name" name="child_last_name" value="{{ old('child_last_name') }}">
-            <input type="hidden" id="hidden_child_age_months" name="child_age_months" value="{{ old('child_age_months') }}">
+            <input type="hidden" id="hidden_custom_patient_id" name="custom_patient_id" value="{{ old('custom_patient_id') }}">
             <!-- Removed duplicate hidden terms field. The visible checkbox now submits the terms acceptance. -->
 
             <!-- Step 1: Personal Information -->
@@ -301,6 +299,7 @@
                         <input type="password" name="password" id="password" 
                                placeholder="Create a strong password (minimum 8 characters)" 
                                value="{{ old('password') }}"
+                               autocomplete="new-password"
                                required>
                         <button type="button" class="password-visibility-toggle" data-target="password" aria-label="Toggle password visibility">
                             <i class="fas fa-eye show-icon"></i>
@@ -328,6 +327,7 @@
                         <input type="password" name="password_confirmation" id="password_confirmation" 
                                placeholder="Confirm your password" 
                                value="{{ old('password_confirmation') }}"
+                               autocomplete="new-password"
                                required>
                         <button type="button" class="password-visibility-toggle" data-target="password_confirmation" aria-label="Toggle password visibility">
                             <i class="fas fa-eye show-icon"></i>
@@ -345,46 +345,39 @@
 
             <!-- Step 3: Child Information -->
             <div class="wizard-step" id="step-3" data-step="3">
-                <h3>Child Information</h3>
-                <p class="step-description">Help us find your child in our records (Optional)</p>
+                <h3>Link Your Child</h3>
+                <p class="step-description">Connect your account to your child's patient record (Optional)</p>
                 
                 <div class="info-box">
-                    <strong>🔒 Privacy Protected:</strong> We use this information only to securely link your account to your child's records. This information is kept confidential and secure.
+                    <strong>🔒 Privacy Protected:</strong> Enter your child's Patient ID provided by your nutritionist to instantly link your accounts. This information is kept confidential and secure.
+                </div>
+
+                <div class="patient-id-guide">
+                    <h4><i class="fas fa-info-circle"></i> Where to find your Patient ID?</h4>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Ask your nutritionist for your child's Patient ID</li>
+                        <li><i class="fas fa-check"></i> Check your assessment documents or reports</li>
+                        <li><i class="fas fa-check"></i> Format: YYYY-SP-####-CC (e.g., 2025-SP-0001-01)</li>
+                    </ul>
                 </div>
 
                 <div class="form-group">
-                    <label for="child_first_name">Child's First Name</label>
-                    <input type="text" name="child_first_name" id="child_first_name" 
-                           placeholder="Enter your child's first name" 
-                           value="{{ old('child_first_name') }}">
-                    @error('child_first_name')
-                        <span class="error-text">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="child_last_name">Child's Last Name</label>
-                    <input type="text" name="child_last_name" id="child_last_name" 
-                           placeholder="Enter your child's last name" 
-                           value="{{ old('child_last_name') }}">
-                    @error('child_last_name')
-                        <span class="error-text">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="child_age_months">Child's Age (in months)</label>
-                    <input type="number" name="child_age_months" id="child_age_months" 
-                           min="0" max="60" placeholder="e.g., 24 for 2 years old"
-                           value="{{ old('child_age_months') }}">
-                    <small class="field-help">Enter age in months (0-60 months / 0-5 years)</small>
-                    @error('child_age_months')
+                    <label for="custom_patient_id">Patient ID</label>
+                    <input type="text" 
+                           name="custom_patient_id" 
+                           id="custom_patient_id" 
+                           placeholder="e.g., 2025-SP-0001-01" 
+                           value="{{ old('custom_patient_id') }}"
+                           pattern="\d{4}-SP-\d{4}-\d{2}"
+                           maxlength="17">
+                    <small class="field-help">Enter the Patient ID in format: YYYY-SP-####-CC</small>
+                    @error('custom_patient_id')
                         <span class="error-text">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <div class="skip-option">
-                    <p><em>💡 You can skip this step and link your child later through your dashboard.</em></p>
+                    <p><em>💡 You can skip this step and link your child later through your dashboard, or contact your nutritionist if you don't have a Patient ID yet.</em></p>
                 </div>
                 
                 <!-- Step 3 Navigation -->
@@ -437,24 +430,37 @@
                 <div class="review-section">
                     <h4>Child Information</h4>
                     <div class="review-item">
-                        <span class="label">Child's Name:</span>
-                        <span class="value" id="review-child-name"></span>
-                    </div>
-                    <div class="review-item">
-                        <span class="label">Age:</span>
-                        <span class="value" id="review-child-age"></span>
+                        <span class="label">Patient ID:</span>
+                        <span class="value" id="review-patient-id"></span>
                     </div>
                 </div>
 
                 <div class="terms-section">
-                    <div class="terms-view-notice" id="termsNotice">
+                    <h4>Terms & Conditions</h4>
+                    <div class="terms-notice">
                         <i class="fas fa-info-circle"></i>
-                        <p>Please click to read: <a href="{{ route('terms') }}" target="_blank" id="termsLink" class="terms-link">Terms and Conditions</a> and <a href="{{ route('privacy') }}" target="_blank" id="privacyLink" class="terms-link">Privacy Policy</a> before proceeding.</p>
+                        <p>Please review our policies before completing your registration:</p>
                     </div>
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="terms" id="terms" value="1" required>
-                        <span>I have read and agree to the <a href="{{ route('terms') }}" target="_blank" class="inline-link">Terms and Conditions</a> and <a href="{{ route('privacy') }}" target="_blank" class="inline-link">Privacy Policy</a></span>
-                    </label>
+                    
+                    <div class="terms-links">
+                        <a href="{{ route('terms') }}" target="_blank" class="terms-document-link">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Terms and Conditions</span>
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        <a href="{{ route('privacy') }}" target="_blank" class="terms-document-link">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Privacy Policy</span>
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+
+                    <div class="checkbox-container">
+                        <input type="checkbox" name="terms" id="terms" value="1" required class="custom-checkbox">
+                        <label for="terms" class="checkbox-text">
+                            I have read and agree to the Terms and Conditions and Privacy Policy
+                        </label>
+                    </div>
                 </div>
                 
                 <!-- Step 4 Navigation -->
@@ -493,7 +499,6 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/login.js') }}"></script>
     <script src="{{ asset('js/register-parent.js') }}"></script>
     
     <script>

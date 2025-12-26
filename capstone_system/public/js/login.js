@@ -154,6 +154,12 @@ function initializePasswordToggle() {
 function initializeLoginForm() {
     const form = document.getElementById('loginForm');
     const submitBtn = document.getElementById('loginBtn');
+    
+    // Check if login form elements exist (not on registration page)
+    if (!form || !submitBtn) {
+        return;
+    }
+    
     const btnText = submitBtn.querySelector('.btn-text');
     const loadingSpinner = submitBtn.querySelector('.loading-spinner');
     

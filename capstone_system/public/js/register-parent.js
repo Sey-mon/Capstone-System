@@ -118,10 +118,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (skipButton) {
             skipButton.addEventListener('click', function(e) {
                 e.preventDefault();
-                // Clear child info fields
-                document.getElementById('child_first_name').value = '';
-                document.getElementById('child_last_name').value = '';
-                document.getElementById('child_age_months').value = '';
+                // Clear patient ID field
+                document.getElementById('custom_patient_id').value = '';
                 
                 // Sync and move to next step
                 syncCurrentStepData();
@@ -257,14 +255,10 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('email').value || 'Not provided';
             
         // Child Information
-        const childFirstName = document.getElementById('child_first_name').value;
-        const childLastName = document.getElementById('child_last_name').value;
-        const childAge = document.getElementById('child_age_months').value;
+        const patientId = document.getElementById('custom_patient_id').value;
         
-        document.getElementById('review-child-name').textContent = 
-            (childFirstName && childLastName) ? `${childFirstName} ${childLastName}` : 'Not provided';
-        document.getElementById('review-child-age').textContent = 
-            childAge ? `${childAge} months` : 'Not provided';
+        document.getElementById('review-patient-id').textContent = 
+            patientId || 'Not provided - You can link your child later';
     }
     
     function validateCurrentStep() {
