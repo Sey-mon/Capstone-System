@@ -86,6 +86,9 @@ Route::get('/csrf-token', function () {
     return response()->json(['csrf_token' => csrf_token()]);
 });
 
+// Email Availability Check Route (for registration)
+Route::post('/api/check-email-availability', [AuthController::class, 'checkEmailAvailability'])->name('api.check-email');
+
 // CSRF Test Page (for debugging)
 Route::get('/test-csrf', function () {
     return view('test-csrf');
@@ -93,7 +96,7 @@ Route::get('/test-csrf', function () {
 
 // Nutritional Indicators Calculation Route (accessible by authenticated users)
 Route::post('/calculate/all-indices', [NutritionistController::class, 'calculateNutritionalIndicators'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'account.verified'])
     ->name('calculate.all-indices');
 
 // Test route for debugging registration
@@ -126,7 +129,7 @@ Route::get('/privacy', function () {
 })->name('privacy');
 
 // Admin Routes (Protected by auth, verified email, and role middleware)
-Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard/map-data', [AdminController::class, 'getMapData'])->name('dashboard.map-data');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
@@ -267,7 +270,7 @@ Route::middleware(['auth', 'verified', 'role:Admin'])->prefix('admin')->name('ad
 });
 
 // Nutritionist Routes (Protected by auth, verified email, and role middleware)
-Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
+Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
     Route::get('/dashboard', [NutritionistController::class, 'dashboard'])->name('dashboard');
     Route::get('/patients', [NutritionistController::class, 'patients'])->name('patients');
     
@@ -331,7 +334,7 @@ Route::middleware(['auth', 'verified', 'role:Nutritionist'])->prefix('nutritioni
 Route::get('/api/foods/check-duplicate', [FoodController::class, 'checkDuplicate'])->middleware('auth');
 
 // Parent Routes (Protected by auth, verified email, and role middleware)
-Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('parent.')->group(function () {
+Route::middleware(['auth', 'account.verified', 'role:Parent'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('dashboard');
     Route::get('/children', [ParentController::class, 'children'])->name('children');
     Route::get('/assessments', [ParentController::class, 'assessments'])->name('assessments');

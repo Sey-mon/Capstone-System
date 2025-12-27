@@ -307,4 +307,6 @@
     window.childrenGrowthData = @json($stats['children_with_growth']->values());
 </script>
 <script src="{{ asset('js/parent/parent-dashboard.js') }}"></script>
+<script src="{{ asset('js/parent/parent-onboarding.js') }}"></script>
 @endpush
+
