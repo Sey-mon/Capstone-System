@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="{{ asset('css/register-parent.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        // Global config for registration enhancements
+        const loginRoute = "{{ route('login') }}";
+    </script>
 </head>
 <body>
     <!-- Navigation Header -->
@@ -117,6 +121,8 @@
                     <input type="text" name="first_name" id="first_name" 
                            placeholder="Enter your first name" 
                            value="{{ old('first_name') }}"
+                           pattern="[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+"
+                           title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed"
                            required autofocus>
                     @error('first_name')
                         <span class="error-text">{{ $message }}</span>
@@ -127,6 +133,8 @@
                     <label for="middle_name">Middle Name (Optional)</label>
                     <input type="text" name="middle_name" id="middle_name" 
                            placeholder="Enter your middle name" 
+                           pattern="[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+"
+                           title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed"
                            value="{{ old('middle_name') }}">
                     @error('middle_name')
                         <span class="error-text">{{ $message }}</span>
@@ -137,6 +145,8 @@
                     <label for="last_name">Last Name</label>
                     <input type="text" name="last_name" id="last_name" 
                            placeholder="Enter your last name" 
+                           pattern="[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+"
+                           title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed"
                            value="{{ old('last_name') }}"
                            required>
                     @error('last_name')
@@ -345,24 +355,37 @@
 
             <!-- Step 3: Child Information -->
             <div class="wizard-step" id="step-3" data-step="3">
-                <h3>Link Your Child</h3>
-                <p class="step-description">Connect your account to your child's patient record (Optional)</p>
+                <h3>Link Your Child (Optional)</h3>
+                <p class="step-description">Connect to your child's patient record or skip for now</p>
                 
-                <div class="info-box">
-                    <strong>🔒 Privacy Protected:</strong> Enter your child's Patient ID provided by your nutritionist to instantly link your accounts. This information is kept confidential and secure.
+                <div class="info-box" style="background: #e7f3ff; border-left: 4px solid #17a2b8; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #17a2b8;"><i class="fas fa-info-circle"></i> Don't have a Patient ID yet?</h4>
+                    <p style="margin: 0; line-height: 1.6;"><strong>That's perfectly fine!</strong> Most new parents don't have this information. You can link your child later through your dashboard after your first clinic visit.</p>
                 </div>
 
-                <div class="patient-id-guide">
-                    <h4><i class="fas fa-info-circle"></i> Where to find your Patient ID?</h4>
-                    <ul>
-                        <li><i class="fas fa-check"></i> Ask your nutritionist for your child's Patient ID</li>
-                        <li><i class="fas fa-check"></i> Check your assessment documents or reports</li>
-                        <li><i class="fas fa-check"></i> Format: YYYY-SP-####-CC (e.g., 2025-SP-0001-01)</li>
+                <div style="text-align: center; margin: 2rem 0;">
+                    <button type="button" class="btn secondary skip-child-info" style="padding: 1rem 2.5rem; font-size: 1.1rem; font-weight: 600;">
+                        <i class="fas fa-forward"></i> Skip - I'll Add My Child Later
+                    </button>
+                </div>
+
+                <div style="margin: 2rem 0; text-align: center; color: #6c757d;">
+                    <hr style="border: 0; border-top: 1px solid #dee2e6; margin: 1.5rem 0;">
+                    <p style="margin: 0.5rem 0;"><em>or if you already have a Patient ID</em></p>
+                    <hr style="border: 0; border-top: 1px solid #dee2e6; margin: 1.5rem 0;">
+                </div>
+
+                <div class="patient-id-guide" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0 0 0.75rem 0;"><i class="fas fa-id-card"></i> Where to find your Patient ID?</h4>
+                    <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.8;">
+                        <li><i class="fas fa-check" style="color: #28a745;"></i> Ask your nutritionist for your child's Patient ID</li>
+                        <li><i class="fas fa-check" style="color: #28a745;"></i> Check your assessment documents or reports</li>
+                        <li><i class="fas fa-check" style="color: #28a745;"></i> Format: YYYY-SP-####-CC (e.g., 2025-SP-0001-01)</li>
                     </ul>
                 </div>
 
                 <div class="form-group">
-                    <label for="custom_patient_id">Patient ID</label>
+                    <label for="custom_patient_id">Patient ID (Optional)</label>
                     <input type="text" 
                            name="custom_patient_id" 
                            id="custom_patient_id" 
@@ -375,18 +398,11 @@
                         <span class="error-text">{{ $message }}</span>
                     @enderror
                 </div>
-
-                <div class="skip-option">
-                    <p><em>💡 You can skip this step and link your child later through your dashboard, or contact your nutritionist if you don't have a Patient ID yet.</em></p>
-                </div>
                 
                 <!-- Step 3 Navigation -->
                 <div class="wizard-navigation">
                     <button type="button" class="btn secondary prev-step">Previous</button>
-                    <div>
-                        <button type="button" class="btn secondary skip-child-info">Skip This Step</button>
-                        <button type="button" class="btn primary next-step">Continue</button>
-                    </div>
+                    <button type="button" class="btn primary next-step">Continue to Review</button>
                 </div>
             </div>
 
@@ -499,7 +515,8 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/register-parent.js') }}"></script>
+    <script src="{{ asset('js/auth/register/register-parent.js') }}"></script>
+    <script src="{{ asset('js/auth/register/registration-enhancements.js') }}"></script>
     
     <script>
         // New Password Field Functionality

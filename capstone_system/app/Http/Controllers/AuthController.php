@@ -283,8 +283,8 @@ class AuthController extends Controller
         
         if (!$user) {
             return back()->withErrors([
-                'email' => 'The provided credentials do not match our records.',
-            ])->withInput();
+                'email' => 'No account found with this email address.',
+            ])->withInput($request->except('password'));
         }
 
         // Verify parent role only for public login
@@ -292,7 +292,7 @@ class AuthController extends Controller
         if ($roleName !== 'Parent') {
             return back()->withErrors([
                 'email' => 'This login is for parents only. Staff members, please use the Staff Portal.',
-            ])->withInput();
+            ])->withInput($request->except('password'));
         }
 
         // Check password manually since we're using encrypted emails
@@ -300,8 +300,8 @@ class AuthController extends Controller
             // Check if user is active
             if (!$user->is_active) {
                 return back()->withErrors([
-                    'email' => 'Your account is pending approval. Please wait for admin activation.',
-                ])->withInput();
+                    'email' => 'Your account is pending admin approval. You will receive an email notification within 24-48 hours once your account is activated.',
+                ])->withInput($request->except('password'));
             }
 
             // Log the user in manually
@@ -325,8 +325,25 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->withInput();
+            'password' => 'Incorrect password. Please try again.',
+        ])->withInput($request->except('password'));
+    }
+
+    /**
+     * Check email availability for registration (AJAX endpoint)
+     */
+    public function checkEmailAvailability(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $exists = User::emailExists($request->email);
+
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists ? 'Email already registered' : 'Email available'
+        ]);
     }
 
     /**
@@ -362,17 +379,33 @@ class AuthController extends Controller
 
     /**
      * Redirect to appropriate dashboard based on user role
+     * Supports dual verification: email verification for parents, admin activation for staff
      */
     private function redirectToDashboard()
     {
         $user = Auth::user();
         
-        // Check if email is verified - redirect to verification gate (paywall style)
-        if ($user->email_verified_at === null) {
-            return redirect()->route('verification.gate');
-        }
+        // Check verification status
+        $isVerifiedByEmail = $user->email_verified_at !== null;
+        $isActivatedByAdmin = $user->is_active === true;
         
+        // Get user role
         $roleName = $user->role->role_name ?? null;
+        
+        // Verification logic based on role:
+        // - Parents: MUST verify email (self-registration requires email verification)
+        // - Staff (Nutritionist, Admin, etc.): Can be activated by admin (which auto-verifies email)
+        if ($roleName === 'Parent') {
+            // Parents must verify email - admin activation also sets email_verified_at
+            if (!$isVerifiedByEmail) {
+                return redirect()->route('verification.gate');
+            }
+        } else {
+            // Staff accounts: require EITHER email verification OR admin activation
+            if (!$isVerifiedByEmail && !$isActivatedByAdmin) {
+                return redirect()->route('verification.gate');
+            }
+        }
 
         switch ($roleName) {
             case 'Admin':
@@ -426,19 +459,19 @@ class AuthController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z\s\-\.]+$/' // Only letters, spaces, hyphens, periods
+                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u' // Letters including ñ, á, é, í, ó, ú, spaces, hyphens, periods
             ],
             'middle_name' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z\s\-\.]+$/'
+                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z\s\-\.]+$/'
+                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u'
             ],
             'suffix' => [
                 'nullable',
@@ -473,9 +506,9 @@ class AuthController extends Controller
             ],
         ], [
             // Custom error messages
-            'first_name.regex' => 'First name can only contain letters, spaces, hyphens, and periods.',
-            'middle_name.regex' => 'Middle name can only contain letters, spaces, hyphens, and periods.',
-            'last_name.regex' => 'Last name can only contain letters, spaces, hyphens, and periods.',
+            'first_name.regex' => 'First name can only contain letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods.',
+            'middle_name.regex' => 'Middle name can only contain letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods.',
+            'last_name.regex' => 'Last name can only contain letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods.',
             'suffix.in' => 'Please select a valid suffix from the dropdown.',
             'house_street.required' => 'House/Street address is required.',
             'house_street.max' => 'House/Street address must not exceed 500 characters.',
@@ -527,6 +560,7 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'contact_number' => $request->contact_number,
+                'is_active' => false, // Require email verification for parent self-registrations
             ]);
 
             // If custom patient ID is provided, link immediately
@@ -545,32 +579,9 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // Send welcome email (queued)
-            try {
-                Mail::to($user->email)->queue(new WelcomeEmail($user));
-                
-                // Log email queued
-                AuditLog::create([
-                    'user_id' => $user->user_id,
-                    'action' => 'welcome_email_queued',
-                    'description' => 'Welcome email queued for sending to ' . $user->email,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                ]);
-            } catch (\Exception $e) {
-                // Log email failure but don't stop registration
-                AuditLog::create([
-                    'user_id' => $user->user_id,
-                    'action' => 'welcome_email_failed',
-                    'description' => 'Failed to queue welcome email: ' . $e->getMessage(),
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                ]);
-            }
-
             DB::commit();
 
-            // Log the user in temporarily to send email verification
+            // Log the user in and keep them logged in to redirect to verification gate
             Auth::login($user);
             
             // Send email verification notification
@@ -594,15 +605,8 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Log the user out after sending verification email
-            // so they can return to login page if needed
-            Auth::logout();
-            
-            // Create secure success message without personal information
-            $successMessage = 'Account created successfully! Please check your email to verify your account before logging in.';
-            
-            // Redirect to login page with success message
-            return redirect()->route('login')->with('success', $successMessage);
+            // Redirect to verification gate (user stays logged in but blocked until verified)
+            return redirect()->route('verification.gate')->with('success', 'Account created successfully! Please verify your email to continue.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -702,9 +706,24 @@ class AuthController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u'
+            ],
+            'middle_name' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u'
+            ],
+            'last_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u'
+            ],
             'email' => 'required|string|email|max:255|unique:users,email,NULL,user_id,deleted_at,NULL',
             'contact_number' => 'required|string|max:20',
             'sex' => 'nullable|string|in:male,female,other',
@@ -986,11 +1005,17 @@ class AuthController extends Controller
 
         // Mark email as verified
         if ($user->markEmailAsVerified()) {
+            // Also activate the account for parent self-registrations
+            if ($user->role && $user->role->role_name === 'Parent' && !$user->is_active) {
+                $user->update(['is_active' => true]);
+            }
+            
             // Log the verification
             AuditLog::create([
                 'user_id' => $user->user_id,
                 'action' => 'email_verified',
-                'description' => 'Email address verified successfully via verification link',
+                'description' => 'Email address verified successfully via verification link' . 
+                    ($user->is_active ? ' (Account activated)' : ''),
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);

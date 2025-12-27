@@ -58,65 +58,139 @@
     <!-- Hero Section -->
     <section id="home" class="hero-section">
         <div class="hero-content">
-            <div class="hero-text" style="display: flex; align-items: center; justify-content: center;">
+            <div class="hero-text">
                 <div class="verification-gate-wrapper">
                     <div class="verification-gate-card">
-                        <div class="lock-icon-large">
-                            <i class="fas fa-lock"></i>
-                        </div>
-                        
-                        <h2>Account Verification Required</h2>
-                        <p class="subtitle">Please verify your email to continue</p>
-
-                        <div class="user-info-box">
-                            <h5>Welcome, {{ $user->first_name }}!</h5>
-                            <p><i class="fas fa-envelope" style="color: #28a745; margin-right: 0.5rem;"></i><strong>Registered email:</strong></p>
-                            <p style="margin-left: 1.5rem; color: #1f2937; font-weight: 600;">{{ $user->email }}</p>
-                        </div>
-
-                        <div class="alert-box">
-                            <p><i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i><strong>Access Restricted</strong></p>
-                            <p>You must verify your email address before accessing your dashboard. This security measure protects your account and ensures you receive important notifications.</p>
-                        </div>
-
-                        <div class="verification-steps">
-                            <h6><i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>How to Verify Your Account</h6>
-                            <div class="step-item">
-                                <div class="step-icon">1</div>
-                                <div class="step-content">
-                                    <h6>Check Your Email</h6>
-                                    <p>Look for our verification email in your inbox</p>
+                        <!-- Animated Icon Header -->
+                        <div class="verification-header">
+                            <div class="icon-container">
+                                <div class="icon-bg-circle pulse"></div>
+                                <div class="icon-bg-circle pulse-delayed"></div>
+                                <div class="lock-icon-modern">
+                                    <i class="fas fa-envelope-open-text"></i>
                                 </div>
                             </div>
-                            <div class="step-item">
-                                <div class="step-icon">2</div>
-                                <div class="step-content">
-                                    <h6>Click the Link</h6>
-                                    <p>Click the verification link in the email</p>
-                                </div>
+                            <h1 class="verification-title">Check Your Email</h1>
+                            <p class="verification-subtitle">We've sent a verification link to complete your registration</p>
+                        </div>
+
+                        <!-- User Welcome Card -->
+                        <div class="user-welcome-card">
+                            <div class="welcome-badge">
+                                <i class="fas fa-user-circle"></i>
                             </div>
-                            <div class="step-item">
-                                <div class="step-icon">3</div>
-                                <div class="step-content">
-                                    <h6>Access Granted</h6>
-                                    <p>Login again to access your dashboard</p>
+                            <div class="welcome-content">
+                                <h3>Welcome, {{ $user->first_name }}! 👋</h3>
+                                <div class="email-display">
+                                    <i class="fas fa-envelope"></i>
+                                    <span>{{ $user->email }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="action-buttons">
-                            <form method="POST" action="{{ route('resend.logout') }}" style="margin: 0;">
+                        <!-- Verification Methods -->
+                        <div class="verification-methods">
+                            <h4 class="methods-title">
+                                <i class="fas fa-shield-alt"></i>
+                                Two Ways to Verify
+                            </h4>
+                            <div class="methods-grid">
+                                <div class="method-card primary-method">
+                                    <div class="method-icon">
+                                        <i class="fas fa-at"></i>
+                                    </div>
+                                    <h5>Email Verification</h5>
+                                    <p>Click the link in your inbox to verify instantly</p>
+                                    <span class="method-badge">Recommended</span>
+                                </div>
+                                <div class="method-card">
+                                    <div class="method-icon">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                    <h5>Admin Activation</h5>
+                                    <p>Wait for administrator approval (for staff accounts)</p>
+                                    <span class="method-badge secondary">Manual</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Steps -->
+                        <div class="quick-steps">
+                            <h4 class="steps-title">
+                                <i class="fas fa-list-check"></i>
+                                Quick Steps
+                            </h4>
+                            <div class="steps-timeline">
+                                <div class="timeline-step">
+                                    <div class="step-marker">
+                                        <span class="step-number">1</span>
+                                        <div class="step-connector"></div>
+                                    </div>
+                                    <div class="step-details">
+                                        <h5>Check your inbox</h5>
+                                        <p>Look for an email from San Pedro Health Office</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-step">
+                                    <div class="step-marker">
+                                        <span class="step-number">2</span>
+                                        <div class="step-connector"></div>
+                                    </div>
+                                    <div class="step-details">
+                                        <h5>Click the verification link</h5>
+                                        <p>This will activate your account immediately</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-step">
+                                    <div class="step-marker">
+                                        <span class="step-number">3</span>
+                                    </div>
+                                    <div class="step-details">
+                                        <h5>Start using your account</h5>
+                                        <p>Login and access your personalized dashboard</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Helpful Tips -->
+                        <div class="helpful-tips">
+                            <div class="tip-header">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Helpful Tips</span>
+                            </div>
+                            <ul class="tips-list">
+                                <li><i class="fas fa-check-circle"></i> Check your spam/junk folder if you don't see the email</li>
+                                <li><i class="fas fa-check-circle"></i> The verification link expires in 24 hours</li>
+                                <li><i class="fas fa-check-circle"></i> Make sure to click the button in the email</li>
+                            </ul>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons-modern">
+                            <form method="POST" action="{{ route('resend.logout') }}" class="action-form">
                                 @csrf
-                                <button type="submit" class="btn-resend" style="width: 100%;">
-                                    <i class="fas fa-paper-plane"></i> Resend Verification Email & Logout
+                                <button type="submit" class="btn-primary-modern">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>Resend Verification Email</span>
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                            <form method="POST" action="{{ route('logout') }}" class="action-form">
                                 @csrf
-                                <button type="submit" class="btn-logout" style="width: 100%;">
-                                    <i class="fas fa-sign-out-alt"></i> Logout Without Resending
+                                <button type="submit" class="btn-secondary-modern">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
                                 </button>
                             </form>
+                        </div>
+
+                        <!-- Help Section -->
+                        <div class="help-section">
+                            <p>
+                                <i class="fas fa-question-circle"></i>
+                                Need help? Contact our support team at 
+                                <a href="mailto:support@sanpedrohealthoffice.gov.ph">support@sanpedrohealthoffice.gov.ph</a>
+                            </p>
                         </div>
                     </div>
                 </div>
