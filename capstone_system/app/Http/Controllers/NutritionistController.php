@@ -290,12 +290,19 @@ class NutritionistController extends Controller
             'last_name' => 'required|string|max:255',
             'barangay_id' => 'required|exists:barangays,barangay_id',
             'contact_number' => 'required|string|max:20',
-            'age_months' => 'required|integer|min:0',
+            'birthdate' => 'required|date|before:today',
+            'age_months' => 'nullable|integer|min:0',
             'sex' => 'required|in:Male,Female',
             'date_of_admission' => 'required|date',
             'weight_kg' => 'required|numeric|min:0',
             'height_cm' => 'required|numeric|min:0',
         ]);
+        
+        // Calculate age_months from birthdate if not provided or to ensure accuracy
+        $birthdate = new \DateTime($request->birthdate);
+        $today = new \DateTime();
+        $interval = $birthdate->diff($today);
+        $age_months = ($interval->y * 12) + $interval->m;
 
         try {
             $patient = Patient::create([
@@ -306,7 +313,8 @@ class NutritionistController extends Controller
                 'last_name' => $request->last_name,
                 'barangay_id' => $request->barangay_id,
                 'contact_number' => $request->contact_number,
-                'age_months' => $request->age_months,
+                'birthdate' => $request->birthdate,
+                'age_months' => $age_months,
                 'sex' => $request->sex,
                 'date_of_admission' => $request->date_of_admission,
                 'total_household_adults' => $request->total_household_adults ?? 0,
@@ -385,12 +393,19 @@ class NutritionistController extends Controller
             'last_name' => 'required|string|max:255',
             'barangay_id' => 'required|exists:barangays,barangay_id',
             'contact_number' => 'required|string|max:20',
-            'age_months' => 'required|integer|min:0',
+            'birthdate' => 'required|date|before:today',
+            'age_months' => 'nullable|integer|min:0',
             'sex' => 'required|in:Male,Female',
             'date_of_admission' => 'required|date',
             'weight_kg' => 'required|numeric|min:0',
             'height_cm' => 'required|numeric|min:0',
         ]);
+        
+        // Calculate age_months from birthdate
+        $birthdate = new \DateTime($request->birthdate);
+        $today = new \DateTime();
+        $interval = $birthdate->diff($today);
+        $age_months = ($interval->y * 12) + $interval->m;
 
         try {
             $patient->update([
@@ -400,7 +415,8 @@ class NutritionistController extends Controller
                 'last_name' => $request->last_name,
                 'barangay_id' => $request->barangay_id,
                 'contact_number' => $request->contact_number,
-                'age_months' => $request->age_months,
+                'birthdate' => $request->birthdate,
+                'age_months' => $age_months,
                 'sex' => $request->sex,
                 'date_of_admission' => $request->date_of_admission,
                 'total_household_adults' => $request->total_household_adults ?? 0,

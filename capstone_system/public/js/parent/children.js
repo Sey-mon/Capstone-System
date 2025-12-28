@@ -67,3 +67,60 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+/**
+ * Validate patient code format
+ * Expected format: YYYY-SP-####-CC (e.g., 2025-SP-0001-01)
+ */
+function validatePatientCode(code) {
+    const pattern = /^\d{4}-[A-Z]{2}-\d{4}-\d{2}$/;
+    return pattern.test(code);
+}
+
+/**
+ * Display error messages in a user-friendly way
+ */
+function showError(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message,
+        confirmButtonColor: '#059669',
+        confirmButtonText: 'OK'
+    });
+}
+
+/**
+ * Display success messages
+ */
+function showSuccess(message, callback) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        html: `
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <p>${message}</p>
+            </div>
+        `,
+        confirmButtonColor: '#059669',
+        confirmButtonText: 'OK'
+    }).then(() => {
+        if (callback && typeof callback === 'function') {
+            callback();
+        }
+    });
+}
+
+/**
+ * Show loading state
+ */
+function showLoading(message = 'Processing...') {
+    Swal.fire({
+        title: message,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}

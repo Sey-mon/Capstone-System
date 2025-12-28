@@ -902,6 +902,267 @@
     background: var(--gray-200);
 }
 
+/* ===== ADD CHILD MODAL STYLES ===== */
+
+.swal-add-child-header {
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.swal-add-child-header i {
+    font-size: 1.75rem;
+}
+
+.add-child-popup {
+    border-radius: 16px !important;
+    padding: 2rem !important;
+}
+
+.add-child-form-container {
+    text-align: left;
+    padding: 1rem 0;
+}
+
+.add-child-description {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    border-left: 4px solid var(--primary);
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.add-child-description i {
+    color: var(--primary);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.add-child-form {
+    margin-top: 1.5rem;
+}
+
+.form-group-modern {
+    margin-bottom: 1.5rem;
+}
+
+.form-label-modern {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.625rem;
+    font-size: 0.9375rem;
+}
+
+.form-label-modern i {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+.form-input-modern {
+    width: 100%;
+    padding: 0.875rem 1.125rem;
+    border: 2px solid var(--gray-200);
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    transition: all 0.3s ease;
+    background: white;
+    color: var(--text-primary);
+}
+
+.form-input-modern:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.form-input-modern::placeholder {
+    color: var(--text-secondary);
+}
+
+.form-help-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.form-help-text i {
+    color: var(--primary);
+}
+
+.btn-confirm-modern,
+.btn-cancel-modern {
+    border-radius: 10px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    font-size: 0.9375rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-confirm-modern:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+}
+
+.btn-cancel-modern:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3) !important;
+}
+
+.success-message {
+    text-align: center;
+    padding: 1rem;
+}
+
+.success-message i {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.success-message p {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* Child Confirmation Styles */
+.child-confirmation-container {
+    text-align: left;
+    padding: 1rem 0;
+}
+
+.confirmation-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%);
+    border-left: 4px solid #f59e0b;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.confirmation-warning i {
+    color: #f59e0b;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.confirmation-warning p {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+}
+
+.child-preview-details {
+    background: var(--gray-50);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.preview-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.preview-row:last-child {
+    border-bottom: none;
+}
+
+.preview-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.preview-label i {
+    color: var(--primary);
+    font-size: 0.875rem;
+}
+
+.preview-value {
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-align: right;
+}
+
+.preview-value strong {
+    color: var(--primary);
+    font-size: 1.125rem;
+}
+
+.confirmation-question {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.confirmation-question i {
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+
+.confirmation-question p {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+/* Privacy Note */
+.privacy-note {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.privacy-note i {
+    color: #3b82f6;
+    font-size: 0.875rem;
+}
+
+.privacy-note small {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1200px) {
     .stats-grid {

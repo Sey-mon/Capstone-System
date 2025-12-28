@@ -153,8 +153,15 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
+                            <label for="birthdate" class="form-label">Birthdate <span class="required">*</span></label>
+                            <input type="date" id="birthdate" name="birthdate" class="form-control" required>
+                            <small class="form-text text-muted">Age will be automatically calculated</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
                             <label for="age_months" class="form-label">Age (months) <span class="required">*</span></label>
-                            <input type="number" id="age_months" name="age_months" class="form-control" min="0" required placeholder="0">
+                            <input type="number" id="age_months" name="age_months" class="form-control" min="0" required readonly>
                         </div>
                     </div>
                     <div class="col-md-6">

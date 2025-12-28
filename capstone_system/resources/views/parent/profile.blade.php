@@ -58,10 +58,6 @@
                         <i class="fas fa-edit"></i>
                         Edit Profile
                     </button>
-                    <button class="btn btn-outline" onclick="window.print()">
-                        <i class="fas fa-print"></i>
-                        Print
-                    </button>
                 </div>
             </div>
         </div>
@@ -161,15 +157,13 @@
                                 <div class="info-value">{{ Auth::user()->birth_date->format('F d, Y') }}</div>
                             </div>
                             @endif
-                            @if(Auth::user()->sex)
                             <div class="info-row">
                                 <div class="info-label">
                                     <i class="fas fa-venus-mars"></i>
                                     Gender
                                 </div>
-                                <div class="info-value">{{ ucfirst(Auth::user()->sex) }}</div>
+                                <div class="info-value">{{ Auth::user()->sex ? ucfirst(Auth::user()->sex) : 'Not provided' }}</div>
                             </div>
-                            @endif
                             <div class="info-row">
                                 <div class="info-label">
                                     <i class="fas fa-map-marker-alt"></i>
@@ -295,14 +289,30 @@
                                     <i class="fas fa-envelope"></i>
                                     Email Address
                                 </div>
-                                <div class="info-value">{{ Auth::user()->email }}</div>
+                                <div class="info-value">
+                                    <div>{{ Auth::user()->email }}</div>
+                                    @if(Auth::user()->email_verified_at)
+                                    <small style="color: #10b981; font-size: 12px; display: block; margin-top: 4px;">
+                                        <i class="fas fa-check-circle"></i> Verified {{ Auth::user()->email_verified_at->diffForHumans() }}
+                                    </small>
+                                    @else
+                                    <small style="color: #f59e0b; font-size: 12px; display: block; margin-top: 4px;">
+                                        <i class="fas fa-exclamation-circle"></i> Not verified
+                                    </small>
+                                    @endif
+                                </div>
                             </div>
                             <div class="info-row">
                                 <div class="info-label">
                                     <i class="fas fa-clock"></i>
                                     Last Updated
                                 </div>
-                                <div class="info-value">{{ Auth::user()->updated_at->format('M d, Y') }}</div>
+                                <div class="info-value">
+                                    <div>{{ Auth::user()->updated_at->format('M d, Y') }}</div>
+                                    <small style="color: #6b7280; font-size: 12px; display: block; margin-top: 4px;">
+                                        {{ Auth::user()->updated_at->diffForHumans() }}
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -379,10 +389,6 @@
                             <button class="action-btn" onclick="changePassword()">
                                 <i class="fas fa-key"></i>
                                 <span>Change Password</span>
-                            </button>
-                            <button class="action-btn" onclick="window.print()">
-                                <i class="fas fa-print"></i>
-                                <span>Print Profile</span>
                             </button>
                         </div>
                     </div>
@@ -544,20 +550,54 @@
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>Current Password *
                             </label>
-                            <input id="swal-current-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter current password" required>
+                            <div style="position: relative;">
+                                <input id="swal-current-password" type="password" class="swal2-input password-input" autocomplete="current-password" style="width: 100%; margin: 0; padding: 12px 45px 12px 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter current password" required>
+                                <button type="button" class="password-toggle-btn" data-target="swal-current-password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; padding: 5px;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>New Password *
                             </label>
-                            <input id="swal-new-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter new password (min. 8 characters)" required>
-                            <small style="color: #6b7280; font-size: 12px; margin-top: 5px; display: block;">Password must be at least 8 characters long</small>
+                            <div style="position: relative;">
+                                <input id="swal-new-password" type="password" class="swal2-input password-input" autocomplete="new-password" style="width: 100%; margin: 0; padding: 12px 45px 12px 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter new password" required>
+                                <button type="button" class="password-toggle-btn" data-target="swal-new-password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; padding: 5px;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength-info" style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                                <small style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">Password must contain:</small>
+                                <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px;">
+                                    <li class="requirement" data-requirement="length" style="color: #6b7280; padding: 4px 0;">
+                                        <i class="fas fa-circle" style="font-size: 8px; margin-right: 8px;"></i>At least 8 characters
+                                    </li>
+                                    <li class="requirement" data-requirement="uppercase" style="color: #6b7280; padding: 4px 0;">
+                                        <i class="fas fa-circle" style="font-size: 8px; margin-right: 8px;"></i>One uppercase letter (A-Z)
+                                    </li>
+                                    <li class="requirement" data-requirement="lowercase" style="color: #6b7280; padding: 4px 0;">
+                                        <i class="fas fa-circle" style="font-size: 8px; margin-right: 8px;"></i>One lowercase letter (a-z)
+                                    </li>
+                                    <li class="requirement" data-requirement="number" style="color: #6b7280; padding: 4px 0;">
+                                        <i class="fas fa-circle" style="font-size: 8px; margin-right: 8px;"></i>One number (0-9)
+                                    </li>
+                                    <li class="requirement" data-requirement="special" style="color: #6b7280; padding: 4px 0;">
+                                        <i class="fas fa-circle" style="font-size: 8px; margin-right: 8px;"></i>One special character (@$!%*?&#)
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                         <div>
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>Confirm New Password *
                             </label>
-                            <input id="swal-confirm-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Re-enter new password" required>
+                            <div style="position: relative;">
+                                <input id="swal-confirm-password" type="password" class="swal2-input password-input" autocomplete="new-password" style="width: 100%; margin: 0; padding: 12px 45px 12px 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Re-enter new password" required>
+                                <button type="button" class="password-toggle-btn" data-target="swal-confirm-password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; padding: 5px;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -585,6 +625,56 @@
                         this.style.boxShadow = 'none';
                     });
                 });
+
+                // Password toggle functionality
+                document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const targetId = this.getAttribute('data-target');
+                        const input = document.getElementById(targetId);
+                        const icon = this.querySelector('i');
+                        
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            icon.classList.remove('fa-eye');
+                            icon.classList.add('fa-eye-slash');
+                        } else {
+                            input.type = 'password';
+                            icon.classList.remove('fa-eye-slash');
+                            icon.classList.add('fa-eye');
+                        }
+                    });
+                });
+
+                // Password strength validation
+                const newPasswordInput = document.getElementById('swal-new-password');
+                if (newPasswordInput) {
+                    newPasswordInput.addEventListener('input', function() {
+                        const password = this.value;
+                        const requirements = {
+                            length: password.length >= 8,
+                            uppercase: /[A-Z]/.test(password),
+                            lowercase: /[a-z]/.test(password),
+                            number: /[0-9]/.test(password),
+                            special: /[@$!%*?&#]/.test(password)
+                        };
+
+                        Object.keys(requirements).forEach(req => {
+                            const element = document.querySelector(`[data-requirement="${req}"]`);
+                            if (element) {
+                                const icon = element.querySelector('i');
+                                if (requirements[req]) {
+                                    element.style.color = '#10b981';
+                                    icon.classList.remove('fa-circle');
+                                    icon.classList.add('fa-check-circle');
+                                } else {
+                                    element.style.color = '#6b7280';
+                                    icon.classList.remove('fa-check-circle');
+                                    icon.classList.add('fa-circle');
+                                }
+                            }
+                        });
+                    });
+                }
             },
             preConfirm: () => {
                 const currentPassword = document.getElementById('swal-current-password').value;
@@ -596,8 +686,19 @@
                     return false;
                 }
                 
-                if (newPassword.length < 8) {
-                    Swal.showValidationMessage('New password must be at least 8 characters long');
+                // Password strength validation
+                const requirements = {
+                    length: newPassword.length >= 8,
+                    uppercase: /[A-Z]/.test(newPassword),
+                    lowercase: /[a-z]/.test(newPassword),
+                    number: /[0-9]/.test(newPassword),
+                    special: /[@$!%*?&#]/.test(newPassword)
+                };
+
+                const unmetRequirements = Object.keys(requirements).filter(req => !requirements[req]);
+                
+                if (unmetRequirements.length > 0) {
+                    Swal.showValidationMessage('Password does not meet all requirements');
                     return false;
                 }
                 
@@ -625,6 +726,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({
@@ -632,7 +734,16 @@
                 _method: 'PUT'
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server did not return JSON response');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 Swal.fire({
@@ -658,7 +769,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: 'An error occurred while updating personal information',
+                text: error.message || 'An error occurred while updating personal information',
                 confirmButtonColor: '#ef4444'
             });
         });
@@ -670,6 +781,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({
@@ -677,7 +789,16 @@
                 _method: 'PUT'
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server did not return JSON response');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 Swal.fire({
@@ -701,7 +822,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: 'An error occurred while updating password',
+                text: error.message || 'An error occurred while updating password',
                 confirmButtonColor: '#ef4444'
             });
         });

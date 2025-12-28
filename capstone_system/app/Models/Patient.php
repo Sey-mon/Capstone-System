@@ -22,6 +22,7 @@ class Patient extends Model
         'barangay_id',
         'contact_number',
         'age_months',
+        'birthdate',
         'sex',
         'date_of_admission',
         'total_household_adults',
@@ -41,6 +42,7 @@ class Patient extends Model
 
     protected $casts = [
         'date_of_admission' => 'date',
+        'birthdate' => 'date',
         'is_4ps_beneficiary' => 'boolean',
         'weight_kg' => 'decimal:2',
         'height_cm' => 'decimal:2',

@@ -3,6 +3,26 @@ let isEditing = false;
 let currentPatientId = null;
 let filterTimeout = null;
 
+// Auto-calculate age from birthdate
+function calculateAgeFromBirthdate(birthdateInput, ageMonthsInput) {
+    const birthdate = new Date(birthdateInput.value);
+    const today = new Date();
+    
+    if (birthdate && !isNaN(birthdate.getTime())) {
+        // Calculate age in months
+        let months = (today.getFullYear() - birthdate.getFullYear()) * 12;
+        months -= birthdate.getMonth();
+        months += today.getMonth();
+        
+        // Adjust if birth day hasn't occurred this month yet
+        if (today.getDate() < birthdate.getDate()) {
+            months--;
+        }
+        
+        ageMonthsInput.value = Math.max(0, months);
+    }
+}
+
 // Form submission handler - prevent default form submission
 function handlePatientFormSubmit(e) {
     e.preventDefault();
@@ -383,6 +403,15 @@ function openAddPatientModal() {
             if (form) {
                 form.addEventListener('submit', handlePatientFormSubmit);
                 attachNutritionalCalculators(form);
+                
+                // Add birthdate auto-calculation
+                const birthdateInput = form.querySelector('#birthdate');
+                const ageMonthsInput = form.querySelector('#age_months');
+                if (birthdateInput && ageMonthsInput) {
+                    birthdateInput.addEventListener('change', function() {
+                        calculateAgeFromBirthdate(birthdateInput, ageMonthsInput);
+                    });
+                }
             }
         },
         preConfirm: () => {
