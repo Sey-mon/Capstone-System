@@ -377,9 +377,16 @@
                                 <input type="text" id="contact_number" name="contact_number" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label for="age_months">Age (months) *</label>
-                                <input type="number" id="age_months" name="age_months" class="form-control" min="0" required>
+                                <label for="birthdate">Birthdate *</label>
+                                <input type="date" id="birthdate" name="birthdate" class="form-control" required>
                             </div>
+                            <div class="form-group">
+                                <label for="age_months">Age (months) *</label>
+                                <input type="number" id="age_months" name="age_months" class="form-control" min="0" required readonly>
+                                <small class="form-text text-muted">Auto-calculated from birthdate</small>
+                            </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="sex">Sex *</label>
                                 <select id="sex" name="sex" class="form-control" required>
@@ -388,8 +395,6 @@
                                     <option value="Female">Female</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="form-row">
                             <div class="form-group">
                                 <label for="date_of_admission">Date of Admission *</label>
                                 <input type="date" id="date_of_admission" name="date_of_admission" class="form-control" required>
@@ -686,4 +691,32 @@
 @push('scripts')
     <script src="{{ asset('js/admin/admin-patients.js') }}"></script>
     <script src="{{ asset('js/admin/admin-patients-enhanced.js') }}"></script>
+    <script>
+        // Auto-calculate age from birthdate
+        document.addEventListener('DOMContentLoaded', function() {
+            const birthdateInput = document.getElementById('birthdate');
+            const ageMonthsInput = document.getElementById('age_months');
+            
+            if (birthdateInput && ageMonthsInput) {
+                birthdateInput.addEventListener('change', function() {
+                    const birthdate = new Date(this.value);
+                    const today = new Date();
+                    
+                    if (birthdate && !isNaN(birthdate.getTime())) {
+                        // Calculate age in months
+                        let months = (today.getFullYear() - birthdate.getFullYear()) * 12;
+                        months -= birthdate.getMonth();
+                        months += today.getMonth();
+                        
+                        // Adjust if birth day hasn't occurred this month yet
+                        if (today.getDate() < birthdate.getDate()) {
+                            months--;
+                        }
+                        
+                        ageMonthsInput.value = Math.max(0, months);
+                    }
+                });
+            }
+        });
+    </script>
 @endpush

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class ParentController extends Controller
 {
@@ -50,6 +51,171 @@ class ParentController extends Controller
 
         return redirect()->route('parent.children')->with('success', 'Child successfully bound to your account.');
     }
+
+    /**
+     * Verify child using Patient ID and Birthdate, return masked preview
+     */
+    public function previewChildByCode(Request $request)
+    {
+        $validated = $request->validate([
+            'patient_code' => 'required|string',
+            'birthdate' => 'required|date',
+        ]);
+
+        try {
+            // Find child by custom_patient_id and birthdate
+            $child = Patient::where('custom_patient_id', $validated['patient_code'])
+                ->whereDate('birthdate', $validated['birthdate'])
+                ->with(['barangay'])
+                ->first();
+
+            if (!$child) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No child found with the provided information. Please verify the Patient ID and Birthdate.'
+                ], 404);
+            }
+
+            // Check if child is already linked to a parent
+            if ($child->parent_id !== null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This child is already linked to a parent account.'
+                ], 400);
+            }
+
+            // Create masked preview data
+            $maskedData = [
+                'patient_id' => $child->patient_id,
+                'custom_patient_id' => $child->custom_patient_id,
+                'first_name_masked' => $this->maskString($child->first_name),
+                'middle_name_masked' => $child->middle_name ? $this->maskString($child->middle_name) : null,
+                'last_name_masked' => $this->maskString($child->last_name),
+                'sex' => $child->sex,
+                'age_months' => $child->age_months,
+                'barangay_masked' => $child->barangay ? $this->maskString($child->barangay->barangay_name, 3) : null,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'child' => $maskedData
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while verifying child information.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Mask a string for privacy (show first character and mask the rest)
+     */
+    private function maskString($string, $showChars = 1)
+    {
+        if (empty($string)) {
+            return '';
+        }
+        
+        $length = mb_strlen($string);
+        if ($length <= $showChars) {
+            return $string;
+        }
+        
+        return mb_substr($string, 0, $showChars) . str_repeat('*', min($length - $showChars, 3));
+    }
+
+    /**
+     * Link a child to parent using unique patient code (after confirmation)
+     */
+    public function linkChildByCode(Request $request)
+    {
+        $parent = Auth::user();
+        
+        $validated = $request->validate([
+            'patient_id' => 'required|integer',
+        ]);
+
+        try {
+            // Find child by patient_id
+            $child = Patient::where('patient_id', $validated['patient_id'])
+                ->first();
+
+            if (!$child) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Child not found.'
+                ], 404);
+            }
+
+            // Check if child is already linked to a parent
+            if ($child->parent_id !== null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This child is already linked to a parent account.'
+                ], 400);
+            }
+
+            // Link the child to the parent
+            $child->parent_id = $parent->user_id;
+            $child->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully linked {$child->first_name} {$child->last_name} to your account!"
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while linking the child. Please try again later.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Unlink a child from parent account
+     */
+    public function unlinkChild(Request $request)
+    {
+        $parent = Auth::user();
+        
+        $validated = $request->validate([
+            'patient_id' => 'required|integer',
+        ]);
+
+        try {
+            // Find child and verify ownership
+            $child = Patient::where('patient_id', $validated['patient_id'])
+                ->where('parent_id', $parent->user_id)
+                ->first();
+
+            if (!$child) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Child not found or not linked to your account.'
+                ], 404);
+            }
+
+            // Unlink the child
+            $childName = $child->first_name . ' ' . $child->last_name;
+            $child->parent_id = null;
+            $child->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully unlinked {$childName} from your account."
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while unlinking the child.'
+            ], 500);
+        }
+    }
+    
     /**
      * Show parent dashboard
      */
@@ -574,25 +740,51 @@ class ParentController extends Controller
     {
         $user = Auth::user();
         
-        $validated = $request->validate([
+        // Manual validation for better AJAX error handling
+        $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
             'contact_number' => 'nullable|string|max:255',
+            'birth_date' => 'nullable|date',
+            'sex' => 'nullable|in:male,female,other',
             'address' => 'nullable|string|max:500',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         // Update user using DB query
         DB::table('users')
             ->where('user_id', $user->user_id)
             ->update([
                 'first_name' => $validated['first_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
                 'last_name' => $validated['last_name'],
-                'email' => $validated['email'],
-                'contact_number' => $validated['contact_number'],
-                'address' => $validated['address'],
+                'contact_number' => $validated['contact_number'] ?? null,
+                'birth_date' => $validated['birth_date'] ?? null,
+                'sex' => $validated['sex'] ?? null,
+                'address' => $validated['address'] ?? null,
                 'updated_at' => now(),
             ]);
+
+        // Return JSON response for AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully!'
+            ]);
+        }
 
         return redirect()->route('parent.profile')->with('success', 'Profile updated successfully!');
     }    /**
@@ -602,13 +794,42 @@ class ParentController extends Controller
     {
         $user = Auth::user();
         
-        $validated = $request->validate([
+        // Manual validation for better AJAX error handling with strong password requirements
+        $validator = Validator::make($request->all(), [
             'current_password' => 'required',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/'
+            ],
+        ], [
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).'
         ]);
+
+        if ($validator->fails()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         // Check if current password is correct
         if (!Hash::check($validated['current_password'], $user->password)) {
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Current password is incorrect.'
+                ], 422);
+            }
             return redirect()->route('parent.profile')->withErrors(['current_password' => 'Current password is incorrect.']);
         }
 
@@ -619,6 +840,14 @@ class ParentController extends Controller
                 'password' => Hash::make($validated['password']),
                 'updated_at' => now(),
             ]);
+
+        // Return JSON response for AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password updated successfully!'
+            ]);
+        }
 
         return redirect()->route('parent.profile')->with('success', 'Password updated successfully!');
     }
