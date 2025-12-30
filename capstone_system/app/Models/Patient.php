@@ -189,6 +189,41 @@ class Patient extends Model
     }
 
     /**
+     * Age months accessor - auto-calculates current age from birthdate.
+     * 
+     * This accessor automatically calculates the patient's current age in months
+     * based on their birthdate whenever the age_months attribute is accessed.
+     * Falls back to the stored value if birthdate is not available.
+     * 
+     * @param mixed $value The stored age_months value from database
+     * @return int Current age in months
+     */
+    public function getAgeMonthsAttribute($value)
+    {
+        // If birthdate exists, calculate current age dynamically
+        if ($this->birthdate) {
+            $birthdate = \Carbon\Carbon::parse($this->birthdate);
+            $now = \Carbon\Carbon::now();
+            
+            // Calculate total months difference
+            $years = $now->year - $birthdate->year;
+            $months = $now->month - $birthdate->month;
+            
+            // Adjust for day of month
+            if ($now->day < $birthdate->day) {
+                $months--;
+            }
+            
+            $totalMonths = ($years * 12) + $months;
+            
+            return max(0, $totalMonths);
+        }
+        
+        // If no birthdate, return stored value
+        return $value;
+    }
+
+    /**
      * Get the patient's gender (alias for sex field).
      */
     public function getGenderAttribute()

@@ -510,6 +510,44 @@ function editPatient(patientId) {
                     popup.querySelector('#edema').value = patient.edema ?? '';
                     popup.querySelector('#other_medical_problems').value = patient.other_medical_problems ?? '';
                     
+                    // Handle birthdate field
+                    const birthdateField = popup.querySelector('#birthdate');
+                    if (birthdateField && patient.birthdate) {
+                        birthdateField.value = patient.birthdate.substring(0, 10);
+                    }
+                    
+                    // Lock demographic fields (name, birthdate) - cannot be edited
+                    const demographicFields = popup.querySelectorAll('[data-lock-on-edit="true"]');
+                    demographicFields.forEach(field => {
+                        field.disabled = true;
+                        field.style.backgroundColor = '#f5f5f5';
+                        field.style.cursor = 'not-allowed';
+                    });
+                    
+                    // Lock health fields (weight, height, indicators) - cannot be edited
+                    const healthFields = popup.querySelectorAll('[data-health-field="true"]');
+                    healthFields.forEach(field => {
+                        field.disabled = true;
+                        field.style.backgroundColor = '#fff9e6';
+                        field.style.cursor = 'not-allowed';
+                        field.removeAttribute('required'); // Remove required validation
+                    });
+                    
+                    // Show edit-only messages, hide add-only messages
+                    popup.querySelectorAll('.edit-only-message').forEach(msg => {
+                        msg.style.display = 'block';
+                        msg.style.color = '#856404';
+                        msg.style.fontWeight = '500';
+                    });
+                    popup.querySelectorAll('.add-only-message').forEach(msg => {
+                        msg.style.display = 'none';
+                    });
+                    
+                    // Hide required asterisks for locked fields
+                    popup.querySelectorAll('.add-only-required').forEach(req => {
+                        req.style.display = 'none';
+                    });
+                    
                     // Attach form submit handler
                     const form = popup.querySelector('#patientForm');
                     if (form) {
