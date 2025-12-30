@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\Assessment;
+use App\Observers\AssessmentObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register Assessment Observer to auto-sync patient data from completed assessments
+        Assessment::observe(AssessmentObserver::class);
     }
 }

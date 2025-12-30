@@ -389,45 +389,24 @@ class NutritionistController extends Controller
 
         $request->validate([
             'parent_id' => 'nullable|exists:users,user_id',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
             'barangay_id' => 'required|exists:barangays,barangay_id',
             'contact_number' => 'required|string|max:20',
-            'birthdate' => 'required|date|before:today',
-            'age_months' => 'nullable|integer|min:0',
-            'sex' => 'required|in:Male,Female',
             'date_of_admission' => 'required|date',
-            'weight_kg' => 'required|numeric|min:0',
-            'height_cm' => 'required|numeric|min:0',
+            // Note: first_name, middle_name, last_name, birthdate, sex are locked for editing
+            // Note: weight_kg, height_cm, and nutritional indicators are managed via assessments
         ]);
-        
-        // Calculate age_months from birthdate
-        $birthdate = new \DateTime($request->birthdate);
-        $today = new \DateTime();
-        $interval = $birthdate->diff($today);
-        $age_months = ($interval->y * 12) + $interval->m;
 
         try {
+            // Only update non-locked fields (household and contact info)
             $patient->update([
                 'parent_id' => $request->parent_id ?: null,
-                'first_name' => $request->first_name,
-                'middle_name' => $request->middle_name,
-                'last_name' => $request->last_name,
                 'barangay_id' => $request->barangay_id,
                 'contact_number' => $request->contact_number,
-                'birthdate' => $request->birthdate,
-                'age_months' => $age_months,
-                'sex' => $request->sex,
                 'date_of_admission' => $request->date_of_admission,
                 'total_household_adults' => $request->total_household_adults ?? 0,
                 'total_household_children' => $request->total_household_children ?? 0,
                 'total_household_twins' => $request->total_household_twins ?? 0,
                 'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
-                'weight_kg' => $request->weight_kg,
-                'height_cm' => $request->height_cm,
-                'weight_for_age' => $request->weight_for_age,
-                'height_for_age' => $request->height_for_age,
-                'bmi_for_age' => $request->bmi_for_age,
                 'breastfeeding' => $request->breastfeeding,
                 'other_medical_problems' => $request->other_medical_problems,
                 'edema' => $request->edema,

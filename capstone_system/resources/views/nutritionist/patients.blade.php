@@ -126,19 +126,22 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="first_name" class="form-label">First Name <span class="required">*</span></label>
-                            <input type="text" id="first_name" name="first_name" class="form-control" required placeholder="Enter first name">
+                            <input type="text" id="first_name" name="first_name" class="form-control" data-lock-on-edit="true" required placeholder="Enter first name">
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-lock"></i> Cannot be edited to preserve data integrity</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="middle_name" class="form-label">Middle Name</label>
-                            <input type="text" id="middle_name" name="middle_name" class="form-control" placeholder="Enter middle name">
+                            <input type="text" id="middle_name" name="middle_name" class="form-control" data-lock-on-edit="true" placeholder="Enter middle name">
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-lock"></i> Cannot be edited</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="last_name" class="form-label">Last Name <span class="required">*</span></label>
-                            <input type="text" id="last_name" name="last_name" class="form-control" required placeholder="Enter last name">
+                            <input type="text" id="last_name" name="last_name" class="form-control" data-lock-on-edit="true" required placeholder="Enter last name">
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-lock"></i> Cannot be edited to preserve data integrity</small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -154,8 +157,9 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="birthdate" class="form-label">Birthdate <span class="required">*</span></label>
-                            <input type="date" id="birthdate" name="birthdate" class="form-control" required>
-                            <small class="form-text text-muted">Age will be automatically calculated</small>
+                            <input type="date" id="birthdate" name="birthdate" class="form-control" data-lock-on-edit="true" required>
+                            <small class="form-text text-muted add-only-message">Age will be automatically calculated</small>
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-lock"></i> Cannot be edited to preserve historical accuracy</small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -249,14 +253,16 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="weight_kg" class="form-label">Weight (kg) <span class="required">*</span></label>
-                            <input type="number" id="weight_kg" name="weight_kg" class="form-control" step="0.01" min="0" required placeholder="0.00">
+                            <label for="weight_kg" class="form-label">Weight (kg) <span class="required" class="add-only-required">*</span></label>
+                            <input type="number" id="weight_kg" name="weight_kg" class="form-control" data-health-field="true" step="0.01" min="0" required placeholder="0.00">
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="height_cm" class="form-label">Height (cm) <span class="required">*</span></label>
-                            <input type="number" id="height_cm" name="height_cm" class="form-control" step="0.01" min="0" required placeholder="0.00">
+                            <label for="height_cm" class="form-label">Height (cm) <span class="required" class="add-only-required">*</span></label>
+                            <input type="number" id="height_cm" name="height_cm" class="form-control" data-health-field="true" step="0.01" min="0" required placeholder="0.00">
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -265,7 +271,8 @@
                                 Weight for Age
                                 <i class="fas fa-info-circle" title="Nutritional status indicator"></i>
                             </label>
-                            <input type="text" id="weight_for_age" name="weight_for_age" class="form-control" placeholder="e.g., Normal">
+                            <input type="text" id="weight_for_age" name="weight_for_age" class="form-control" data-health-field="true" placeholder="e.g., Normal">
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -274,7 +281,8 @@
                                 Height for Age
                                 <i class="fas fa-info-circle" title="Growth indicator"></i>
                             </label>
-                            <input type="text" id="height_for_age" name="height_for_age" class="form-control" placeholder="e.g., Normal">
+                            <input type="text" id="height_for_age" name="height_for_age" class="form-control" data-health-field="true" placeholder="e.g., Normal">
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -283,7 +291,8 @@
                                 BMI for Age
                                 <i class="fas fa-info-circle" title="Body mass index indicator"></i>
                             </label>
-                            <input type="text" id="bmi_for_age" name="bmi_for_age" class="form-control" placeholder="e.g., Normal">
+                            <input type="text" id="bmi_for_age" name="bmi_for_age" class="form-control" data-health-field="true" placeholder="e.g., Normal">
+                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
                         </div>
                     </div>
                     <div class="col-md-6">
