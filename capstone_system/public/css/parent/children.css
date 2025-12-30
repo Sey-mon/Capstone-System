@@ -1579,3 +1579,273 @@ h2#swal2-title {
         justify-content: center;
     }
 }
+/* ===================================
+   Compact UI Optimizations
+   =================================== */
+
+/* Content area padding */
+.desktop-content-area {
+    padding: 16px 12px;
+}
+
+/* Header stats - make smaller */
+.header-stat-item {
+    padding: 8px 12px;
+    gap: 8px;
+}
+
+.header-stat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.header-stat-value {
+    font-size: 18px;
+}
+
+.header-stat-label {
+    font-size: 11px;
+}
+
+/* Page icon */
+.page-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+}
+
+.page-main-title {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+.page-description {
+    font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+}
+
+/* Add child button */
+.add-child-section {
+    margin-bottom: 16px;
+}
+
+.btn-add-child {
+    padding: 10px 20px;
+    font-size: 13px;
+}
+
+.btn-add-child i {
+    font-size: 14px;
+}
+
+/* Children grid */
+.children-desktop-grid {
+    gap: 16px;
+}
+
+/* Child cards - more compact */
+.child-card {
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.child-card-header {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.child-avatar {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+}
+
+.child-name {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.child-meta {
+    font-size: 12px;
+}
+
+.meta-item {
+    font-size: 12px;
+}
+
+.meta-item i {
+    font-size: 11px;
+}
+
+/* Action buttons */
+.btn-modern {
+    padding: 8px 14px;
+    font-size: 12px;
+}
+
+.btn-modern i {
+    font-size: 11px;
+}
+
+/* Metric cards */
+.metric-card {
+    padding: 12px;
+}
+
+.metric-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+}
+
+.metric-label {
+    font-size: 11px;
+}
+
+.metric-value {
+    font-size: 16px;
+}
+
+.metric-value small {
+    font-size: 11px;
+}
+
+.metric-value-small {
+    font-size: 13px;
+}
+
+/* Additional info section */
+.additional-info-section {
+    padding: 10px;
+    gap: 8px;
+}
+
+.info-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.info-badge i {
+    font-size: 11px;
+}
+
+/* Empty state */
+.empty-state-desktop {
+    padding: 40px 20px;
+}
+
+.empty-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 32px;
+}
+
+.empty-title {
+    font-size: 20px;
+    margin: 16px 0 10px;
+}
+
+.empty-subtitle {
+    font-size: 13px;
+}
+
+/* Modal compact styles */
+.swal-add-child-header {
+    font-size: 18px;
+}
+
+.add-child-description {
+    font-size: 13px;
+}
+
+.form-label-modern {
+    font-size: 12px;
+}
+
+.form-input-modern {
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.form-help-text {
+    font-size: 11px;
+}
+
+.btn-confirm-modern,
+.btn-cancel-modern {
+    padding: 10px 20px;
+    font-size: 13px;
+}
+
+/* Profile section compact */
+.profile-section-title {
+    font-size: 14px;
+}
+
+.profile-label {
+    font-size: 11px;
+}
+
+.profile-value {
+    font-size: 13px;
+}
+
+.profile-value-large {
+    font-size: 15px;
+}
+
+.profile-value-xlarge {
+    font-size: 17px;
+}
+
+.profile-item {
+    padding: 10px 12px;
+}
+
+/* Confirmation screens */
+.confirmation-warning {
+    padding: 12px;
+}
+
+.confirmation-warning p {
+    font-size: 13px;
+}
+
+.preview-row {
+    padding: 8px 12px;
+}
+
+.preview-label {
+    font-size: 12px;
+}
+
+.preview-value {
+    font-size: 13px;
+}
+
+.confirmation-question {
+    padding: 12px;
+}
+
+.confirmation-question p {
+    font-size: 14px;
+}
+
+.unlink-confirmation p {
+    font-size: 13px;
+}
+
+.warning-box {
+    padding: 10px;
+}
+
+.warning-box p {
+    font-size: 12px;
+}
+
+.privacy-note {
+    padding: 8px;
+}
+
+.privacy-note small {
+    font-size: 11px;
+}

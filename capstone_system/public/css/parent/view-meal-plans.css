@@ -1664,3 +1664,222 @@
     display: inline-block;
     min-width: 80px;
 }
+/* ===================================
+   Compact UI Optimizations
+   =================================== */
+
+/* Critical CSS for LCP optimization */
+.empty-description {
+    font-display: swap;
+    content-visibility: auto;
+}
+
+.floating-icon {
+    will-change: auto;
+}
+
+.meal-plan-card-premium {
+    contain: layout style paint;
+}
+
+.empty-state-premium {
+    contain: layout style;
+}
+
+/* Compact sizing - except header */
+.meal-plans-container { 
+    padding: 16px 12px; 
+}
+
+.premium-alert { 
+    padding: 12px 16px; 
+    margin-bottom: 16px; 
+}
+
+.alert-icon-wrapper { 
+    width: 36px; 
+    height: 36px; 
+    font-size: 16px; 
+}
+
+.alert-content h4 { 
+    font-size: 15px; 
+    margin-bottom: 4px; 
+}
+
+.alert-content p { 
+    font-size: 13px; 
+}
+
+.control-panel { 
+    padding: 14px; 
+    margin-bottom: 16px; 
+}
+
+.filter-label { 
+    font-size: 12px; 
+    margin-bottom: 6px; 
+}
+
+.premium-select { 
+    padding: 8px 12px; 
+    font-size: 13px; 
+}
+
+.view-toggle-btn { 
+    width: 32px; 
+    height: 32px; 
+    font-size: 14px; 
+}
+
+.meal-plan-card-premium { 
+    padding: 16px; 
+    margin-bottom: 16px; 
+}
+
+.card-header-premium { 
+    padding-bottom: 12px; 
+    margin-bottom: 12px; 
+}
+
+.child-avatar { 
+    width: 40px; 
+    height: 40px; 
+    font-size: 18px; 
+}
+
+.child-name { 
+    font-size: 16px; 
+    margin-bottom: 4px; 
+}
+
+.plan-meta { 
+    font-size: 12px; 
+}
+
+.meta-item { 
+    font-size: 12px; 
+}
+
+.meta-item i { 
+    font-size: 11px; 
+}
+
+.action-menu-btn { 
+    width: 30px; 
+    height: 30px; 
+    font-size: 14px; 
+}
+
+.dropdown-item { 
+    padding: 8px 14px; 
+    font-size: 13px; 
+}
+
+.dropdown-item i { 
+    font-size: 12px; 
+}
+
+.notes-section-compact { 
+    padding: 10px; 
+    margin-bottom: 12px; 
+}
+
+.notes-header { 
+    font-size: 12px; 
+    margin-bottom: 6px; 
+}
+
+.notes-text { 
+    font-size: 12px; 
+}
+
+.plan-preview-section { 
+    padding: 10px; 
+    margin-bottom: 12px; 
+}
+
+.preview-header { 
+    font-size: 12px; 
+    margin-bottom: 8px; 
+}
+
+.plan-content-preview { 
+    font-size: 13px; 
+}
+
+.plan-tags { 
+    gap: 6px; 
+}
+
+.tag { 
+    padding: 5px 10px; 
+    font-size: 11px; 
+}
+
+.tag i { 
+    font-size: 10px; 
+}
+
+.card-footer-premium { 
+    padding-top: 12px; 
+}
+
+.btn-premium { 
+    padding: 10px 18px; 
+    font-size: 13px; 
+}
+
+.icon-btn { 
+    width: 32px; 
+    height: 32px; 
+    font-size: 14px; 
+}
+
+.empty-state-premium { 
+    padding: 40px 20px; 
+}
+
+.empty-icon-wrapper { 
+    margin-bottom: 20px; 
+}
+
+.icon-circle { 
+    width: 70px; 
+    height: 70px; 
+    font-size: 30px; 
+}
+
+.empty-title { 
+    font-size: 22px; 
+    margin-bottom: 10px; 
+}
+
+.empty-description { 
+    font-size: 14px; 
+}
+
+.premium-btn.large-btn { 
+    padding: 12px 28px; 
+    font-size: 14px; 
+}
+
+.empty-features { 
+    margin-top: 24px; 
+    gap: 16px; 
+}
+
+.feature-item { 
+    font-size: 13px; 
+}
+
+.feature-item i { 
+    font-size: 18px; 
+    margin-bottom: 6px; 
+}
+
+.floating-icon { 
+    width: 40px; 
+    height: 40px; 
+    font-size: 18px; 
+}
