@@ -147,8 +147,14 @@ class ApiController extends Controller
             // Perform assessment using API
             $result = $malnutritionService->assessChild($childData, $socioData);
             
-            // Store assessment in database
-            $assessment = Assessment::create([
+            // Check if an assessment already exists for this patient today
+            $todayDate = now()->format('Y-m-d');
+            $assessment = Assessment::where('patient_id', $patient->patient_id)
+                ->whereDate('assessment_date', $todayDate)
+                ->first();
+            
+            // Prepare assessment data
+            $assessmentData = [
                 'patient_id' => $patient->patient_id,
                 'nutritionist_id' => $user->role->role_name === 'Nutritionist' ? $user->user_id : null,
                 'assessment_date' => now(),
@@ -157,18 +163,30 @@ class ApiController extends Controller
                 'treatment' => json_encode($result['treatment_plan'] ?? []),
                 'notes' => $request->notes,
                 'completed_at' => now(),
-            ]);
+            ];
+            
+            // Update existing assessment or create new one
+            if ($assessment) {
+                $assessment->update($assessmentData);
+            } else {
+                $assessment = Assessment::create($assessmentData);
+            }
 
             // If it's an AJAX request, return JSON response
             if ($request->ajax()) {
                 // Extract diagnosis from the result for the response
                 $diagnosisText = $result['assessment']['primary_diagnosis'] ?? 'Unknown';
                 
+                $message = $assessment->wasRecentlyCreated 
+                    ? 'Assessment completed successfully!' 
+                    : 'Assessment updated! This patient was already assessed today. The previous assessment has been updated with the new data.';
+                
                 return response()->json([
                     'success' => true,
-                    'message' => 'Assessment completed successfully!',
+                    'message' => $message,
                     'assessment_id' => $assessment->assessment_id,
-                    'diagnosis' => $diagnosisText
+                    'diagnosis' => $diagnosisText,
+                    'is_update' => !$assessment->wasRecentlyCreated
                 ]);
             }
 

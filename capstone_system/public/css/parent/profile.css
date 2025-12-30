@@ -1059,15 +1059,22 @@
 .parent-swal-popup {
     border-radius: 16px !important;
     padding: 0 !important;
+    --swal2-title-padding: 0 !important;
+    overflow: hidden !important;
 }
 
 .parent-swal-popup .swal2-title {
-    padding: 20px 30px 10px !important;
+    padding: 0 !important;
     margin: 0 !important;
+    line-height: 1 !important;
+    font-size: 0 !important;
+    height: auto !important;
+    --swal2-title-padding: 0 !important;
+    width: 100% !important;
 }
 
 .parent-swal-popup .swal2-html-container {
-    padding: 0 30px 20px !important;
+    padding: 0 20px 20px !important;
     margin: 0 !important;
 }
 
