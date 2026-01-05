@@ -254,9 +254,16 @@ Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->
 
     // Food Database Management Routes (Admin)
     Route::get('/foods', [FoodController::class, 'index'])->name('foods.index');
+    Route::post('/foods', [FoodController::class, 'store'])->name('foods.store');
+    
+    // Specific routes before dynamic routes
     Route::get('/foods/export', [FoodController::class, 'export'])->name('foods.export');
     Route::post('/foods/import', [FoodController::class, 'import'])->name('foods.import');
-    Route::post('/foods', [FoodController::class, 'store'])->name('foods.store');
+    Route::post('/foods/quick-add', [FoodController::class, 'quickAdd'])->name('foods.quick-add');
+    Route::post('/foods/batch-delete', [FoodController::class, 'batchDelete'])->name('foods.batch-delete');
+    Route::post('/foods/check-duplicate', [FoodController::class, 'checkDuplicate'])->name('foods.check-duplicate');
+    
+    // Dynamic ID routes last
     Route::get('/foods/{id}', [FoodController::class, 'show'])->name('foods.show');
     Route::put('/foods/{id}', [FoodController::class, 'update'])->name('foods.update');
     Route::delete('/foods/{id}', [FoodController::class, 'destroy'])->name('foods.destroy');
@@ -266,6 +273,8 @@ Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->
     Route::get('/food-requests/{id}', [FoodRequestController::class, 'show'])->name('food-requests.show');
     Route::post('/food-requests/{id}/approve', [FoodRequestController::class, 'approve'])->name('food-requests.approve');
     Route::post('/food-requests/{id}/reject', [FoodRequestController::class, 'reject'])->name('food-requests.reject');
+    Route::post('/food-requests/batch-approve', [FoodRequestController::class, 'batchApprove'])->name('food-requests.batch-approve');
+    Route::post('/food-requests/batch-reject', [FoodRequestController::class, 'batchReject'])->name('food-requests.batch-reject');
     Route::delete('/food-requests/{id}', [FoodRequestController::class, 'destroy'])->name('food-requests.destroy');
 });
 
@@ -321,6 +330,7 @@ Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nu
 
     // Food Database View (Nutritionist - Read Only)
     Route::get('/foods', [NutritionistController::class, 'viewFoods'])->name('foods.index');
+    Route::get('/foods/{id}', [NutritionistController::class, 'showFood'])->name('foods.show');
 
     // Food Request Routes (Nutritionist)
     Route::get('/food-requests', [FoodRequestController::class, 'index'])->name('food-requests.index');

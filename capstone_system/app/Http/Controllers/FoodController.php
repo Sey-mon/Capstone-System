@@ -81,11 +81,27 @@ class FoodController extends Controller
 
             DB::commit();
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Food item created successfully!',
+                    'data' => $food
+                ]);
+            }
+
             return redirect()->route('admin.foods.index')
                 ->with('success', 'Food item created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating food: ' . $e->getMessage());
+            
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while creating the food item.'
+                ], 500);
+            }
+            
             return redirect()->route('admin.foods.index')
                 ->with('error', 'An error occurred while creating the food item.')
                 ->withInput();
@@ -123,6 +139,13 @@ class FoodController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 422);
+            }
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -155,11 +178,27 @@ class FoodController extends Controller
 
             DB::commit();
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Food item updated successfully!',
+                    'data' => $food
+                ]);
+            }
+
             return redirect()->route('admin.foods.index')
                 ->with('success', 'Food item updated successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating food: ' . $e->getMessage());
+            
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating the food item.'
+                ], 500);
+            }
+            
             return redirect()->route('admin.foods.index')
                 ->with('error', 'An error occurred while updating the food item.')
                 ->withInput();
@@ -191,13 +230,85 @@ class FoodController extends Controller
 
             DB::commit();
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Food item deleted successfully!'
+                ]);
+            }
+
             return redirect()->route('admin.foods.index')
                 ->with('success', 'Food item deleted successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error deleting food: ' . $e->getMessage());
+            
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while deleting the food item.'
+                ], 500);
+            }
+            
             return redirect()->route('admin.foods.index')
                 ->with('error', 'An error occurred while deleting the food item.');
+        }
+    }
+
+    /**
+     * Batch delete foods (Admin)
+     */
+    public function batchDelete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:foods,food_id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $ids = $request->input('ids');
+            $deletedCount = 0;
+
+            foreach ($ids as $id) {
+                $food = Food::find($id);
+                if ($food) {
+                    // Log the action
+                    AuditLog::create([
+                        'user_id' => Auth::id(),
+                        'action' => 'delete',
+                        'table_name' => 'foods',
+                        'record_id' => $food->food_id,
+                        'old_values' => json_encode($food->toArray()),
+                        'description' => 'Batch deleted food: ' . $food->food_name_and_description,
+                    ]);
+                    
+                    $food->delete();
+                    $deletedCount++;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted {$deletedCount} food items."
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error batch deleting foods: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while deleting food items.'
+            ], 500);
         }
     }
 
@@ -368,37 +479,103 @@ class FoodController extends Controller
     public function checkDuplicate(Request $request)
     {
         $name = $request->input('name', '');
+        $excludeId = $request->input('exclude_id'); // For edit operations
         
         if (strlen($name) < 3) {
             return response()->json([
                 'exists' => false,
+                'duplicates' => [],
                 'message' => 'Search term too short'
             ]);
         }
 
-        // Check in existing foods table
-        $existsInFoods = Food::where('food_name_and_description', 'LIKE', '%' . $name . '%')
-            ->orWhere('alternate_common_names', 'LIKE', '%' . $name . '%')
-            ->exists();
+        // Check in existing foods table with similarity search
+        $foodsQuery = Food::where(function($query) use ($name) {
+                $query->where('food_name_and_description', 'LIKE', '%' . $name . '%')
+                      ->orWhere('alternate_common_names', 'LIKE', '%' . $name . '%');
+            });
+        
+        if ($excludeId) {
+            $foodsQuery->where('food_id', '!=', $excludeId);
+        }
+        
+        $duplicateFoods = $foodsQuery->limit(5)->get(['food_id', 'food_name_and_description', 'alternate_common_names']);
 
         // Check in pending food requests
-        $existsInRequests = FoodRequest::where('status', 'pending')
+        $duplicateRequests = FoodRequest::where('status', 'pending')
             ->where(function($query) use ($name) {
                 $query->where('food_name_and_description', 'LIKE', '%' . $name . '%')
                       ->orWhere('alternate_common_names', 'LIKE', '%' . $name . '%');
             })
-            ->exists();
+            ->limit(5)
+            ->get(['id', 'food_name_and_description', 'alternate_common_names']);
 
-        $exists = $existsInFoods || $existsInRequests;
+        $exists = $duplicateFoods->count() > 0 || $duplicateRequests->count() > 0;
 
         return response()->json([
             'exists' => $exists,
-            'in_database' => $existsInFoods,
-            'in_pending_requests' => $existsInRequests,
+            'in_database' => $duplicateFoods->count() > 0,
+            'in_pending_requests' => $duplicateRequests->count() > 0,
+            'duplicates' => [
+                'foods' => $duplicateFoods,
+                'requests' => $duplicateRequests
+            ],
             'message' => $exists 
-                ? 'A similar food item already exists or is pending approval' 
+                ? 'Found ' . ($duplicateFoods->count() + $duplicateRequests->count()) . ' similar item(s)' 
                 : 'Food name is available'
         ]);
+    }
+
+    /**
+     * Quick add food (simplified form for faster entry)
+     */
+    public function quickAdd(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'food_name_and_description' => 'required|string|max:5000',
+            'energy_kcal' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $food = Food::create([
+                'food_name_and_description' => $request->food_name_and_description,
+                'energy_kcal' => $request->energy_kcal,
+                'alternate_common_names' => $request->alternate_common_names,
+                'nutrition_tags' => $request->nutrition_tags,
+            ]);
+
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'create',
+                'table_name' => 'foods',
+                'record_id' => $food->food_id,
+                'description' => 'Quick added food: ' . $food->food_name_and_description,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Food added successfully!',
+                'data' => $food
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error quick adding food: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while adding the food item.'
+            ], 500);
+        }
     }
 }
 

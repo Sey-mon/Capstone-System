@@ -72,6 +72,9 @@
             @endif
         </select>
 
+        <button class="btn btn-secondary" onclick="toggleBulkActions()" id="bulkActionBtn" style="display:none;">
+            <i class="fas fa-tasks"></i> <span id="selectedCount">0</span> Selected
+        </button>
         <button class="btn btn-secondary" onclick="document.getElementById('importForm').style.display='block'">
             <i class="fas fa-file-import"></i> Import CSV
         </button>
@@ -79,7 +82,21 @@
             <i class="fas fa-file-export"></i> Export
         </a>
         <button class="btn btn-primary" onclick="openCreateModal()">
-            <i class="fas fa-plus"></i> Add New Food
+            <i class="fas fa-plus"></i> Add Food
+        </button>
+        <button class="btn btn-success" onclick="openQuickAddModal()" title="Quick add with less fields">
+            <i class="fas fa-bolt"></i> Quick Add
+        </button>
+    </div>
+
+    <!-- Bulk Actions Bar (Hidden by default) -->
+    <div id="bulkActionsBar" style="display:none; background: #fff; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 2px 0 rgba(0,0,0,.05); display: flex; gap: 12px; align-items: center;">
+        <span style="font-weight: 600; color: #374151;"><span id="bulkCount">0</span> item(s) selected</span>
+        <button class="btn btn-danger btn-sm" onclick="bulkDelete()">
+            <i class="fas fa-trash"></i> Delete Selected
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+            <i class="fas fa-times"></i> Clear Selection
         </button>
     </div>
 
@@ -108,22 +125,30 @@
             <table class="data-table" style="table-layout: fixed;">
                 <thead>
                     <tr>
-                        <th><i class="fas fa-hashtag"></i> ID</th>
+                        <th style="width: 50px;">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" title="Select all on this page">
+                        </th>
+                        <th style="width: 80px;"><i class="fas fa-hashtag"></i> ID</th>
                         <th><i class="fas fa-apple-alt"></i> Food Name & Description</th>
-                        <th><i class="fas fa-list-alt"></i> Alternate Names</th>
-                        <th><i class="fas fa-fire"></i> Energy (kcal)</th>
-                        <th><i class="fas fa-tags"></i> Tags</th>
-                        <th><i class="fas fa-cog"></i> Actions</th>
+                        <th style="width: 200px;"><i class="fas fa-list-alt"></i> Alternate Names</th>
+                        <th style="width: 140px;"><i class="fas fa-tags"></i> Tags</th>
+                        <th style="width: 180px;"><i class="fas fa-cog"></i> Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($foods as $food)
-                        <tr>
-                            <td><strong>#{{ $food->food_id }}</strong></td>
-                            <td>{{ Str::limit($food->food_name_and_description, 60) }}</td>
-                            <td>{{ Str::limit($food->alternate_common_names, 40) ?? '-' }}</td>
-                            <td><strong>{{ number_format($food->energy_kcal, 1) }}</strong></td>
+                        <tr data-food-id="{{ $food->food_id }}">
                             <td>
+                                <input type="checkbox" class="food-checkbox" value="{{ $food->food_id }}" onchange="updateBulkActions()">
+                            </td>
+                            <td><strong>#{{ $food->food_id }}</strong></td>
+                            <td class="editable-cell" data-field="food_name_and_description" data-id="{{ $food->food_id }}">
+                                {{ Str::limit($food->food_name_and_description, 60) }}
+                            </td>
+                            <td class="editable-cell" data-field="alternate_common_names" data-id="{{ $food->food_id }}">
+                                {{ Str::limit($food->alternate_common_names, 40) ?? '-' }}
+                            </td>
+                            <td class="editable-cell" data-field="nutrition_tags" data-id="{{ $food->food_id }}">
                                 @if($food->nutrition_tags)
                                     <span style="display: inline-block; padding: 4px 12px; background: var(--light-green); color: var(--dark-green); border-radius: 6px; font-size: 12px; font-weight: 600;">
                                         {{ Str::limit($food->nutrition_tags, 30) }}
@@ -134,16 +159,15 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                    <button class="btn-sm btn-edit" onclick="editFood({{ $food->food_id }})">
-                                        <i class="fas fa-edit"></i> Edit
+                                    <button class="btn-sm btn-info" onclick="viewFood({{ $food->food_id }})" title="View full details">
+                                        <i class="fas fa-eye"></i>
                                     </button>
-                                    <form method="POST" action="{{ route('admin.foods.destroy', $food->food_id) }}" style="display:inline;" class="delete-form">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-sm btn-delete">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </form>
+                                    <button class="btn-sm btn-edit" onclick="editFood({{ $food->food_id }})" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-sm btn-delete" onclick="deleteFood({{ $food->food_id }})" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -153,7 +177,7 @@
                                 <div style="text-align: center; padding: 60px 20px;">
                                     <i class="fas fa-inbox" style="font-size: 48px; color: var(--gray-300); margin-bottom: 16px;"></i>
                                     <p style="color: var(--gray-500); margin-bottom: 16px;">No food items found.</p>
-                                    <button onclick="openCreateModal()">
+                                    <button class="btn btn-primary" onclick="openCreateModal()">
                                         <i class="fas fa-plus"></i> Add First Item
                                     </button>
                                 </div>
@@ -171,4 +195,5 @@
 
 @push('scripts')
     <script defer src="{{ asset('js/admin/foods.js') }}"></script>
+    <script defer src="{{ asset('js/admin/foods-enhanced.js') }}"></script>
 @endpush

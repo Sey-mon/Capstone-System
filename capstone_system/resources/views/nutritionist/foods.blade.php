@@ -110,7 +110,6 @@
                             <th width="60">ID</th>
                             <th>Food Name & Description</th>
                             <th width="180">Alternate Names</th>
-                            <th width="120">Energy (kcal)</th>
                             <th width="180">Tags</th>
                             <th width="80">Actions</th>
                         </tr>
@@ -121,7 +120,6 @@
                                 <td><span class="id-badge">{{ $food->food_id }}</span></td>
                                 <td class="food-name">{{ Str::limit($food->food_name_and_description, 80) }}</td>
                                 <td><span class="alternate-name">{{ Str::limit($food->alternate_common_names, 40) ?? '-' }}</span></td>
-                                <td><span class="energy-badge">{{ number_format($food->energy_kcal, 1) }}</span></td>
                                 <td><span class="tags-cell">{{ Str::limit($food->nutrition_tags, 40) }}</span></td>
                                 <td class="action-cell">
                                     <button onclick="viewFoodDetails({{ $food->food_id }})" class="btn-sm btn-info" title="View Details">
@@ -131,7 +129,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="empty-state">
+                                <td colspan="5" class="empty-state">
                                     <i class="fas fa-search"></i>
                                     <p>No food items found</p>
                                     <small>Try adjusting your search or filters</small>
@@ -175,14 +173,6 @@
                                 <i class="fas fa-tag"></i>
                                 <strong>Alternate Names:</strong> 
                                 <span>{{ $request->alternate_common_names }}</span>
-                            </div>
-                        @endif
-                        
-                        @if($request->energy_kcal)
-                            <div class="detail-item">
-                                <i class="fas fa-fire"></i>
-                                <strong>Energy:</strong> 
-                                <span>{{ number_format($request->energy_kcal, 1) }} kcal</span>
                             </div>
                         @endif
                         

@@ -982,6 +982,34 @@ class NutritionistController extends Controller
     }
 
     /**
+     * Show individual food details (Read-only for nutritionists)
+     */
+    public function showFood($id)
+    {
+        try {
+            $food = Food::findOrFail($id);
+            
+            // Return JSON for AJAX requests
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json($food);
+            }
+            
+            // Otherwise redirect to foods list
+            return redirect()->route('nutritionist.foods.index');
+        } catch (\Exception $e) {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Food not found'
+                ], 404);
+            }
+            
+            return redirect()->route('nutritionist.foods.index')
+                ->with('error', 'Food not found');
+        }
+    }
+
+    /**
      * Search foods (AJAX)
      */
     public function searchFoods(Request $request)

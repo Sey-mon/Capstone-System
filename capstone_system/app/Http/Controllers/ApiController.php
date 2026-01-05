@@ -144,17 +144,32 @@ class ApiController extends Controller
         ];
 
         try {
-            // Perform assessment using API
-            $result = $malnutritionService->assessChild($childData, $socioData);
-            
             // Check if an assessment already exists for this patient today
             $todayDate = now()->format('Y-m-d');
-            $assessment = Assessment::where('patient_id', $patient->patient_id)
+            $existingAssessment = Assessment::where('patient_id', $patient->patient_id)
                 ->whereDate('assessment_date', $todayDate)
                 ->first();
             
-            // Prepare assessment data
-            $assessmentData = [
+            // If assessment exists for today, prevent duplicate
+            if ($existingAssessment) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This patient has already been assessed today. You can only assess a patient once per day. Please try again tomorrow or view the existing assessment.',
+                        'existing_assessment_id' => $existingAssessment->assessment_id
+                    ], 422);
+                }
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['error' => 'This patient has already been assessed today. You can only assess a patient once per day.']);
+            }
+            
+            // Perform assessment using API
+            $result = $malnutritionService->assessChild($childData, $socioData);
+            
+            // Store assessment in database
+            $assessment = Assessment::create([
                 'patient_id' => $patient->patient_id,
                 'nutritionist_id' => $user->role->role_name === 'Nutritionist' ? $user->user_id : null,
                 'assessment_date' => now(),
@@ -163,30 +178,18 @@ class ApiController extends Controller
                 'treatment' => json_encode($result['treatment_plan'] ?? []),
                 'notes' => $request->notes,
                 'completed_at' => now(),
-            ];
-            
-            // Update existing assessment or create new one
-            if ($assessment) {
-                $assessment->update($assessmentData);
-            } else {
-                $assessment = Assessment::create($assessmentData);
-            }
+            ]);
 
             // If it's an AJAX request, return JSON response
             if ($request->ajax()) {
                 // Extract diagnosis from the result for the response
                 $diagnosisText = $result['assessment']['primary_diagnosis'] ?? 'Unknown';
                 
-                $message = $assessment->wasRecentlyCreated 
-                    ? 'Assessment completed successfully!' 
-                    : 'Assessment updated! This patient was already assessed today. The previous assessment has been updated with the new data.';
-                
                 return response()->json([
                     'success' => true,
-                    'message' => $message,
+                    'message' => 'Assessment completed successfully!',
                     'assessment_id' => $assessment->assessment_id,
-                    'diagnosis' => $diagnosisText,
-                    'is_update' => !$assessment->wasRecentlyCreated
+                    'diagnosis' => $diagnosisText
                 ]);
             }
 

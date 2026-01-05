@@ -19,8 +19,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Google reCAPTCHA v3 -->
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
 </head>
 <body>  
     <!-- Navigation Header -->
@@ -127,17 +127,11 @@
                         <a href="{{ route('password.request') }}" class="forgot-password">Forgot Password?</a>
                     </div>
 
-                    <!-- Google reCAPTCHA v2 -->
-                    <div class="form-group">
-                        <div class="g-recaptcha" 
-                             data-sitekey="{{ config('services.recaptcha.site_key', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') }}"
-                             data-theme="light">
-                        </div>
-
-                        @error('g-recaptcha-response')
-                            <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
-                        @enderror
-                    </div>
+                    <!-- Google reCAPTCHA v3 (invisible) -->
+                    <input type="hidden" name="recaptcha_token" id="recaptchaToken">
+                    @error('recaptcha_token')
+                        <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
+                    @enderror
 
                     <button type="submit" class="btn-primary" id="loginBtn">
                         <span class="btn-text">Sign In</span>
@@ -447,6 +441,22 @@
                     }, 500);
                 }, 10000);
             });
+
+            // reCAPTCHA v3 - Generate token on form submit
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    grecaptcha.ready(function() {
+                        grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'login'})
+                            .then(function(token) {
+                                document.getElementById('recaptchaToken').value = token;
+                                loginForm.submit();
+                            });
+                    });
+                });
+            }
         });
     </script>
 </body>
