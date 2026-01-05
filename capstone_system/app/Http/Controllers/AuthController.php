@@ -31,12 +31,12 @@ class AuthController extends Controller
             ])->withInput($request->except('email'));
         }
 
-        // LAYER 2: Google reCAPTCHA Validation
+        // LAYER 2: Google reCAPTCHA v3 Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'g-recaptcha-response' => 'required',
+            'recaptcha_token' => 'required',
         ], [
-            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
+            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
         ]);
 
         if ($validator->fails()) {
@@ -45,15 +45,22 @@ class AuthController extends Controller
                 ->withInput($request->except('email'));
         }
 
-        // LAYER 3: Verify reCAPTCHA with Google API
+        // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
-        $recaptcha = new \ReCaptcha\ReCaptcha($recaptchaSecret);
-        $resp = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
-
-        if (!$resp->isSuccess()) {
-            return back()->withErrors([
-                'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
-            ])->withInput($request->except('email'));
+        if ($recaptchaSecret) {
+            $recaptchaResponse = file_get_contents(
+                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
+                '&response=' . $request->input('recaptcha_token') . 
+                '&remoteip=' . $request->ip()
+            );
+            $recaptchaData = json_decode($recaptchaResponse);
+            
+            // Check if verification was successful and score is above threshold (0.5)
+            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
+                return back()->withErrors([
+                    'recaptcha_token' => 'Security verification failed. Please try again.',
+                ])->withInput($request->except('email'));
+            }
         }
 
         // Find user by email
@@ -82,13 +89,13 @@ class AuthController extends Controller
             ])->withInput($request->except('message'));
         }
 
-        // LAYER 2: Google reCAPTCHA Validation
+        // LAYER 2: Google reCAPTCHA v3 Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'message' => 'required|string|max:1000',
-            'g-recaptcha-response' => 'required',
+            'recaptcha_token' => 'required',
         ], [
-            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
+            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
         ]);
 
         if ($validator->fails()) {
@@ -97,15 +104,22 @@ class AuthController extends Controller
                 ->withInput($request->except('message'));
         }
 
-        // LAYER 3: Verify reCAPTCHA with Google API
+        // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
-        $recaptcha = new \ReCaptcha\ReCaptcha($recaptchaSecret);
-        $resp = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
-
-        if (!$resp->isSuccess()) {
-            return back()->withErrors([
-                'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
-            ])->withInput($request->except('message'));
+        if ($recaptchaSecret) {
+            $recaptchaResponse = file_get_contents(
+                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
+                '&response=' . $request->input('recaptcha_token') . 
+                '&remoteip=' . $request->ip()
+            );
+            $recaptchaData = json_decode($recaptchaResponse);
+            
+            // Check if verification was successful and score is above threshold (0.5)
+            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
+                return back()->withErrors([
+                    'recaptcha_token' => 'Security verification failed. Please try again.',
+                ])->withInput($request->except('message'));
+            }
         }
 
         // Send email to admin (replace with actual admin email)
@@ -157,28 +171,33 @@ class AuthController extends Controller
             ])->withInput($request->except('password'));
         }
 
-        // LAYER 2: Google reCAPTCHA Validation
+        // LAYER 2: Google reCAPTCHA v3 Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'g-recaptcha-response' => 'required',
+            'recaptcha_token' => 'required',
         ], [
-            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
+            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput($request->except('password'));
         }
 
-        // Verify reCAPTCHA with Google
+        // Verify reCAPTCHA v3 with Google and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
-        if ($recaptchaSecret && $recaptchaSecret !== '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe') {
-            $recaptcha = new \ReCaptcha\ReCaptcha($recaptchaSecret);
-            $resp = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
+        if ($recaptchaSecret) {
+            $recaptchaResponse = file_get_contents(
+                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
+                '&response=' . $request->input('recaptcha_token') . 
+                '&remoteip=' . $request->ip()
+            );
+            $recaptchaData = json_decode($recaptchaResponse);
             
-            if (!$resp->isSuccess()) {
+            // Check if verification was successful and score is above threshold (0.5)
+            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
                 return back()->withErrors([
-                    'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
+                    'recaptcha_token' => 'Security verification failed. Please try again.',
                 ])->withInput($request->except('password'));
             }
         }
@@ -250,28 +269,33 @@ class AuthController extends Controller
             ])->withInput($request->except('password'));
         }
 
-        // LAYER 2: Google reCAPTCHA Validation
+        // LAYER 2: Google reCAPTCHA v3 Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'g-recaptcha-response' => 'required',
+            'recaptcha_token' => 'required',
         ], [
-            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
+            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput($request->except('password'));
         }
 
-        // Verify reCAPTCHA with Google
+        // Verify reCAPTCHA v3 with Google and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
-        if ($recaptchaSecret && $recaptchaSecret !== '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe') {
-            $recaptcha = new \ReCaptcha\ReCaptcha($recaptchaSecret);
-            $resp = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
+        if ($recaptchaSecret) {
+            $recaptchaResponse = file_get_contents(
+                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
+                '&response=' . $request->input('recaptcha_token') . 
+                '&remoteip=' . $request->ip()
+            );
+            $recaptchaData = json_decode($recaptchaResponse);
             
-            if (!$resp->isSuccess()) {
+            // Check if verification was successful and score is above threshold (0.5)
+            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
                 return back()->withErrors([
-                    'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
+                    'recaptcha_token' => 'Security verification failed. Please try again.',
                 ])->withInput($request->except('password'));
             }
         }

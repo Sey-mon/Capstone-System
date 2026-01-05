@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Google reCAPTCHA v3 -->
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
     
     <style>
         /* Slideshow Styles */
@@ -368,16 +368,11 @@
                         <a href="{{ route('password.request') }}" class="forgot-password">Forgot Password?</a>
                     </div>
 
-                    <!-- Google reCAPTCHA v2 -->
-                    <div class="form-group">
-                        <div class="g-recaptcha" 
-                             data-sitekey="{{ config('services.recaptcha.site_key', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') }}"
-                             data-theme="light">
-                        </div>
-                        @error('g-recaptcha-response')
-                            <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
-                        @enderror
-                    </div>
+                    <!-- Google reCAPTCHA v3 (invisible) -->
+                    <input type="hidden" name="recaptcha_token" id="recaptchaToken">
+                    @error('recaptcha_token')
+                        <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
+                    @enderror
 
                     <button type="submit" class="btn-primary" id="loginBtn">
                         <span class="btn-text">Sign In</span>
@@ -500,15 +495,28 @@
 
     <script src="{{ asset('js/login.js') }}"></script>
     <script>
-        // Honeypot protection - if bot fills the hidden field, prevent submission
-        document.getElementById('staffLoginForm').addEventListener('submit', function(e) {
-            const honeypot = document.getElementById('website').value;
-            if (honeypot) {
+        // reCAPTCHA v3 - Generate token on form submit
+        const staffLoginForm = document.getElementById('staffLoginForm');
+        if (staffLoginForm) {
+            staffLoginForm.addEventListener('submit', function(e) {
+                const honeypot = document.getElementById('website').value;
+                if (honeypot) {
+                    e.preventDefault();
+                    console.log('Bot detected via honeypot');
+                    return false;
+                }
+                
                 e.preventDefault();
-                console.log('Bot detected via honeypot');
-                return false;
-            }
-        });
+                
+                grecaptcha.ready(function() {
+                    grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'staff_login'})
+                        .then(function(token) {
+                            document.getElementById('recaptchaToken').value = token;
+                            staffLoginForm.submit();
+                        });
+                });
+            });
+        }
 
         // Slideshow functionality
         let currentSlide = 0;

@@ -59,10 +59,26 @@
     <!-- Filter Tabs -->
     <div class="filter-tabs">
         <a href="{{ route('admin.food-requests.index') }}" class="{{ !$status ? 'active' : '' }}">All</a>
-        <a href="{{ route('admin.food-requests.index', ['status' => 'pending']) }}" class="{{ $status == 'pending' ? 'active' : '' }}">Pending</a>
+        <a href="{{ route('admin.food-requests.index', ['status' => 'pending']) }}" class="{{ $status == 'pending' ? 'active' : '' }}">Pending ({{ $stats['pending'] }})</a>
         <a href="{{ route('admin.food-requests.index', ['status' => 'approved']) }}" class="{{ $status == 'approved' ? 'active' : '' }}">Approved</a>
         <a href="{{ route('admin.food-requests.index', ['status' => 'rejected']) }}" class="{{ $status == 'rejected' ? 'active' : '' }}">Rejected</a>
     </div>
+
+    <!-- Bulk Actions Bar (Hidden by default) -->
+    @if($status == 'pending' || !$status)
+    <div id="bulkActionsBar" style="display:none; background: #fff; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 2px 0 rgba(0,0,0,.05); gap: 12px; align-items: center;">
+        <span style="font-weight: 600; color: #374151;"><span id="bulkCount">0</span> request(s) selected</span>
+        <button class="btn btn-success btn-sm" onclick="bulkApprove()">
+            <i class="fas fa-check"></i> Approve Selected
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="bulkReject()">
+            <i class="fas fa-times"></i> Reject Selected
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+            <i class="fas fa-times-circle"></i> Clear Selection
+        </button>
+    </div>
+    @endif
 
     <!-- Requests Table -->
     <div class="content-card">
@@ -71,10 +87,14 @@
         <table class="data-table">
             <thead>
                 <tr>
+                    @if($status == 'pending' || !$status)
+                    <th style="width: 50px;">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" title="Select all on this page">
+                    </th>
+                    @endif
                     <th>ID</th>
                     <th>Requested By</th>
                     <th>Food Name</th>
-                    <th>Energy (kcal)</th>
                     <th>Status</th>
                     <th>Date</th>
                     <th>Actions</th>
@@ -82,48 +102,47 @@
             </thead>
             <tbody>
                 @forelse($requests as $request)
-                    <tr>
+                    <tr data-request-id="{{ $request->id }}">
+                        @if($status == 'pending' || !$status)
+                        <td>
+                            @if($request->status == 'pending')
+                            <input type="checkbox" class="request-checkbox" value="{{ $request->id }}" onchange="updateBulkActions()">
+                            @endif
+                        </td>
+                        @endif
                         <td>{{ $request->id }}</td>
                         <td>{{ $request->requester->first_name }} {{ $request->requester->last_name }}</td>
                         <td>{{ Str::limit($request->food_name_and_description, 50) }}</td>
-                        <td>{{ $request->energy_kcal ? number_format($request->energy_kcal, 1) : 'N/A' }}</td>
                         <td>
                             <span class="badge badge-{{ $request->status }}">{{ ucfirst($request->status) }}</span>
                         </td>
                         <td>{{ $request->created_at->format('M d, Y') }}</td>
                         <td>
-                            @if($request->status == 'pending')
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                 <button class="btn-sm btn-info" onclick="viewRequestDetails({{ $request->id }})" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <form method="POST" action="{{ route('admin.food-requests.approve', $request->id) }}" style="display:inline;">
-                                    @csrf
-                                    <button type="submit" class="btn-sm btn-success" onclick="return confirm('Approve this request and add to database?')" title="Approve">
-                                        <i class="fas fa-check"></i> Approve
+                                @if($request->status == 'pending')
+                                    <button class="btn-sm btn-success" onclick="approveRequest({{ $request->id }})" title="Approve">
+                                        <i class="fas fa-check"></i>
                                     </button>
-                                </form>
-                                <button class="btn-sm btn-danger" onclick="rejectRequest({{ $request->id }})" title="Reject">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            @else
-                                <button class="btn-sm btn-info" onclick="viewRequestDetails({{ $request->id }})" title="View Details">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                <span class="badge badge-{{ $request->status }}">{{ ucfirst($request->status) }}</span>
-                            @endif
-                            
-                            <form method="POST" action="{{ route('admin.food-requests.destroy', $request->id) }}" style="display:inline;" onsubmit="return confirm('Delete this request?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-sm btn-delete" title="Delete">
+                                    <button class="btn-sm btn-danger" onclick="rejectRequest({{ $request->id }})" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                @endif
+                                
+                                <button class="btn-sm btn-delete" onclick="deleteRequest({{ $request->id }})" title="Delete">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                            </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align:center; padding: 40px;">No food requests found</td>
+                        <td colspan="{{ ($status == 'pending' || !$status) ? '7' : '6' }}" style="text-align:center; padding: 40px;">
+                            <i class="fas fa-inbox" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+                            <p style="color: #6b7280;">No food requests found</p>
+                        </td>
                     </tr>
                 @endforelse
             </tbody>
@@ -169,4 +188,5 @@
 
 @push('scripts')
     <script src="{{ asset('js/admin/food-requests.js') }}"></script>
+    <script src="{{ asset('js/admin/food-requests-enhanced.js') }}"></script>
 @endpush

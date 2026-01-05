@@ -1402,3 +1402,226 @@ body.swal2-shown {
         border: 1px solid #e2e8f0;
     }
 }
+/* ===================================
+   Compact UI Optimizations
+   =================================== */
+
+/* Content area padding */
+.desktop-content-area {
+    padding: 16px 12px;
+}
+
+/* Header stats - make smaller */
+.header-stat-item {
+    padding: 8px 12px;
+    gap: 8px;
+}
+
+.header-stat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.header-stat-value {
+    font-size: 18px;
+}
+
+.header-stat-label {
+    font-size: 11px;
+}
+
+/* Page icon */
+.page-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+}
+
+.page-main-title {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+.page-description {
+    font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+}
+
+/* Child cards - more compact */
+.child-card {
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.child-card-header {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.child-avatar {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+}
+
+.child-name {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.child-meta {
+    font-size: 12px;
+}
+
+.meta-item {
+    font-size: 12px;
+}
+
+.meta-item i {
+    font-size: 11px;
+}
+
+.view-history-btn,
+.no-data-badge {
+    padding: 8px 14px;
+    font-size: 12px;
+}
+
+/* Assessment sections */
+.latest-assessment {
+    padding: 14px;
+}
+
+.assessment-header-inline h4 {
+    font-size: 15px;
+}
+
+.assessment-date {
+    font-size: 11px;
+}
+
+.diagnosis-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.diagnosis-badge i {
+    font-size: 11px;
+}
+
+/* Metric cards */
+.metric-card {
+    padding: 12px;
+}
+
+.metric-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+}
+
+.metric-label {
+    font-size: 11px;
+}
+
+.metric-value {
+    font-size: 16px;
+}
+
+.metric-value small {
+    font-size: 11px;
+}
+
+/* Remarks section */
+.remarks-section {
+    padding: 12px;
+}
+
+.remarks-header {
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.remarks-content {
+    font-size: 13px;
+}
+
+/* No assessment section */
+.no-assessment {
+    padding: 30px 20px;
+}
+
+.no-assessment-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+}
+
+.no-assessment h4 {
+    font-size: 16px;
+    margin: 12px 0 8px;
+}
+
+.no-assessment p {
+    font-size: 13px;
+}
+
+/* Empty state */
+.empty-state {
+    padding: 40px 20px;
+}
+
+.empty-state-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 32px;
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    margin: 16px 0 10px;
+}
+
+.empty-state p {
+    font-size: 13px;
+}
+
+.empty-state-btn {
+    padding: 10px 20px;
+    font-size: 13px;
+}
+
+.empty-state-btn i {
+    font-size: 12px;
+}
+
+/* Assessment details grid */
+.assessments-grid {
+    gap: 16px;
+}
+
+/* Modal/SweetAlert compact styles */
+.swal-header-title {
+    font-size: 18px;
+}
+
+.swal-assessment-item {
+    padding: 10px 14px;
+    font-size: 13px;
+}
+
+.swal-detail-header h3 {
+    font-size: 16px;
+}
+
+.swal-detail-date {
+    font-size: 12px;
+}
+
+.swal-diagnosis-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.swal-metrics-grid .metric-card {
+    padding: 10px;
+}

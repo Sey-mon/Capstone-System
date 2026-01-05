@@ -264,11 +264,10 @@
                                 <div class="empty-icon">
                                     <i class="fas fa-user-plus"></i>
                                 </div>
-                                <div class="empty-ripple"></div>
                             </div>
                             <h3>No Children Found</h3>
                             <p>You need to add at least one child to your account before generating meal plans.</p>
-                            <a href="{{ route('parent.bind-child') }}" class="ultra-button secondary">
+                            <a href="{{ route('parent.children') }}" class="ultra-button secondary">
                                 <div class="button-content">
                                     <i class="fas fa-plus button-icon"></i>
                                     <span class="button-text">Add Your First Child</span>

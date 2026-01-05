@@ -1311,7 +1311,7 @@ main {
 .empty-icon {
     width: 100px;
     height: 100px;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1328,7 +1328,7 @@ main {
     left: -10px;
     right: -10px;
     bottom: -10px;
-    border: 2px solid #f093fb;
+    border: 2px solid #10b981;
     border-radius: 50%;
     animation: ripple 2s ease-in-out infinite;
 }

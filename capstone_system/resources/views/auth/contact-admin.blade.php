@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Google reCAPTCHA v3 -->
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
     
     <style>
         /* Modern Button Styles */
@@ -204,12 +204,10 @@
                         @enderror
                     </div>
 
-                    <!-- Google reCAPTCHA v2 Widget -->
+                    <!-- Google reCAPTCHA v3 (invisible) -->
+                    <input type="hidden" name="recaptcha_token" id="recaptchaToken">
                     <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}" 
-                             style="display: flex; justify-content: center; transform: scale(0.95); transform-origin: center;"></div>
-                        
-                        @error('g-recaptcha-response')
+                        @error('recaptcha_token')
                             <div style="color: #ef4444; font-size: 0.875rem; margin-top: 10px; text-align: center;">
                                 <i class="fas fa-exclamation-circle"></i> {{ $message }}
                             </div>
@@ -259,7 +257,7 @@
                 });
             }
 
-            // Enhanced button loading state
+            // Enhanced button loading state with reCAPTCHA v3
             if (form && contactBtn) {
                 form.addEventListener('submit', function(e) {
                     // Honeypot validation
@@ -269,20 +267,20 @@
                         return false;
                     }
 
-                    // Check if reCAPTCHA is completed
-                    const recaptchaResponse = grecaptcha.getResponse();
-                    if (!recaptchaResponse) {
-                        return; // Let the form validation handle it
-                    }
-
+                    e.preventDefault();
+                    
                     // Add loading state
                     contactBtn.classList.add('loading');
                     contactBtn.disabled = true;
                     
-                    // Add a slight delay to show the loading animation
-                    setTimeout(() => {
-                        // Form will submit naturally
-                    }, 300);
+                    // Generate reCAPTCHA v3 token
+                    grecaptcha.ready(function() {
+                        grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'contact_admin'})
+                            .then(function(token) {
+                                document.getElementById('recaptchaToken').value = token;
+                                form.submit();
+                            });
+                    });
                 });
             }
 

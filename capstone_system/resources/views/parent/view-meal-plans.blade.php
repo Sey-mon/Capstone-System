@@ -10,13 +10,21 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<!-- Preconnect to external resources -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+<!-- Preload critical CSS -->
+<link rel="preload" href="{{ asset('css/parent/view-meal-plans.css') }}?v={{ time() }}" as="style">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"></noscript>
 <link rel="stylesheet" href="{{ asset('css/parent/view-meal-plans.css') }}?v={{ time() }}">
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{{ asset('js/parent/view-meal-plans.js') }}?v={{ time() }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+<script src="{{ asset('js/parent/view-meal-plans.js') }}?v={{ time() }}" defer></script>
 @endpush
 
 @section('content')
@@ -277,21 +285,21 @@
                 @else
                     <!-- Premium Empty State -->
                     <div class="empty-state-premium">
-                        <div class="empty-state-background">
-                            <div class="floating-icon icon-1"><i class="fas fa-utensils"></i></div>
-                            <div class="floating-icon icon-2"><i class="fas fa-apple-alt"></i></div>
-                            <div class="floating-icon icon-3"><i class="fas fa-carrot"></i></div>
-                            <div class="floating-icon icon-4"><i class="fas fa-drumstick-bite"></i></div>
+                        <div class="empty-state-background" style="content-visibility: auto;">
+                            <div class="floating-icon icon-1" loading="lazy"><i class="fas fa-utensils"></i></div>
+                            <div class="floating-icon icon-2" loading="lazy"><i class="fas fa-apple-alt"></i></div>
+                            <div class="floating-icon icon-3" loading="lazy"><i class="fas fa-carrot"></i></div>
+                            <div class="floating-icon icon-4" loading="lazy"><i class="fas fa-drumstick-bite"></i></div>
                         </div>
                         <div class="empty-state-content">
                             <div class="empty-icon-wrapper">
                                 <div class="icon-circle">
                                     <i class="fas fa-clipboard-list"></i>
                                 </div>
-                                <div class="icon-pulse"></div>
+                                <div class="icon-pulse" style="content-visibility: auto;"></div>
                             </div>
                             <h2 class="empty-title">No Meal Plans Yet</h2>
-                            <p class="empty-description">
+                            <p class="empty-description" style="max-width: 600px; margin: 0 auto;">
                                 You haven't generated any meal plans yet. Start creating personalized, 
                                 AI-powered nutrition plans tailored for your children's needs!
                             </p>
@@ -300,7 +308,7 @@
                                 <i class="fas fa-magic"></i>
                                 <span>Generate Your First Meal Plan</span>
                             </a>
-                            <div class="empty-features">
+                            <div class="empty-features" style="content-visibility: auto;">
                                 <div class="feature-item">
                                     <i class="fas fa-brain"></i>
                                     <span>AI-Powered</span>

@@ -144,6 +144,27 @@ class ApiController extends Controller
         ];
 
         try {
+            // Check if an assessment already exists for this patient today
+            $todayDate = now()->format('Y-m-d');
+            $existingAssessment = Assessment::where('patient_id', $patient->patient_id)
+                ->whereDate('assessment_date', $todayDate)
+                ->first();
+            
+            // If assessment exists for today, prevent duplicate
+            if ($existingAssessment) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This patient has already been assessed today. You can only assess a patient once per day. Please try again tomorrow or view the existing assessment.',
+                        'existing_assessment_id' => $existingAssessment->assessment_id
+                    ], 422);
+                }
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['error' => 'This patient has already been assessed today. You can only assess a patient once per day.']);
+            }
+            
             // Perform assessment using API
             $result = $malnutritionService->assessChild($childData, $socioData);
             

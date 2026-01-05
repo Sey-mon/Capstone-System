@@ -46,9 +46,10 @@ return [
         'timeout' => env('LLM_API_TIMEOUT', 30),
     ],
 
+    // Google reCAPTCHA v3 - Invisible bot protection
     'recaptcha' => [
-        'site_key' => env('RECAPTCHA_SITE_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'), // Google's test key
-        'secret_key' => env('RECAPTCHA_SECRET_KEY', '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'), // Google's test key
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
     ],
 
 ];

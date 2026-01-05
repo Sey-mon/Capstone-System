@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Google reCAPTCHA v3 -->
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
 </head>
 <body>
     <!-- Navigation Header -->
@@ -80,11 +80,10 @@
                         @enderror
                     </div>
 
-                    <!-- Google reCAPTCHA v2 Widget -->
-                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}" 
-                         style="margin: 20px 0; display: flex; justify-content: center;"></div>
+                    <!-- Google reCAPTCHA v3 (invisible) -->
+                    <input type="hidden" name="recaptcha_token" id="recaptchaToken">
                     
-                    @error('g-recaptcha-response')
+                    @error('recaptcha_token')
                         <div style="color: #ef4444; font-size: 0.875rem; margin-top: -10px; margin-bottom: 15px; text-align: center;">
                             {{ $message }}
                         </div>
@@ -124,6 +123,23 @@
     
     <!-- Honeypot validation script -->
     <script>
+        // reCAPTCHA v3 - Generate token on form submit
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                grecaptcha.ready(function() {
+                    grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'password_reset'})
+                        .then(function(token) {
+                            document.getElementById('recaptchaToken').value = token;
+                            forgotPasswordForm.submit();
+                        });
+                });
+            });
+        }
+
+        // Honeypot validation
         document.querySelector('form').addEventListener('submit', function(e) {
             if (document.getElementById('website').value !== '') {
                 e.preventDefault();
