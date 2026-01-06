@@ -1288,6 +1288,69 @@ body.swal2-shown {
     margin: 0;
 }
 
+/* Nutritional Indicators Section */
+.swal-indicators-section {
+    margin-top: 20px;
+    padding: 0;
+}
+
+.swal-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.swal-section-title i {
+    color: #059669;
+}
+
+.swal-indicators-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.swal-indicator-item {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.swal-indicator-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.1);
+    border-color: #86efac;
+}
+
+.swal-indicator-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #065f46;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.swal-indicator-badge {
+    font-size: 14px;
+    font-weight: 700;
+    color: #059669;
+    padding: 4px 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #d1fae5;
+    display: inline-block;
+    width: fit-content;
+}
+
 /* Scrollbar styling for SweetAlert modal */
 .swal-sidebar::-webkit-scrollbar,
 .swal-content-area::-webkit-scrollbar {

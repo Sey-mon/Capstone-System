@@ -31,9 +31,6 @@ class Patient extends Model
         'is_4ps_beneficiary',
         'weight_kg',
         'height_cm',
-        'weight_for_age',
-        'height_for_age',
-        'bmi_for_age',
         'breastfeeding',
         'other_medical_problems',
         'edema',
@@ -229,5 +226,39 @@ class Patient extends Model
     public function getGenderAttribute()
     {
         return $this->sex;
+    }
+
+    /**
+     * Get the latest BMI for age from the most recent assessment
+     */
+    public function getLatestBmiForAge()
+    {
+        return $this->latestAssessment?->bmi_for_age;
+    }
+
+    /**
+     * Get the latest weight for age from the most recent assessment
+     */
+    public function getLatestWeightForAge()
+    {
+        return $this->latestAssessment?->weight_for_age;
+    }
+
+    /**
+     * Get the latest height for age from the most recent assessment
+     */
+    public function getLatestHeightForAge()
+    {
+        return $this->latestAssessment?->height_for_age;
+    }
+
+    /**
+     * Get the latest assessment relationship
+     */
+    public function latestAssessment()
+    {
+        return $this->hasOne(Assessment::class, 'patient_id', 'patient_id')
+            ->whereNotNull('completed_at')
+            ->latest('assessment_date');
     }
 }

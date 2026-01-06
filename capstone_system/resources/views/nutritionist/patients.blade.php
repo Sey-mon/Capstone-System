@@ -265,36 +265,6 @@
                             <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label for="weight_for_age" class="form-label">
-                                Weight for Age
-                                <i class="fas fa-info-circle" title="Nutritional status indicator"></i>
-                            </label>
-                            <input type="text" id="weight_for_age" name="weight_for_age" class="form-control" data-health-field="true" placeholder="e.g., Normal">
-                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label for="height_for_age" class="form-label">
-                                Height for Age
-                                <i class="fas fa-info-circle" title="Growth indicator"></i>
-                            </label>
-                            <input type="text" id="height_for_age" name="height_for_age" class="form-control" data-health-field="true" placeholder="e.g., Normal">
-                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label for="bmi_for_age" class="form-label">
-                                BMI for Age
-                                <i class="fas fa-info-circle" title="Body mass index indicator"></i>
-                            </label>
-                            <input type="text" id="bmi_for_age" name="bmi_for_age" class="form-control" data-health-field="true" placeholder="e.g., Normal">
-                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-info-circle"></i> Updates automatically from assessments</small>
-                        </div>
-                    </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="breastfeeding" class="form-label">Breastfeeding</label>

@@ -166,7 +166,7 @@ class AdminController extends Controller
      */
     public function patients()
     {
-    $patients = Patient::with(['parent', 'nutritionist', 'barangay'])->orderBy('created_at', 'desc')->paginate(15);
+    $patients = Patient::with(['parent', 'nutritionist', 'barangay', 'latestAssessment'])->orderBy('created_at', 'desc')->paginate(10);
         $barangays = Barangay::all();
         $nutritionists = User::where('role_id', function($query) {
                 $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
@@ -213,9 +213,6 @@ class AdminController extends Controller
                 'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
                 'weight_kg' => $request->weight_kg,
                 'height_cm' => $request->height_cm,
-                'weight_for_age' => $request->weight_for_age,
-                'height_for_age' => $request->height_for_age,
-                'bmi_for_age' => $request->bmi_for_age,
                 'breastfeeding' => $request->breastfeeding,
                 'other_medical_problems' => $request->other_medical_problems,
                 'edema' => $request->edema,
@@ -239,7 +236,7 @@ class AdminController extends Controller
      */
     public function getPatient($id)
     {
-        return $this->getRecord(Patient::class, $id, ['parent', 'nutritionist', 'barangay']);
+        return $this->getRecord(Patient::class, $id, ['parent', 'nutritionist', 'barangay', 'latestAssessment']);
     }
 
     /**
@@ -254,47 +251,45 @@ class AdminController extends Controller
                 'message' => 'Patient not found.'
             ], 404);
         }
-        $request->validate($this->getPatientValidationRules(true));
         
-        // Calculate age_months from birthdate if provided
-        $age_months = $request->age_months;
-        if ($request->birthdate) {
-            $birthdate = new \DateTime($request->birthdate);
-            $today = new \DateTime();
-            $interval = $birthdate->diff($today);
-            $age_months = ($interval->y * 12) + $interval->m;
+        $request->validate([
+            'parent_id' => 'nullable|exists:users,user_id',
+            'nutritionist_id' => 'nullable|exists:users,user_id',
+            'barangay_id' => 'required|exists:barangays,barangay_id',
+            'contact_number' => 'required|string|max:20',
+            'date_of_admission' => 'required|date',
+            // Note: first_name, middle_name, last_name, birthdate, sex are locked for editing
+            // Note: weight_kg, height_cm, and nutritional indicators are managed via assessments
+        ]);
+        
+        try {
+            // Only update non-locked fields (household and contact info)
+            $patient->update([
+                'parent_id' => $request->parent_id ?: null,
+                'nutritionist_id' => $request->nutritionist_id ?: null,
+                'barangay_id' => $request->barangay_id,
+                'contact_number' => $request->contact_number,
+                'date_of_admission' => $request->date_of_admission,
+                'total_household_adults' => $request->total_household_adults ?? 0,
+                'total_household_children' => $request->total_household_children ?? 0,
+                'total_household_twins' => $request->total_household_twins ?? 0,
+                'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
+                'breastfeeding' => $request->breastfeeding,
+                'other_medical_problems' => $request->other_medical_problems,
+                'edema' => $request->edema,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Patient updated successfully!',
+                'patient' => $patient->load(['parent', 'nutritionist', 'barangay'])
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating patient: ' . $e->getMessage()
+            ], 500);
         }
-        
-        $patient->update([
-            'parent_id' => $request->parent_id,
-            'nutritionist_id' => $request->nutritionist_id,
-            'first_name' => $request->first_name,
-            'middle_name' => $request->middle_name,
-            'last_name' => $request->last_name,
-            'barangay_id' => $request->barangay_id,
-            'contact_number' => $request->contact_number,
-            'birthdate' => $request->birthdate,
-            'age_months' => $age_months,
-            'sex' => $request->sex,
-            'date_of_admission' => $request->date_of_admission,
-            'total_household_adults' => $request->total_household_adults ?? 0,
-            'total_household_children' => $request->total_household_children ?? 0,
-            'total_household_twins' => $request->total_household_twins ?? 0,
-            'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
-            'weight_kg' => $request->weight_kg,
-            'height_cm' => $request->height_cm,
-            'weight_for_age' => $request->weight_for_age,
-            'height_for_age' => $request->height_for_age,
-            'bmi_for_age' => $request->bmi_for_age,
-            'breastfeeding' => $request->breastfeeding,
-            'other_medical_problems' => $request->other_medical_problems,
-            'edema' => $request->edema,
-        ]);
-        return response()->json([
-            'success' => true,
-            'message' => 'Patient updated successfully!',
-            'patient' => $patient->load(['parent', 'nutritionist', 'barangay'])
-        ]);
     }
 
     /**

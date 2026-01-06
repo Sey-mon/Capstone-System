@@ -225,7 +225,7 @@ class ParentController extends Controller
         
         // Get children with their latest assessments for growth tracking
         $children = Patient::where('parent_id', $parent->user_id)
-            ->with(['nutritionist', 'assessments' => function($query) {
+            ->with(['nutritionist', 'latestAssessment', 'assessments' => function($query) {
                 $query->orderBy('created_at', 'asc');
             }])
             ->get();
@@ -349,7 +349,7 @@ class ParentController extends Controller
     {
         $parent = Auth::user();
         $children = Patient::where('parent_id', $parent->user_id)
-            ->with(['nutritionist', 'assessments'])
+            ->with(['nutritionist', 'assessments', 'barangay', 'latestAssessment'])
             ->paginate(15);
 
         return view('parent.children', compact('children'));

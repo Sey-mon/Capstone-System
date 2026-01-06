@@ -301,6 +301,9 @@ foreach($children as $child) {
             'timestamp' => $assessment->created_at->timestamp,
             'weight' => $assessment->weight_kg ?? 'N/A',
             'height' => $assessment->height_cm ?? 'N/A',
+            'weight_for_age' => $assessment->weight_for_age ?? 'Not assessed',
+            'height_for_age' => $assessment->height_for_age ?? 'Not assessed',
+            'bmi_for_age' => $assessment->bmi_for_age ?? 'Not assessed',
             'diagnosis' => $diagnosis,
             'nutritionist' => $nutritionistName,
             'remarks' => $assessment->notes

@@ -442,36 +442,19 @@
                         <h6 class="section-title">Health Information</h6>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="weight_for_age">Weight for Age</label>
-                                <input type="text" id="weight_for_age" name="weight_for_age" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="height_for_age">Height for Age</label>
-                                <input type="text" id="height_for_age" name="height_for_age" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="bmi_for_age">BMI for Age</label>
-                                <input type="text" id="bmi_for_age" name="bmi_for_age" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
                                 <label for="breastfeeding">Breastfeeding</label>
                                 <select id="breastfeeding" name="breastfeeding" class="form-control">
                                     <option value="">Select</option>
-                                    <option value="Exclusive">Exclusive</option>
-                                    <option value="Partial">Partial</option>
-                                    <option value="None">None</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="edema">Edema</label>
                                 <select id="edema" name="edema" class="form-control">
                                     <option value="">Select</option>
-                                    <option value="None">None</option>
-                                    <option value="Mild">Mild</option>
-                                    <option value="Moderate">Moderate</option>
-                                    <option value="Severe">Severe</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
                                 </select>
                             </div>
                         </div>
@@ -508,19 +491,19 @@
                     
                     <!-- Basic Information -->
                     <div class="form-section">
-                        <h6 class="section-title">Basic Information</h6>
+                        <h6 class="section-title">Basic Information <small class="text-muted">(Demographic fields are locked)</small></h6>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="edit_first_name">First Name *</label>
-                                <input type="text" id="edit_first_name" name="first_name" class="form-control" required>
+                                <label for="edit_first_name">First Name * <i class="fas fa-lock text-muted" title="This field is locked"></i></label>
+                                <input type="text" id="edit_first_name" name="first_name" class="form-control" disabled>
                             </div>
                             <div class="form-group">
-                                <label for="edit_middle_name">Middle Name</label>
-                                <input type="text" id="edit_middle_name" name="middle_name" class="form-control">
+                                <label for="edit_middle_name">Middle Name <i class="fas fa-lock text-muted" title="This field is locked"></i></label>
+                                <input type="text" id="edit_middle_name" name="middle_name" class="form-control" disabled>
                             </div>
                             <div class="form-group">
-                                <label for="edit_last_name">Last Name *</label>
-                                <input type="text" id="edit_last_name" name="last_name" class="form-control" required>
+                                <label for="edit_last_name">Last Name * <i class="fas fa-lock text-muted" title="This field is locked"></i></label>
+                                <input type="text" id="edit_last_name" name="last_name" class="form-control" disabled>
                             </div>
                         </div>
                         <div class="form-row">
@@ -558,12 +541,12 @@
                                 <input type="text" id="edit_contact_number" name="contact_number" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label for="edit_age_months">Age (months) *</label>
-                                <input type="number" id="edit_age_months" name="age_months" class="form-control" min="0" required>
+                                <label for="edit_birthdate">Birthdate * <i class="fas fa-lock text-muted" title="This field is locked"></i></label>
+                                <input type="date" id="edit_birthdate" name="birthdate" class="form-control" disabled>
                             </div>
                             <div class="form-group">
-                                <label for="edit_sex">Sex *</label>
-                                <select id="edit_sex" name="sex" class="form-control" required>
+                                <label for="edit_sex">Sex * <i class="fas fa-lock text-muted" title="This field is locked"></i></label>
+                                <select id="edit_sex" name="sex" class="form-control" disabled>
                                     <option value="">Select Sex</option>
                                     <option value="Male">Male</option>
                                     <option value="Female">Female</option>
@@ -576,12 +559,14 @@
                                 <input type="date" id="edit_date_of_admission" name="date_of_admission" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label for="edit_weight_kg">Weight (kg) *</label>
-                                <input type="number" id="edit_weight_kg" name="weight_kg" class="form-control" step="0.01" min="0" required>
+                                <label for="edit_weight_kg">Weight (kg) <i class="fas fa-lock text-muted" title="Managed via assessments"></i></label>
+                                <input type="number" id="edit_weight_kg" name="weight_kg" class="form-control" step="0.01" min="0" disabled>
+                                <small class="form-text text-muted">Updated through assessments</small>
                             </div>
                             <div class="form-group">
-                                <label for="edit_height_cm">Height (cm) *</label>
-                                <input type="number" id="edit_height_cm" name="height_cm" class="form-control" step="0.01" min="0" required>
+                                <label for="edit_height_cm">Height (cm) <i class="fas fa-lock text-muted" title="Managed via assessments"></i></label>
+                                <input type="number" id="edit_height_cm" name="height_cm" class="form-control" step="0.01" min="0" disabled>
+                                <small class="form-text text-muted">Updated through assessments</small>
                             </div>
                         </div>
                     </div>
@@ -618,36 +603,19 @@
                         <h6 class="section-title">Health Information</h6>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="edit_weight_for_age">Weight for Age</label>
-                                <input type="text" id="edit_weight_for_age" name="weight_for_age" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="edit_height_for_age">Height for Age</label>
-                                <input type="text" id="edit_height_for_age" name="height_for_age" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="edit_bmi_for_age">BMI for Age</label>
-                                <input type="text" id="edit_bmi_for_age" name="bmi_for_age" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
                                 <label for="edit_breastfeeding">Breastfeeding</label>
                                 <select id="edit_breastfeeding" name="breastfeeding" class="form-control">
                                     <option value="">Select</option>
-                                    <option value="Exclusive">Exclusive</option>
-                                    <option value="Partial">Partial</option>
-                                    <option value="None">None</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="edit_edema">Edema</label>
                                 <select id="edit_edema" name="edema" class="form-control">
                                     <option value="">Select</option>
-                                    <option value="None">None</option>
-                                    <option value="Mild">Mild</option>
-                                    <option value="Moderate">Moderate</option>
-                                    <option value="Severe">Severe</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
                                 </select>
                             </div>
                         </div>
