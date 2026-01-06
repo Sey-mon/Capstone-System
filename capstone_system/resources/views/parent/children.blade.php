@@ -191,17 +191,7 @@
                     <script>
                     function showChildProfile{{ $child->id }}() {
                         Swal.fire({
-                            title: `<div class="swal-modal-header">
-                                        <div class="swal-header-icon">
-                                            <i class="fas fa-child"></i>
-                                        </div>
-                                        <div class="swal-header-content">
-                                            <h3 class="swal-header-title">
-                                                <i class="fas fa-user-circle"></i> {{ $child->first_name }} {{ $child->last_name }}
-                                            </h3>
-                                            <p class="swal-header-subtitle">Complete Health and Nutrition Profile</p>
-                                        </div>
-                                    </div>`,
+                            title: `<div class="swal-modal-header"><div class="swal-header-icon"><i class="fas fa-child"></i></div><div class="swal-header-content"><h3 class="swal-header-title"><i class="fas fa-user-circle"></i> {{ $child->first_name }} {{ $child->last_name }}</h3><p class="swal-header-subtitle"><i class="fas fa-id-card"></i> Patient ID: {{ $child->custom_patient_id }} • Complete Health and Nutrition Profile</p></div></div>`,
                             html: `
                                 <div class="swal-modal-content">
                                     <!-- Personal Information -->
@@ -262,11 +252,11 @@
                                             </div>
                                             <div class="profile-item profile-item-green">
                                                 <div class="profile-label profile-label-green">BMI for Age</div>
-                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->bmi_for_age ?? 'Not assessed' }}</div>
+                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->getLatestBmiForAge() ?? 'Not assessed' }}</div>
                                             </div>
                                             <div class="profile-item profile-item-green">
                                                 <div class="profile-label profile-label-green">Weight for Age</div>
-                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->weight_for_age ?? 'Not assessed' }}</div>
+                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->getLatestWeightForAge() ?? 'Not assessed' }}</div>
                                             </div>
                                         </div>
                                     </div>

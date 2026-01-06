@@ -227,8 +227,19 @@ function populateEditForm(patient) {
     document.getElementById('edit_nutritionist_id').value = patient.nutritionist_id || '';
     document.getElementById('edit_barangay_id').value = patient.barangay_id || '';
     document.getElementById('edit_contact_number').value = patient.contact_number || '';
-    document.getElementById('edit_age_months').value = patient.age_months || '';
+    
+    // Set birthdate
+    let birthdate = '';
+    if (patient.birthdate) {
+        if (typeof patient.birthdate === 'string') {
+            birthdate = patient.birthdate.substring(0, 10);
+        } else if (patient.birthdate instanceof Date) {
+            birthdate = patient.birthdate.toISOString().substring(0, 10);
+        }
+    }
+    document.getElementById('edit_birthdate').value = birthdate;
     document.getElementById('edit_sex').value = patient.sex || '';
+    
     // Ensure date is in YYYY-MM-DD format for input type="date"
     let admissionDate = '';
     if (patient.date_of_admission) {
@@ -247,9 +258,6 @@ function populateEditForm(patient) {
     document.getElementById('edit_total_household_children').value = patient.total_household_children || 0;
     document.getElementById('edit_total_household_twins').value = patient.total_household_twins || 0;
     document.getElementById('edit_is_4ps_beneficiary').checked = patient.is_4ps_beneficiary || false;
-    document.getElementById('edit_weight_for_age').value = patient.weight_for_age || '';
-    document.getElementById('edit_height_for_age').value = patient.height_for_age || '';
-    document.getElementById('edit_bmi_for_age').value = patient.bmi_for_age || '';
     document.getElementById('edit_breastfeeding').value = patient.breastfeeding || '';
     document.getElementById('edit_edema').value = patient.edema || '';
     document.getElementById('edit_other_medical_problems').value = patient.other_medical_problems || '';
@@ -322,15 +330,15 @@ function displayPatientDetails(patient) {
                 </div>
                 <div class="detail-group">
                     <div class="detail-label">Weight for Age</div>
-                    <div class="detail-value">${patient.weight_for_age || 'N/A'}</div>
+                    <div class="detail-value">${patient.latest_assessment?.weight_for_age || 'Not assessed'}</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label">Height for Age</div>
-                    <div class="detail-value">${patient.height_for_age || 'N/A'}</div>
+                    <div class="detail-value">${patient.latest_assessment?.height_for_age || 'Not assessed'}</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label">BMI for Age</div>
-                    <div class="detail-value">${patient.bmi_for_age || 'N/A'}</div>
+                    <div class="detail-value">${patient.latest_assessment?.bmi_for_age || 'Not assessed'}</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label">4Ps Beneficiary</div>

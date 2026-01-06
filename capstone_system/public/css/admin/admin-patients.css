@@ -208,7 +208,26 @@
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.enhanced-table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.enhanced-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.enhanced-table-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.enhanced-table-container::-webkit-scrollbar-thumb:hover {
+    background: #2e7d32;
 }
 
 .enhanced-patients-table {
@@ -225,6 +244,7 @@
     font-size: 0.875rem;
     border: none;
     position: relative;
+    white-space: nowrap;
 }
 
 .enhanced-patients-table th.sortable {

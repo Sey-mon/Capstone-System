@@ -79,7 +79,7 @@ class NutritionistController extends Controller
             ->get();
 
         // Chart Data: Nutritional Status Distribution (BMI for Age)
-        $nutritionalStatus = Patient::where('nutritionist_id', $nutritionistId)
+        $nutritionalStatus = Assessment::where('nutritionist_id', $nutritionistId)
             ->whereNotNull('bmi_for_age')
             ->where('bmi_for_age', '!=', '')
             ->select('bmi_for_age', DB::raw('count(*) as count'))
@@ -116,7 +116,7 @@ class NutritionistController extends Controller
         $nutritionist = Auth::user();
         $nutritionistId = $nutritionist->user_id;
         $query = Patient::where('nutritionist_id', $nutritionistId)
-            ->with(['parent', 'barangay', 'assessments']);
+            ->with(['parent', 'barangay', 'assessments', 'latestAssessment']);
 
         // Search functionality
         if ($request->has('search') && !empty($request->search)) {
@@ -172,7 +172,7 @@ class NutritionistController extends Controller
         }
 
         // Pagination with filters
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', 10);
         $patients = $query->paginate($perPage)->appends($request->query());
         
         $barangays = Barangay::all();
@@ -323,9 +323,6 @@ class NutritionistController extends Controller
                 'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
                 'weight_kg' => $request->weight_kg,
                 'height_cm' => $request->height_cm,
-                'weight_for_age' => $request->weight_for_age,
-                'height_for_age' => $request->height_for_age,
-                'bmi_for_age' => $request->bmi_for_age,
                 'breastfeeding' => $request->breastfeeding,
                 'other_medical_problems' => $request->other_medical_problems,
                 'edema' => $request->edema,
@@ -353,7 +350,7 @@ class NutritionistController extends Controller
         $nutritionistId = $nutritionist->user_id;
         $patient = Patient::where('nutritionist_id', $nutritionistId)
             ->where('patient_id', $id)
-            ->with(['parent', 'barangay'])
+            ->with(['parent', 'barangay', 'latestAssessment'])
             ->first();
 
         if (!$patient) {

@@ -160,6 +160,26 @@ function showAssessmentHistory(childId, childName) {
                                 </div>
                             </div>
                         </div>
+                        <div class="swal-indicators-section">
+                            <h4 class="swal-section-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Nutritional Indicators
+                            </h4>
+                            <div class="swal-indicators-grid">
+                                <div class="swal-indicator-item">
+                                    <span class="swal-indicator-label">Weight for Age:</span>
+                                    <span class="swal-indicator-badge">${assessment.weight_for_age || 'Not assessed'}</span>
+                                </div>
+                                <div class="swal-indicator-item">
+                                    <span class="swal-indicator-label">Height for Age:</span>
+                                    <span class="swal-indicator-badge">${assessment.height_for_age || 'Not assessed'}</span>
+                                </div>
+                                <div class="swal-indicator-item">
+                                    <span class="swal-indicator-label">BMI for Age:</span>
+                                    <span class="swal-indicator-badge">${assessment.bmi_for_age || 'Not assessed'}</span>
+                                </div>
+                            </div>
+                        </div>
                         ${remarksSection}
                     </div>
                 </div>

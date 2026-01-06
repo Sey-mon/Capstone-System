@@ -13,9 +13,6 @@ class PatientTableSeeder extends Seeder
         $parent_ids = [5, 6, 7, 8, 9]; // Valid parent user_ids
         $nutritionist_ids = [2, 3, 4]; // Valid nutritionist user_ids
         $barangay_ids = range(1, 27); // 27 barangays
-        $weight_for_age_options = ['Normal', 'Underweight', 'Overweight'];
-        $height_for_age_options = ['Normal', 'Stunted', 'Tall'];
-        $bmi_for_age_options = ['Normal', 'Severe Wasting', 'Wasting', 'Overweight'];
         $sex_options = ['Male', 'Female'];
         $breastfeeding_options = ['Yes', 'No'];
         $medical_problems = [null, 'Anemia', 'Asthma', 'Diarrhea', 'None'];
@@ -45,9 +42,6 @@ class PatientTableSeeder extends Seeder
                 'is_4ps_beneficiary' => (bool)rand(0, 1),
                 'weight_kg' => $weight_kg,
                 'height_cm' => $height_cm,
-                'weight_for_age' => $weight_for_age_options[array_rand($weight_for_age_options)],
-                'height_for_age' => $height_for_age_options[array_rand($height_for_age_options)],
-                'bmi_for_age' => $bmi_for_age_options[array_rand($bmi_for_age_options)],
                 'breastfeeding' => $breastfeeding_options[array_rand($breastfeeding_options)],
                 'other_medical_problems' => $medical_problems[array_rand($medical_problems)],
                 'edema' => rand(0, 1) ? 'Yes' : 'No',

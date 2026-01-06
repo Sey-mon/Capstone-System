@@ -168,13 +168,31 @@ class ApiController extends Controller
             // Perform assessment using API
             $result = $malnutritionService->assessChild($childData, $socioData);
             
-            // Store assessment in database
+            // Also get nutritional indicators for storing in assessment
+            $indicatorsResult = $malnutritionService->assessMalnutritionOnly($childData);
+            
+            // Extract classification from indicators
+            $extractClassification = function($indicator) {
+                if (is_array($indicator) && isset($indicator['classification'])) {
+                    return $indicator['classification'];
+                } elseif (is_array($indicator) && isset($indicator['status'])) {
+                    return $indicator['status'];
+                } elseif (is_string($indicator)) {
+                    return $indicator;
+                }
+                return null;
+            };
+            
+            // Store assessment in database with nutritional indicators
             $assessment = Assessment::create([
                 'patient_id' => $patient->patient_id,
                 'nutritionist_id' => $user->role->role_name === 'Nutritionist' ? $user->user_id : null,
                 'assessment_date' => now(),
                 'weight_kg' => $request->weight_kg,
                 'height_cm' => $request->height_cm,
+                'weight_for_age' => $extractClassification($indicatorsResult['weight_for_age'] ?? null),
+                'height_for_age' => $extractClassification($indicatorsResult['height_for_age'] ?? null),
+                'bmi_for_age' => $extractClassification($indicatorsResult['bmi'] ?? $indicatorsResult['bmi_for_age'] ?? null),
                 'treatment' => json_encode($result['treatment_plan'] ?? []),
                 'notes' => $request->notes,
                 'completed_at' => now(),

@@ -503,9 +503,6 @@ function editPatient(patientId) {
                     popup.querySelector('#is_4ps_beneficiary').checked = !!patient.is_4ps_beneficiary;
                     popup.querySelector('#weight_kg').value = patient.weight_kg ?? '';
                     popup.querySelector('#height_cm').value = patient.height_cm ?? '';
-                    popup.querySelector('#weight_for_age').value = patient.weight_for_age ?? '';
-                    popup.querySelector('#height_for_age').value = patient.height_for_age ?? '';
-                    popup.querySelector('#bmi_for_age').value = patient.bmi_for_age ?? '';
                     popup.querySelector('#breastfeeding').value = patient.breastfeeding ?? '';
                     popup.querySelector('#edema').value = patient.edema ?? '';
                     popup.querySelector('#other_medical_problems').value = patient.other_medical_problems ?? '';
@@ -746,9 +743,9 @@ function viewPatient(patientId) {
             }
             html += '</div>';
             html += '<div class="indicators-row">';
-            html += `<div class="indicator-item"><label>Weight for Age:</label><span class="indicator-badge">${show(patient.weight_for_age)}</span></div>`;
-            html += `<div class="indicator-item"><label>Height for Age:</label><span class="indicator-badge">${show(patient.height_for_age)}</span></div>`;
-            html += `<div class="indicator-item"><label>BMI for Age:</label><span class="indicator-badge">${show(patient.bmi_for_age)}</span></div>`;
+            html += `<div class="indicator-item"><label>Weight for Age:</label><span class="indicator-badge">${show(patient.latest_assessment?.weight_for_age) || 'Not assessed'}</span></div>`;
+            html += `<div class="indicator-item"><label>Height for Age:</label><span class="indicator-badge">${show(patient.latest_assessment?.height_for_age) || 'Not assessed'}</span></div>`;
+            html += `<div class="indicator-item"><label>BMI for Age:</label><span class="indicator-badge">${show(patient.latest_assessment?.bmi_for_age) || 'Not assessed'}</span></div>`;
             html += '</div>';
             html += '</div></div>';
             

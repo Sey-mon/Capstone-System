@@ -50,9 +50,6 @@ async function editPatient(patientId) {
             document.getElementById('is_4ps_beneficiary').checked = patient.is_4ps_beneficiary;
             document.getElementById('weight_kg').value = patient.weight_kg;
             document.getElementById('height_cm').value = patient.height_cm;
-            document.getElementById('weight_for_age').value = patient.weight_for_age || '';
-            document.getElementById('height_for_age').value = patient.height_for_age || '';
-            document.getElementById('bmi_for_age').value = patient.bmi_for_age || '';
             document.getElementById('breastfeeding').value = patient.breastfeeding || '';
             document.getElementById('edema').value = patient.edema || '';
             document.getElementById('other_medical_problems').value = patient.other_medical_problems || '';
@@ -93,9 +90,9 @@ async function viewPatient(patientId) {
                             <h6>Health Information</h6>
                             <p><strong>Weight:</strong> ${patient.weight_kg} kg</p>
                             <p><strong>Height:</strong> ${patient.height_cm} cm</p>
-                            <p><strong>Weight for Age:</strong> ${patient.weight_for_age || 'N/A'}</p>
-                            <p><strong>Height for Age:</strong> ${patient.height_for_age || 'N/A'}</p>
-                            <p><strong>BMI for Age:</strong> ${patient.bmi_for_age || 'N/A'}</p>
+                            <p><strong>Weight for Age:</strong> ${patient.latest_assessment?.weight_for_age || 'Not assessed'}</p>
+                            <p><strong>Height for Age:</strong> ${patient.latest_assessment?.height_for_age || 'Not assessed'}</p>
+                            <p><strong>BMI for Age:</strong> ${patient.latest_assessment?.bmi_for_age || 'Not assessed'}</p>
                             <p><strong>4Ps Beneficiary:</strong> ${patient.is_4ps_beneficiary ? 'Yes' : 'No'}</p>
                         </div>
                     </div>
