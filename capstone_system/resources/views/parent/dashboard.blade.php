@@ -134,23 +134,58 @@
     <div class="chart-section">
         <div class="content-card chart-card">
             <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-chart-line"></i>
-                    Children Growth Trends Over Time
-                </h3>
+                <div class="chart-header-left">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        Growth History & Trends
+                    </h3>
+                    <p class="card-subtitle">Track weight and height progress over time</p>
+                </div>
                 <div class="chart-controls">
-                    <button class="chart-btn active" data-chart="weight">
-                        <i class="fas fa-weight"></i>
-                        Weight
-                    </button>
-                    <button class="chart-btn" data-chart="height">
-                        <i class="fas fa-ruler-vertical"></i>
-                        Height
-                    </button>
+                    <div class="child-selector-wrapper">
+                        <label for="childSelector">
+                            <i class="fas fa-child"></i>
+                            Select Child:
+                        </label>
+                        <select id="childSelector" class="child-select">
+                            @foreach($stats['children_with_growth'] as $index => $childData)
+                                @if($childData['assessment_history'] && count($childData['assessment_history']) > 0)
+                                    <option value="{{ $index }}" {{ $loop->first ? 'selected' : '' }}>
+                                        {{ $childData['child']->first_name }} {{ $childData['child']->last_name }}
+                                        ({{ count($childData['assessment_history']) }} assessments)
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="chart-type-toggle">
+                        <button class="toggle-btn active" data-view="combined" title="Show both metrics">
+                            <i class="fas fa-layer-group"></i>
+                            Combined
+                        </button>
+                        <button class="toggle-btn" data-view="weight" title="Show weight only">
+                            <i class="fas fa-weight"></i>
+                            Weight
+                        </button>
+                        <button class="toggle-btn" data-view="height" title="Show height only">
+                            <i class="fas fa-ruler-vertical"></i>
+                            Height
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-content chart-content">
-                <canvas id="growthChart"></canvas>
+                <div class="chart-wrapper">
+                    <canvas id="growthChart"></canvas>
+                </div>
+                <div class="chart-footer">
+                    <div class="chart-insights" id="chartInsights">
+                        <div class="insight-item">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Select a child to view their growth history and trends</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -24,6 +24,19 @@ function showAssessmentHistory(childId, childName) {
         return;
     }
     
+    /* ============================================
+       SCALABLE ASSESSMENT HISTORY MODAL
+       Features for handling 1-100+ assessments:
+       - Responsive layout (mobile to 4K)
+       - Sticky header with count badge
+       - Scrollable list with shadow indicators
+       - Auto-search filter (10+ assessments)
+       - Scroll-to-top button (200px+ scroll)
+       - Keyboard navigation (↑↓ arrows)
+       - Smooth animations & transitions
+       - Performance optimizations
+       ============================================ */
+    
     const childData = assessmentsData[childId];
     
     if (!childData) {
@@ -100,19 +113,38 @@ function showAssessmentHistory(childId, childName) {
             </div>
         `).join('');
 
+        const assessmentCount = assessments.length;
+        const countDisplay = assessmentCount !== 1 ? 's' : '';
+        const showSearch = assessmentCount > 10; // Show search if more than 10 assessments
+
         return `
             <div class="swal-assessment-container">
-                <div class="swal-sidebar">
+                <div class="swal-sidebar" id="assessment-sidebar">
                     <div class="swal-sidebar-header">
                         <h4>
                             <i class="fas fa-history"></i>
                             Assessment History
+                            <span class="swal-assessment-counter">${assessmentCount}</span>
                         </h4>
-                        <p>${assessments.length} Total Assessment${assessments.length !== 1 ? 's' : ''}</p>
+                        <p>${assessmentCount} Total Assessment${countDisplay}</p>
+                        ${showSearch ? `
+                        <div class="swal-assessment-search has-many">
+                            <input 
+                                type="text" 
+                                id="assessment-search-input" 
+                                placeholder="Search by date or status..."
+                                onkeyup="filterAssessments()"
+                            >
+                            <i class="fas fa-search"></i>
+                        </div>
+                        ` : ''}
                     </div>
-                    <div class="swal-assessment-list">
+                    <div class="swal-assessment-list" id="assessment-list">
                         ${sidebar}
                     </div>
+                    <button class="swal-scroll-top-btn" id="scroll-top-btn" onclick="scrollToTopOfList()">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
                 </div>
                 <div class="swal-content-area">
                     <div class="swal-modal-header">
@@ -192,15 +224,126 @@ function showAssessmentHistory(childId, childName) {
         Swal.update({
             html: renderAssessment(index)
         });
+        
+        // Re-initialize scroll listeners after update
+        setTimeout(() => {
+            initScrollListeners();
+        }, 100);
     };
+    
+    // Scroll to top of assessment list
+    window.scrollToTopOfList = function() {
+        const listElement = document.getElementById('assessment-list');
+        if (listElement) {
+            listElement.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    };
+    
+    // Filter assessments based on search input
+    window.filterAssessments = function() {
+        const searchInput = document.getElementById('assessment-search-input');
+        const listElement = document.getElementById('assessment-list');
+        
+        if (!searchInput || !listElement) return;
+        
+        const searchTerm = searchInput.value.toLowerCase();
+        const items = listElement.querySelectorAll('.swal-assessment-item');
+        let visibleCount = 0;
+        
+        items.forEach(item => {
+            const date = item.querySelector('.swal-assessment-item-date').textContent.toLowerCase();
+            const status = item.querySelector('.swal-assessment-item-status').textContent.toLowerCase();
+            
+            const matches = date.includes(searchTerm) || status.includes(searchTerm);
+            
+            if (matches || searchTerm === '') {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Update header count
+        const headerP = document.querySelector('.swal-sidebar-header p');
+        if (headerP && searchTerm !== '') {
+            headerP.textContent = `${visibleCount} of ${items.length} Assessment${items.length !== 1 ? 's' : ''}`;
+        } else if (headerP) {
+            headerP.textContent = `${items.length} Total Assessment${items.length !== 1 ? 's' : ''}`;
+        }
+    };
+    
+    // Initialize scroll shadow detection
+    function initScrollListeners() {
+        const listElement = document.getElementById('assessment-list');
+        const sidebarElement = document.getElementById('assessment-sidebar');
+        const scrollTopBtn = document.getElementById('scroll-top-btn');
+        
+        if (!listElement || !sidebarElement) return;
+        
+        function updateScrollShadows() {
+            const scrollTop = listElement.scrollTop;
+            const scrollHeight = listElement.scrollHeight;
+            const clientHeight = listElement.clientHeight;
+            const scrollBottom = scrollHeight - scrollTop - clientHeight;
+            
+            // Show top shadow if scrolled down more than 10px
+            if (scrollTop > 10) {
+                sidebarElement.classList.add('has-scroll-top');
+            } else {
+                sidebarElement.classList.remove('has-scroll-top');
+            }
+            
+            // Show bottom shadow if not at bottom
+            if (scrollBottom > 10) {
+                sidebarElement.classList.add('has-scroll-bottom');
+            } else {
+                sidebarElement.classList.remove('has-scroll-bottom');
+            }
+            
+            // Show scroll to top button if scrolled down
+            if (scrollTopBtn) {
+                if (scrollTop > 200) {
+                    scrollTopBtn.classList.add('show');
+                } else {
+                    scrollTopBtn.classList.remove('show');
+                }
+            }
+        }
+        
+        // Initial check
+        updateScrollShadows();
+        
+        // Listen to scroll events
+        listElement.addEventListener('scroll', updateScrollShadows);
+        
+        // Check after a short delay (for dynamic content)
+        setTimeout(updateScrollShadows, 100);
+    }
 
-    // Calculate modal width based on screen size
+    // Calculate modal width based on screen size - more granular scaling
     const screenWidth = window.innerWidth;
-    let modalWidth = '90%';
-    if (screenWidth < 768) {
+    let modalWidth = '85%';
+    let maxWidth = '1400px';
+    
+    if (screenWidth < 640) {
+        modalWidth = '98%';
+        maxWidth = 'none';
+    } else if (screenWidth < 768) {
         modalWidth = '95%';
-    } else if (screenWidth < 1200) {
+        maxWidth = 'none';
+    } else if (screenWidth < 1024) {
         modalWidth = '92%';
+        maxWidth = '900px';
+    } else if (screenWidth < 1280) {
+        modalWidth = '88%';
+        maxWidth = '1100px';
+    } else if (screenWidth < 1536) {
+        modalWidth = '85%';
+        maxWidth = '1300px';
     }
 
     Swal.fire({
@@ -230,23 +373,23 @@ function showAssessmentHistory(childId, childName) {
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
-                    padding: 20px !important;
+                    padding: clamp(10px, 2vw, 20px) !important;
                     margin: 0 !important;
                     z-index: 9999 !important;
                     overflow: auto !important;
                 `;
             }
             
-            // Force popup centering and visibility
+            // Force popup centering and visibility with dynamic sizing
             const popup = document.querySelector('.parent-assessment-modal-popup');
             if (popup) {
                 popup.style.cssText = `
                     display: block !important;
                     margin: auto !important;
                     position: relative !important;
-                    max-width: 1200px !important;
+                    max-width: ${maxWidth} !important;
                     width: ${modalWidth} !important;
-                    max-height: 90vh !important;
+                    max-height: 92vh !important;
                     overflow: visible !important;
                     transform: none !important;
                 `;
@@ -257,8 +400,99 @@ function showAssessmentHistory(childId, childName) {
             if (contentArea) {
                 contentArea.style.scrollBehavior = 'smooth';
             }
+            
+            // Initialize scroll shadow listeners
+            initScrollListeners();
+            
+            // Add keyboard navigation
+            document.addEventListener('keydown', handleKeyboardNavigation);
+            
+            // Handle window resize
+            const handleResize = () => {
+                const newWidth = window.innerWidth;
+                let newModalWidth = '85%';
+                let newMaxWidth = '1400px';
+                
+                if (newWidth < 640) {
+                    newModalWidth = '98%';
+                    newMaxWidth = 'none';
+                } else if (newWidth < 768) {
+                    newModalWidth = '95%';
+                    newMaxWidth = 'none';
+                } else if (newWidth < 1024) {
+                    newModalWidth = '92%';
+                    newMaxWidth = '900px';
+                } else if (newWidth < 1280) {
+                    newModalWidth = '88%';
+                    newMaxWidth = '1100px';
+                } else if (newWidth < 1536) {
+                    newModalWidth = '85%';
+                    newMaxWidth = '1300px';
+                }
+                
+                if (popup) {
+                    popup.style.width = newModalWidth;
+                    popup.style.maxWidth = newMaxWidth;
+                }
+            };
+            
+            window.addEventListener('resize', handleResize);
+            
+            // Cleanup on close
+            const observer = new MutationObserver((mutations) => {
+                if (!document.body.contains(popup)) {
+                    window.removeEventListener('resize', handleResize);
+                    document.removeEventListener('keydown', handleKeyboardNavigation);
+                    observer.disconnect();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
         }
     });
+    
+    // Keyboard navigation handler
+    function handleKeyboardNavigation(e) {
+        const listElement = document.getElementById('assessment-list');
+        if (!listElement) return;
+        
+        // Don't interfere if user is typing in search
+        if (document.activeElement.id === 'assessment-search-input') return;
+        
+        const items = Array.from(listElement.querySelectorAll('.swal-assessment-item'));
+        const activeIndex = items.findIndex(item => item.classList.contains('active'));
+        
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            
+            let newIndex = activeIndex;
+            if (e.key === 'ArrowUp' && activeIndex > 0) {
+                newIndex = activeIndex - 1;
+            } else if (e.key === 'ArrowDown' && activeIndex < items.length - 1) {
+                newIndex = activeIndex + 1;
+            }
+            
+            if (newIndex !== activeIndex) {
+                selectAssessment(newIndex);
+                
+                // Scroll the item into view
+                setTimeout(() => {
+                    const newActiveItem = items[newIndex];
+                    if (newActiveItem && listElement) {
+                        const itemTop = newActiveItem.offsetTop;
+                        const itemHeight = newActiveItem.offsetHeight;
+                        const listScrollTop = listElement.scrollTop;
+                        const listHeight = listElement.clientHeight;
+                        
+                        if (itemTop < listScrollTop) {
+                            listElement.scrollTop = itemTop - 10;
+                        } else if (itemTop + itemHeight > listScrollTop + listHeight) {
+                            listElement.scrollTop = itemTop + itemHeight - listHeight + 10;
+                        }
+                    }
+                }, 50);
+            }
+        }
+    }
 }
 
 // Legacy function for compatibility
