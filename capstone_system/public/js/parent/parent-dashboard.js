@@ -55,7 +55,7 @@ function animateCounter(element) {
 }
 
 /**
- * Initialize Growth Chart with Chart.js
+ * Initialize Growth Chart with Chart.js - Individual Child Focus
  */
 function initializeGrowthChart() {
     const ctx = document.getElementById('growthChart');
@@ -73,179 +73,339 @@ function initializeGrowthChart() {
     if (childrenWithAssessments.length === 0) return;
 
     let currentChart = null;
+    let currentChildIndex = 0;
+    let currentView = 'combined'; // 'combined', 'weight', or 'height'
     
-    // Generate distinct colors for each child
-    const colors = [
-        { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgba(59, 130, 246, 1)' },      // Blue
-        { bg: 'rgba(139, 92, 246, 0.2)', border: 'rgba(139, 92, 246, 1)' },      // Purple
-        { bg: 'rgba(236, 72, 153, 0.2)', border: 'rgba(236, 72, 153, 1)' },      // Pink
-        { bg: 'rgba(249, 115, 22, 0.2)', border: 'rgba(249, 115, 22, 1)' },      // Orange
-        { bg: 'rgba(34, 197, 94, 0.2)', border: 'rgba(34, 197, 94, 1)' },        // Green
-        { bg: 'rgba(14, 165, 233, 0.2)', border: 'rgba(14, 165, 233, 1)' },      // Sky
-        { bg: 'rgba(168, 85, 247, 0.2)', border: 'rgba(168, 85, 247, 1)' },      // Violet
-        { bg: 'rgba(251, 146, 60, 0.2)', border: 'rgba(251, 146, 60, 1)' },      // Amber
-    ];
+    // Color scheme for weight and height
+    const weightColor = { 
+        bg: 'rgba(59, 130, 246, 0.15)', 
+        border: 'rgba(59, 130, 246, 1)',
+        point: '#3b82f6'
+    };
+    const heightColor = { 
+        bg: 'rgba(34, 197, 94, 0.15)', 
+        border: 'rgba(34, 197, 94, 1)',
+        point: '#22c55e'
+    };
     
-    function createChart(type) {
+    function updateChartInsights(childData) {
+        const insightsEl = document.getElementById('chartInsights');
+        if (!insightsEl || !childData.assessment_history || childData.assessment_history.length === 0) return;
+        
+        const history = childData.assessment_history;
+        const latest = history[history.length - 1];
+        const previous = history.length > 1 ? history[history.length - 2] : null;
+        
+        let insights = [];
+        
+        // Total assessments
+        insights.push(`
+            <div class=\"insight-item\">
+                <i class=\"fas fa-clipboard-check\"></i>
+                <span><strong>${history.length}</strong> assessment${history.length > 1 ? 's' : ''} recorded</span>
+            </div>
+        `);
+        
+        // Latest values
+        insights.push(`
+            <div class=\"insight-item\">
+                <i class=\"fas fa-weight\"></i>
+                <span>Current weight: <strong>${latest.weight} kg</strong></span>
+            </div>
+            <div class=\"insight-item\">
+                <i class=\"fas fa-ruler-vertical\"></i>
+                <span>Current height: <strong>${latest.height} cm</strong></span>
+            </div>
+        `);
+        
+        // Changes if there's previous data
+        if (previous) {
+            const weightChange = (latest.weight - previous.weight).toFixed(1);
+            const heightChange = (latest.height - previous.height).toFixed(1);
+            
+            if (weightChange != 0) {
+                const weightIcon = weightChange > 0 ? 'arrow-up' : 'arrow-down';
+                const weightClass = weightChange > 0 ? 'positive' : 'negative';
+                insights.push(`
+                    <div class=\"insight-item ${weightClass}\">
+                        <i class=\"fas fa-${weightIcon}\"></i>
+                        <span>${weightChange > 0 ? '+' : ''}${weightChange} kg weight change</span>
+                    </div>
+                `);
+            }
+            
+            if (heightChange != 0 && heightChange > 0) {
+                insights.push(`
+                    <div class=\"insight-item positive\">
+                        <i class=\"fas fa-arrow-up\"></i>
+                        <span>+${heightChange} cm growth</span>
+                    </div>
+                `);
+            }
+        }
+        
+        insightsEl.innerHTML = insights.join('');
+    }
+    
+    function createChart(childIndex, viewType) {
         if (currentChart) {
             currentChart.destroy();
         }
         
-        const isWeight = type === 'weight';
+        const childData = childrenWithAssessments[childIndex];
+        if (!childData) return;
         
-        // Create datasets for each child
-        const datasets = childrenWithAssessments.map((item, index) => {
-            const color = colors[index % colors.length];
-            const childName = item.child.first_name + ' ' + item.child.last_name;
+        const assessmentHistory = childData.assessment_history;
+        if (!assessmentHistory || assessmentHistory.length === 0) return;
+        
+        // Update insights
+        updateChartInsights(childData);
+        
+        // Prepare data
+        const labels = assessmentHistory.map(a => a.date);
+        const weightData = assessmentHistory.map(a => a.weight);
+        const heightData = assessmentHistory.map(a => a.height);
+        
+        // Determine optimal point size and tick settings based on data volume
+        const dataPointCount = assessmentHistory.length;
+        const pointRadius = dataPointCount > 20 ? 4 : dataPointCount > 10 ? 5 : 6;
+        const pointHoverRadius = pointRadius + 2;
+        
+        // Smart tick configuration for readability
+        const maxTicksLimit = dataPointCount > 30 ? 10 : dataPointCount > 20 ? 12 : dataPointCount > 10 ? 15 : undefined;
+        const labelRotation = dataPointCount > 15 ? 45 : dataPointCount > 8 ? 30 : 0;
+        
+        let datasets = [];
+        let scales = {};
+        
+        if (viewType === 'combined') {
+            // Dual-axis chart: weight and height together
+            datasets = [
+                {
+                    label: 'Weight (kg)',
+                    data: weightData,
+                    borderColor: weightColor.border,
+                    backgroundColor: weightColor.bg,
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: pointRadius,
+                    pointHoverRadius: pointHoverRadius,
+                    pointBackgroundColor: weightColor.point,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    yAxisID: 'y-weight',
+                },
+                {
+                    label: 'Height (cm)',
+                    data: heightData,
+                    borderColor: heightColor.border,
+                    backgroundColor: heightColor.bg,
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: pointRadius,
+                    pointHoverRadius: pointHoverRadius,
+                    pointBackgroundColor: heightColor.point,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    yAxisID: 'y-height',
+                }
+            ];
             
-            return {
-                label: childName,
-                data: item.assessment_history.map(assessment => ({
-                    x: assessment.date,
-                    y: isWeight ? assessment.weight : assessment.height
-                })),
+            scales = {
+                'y-weight': {
+                    type: 'linear',
+                    position: 'left',
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(59, 130, 246, 0.1)',
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        font: { size: 12, family: "'Inter', sans-serif" },
+                        color: '#3b82f6',
+                        padding: 10,
+                        callback: function(value) {
+                            return value.toFixed(1) + ' kg';
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Weight (kg)',
+                        font: { size: 13, weight: '600', family: "'Inter', sans-serif" },
+                        color: '#3b82f6',
+                        padding: { top: 10, bottom: 10 }
+                    }
+                },
+                'y-height': {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: false,
+                    grid: {
+                        display: false,
+                    },
+                    ticks: {
+                        font: { size: 12, family: "'Inter', sans-serif" },
+                        color: '#22c55e',
+                        padding: 10,
+                        callback: function(value) {
+                            return value.toFixed(1) + ' cm';
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Height (cm)',
+                        font: { size: 13, weight: '600', family: "'Inter', sans-serif" },
+                        color: '#22c55e',
+                        padding: { top: 10, bottom: 10 }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: { size: 11, family: "'Inter', sans-serif", weight: '500' },
+                        color: '#64748b',
+                        padding: 10,
+                        maxRotation: labelRotation,
+                        minRotation: labelRotation,
+                        maxTicksLimit: maxTicksLimit,
+                        autoSkip: true,
+                        autoSkipPadding: 15
+                    },
+                    title: {
+                        display: true,
+                        text: 'Assessment Date',
+                        font: { size: 13, weight: '600', family: "'Inter', sans-serif" },
+                        color: '#475569',
+                        padding: { top: 10, bottom: 0 }
+                    }
+                }
+            };
+        } else {
+            // Single metric view
+            const isWeight = viewType === 'weight';
+            const color = isWeight ? weightColor : heightColor;
+            const data = isWeight ? weightData : heightData;
+            
+            datasets = [{
+                label: isWeight ? 'Weight (kg)' : 'Height (cm)',
+                data: data,
                 borderColor: color.border,
                 backgroundColor: color.bg,
                 borderWidth: 3,
-                tension: 0.4,
+                tension: 0.3,
                 fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointBackgroundColor: color.border,
+                pointRadius: pointRadius,
+                pointHoverRadius: pointHoverRadius,
+                pointBackgroundColor: color.point,
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
-                pointHoverBackgroundColor: color.border,
-                pointHoverBorderColor: '#fff',
-                pointHoverBorderWidth: 3,
+            }];
+            
+            scales = {
+                y: {
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.06)',
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        font: { size: 12, family: "'Inter', sans-serif" },
+                        color: '#64748b',
+                        padding: 10,
+                        callback: function(value) {
+                            return value.toFixed(1) + (isWeight ? ' kg' : ' cm');
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: isWeight ? 'Weight (kg)' : 'Height (cm)',
+                        font: { size: 13, weight: '600', family: "'Inter', sans-serif" },
+                        color: '#475569',
+                        padding: { top: 10, bottom: 10 }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: { size: 11, family: "'Inter', sans-serif", weight: '500' },
+                        color: '#64748b',
+                        padding: 10,
+                        maxRotation: labelRotation,
+                        minRotation: labelRotation,
+                        maxTicksLimit: maxTicksLimit,
+                        autoSkip: true,
+                        autoSkipPadding: 15
+                    },
+                    title: {
+                        display: true,
+                        text: 'Assessment Date',
+                        font: { size: 13, weight: '600', family: "'Inter', sans-serif" },
+                        color: '#475569',
+                        padding: { top: 10, bottom: 0 }
+                    }
+                }
             };
-        });
-        
-        // Get all unique dates across all children
-        const allDates = [...new Set(
-            childrenWithAssessments.flatMap(item => 
-                item.assessment_history.map(a => a.date)
-            )
-        )].sort((a, b) => new Date(a) - new Date(b));
+        }
         
         currentChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: allDates,
+                labels: labels,
                 datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                    duration: 800,
+                    duration: 600,
                     easing: 'easeInOutQuart'
                 },
                 plugins: {
                     legend: {
                         display: true,
                         position: 'top',
-                        align: 'start',
+                        align: 'end',
                         labels: {
-                            font: {
-                                size: 13,
-                                weight: '600',
-                                family: "'Inter', sans-serif"
-                            },
+                            font: { size: 13, weight: '600', family: "'Inter', sans-serif" },
                             color: '#475569',
                             padding: 15,
                             usePointStyle: true,
                             pointStyle: 'circle',
-                            boxWidth: 8,
-                            boxHeight: 8
+                            boxWidth: 10,
+                            boxHeight: 10
                         }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                        padding: 14,
-                        borderRadius: 10,
-                        titleFont: {
-                            size: 15,
-                            weight: '700',
-                            family: "'Inter', sans-serif"
-                        },
-                        bodyFont: {
-                            size: 14,
-                            family: "'Inter', sans-serif"
-                        },
+                        backgroundColor: 'rgba(30, 41, 59, 0.96)',
+                        padding: 16,
+                        borderRadius: 12,
+                        titleFont: { size: 14, weight: '700', family: "'Inter', sans-serif" },
+                        bodyFont: { size: 13, family: "'Inter', sans-serif" },
                         displayColors: true,
-                        boxWidth: 10,
-                        boxHeight: 10,
-                        boxPadding: 6,
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        boxPadding: 8,
                         callbacks: {
+                            title: function(context) {
+                                return 'Assessment: ' + context[0].label;
+                            },
                             label: function(context) {
                                 const value = context.parsed.y;
-                                const unit = isWeight ? 'kg' : 'cm';
-                                const childName = context.dataset.label;
-                                return `${childName}: ${value.toFixed(1)} ${unit}`;
+                                const label = context.dataset.label;
+                                return label + ': ' + value.toFixed(1);
                             }
                         }
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.06)',
-                            drawBorder: false,
-                            lineWidth: 1
-                        },
-                        ticks: {
-                            font: {
-                                size: 12,
-                                family: "'Inter', sans-serif"
-                            },
-                            color: '#64748b',
-                            padding: 10,
-                            callback: function(value) {
-                                return value.toFixed(1) + (isWeight ? ' kg' : ' cm');
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: isWeight ? 'Weight (kg)' : 'Height (cm)',
-                            font: {
-                                size: 13,
-                                weight: '600',
-                                family: "'Inter', sans-serif"
-                            },
-                            color: '#475569',
-                            padding: { top: 10, bottom: 10 }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false,
-                            drawBorder: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 11,
-                                family: "'Inter', sans-serif",
-                                weight: '500'
-                            },
-                            color: '#64748b',
-                            padding: 10,
-                            maxRotation: 45,
-                            minRotation: 45
-                        },
-                        title: {
-                            display: true,
-                            text: 'Assessment Date',
-                            font: {
-                                size: 13,
-                                weight: '600',
-                                family: "'Inter', sans-serif"
-                            },
-                            color: '#475569',
-                            padding: { top: 10, bottom: 0 }
-                        }
-                    }
-                },
+                scales: scales,
                 interaction: {
                     intersect: false,
                     mode: 'index'
@@ -254,17 +414,27 @@ function initializeGrowthChart() {
         });
     }
     
-    // Initialize with weight chart
-    createChart('weight');
+    // Initialize with first child and combined view
+    createChart(currentChildIndex, currentView);
     
-    // Chart toggle buttons with smooth transitions
-    document.querySelectorAll('.chart-btn').forEach(btn => {
+    // Child selector dropdown
+    const childSelector = document.getElementById('childSelector');
+    if (childSelector) {
+        childSelector.addEventListener('change', function() {
+            currentChildIndex = parseInt(this.value);
+            createChart(currentChildIndex, currentView);
+        });
+    }
+    
+    // View toggle buttons
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             if (this.classList.contains('active')) return;
             
-            document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            createChart(this.dataset.chart);
+            currentView = this.dataset.view;
+            createChart(currentChildIndex, currentView);
         });
     });
 }

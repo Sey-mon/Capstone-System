@@ -212,7 +212,7 @@ class DataManager:
         try:
             conn = get_connection()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT patient_id, first_name, middle_name, last_name, barangay_id, contact_number, age_months, sex, date_of_admission, total_household_adults, total_household_children, total_household_twins, is_4ps_beneficiary, weight_kg, height_cm, weight_for_age, height_for_age, bmi_for_age, breastfeeding, allergies, religion, other_medical_problems, edema, created_at, updated_at, parent_id FROM patients")
+            cursor.execute("SELECT patient_id, first_name, middle_name, last_name, barangay_id, contact_number, age_months, sex, date_of_admission, total_household_adults, total_household_children, total_household_twins, is_4ps_beneficiary, weight_kg, height_cm, breastfeeding, allergies, religion, other_medical_problems, edema, created_at, updated_at, parent_id FROM patients")
             rows = cursor.fetchall()
             return {str(row['patient_id']): row for row in rows}
         finally:
@@ -230,7 +230,7 @@ class DataManager:
     @with_connection
     def get_children_by_parent(self, parent_id: str, conn=None, cursor=None) -> List[Dict]:
         """Get all children for a specific parent from MySQL, all columns."""
-        cursor.execute("SELECT patient_id, first_name, middle_name, last_name, barangay_id, contact_number, age_months, sex, date_of_admission, total_household_adults, total_household_children, total_household_twins, is_4ps_beneficiary, weight_kg, height_cm, weight_for_age, height_for_age, bmi_for_age, breastfeeding, allergies, religion, other_medical_problems, edema, created_at, updated_at, parent_id FROM patients WHERE parent_id = %s", (parent_id,))
+        cursor.execute("SELECT patient_id, first_name, middle_name, last_name, barangay_id, contact_number, age_months, sex, date_of_admission, total_household_adults, total_household_children, total_household_twins, is_4ps_beneficiary, weight_kg, height_cm, breastfeeding, allergies, religion, other_medical_problems, edema, created_at, updated_at, parent_id FROM patients WHERE parent_id = %s", (parent_id,))
         return cursor.fetchall()
 
     @with_connection
@@ -243,7 +243,7 @@ class DataManager:
     @with_connection
     def get_patient_by_id(self, patient_id: str, conn=None, cursor=None) -> Optional[Dict]:
         """Get specific patient data from MySQL, all columns."""
-        cursor.execute("SELECT patient_id, first_name, middle_name, last_name, barangay_id, contact_number, age_months, sex, date_of_admission, total_household_adults, total_household_children, total_household_twins, is_4ps_beneficiary, weight_kg, height_cm, weight_for_age, height_for_age, bmi_for_age, breastfeeding, allergies, religion, other_medical_problems, edema, created_at, updated_at, parent_id FROM patients WHERE patient_id = %s", (patient_id,))
+        cursor.execute("SELECT patient_id, first_name, middle_name, last_name, barangay_id, contact_number, age_months, sex, date_of_admission, total_household_adults, total_household_children, total_household_twins, is_4ps_beneficiary, weight_kg, height_cm, breastfeeding, allergies, religion, other_medical_problems, edema, created_at, updated_at, parent_id FROM patients WHERE patient_id = %s", (patient_id,))
         row = cursor.fetchone()
         return row
 
@@ -296,6 +296,15 @@ class DataManager:
                     conn.close()
             except Exception:
                 pass
+
+    @with_connection
+    def get_latest_assessment_for_patient(self, patient_id: str, conn=None, cursor=None) -> Optional[Dict]:
+        """Get the most recent assessment for a patient."""
+        cursor.execute(
+            "SELECT assessment_id, patient_id, nutritionist_id, assessment_date, weight_kg, height_cm, weight_for_age, height_for_age, bmi_for_age, notes, treatment, recovery_status, created_at, updated_at FROM assessments WHERE patient_id = %s ORDER BY assessment_date DESC, created_at DESC LIMIT 1",
+            (patient_id,)
+        )
+        return cursor.fetchone()
 
     @with_connection
     def get_meal_plans_by_patient(self, patient_id: str, months_back: int = 6, conn=None, cursor=None) -> List[Dict]:

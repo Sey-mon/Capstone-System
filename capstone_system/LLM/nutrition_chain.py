@@ -496,6 +496,19 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     patient_data = data_manager.get_patient_by_id(patient_id)
     if not patient_data:
         return "Error: Patient data not found"
+    
+    # Get latest assessment for nutritional indicators (they moved to assessments table)
+    latest_assessment = data_manager.get_latest_assessment_for_patient(patient_id)
+    
+    # Merge assessment data into patient_data for backward compatibility
+    if latest_assessment:
+        patient_data['weight_for_age'] = latest_assessment.get('weight_for_age', 'Unknown')
+        patient_data['height_for_age'] = latest_assessment.get('height_for_age', 'Unknown')
+        patient_data['bmi_for_age'] = latest_assessment.get('bmi_for_age', 'Unknown')
+    else:
+        patient_data['weight_for_age'] = 'Unknown'
+        patient_data['height_for_age'] = 'Unknown'
+        patient_data['bmi_for_age'] = 'Unknown'
 
     # Get Filipino foods from knowledge base
     knowledge_base = data_manager.get_knowledge_base()

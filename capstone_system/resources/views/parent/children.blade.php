@@ -193,6 +193,18 @@
                         Swal.fire({
                             title: `<div class="swal-modal-header"><div class="swal-header-icon"><i class="fas fa-child"></i></div><div class="swal-header-content"><h3 class="swal-header-title"><i class="fas fa-user-circle"></i> {{ $child->first_name }} {{ $child->last_name }}</h3><p class="swal-header-subtitle"><i class="fas fa-id-card"></i> Patient ID: {{ $child->custom_patient_id }} • Complete Health and Nutrition Profile</p></div></div>`,
                             html: `
+                                <style>
+                                    .swal-modal-content { padding: 12px; }
+                                    .profile-section { margin-bottom: 12px; }
+                                    .profile-section-title { font-size: 13px; margin-bottom: 8px; padding: 6px 10px; }
+                                    .profile-grid-4, .profile-grid-2 { gap: 8px; }
+                                    .profile-item { padding: 8px 10px; }
+                                    .profile-label { font-size: 10px; margin-bottom: 3px; }
+                                    .profile-value { font-size: 13px; }
+                                    .profile-value-large { font-size: 14px !important; }
+                                    .profile-value-xlarge { font-size: 15px !important; }
+                                    .profile-value-number { font-size: 16px !important; }
+                                </style>
                                 <div class="swal-modal-content">
                                     <!-- Personal Information -->
                                     <div class="profile-section">
@@ -287,7 +299,7 @@
                                     </div>
                                 </div>
                             `,
-                            width: '95%',
+                            width: '70%',
                             showCloseButton: true,
                             showConfirmButton: false,
                             padding: '0',
