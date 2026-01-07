@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeFilters();
-    initializeViewToggle();
+    initializeSearch();
     initializeSortFilter();
     initializeAnimations();
 });
@@ -16,6 +16,50 @@ function initializeFilters() {
         });
     }
 }
+
+// Initialize search functionality
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            searchMealPlans(this.value);
+        });
+    }
+}
+
+// Search meal plans by child name, date, or content
+function searchMealPlans(searchTerm) {
+    const cards = document.querySelectorAll('.meal-plan-card-premium');
+    const searchLower = searchTerm.toLowerCase().trim();
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        if (searchLower === '') {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            const childName = card.querySelector('.child-name')?.textContent.toLowerCase() || '';
+            const date = card.querySelector('.meta-item')?.textContent.toLowerCase() || '';
+            const preview = card.querySelector('.plan-content-preview')?.textContent.toLowerCase() || '';
+            const notes = card.querySelector('.notes-text')?.textContent.toLowerCase() || '';
+            
+            const matches = childName.includes(searchLower) || 
+                          date.includes(searchLower) || 
+                          preview.includes(searchLower) ||
+                          notes.includes(searchLower);
+            
+            if (matches) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+    
+    checkEmptyState(visibleCount);
+}
+
 
 // Initialize sort functionality
 function initializeSortFilter() {
@@ -232,37 +276,6 @@ function checkEmptyState(visibleCount) {
     }
 }
 
-// Initialize view toggle (grid/list)
-function initializeViewToggle() {
-    const viewButtons = document.querySelectorAll('[data-view]');
-    const grid = document.getElementById('mealPlansGrid');
-    
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const view = this.dataset.view;
-            
-            // Update active button with animation
-            viewButtons.forEach(btn => {
-                btn.classList.remove('active');
-            });
-            this.classList.add('active');
-            
-            // Update grid layout with transition
-            if (view === 'list') {
-                grid.style.gridTemplateColumns = '1fr';
-                grid.querySelectorAll('.meal-plan-card-premium').forEach(card => {
-                    card.style.maxWidth = '100%';
-                });
-            } else {
-                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(380px, 1fr))';
-                grid.querySelectorAll('.meal-plan-card-premium').forEach(card => {
-                    card.style.maxWidth = 'none';
-                });
-            }
-        });
-    });
-}
-
 // Initialize entrance animations
 function initializeAnimations() {
     const cards = document.querySelectorAll('.meal-plan-card-premium');
@@ -456,6 +469,7 @@ function printMealPlanFromSwal(planId, data) {
                     margin: 15mm;
                     size: landscape;
                 }
+                
                 body { 
                     font-family: Arial, sans-serif; 
                     padding: 20px;
@@ -463,20 +477,22 @@ function printMealPlanFromSwal(planId, data) {
                 }
                 .header { 
                     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                    color: white;
-                    padding: 25px;
-                    border-radius: 12px;
-                    margin-bottom: 25px;
+                    color: #1e293b;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    margin-bottom: 20px;
                     text-align: center;
                 }
                 .header h1 {
-                    margin: 0 0 10px 0;
-                    font-size: 28px;
-                    color: white;
+                    margin: 0 0 8px 0;
+                    font-size: 20px;
+                    color: #1e293b;
                 }
                 .header p {
-                    margin: 5px 0;
-                    opacity: 0.95;
+                    margin: 3px 0;
+                    opacity: 0.85;
+                    font-size: 13px;
+                    color: #1e293b;
                 }
                 .info-section {
                     background: #f0fdf4;
@@ -528,14 +544,14 @@ function printMealPlanFromSwal(planId, data) {
                     font-size: 12px;
                     color: #047857;
                     background: #ecfdf5;
-                    border: 1px solid #d1fae5;
+                    border: 1px solid #000000;
                     text-align: left;
                     vertical-align: top;
                 }
                 .meal-content-cell {
                     padding: 12px 10px;
                     color: #374151;
-                    border: 1px solid #e5e7eb;
+                    border: 1px solid #000000;
                     vertical-align: top;
                     text-align: left;
                     font-size: 11px;

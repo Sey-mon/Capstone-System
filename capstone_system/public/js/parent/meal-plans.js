@@ -352,6 +352,10 @@ function printMealPlan() {
             <head>
                 <title>Smart Meal Plan - ${childName}</title>
                 <style>
+                    @page {
+                        margin: 20mm;
+                    }
+                    
                     body { 
                         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
                         margin: 0;
@@ -359,6 +363,12 @@ function printMealPlan() {
                         color: #1e293b;
                         line-height: 1.7;
                         background: #f8fafc;
+                    }
+                    
+                    @media print {
+                        body {
+                            padding: 20px;
+                        }
                     }
                     .print-container {
                         background: white;
