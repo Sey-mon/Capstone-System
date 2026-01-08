@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Nutritional Assessment Profile - {{ $patient->first_name }} {{ $patient->last_name }}</title>
+    <title>Nutritional Screening Profile - {{ $patient->first_name }} {{ $patient->last_name }}</title>
     <style>
         {!! file_get_contents(public_path('css/nutritionist/assessment-pdf.css')) !!}
     </style>
@@ -54,8 +54,8 @@
             </div>
             <div class="patient-title-section">
                 <h1 class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</h1>
-                <div class="assessment-title">Nutritional Assessment Profile</div>
-                <div class="assessment-date">Assessment Date: {{ $assessment->assessment_date->format('F d, Y') }}</div>
+                <div class="assessment-title">Nutritional Screening Profile</div>
+                <div class="assessment-date">Screening Date: {{ $assessment->assessment_date->format('F d, Y') }}</div>
             </div>
             <div class="status-indicator status-{{ strtolower(str_replace(' ', '-', $assessment->diagnosis)) }}">
                 {{ $assessment->diagnosis }}
@@ -73,8 +73,8 @@
                         @if($treatmentPlan && isset($treatmentPlan['patient_info']['confidence_level']))
                         <p><strong>Confidence level:</strong> {{ $treatmentPlan['patient_info']['confidence_level'] }}</p>
                         @endif
-                        <p><strong>Assessment date:</strong> {{ $assessment->assessment_date->format('Y-m-d') }}</p>
-                        <p><strong>Plan created by:</strong> AI-Enhanced Malnutrition Assessment System</p>
+                        <p><strong>Screening date:</strong> {{ $assessment->assessment_date->format('Y-m-d') }}</p>
+                        <p><strong>Plan created by:</strong> AI-Enhanced Malnutrition Screening System</p>
                     </div>
                 </div>
             </div>
@@ -229,9 +229,9 @@
 
         <!-- Professional Footer -->
         <div class="footer">
-            <div class="footer-title">Professional Assessment Certification</div>
+            <div class="footer-title">Professional Screening Certification</div>
             <div class="footer-info">
-                This comprehensive nutritional assessment profile was professionally conducted, analyzed, and documented by<br>
+                This comprehensive nutritional screening profile was professionally conducted, analyzed, and documented by<br>
                 <strong>{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</strong> - Licensed Nutritionist<br>
                 <br>
                 Document Generated: {{ now()->format('l, F d, Y \a\t g:i A') }}<br>

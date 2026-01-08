@@ -82,60 +82,9 @@
                     <small class="form-text text-muted">Patient gender: {{ ucfirst($patient->sex) }}</small>
                 </div>
             </div>
-
-            <!-- Clinical Symptoms -->
-            <div class="form-section">
-                <h6 class="section-title"><i class="fas fa-stethoscope"></i> Clinical Symptoms</h6>
-                
-                <div class="mb-3">
-                    <label for="appetite" class="form-label">Appetite</label>
-                    <select class="form-control" id="appetite" name="appetite">
-                        <option value="good" {{ old('appetite') == 'good' ? 'selected' : '' }}>Good</option>
-                        <option value="poor" {{ old('appetite') == 'poor' ? 'selected' : '' }}>Poor</option>
-                        <option value="none" {{ old('appetite') == 'none' ? 'selected' : '' }}>None</option>
-                    </select>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="diarrhea_days" class="form-label">Diarrhea (days)</label>
-                    <input type="number" 
-                           class="form-control" 
-                           id="diarrhea_days" 
-                           name="diarrhea_days" 
-                           value="{{ old('diarrhea_days', 0) }}" 
-                           min="0" 
-                           max="30">
-                    <small class="form-text text-muted">Number of days with diarrhea in past month</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="fever_days" class="form-label">Fever (days)</label>
-                    <input type="number" 
-                           class="form-control" 
-                           id="fever_days" 
-                           name="fever_days" 
-                           value="{{ old('fever_days', 0) }}" 
-                           min="0" 
-                           max="30">
-                    <small class="form-text text-muted">Number of days with fever in past month</small>
-                </div>
-                
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               id="vomiting" 
-                               name="vomiting" 
-                               {{ old('vomiting') ? 'checked' : '' }}>
-                        <label class="form-check-label" for="vomiting">
-                            Recent vomiting episodes
-                        </label>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Right Column - Socioeconomic -->
+        <!-- Right Column - Socioeconomic & Notes -->
         <div class="col-md-6">
             <!-- Socioeconomic Information -->
             <div class="form-section mb-4">
@@ -151,71 +100,6 @@
                            min="1" 
                            max="20">
                     <small class="form-text text-muted">Total number of people in household</small>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="mother_education" class="form-label">Mother's Education</label>
-                    <select class="form-control" id="mother_education" name="mother_education">
-                        <option value="none" {{ old('mother_education') == 'none' ? 'selected' : '' }}>No Formal Education</option>
-                        <option value="primary" {{ old('mother_education', 'primary') == 'primary' ? 'selected' : '' }}>Primary Education</option>
-                        <option value="secondary" {{ old('mother_education') == 'secondary' ? 'selected' : '' }}>Secondary Education</option>
-                        <option value="tertiary" {{ old('mother_education') == 'tertiary' ? 'selected' : '' }}>Tertiary Education</option>
-                    </select>
-                </div>
-
-                <!-- Government Benefits -->
-                <div class="mb-3">
-                    <h6 class="mb-2">Government Benefits & Resources</h6>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               id="is_4ps_beneficiary" 
-                               name="is_4ps_beneficiary" 
-                               {{ old('is_4ps_beneficiary', $patient->is_4ps_beneficiary) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="is_4ps_beneficiary">
-                            4Ps Beneficiary
-                            @if($patient->is_4ps_beneficiary)
-                                <small class="text-muted">(from patient record)</small>
-                            @endif
-                        </label>
-                    </div>
-                    
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               id="has_electricity" 
-                               name="has_electricity" 
-                               {{ old('has_electricity') ? 'checked' : '' }}>
-                        <label class="form-check-label" for="has_electricity">
-                            Has Electricity
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Household Conditions -->
-                <div class="mb-3">
-                    <h6 class="mb-2">Household Conditions</h6>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               id="has_clean_water" 
-                               name="has_clean_water" 
-                               {{ old('has_clean_water') ? 'checked' : '' }}>
-                        <label class="form-check-label" for="has_clean_water">
-                            Clean Water Access
-                        </label>
-                    </div>
-                    
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               id="father_present" 
-                               name="father_present" 
-                               {{ old('father_present') ? 'checked' : '' }}>
-                        <label class="form-check-label" for="father_present">
-                            Father Present
-                        </label>
-                    </div>
                 </div>
             </div>
 
@@ -234,6 +118,147 @@
                         <br><strong>From patient record:</strong> {{ Str::limit($patient->other_medical_problems, 100) }}
                     @endif
                     </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Symptoms & Signs - Full Width Section -->
+    <div class="form-section mb-4">
+        <h6 class="section-title"><i class="fas fa-stethoscope"></i> Clinical Symptoms & Physical Signs</h6>
+        
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6">
+                <!-- Appetite & Feeding -->
+                <div class="mb-3">
+                    <label for="appetite" class="form-label">Appetite Level</label>
+                    <select class="form-control" id="appetite" name="appetite">
+                        <option value="">Select appetite level</option>
+                        <option value="good" {{ old('appetite') == 'good' ? 'selected' : '' }}>Good - Eats well, finishes meals</option>
+                        <option value="fair" {{ old('appetite') == 'fair' ? 'selected' : '' }}>Fair - Eats moderately</option>
+                        <option value="poor" {{ old('appetite') == 'poor' ? 'selected' : '' }}>Poor - Refuses food often</option>
+                        <option value="very_poor" {{ old('appetite') == 'very_poor' ? 'selected' : '' }}>Very Poor - Minimal intake</option>
+                    </select>
+                </div>
+
+                <!-- Edema Assessment -->
+                <div class="mb-3">
+                    <label for="edema" class="form-label">Edema (Swelling)</label>
+                    <select class="form-control" id="edema" name="edema">
+                        <option value="none" {{ old('edema', 'none') == 'none' ? 'selected' : '' }}>None</option>
+                        <option value="mild" {{ old('edema') == 'mild' ? 'selected' : '' }}>Mild - Both feet/ankles</option>
+                        <option value="moderate" {{ old('edema') == 'moderate' ? 'selected' : '' }}>Moderate - Both feet, legs, hands</option>
+                        <option value="severe" {{ old('edema') == 'severe' ? 'selected' : '' }}>Severe - Generalized edema</option>
+                    </select>
+                    <small class="form-text text-muted">Check for bilateral pitting edema</small>
+                </div>
+
+                <!-- MUAC (Mid-Upper Arm Circumference) -->
+                <div class="mb-3">
+                    <label for="muac" class="form-label">MUAC (cm)</label>
+                    <input type="number" 
+                           class="form-control" 
+                           id="muac" 
+                           name="muac" 
+                           value="{{ old('muac') }}" 
+                           step="0.1" 
+                           min="5" 
+                           max="30"
+                           placeholder="e.g., 11.5">
+                    <small class="form-text text-muted">Mid-Upper Arm Circumference for malnutrition screening</small>
+                </div>
+
+                <!-- Gastrointestinal Symptoms -->
+                <div class="mb-3">
+                    <label class="form-label d-block">Gastrointestinal Symptoms</label>
+                    
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label for="diarrhea_days" class="form-label small">Diarrhea (days in past 2 weeks)</label>
+                            <input type="number" 
+                                   class="form-control form-control-sm" 
+                                   id="diarrhea_days" 
+                                   name="diarrhea_days" 
+                                   value="{{ old('diarrhea_days', 0) }}" 
+                                   min="0" 
+                                   max="14">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="vomiting_frequency" class="form-label small">Vomiting (times per day)</label>
+                            <input type="number" 
+                                   class="form-control form-control-sm" 
+                                   id="vomiting_frequency" 
+                                   name="vomiting_frequency" 
+                                   value="{{ old('vomiting_frequency', 0) }}" 
+                                   min="0" 
+                                   max="20">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fever & Infections -->
+                <div class="mb-3">
+                    <label for="fever_days" class="form-label">Fever (days in past 2 weeks)</label>
+                    <input type="number" 
+                           class="form-control" 
+                           id="fever_days" 
+                           name="fever_days" 
+                           value="{{ old('fever_days', 0) }}" 
+                           min="0" 
+                           max="14">
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-md-6">
+                <!-- Visible Signs of Malnutrition -->
+                <div class="mb-3">
+                    <label class="form-label d-block">Visible Signs (Check all that apply)</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="skin_changes" name="skin_changes" {{ old('skin_changes') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="skin_changes">
+                            Skin changes (dry, peeling, lesions)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="hair_changes" name="hair_changes" {{ old('hair_changes') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="hair_changes">
+                            Hair changes (thin, discolored, easily pluckable)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="muscle_wasting" name="muscle_wasting" {{ old('muscle_wasting') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="muscle_wasting">
+                            Visible muscle wasting
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="lethargy" name="lethargy" {{ old('lethargy') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="lethargy">
+                            Lethargy or reduced activity
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="pallor" name="pallor" {{ old('pallor') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="pallor">
+                            Pallor (pale skin/mucous membranes)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Breastfeeding Status (for infants) -->
+                <div class="mb-3">
+                    <label for="breastfeeding_status" class="form-label">Breastfeeding Status</label>
+                    <select class="form-control" id="breastfeeding_status" name="breastfeeding_status">
+                        <option value="not_applicable" {{ old('breastfeeding_status', 'not_applicable') == 'not_applicable' ? 'selected' : '' }}>Not Applicable (>24 months)</option>
+                        <option value="exclusive" {{ old('breastfeeding_status') == 'exclusive' ? 'selected' : '' }}>Exclusive breastfeeding</option>
+                        <option value="complementary" {{ old('breastfeeding_status') == 'complementary' ? 'selected' : '' }}>Breastfeeding + complementary foods</option>
+                        <option value="formula" {{ old('breastfeeding_status') == 'formula' ? 'selected' : '' }}>Formula feeding only</option>
+                        <option value="mixed" {{ old('breastfeeding_status') == 'mixed' ? 'selected' : '' }}>Mixed feeding</option>
+                        <option value="weaned" {{ old('breastfeeding_status') == 'weaned' ? 'selected' : '' }}>Weaned</option>
+                    </select>
+                    <small class="form-text text-muted">For children under 24 months</small>
                 </div>
             </div>
         </div>
@@ -372,3 +397,47 @@ textarea.form-control {
     overflow: hidden !important;
 }
 </style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('assessmentForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function(e) {
+        // Collect all clinical symptoms data
+        const clinicalData = {
+            appetite: document.getElementById('appetite')?.value || '',
+            edema: document.getElementById('edema')?.value || '',
+            muac: document.getElementById('muac')?.value || '',
+            gastrointestinal: {
+                diarrhea_days: document.getElementById('diarrhea_days')?.value || '0',
+                vomiting_frequency: document.getElementById('vomiting_frequency')?.value || '0'
+            },
+            fever_days: document.getElementById('fever_days')?.value || '0',
+            visible_signs: {
+                skin_changes: document.getElementById('skin_changes')?.checked || false,
+                hair_changes: document.getElementById('hair_changes')?.checked || false,
+                muscle_wasting: document.getElementById('muscle_wasting')?.checked || false,
+                lethargy: document.getElementById('lethargy')?.checked || false,
+                pallor: document.getElementById('pallor')?.checked || false
+            },
+            breastfeeding_status: document.getElementById('breastfeeding_status')?.value || ''
+        };
+
+        // Get the notes textarea
+        const notesField = document.getElementById('notes');
+        if (notesField) {
+            const currentNotes = notesField.value.trim();
+            
+            // Create a structured note with clinical data
+            const structuredNote = {
+                clinical_symptoms: clinicalData,
+                additional_notes: currentNotes,
+                recorded_at: new Date().toISOString()
+            };
+
+            // Store as JSON string in the notes field
+            notesField.value = JSON.stringify(structuredNote, null, 2);
+        }
+    });
+});
+</script>
