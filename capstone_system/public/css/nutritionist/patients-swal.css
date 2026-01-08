@@ -270,6 +270,29 @@
 
 /* SweetAlert2 Buttons - Simple Style without Animations */
 .swal2-confirm {
+    background: linear-gradient(135deg, #d32f2f 0%, #e53935 100%) !important;
+    border: none !important;
+    padding: 10px 24px !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(211, 47, 47, 0.3) !important;
+    transition: opacity 0.2s ease !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+.swal2-confirm:hover {
+    opacity: 0.9 !important;
+}
+
+.swal2-confirm:active {
+    opacity: 0.8 !important;
+}
+
+/* Green button for Update Patient */
+.swal2-confirm-update {
     background: linear-gradient(135deg, #388E3C 0%, #43A047 100%) !important;
     border: none !important;
     padding: 10px 24px !important;
@@ -283,18 +306,11 @@
     position: relative;
 }
 
-.swal2-confirm::before {
-    content: '\f00c';
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    margin-right: 8px;
-}
-
-.swal2-confirm:hover {
+.swal2-confirm-update:hover {
     opacity: 0.9 !important;
 }
 
-.swal2-confirm:active {
+.swal2-confirm-update:active {
     opacity: 0.8 !important;
 }
 

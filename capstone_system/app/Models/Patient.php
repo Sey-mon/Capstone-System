@@ -32,6 +32,8 @@ class Patient extends Model
         'weight_kg',
         'height_cm',
         'breastfeeding',
+        'allergies',
+        'religion',
         'other_medical_problems',
         'edema',
         'custom_patient_id',

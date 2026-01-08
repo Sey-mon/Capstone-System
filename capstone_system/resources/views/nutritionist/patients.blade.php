@@ -25,10 +25,6 @@
                     <i class="fas fa-times"></i>
                     <span>Clear All</span>
                 </button>
-                <button type="button" class="btn-filter-action btn-refresh" onclick="refreshPatients()">
-                    <i class="fas fa-sync-alt"></i>
-                    <span>Refresh</span>
-                </button>
             </div>
         </div>
 
@@ -283,6 +279,45 @@
                                 <option value="Yes">Yes</option>
                                 <option value="No">No</option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="allergies" class="form-label">Allergies</label>
+                            <select id="allergies" name="allergies" class="form-select" onchange="handleAllergiesChange(this)">
+                                <option value="">Select allergy</option>
+                                <option value="None">None</option>
+                                <option value="Milk/Dairy">Milk/Dairy</option>
+                                <option value="Eggs">Eggs</option>
+                                <option value="Peanuts">Peanuts</option>
+                                <option value="Tree Nuts">Tree Nuts</option>
+                                <option value="Shellfish/Seafood">Shellfish/Seafood</option>
+                                <option value="Fish">Fish</option>
+                                <option value="Soy">Soy</option>
+                                <option value="Wheat/Gluten">Wheat/Gluten</option>
+                                <option value="Other">Other (Please specify)</option>
+                            </select>
+                            <input type="text" id="allergies_other" name="allergies_other" class="form-control mt-2" placeholder="Please specify other allergies..." style="display: none;">
+                            <small class="form-text text-muted"><i class="fas fa-info-circle"></i> Used by AI for meal plan recommendations</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="religion" class="form-label">Religion</label>
+                            <select id="religion" name="religion" class="form-select" onchange="handleReligionChange(this)">
+                                <option value="">Select religion</option>
+                                <option value="Roman Catholic">Roman Catholic</option>
+                                <option value="Islam">Islam</option>
+                                <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+                                <option value="Protestant">Protestant</option>
+                                <option value="Seventh-day Adventist">Seventh-day Adventist</option>
+                                <option value="Aglipayan">Aglipayan</option>
+                                <option value="Born Again Christian">Born Again Christian</option>
+                                <option value="Other">Other (Please specify)</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                            <input type="text" id="religion_other" name="religion_other" class="form-control mt-2" placeholder="Please specify religion..." style="display: none;">
+                            <small class="form-text text-muted"><i class="fas fa-info-circle"></i> Used for dietary restrictions</small>
                         </div>
                     </div>
                     <div class="col-12">
