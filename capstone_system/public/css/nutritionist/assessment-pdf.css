@@ -357,10 +357,10 @@ body {
     border-bottom: 1.5px solid #e8eef5;
 }
 .experience-title:before {
-    content: "✓ ";
+    content: "";
     color: #10b981;
     font-weight: 800;
-    margin-right: 4px;
+    margin-right: 0;
 }
 .experience-content {
     color: #4a5568;
@@ -378,18 +378,12 @@ body {
 .experience-content ul {
     margin: 8px 0;
     padding-left: 20px;
+    list-style-type: disc;
 }
 .experience-content li {
     margin-bottom: 6px;
     position: relative;
     font-size: 13px;
-}
-.experience-content li:before {
-    content: "▸";
-    color: #10b981;
-    font-weight: 700;
-    position: absolute;
-    left: -15px;
 }
 .skills-grid {
     display: grid;

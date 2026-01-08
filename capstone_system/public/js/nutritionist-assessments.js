@@ -617,7 +617,40 @@ function submitAssessmentFormData(form, patientId) {
     // Show loading on the confirm button
     Swal.showLoading();
     
+    // Collect all clinical symptoms data BEFORE creating FormData
+    const clinicalData = {
+        appetite: document.getElementById('appetite')?.value || '',
+        edema: document.getElementById('edema')?.value || '',
+        muac: document.getElementById('muac')?.value || '',
+        diarrhea: document.getElementById('diarrhea_days')?.value || '0',
+        vomiting: document.getElementById('vomiting_frequency')?.value || '0',
+        fever: document.getElementById('fever_days')?.value || '0',
+        visible_signs: [],
+        breastfeeding_status: document.getElementById('breastfeeding_status')?.value || ''
+    };
+    
+    // Collect visible signs checkboxes
+    const visibleSigns = ['skin_changes', 'hair_changes', 'muscle_wasting', 'lethargy', 'pallor'];
+    visibleSigns.forEach(sign => {
+        if (document.getElementById(sign)?.checked) {
+            clinicalData.visible_signs.push(sign.replace('_', ' '));
+        }
+    });
+    
+    // Get the additional notes from the textarea
+    const notesField = document.getElementById('notes');
+    const additionalNotes = notesField ? notesField.value.trim() : '';
+    
+    // Create structured JSON note
+    const structuredNote = {
+        clinical_symptoms: clinicalData,
+        additional_notes: additionalNotes,
+        recorded_at: new Date().toISOString()
+    };
+    
+    // Create FormData and override the notes field with JSON
     const formData = new FormData(form);
+    formData.set('notes', JSON.stringify(structuredNote));
     
     return fetch(form.action, {
         method: 'POST',
@@ -837,11 +870,18 @@ function renderAssessmentHistory(assessments, patientName, currentIndex) {
     if (assessment.notes) {
         try {
             // Try to parse as JSON first
-            clinicalData = typeof assessment.notes === 'string' ? 
+            const parsedNotes = typeof assessment.notes === 'string' ? 
                 JSON.parse(assessment.notes) : assessment.notes;
             
-            // Extract additional notes if it's in the JSON
-            additionalNotes = clinicalData.additional_notes || clinicalData.additionalNotes || '';
+            // Extract clinical symptoms and additional notes from the new structure
+            if (parsedNotes.clinical_symptoms) {
+                clinicalData = parsedNotes.clinical_symptoms;
+                additionalNotes = parsedNotes.additional_notes || '';
+            } else {
+                // Fallback for old structure
+                clinicalData = parsedNotes;
+                additionalNotes = parsedNotes.additional_notes || parsedNotes.additionalNotes || '';
+            }
         } catch (e) {
             // If not JSON, treat it as plain text notes
             additionalNotes = assessment.notes;
@@ -869,6 +909,10 @@ function renderAssessmentHistory(assessments, patientName, currentIndex) {
                         ${patientName}
                     </h3>
                     <p class="swal-header-subtitle">Complete screening timeline and progress tracking</p>
+                    <button class="btn btn-success btn-sm swal-pdf-button" onclick="downloadAssessmentPDF(${assessment.assessment_id})">
+                        <i class="fas fa-file-pdf me-1"></i>
+                        Download PDF
+                    </button>
                 </div>
                 <div class="swal-assessment-detail">
                     <div class="swal-detail-header">
@@ -964,34 +1008,34 @@ function renderAssessmentHistory(assessments, patientName, currentIndex) {
                                 <span class="swal-clinical-value">${clinicalData.muac} cm</span>
                             </div>
                             ` : ''}
-                            ${clinicalData.diarrhea ? `
+                            ${clinicalData.diarrhea && clinicalData.diarrhea !== '0' ? `
                             <div class="swal-clinical-item">
                                 <span class="swal-clinical-label">Diarrhea:</span>
-                                <span class="swal-clinical-value">${clinicalData.diarrhea}</span>
+                                <span class="swal-clinical-value">${clinicalData.diarrhea} day(s)</span>
                             </div>
                             ` : ''}
-                            ${clinicalData.vomiting ? `
+                            ${clinicalData.vomiting && clinicalData.vomiting !== '0' ? `
                             <div class="swal-clinical-item">
                                 <span class="swal-clinical-label">Vomiting:</span>
-                                <span class="swal-clinical-value">${clinicalData.vomiting}</span>
+                                <span class="swal-clinical-value">${clinicalData.vomiting} times/day</span>
                             </div>
                             ` : ''}
-                            ${clinicalData.fever ? `
+                            ${clinicalData.fever && clinicalData.fever !== '0' ? `
                             <div class="swal-clinical-item">
                                 <span class="swal-clinical-label">Fever:</span>
-                                <span class="swal-clinical-value">${clinicalData.fever}</span>
+                                <span class="swal-clinical-value">${clinicalData.fever} day(s)</span>
                             </div>
                             ` : ''}
-                            ${clinicalData.breastfeeding_status ? `
+                            ${clinicalData.breastfeeding_status && clinicalData.breastfeeding_status !== 'not_applicable' ? `
                             <div class="swal-clinical-item">
                                 <span class="swal-clinical-label">Breastfeeding Status:</span>
-                                <span class="swal-clinical-value">${clinicalData.breastfeeding_status}</span>
+                                <span class="swal-clinical-value">${clinicalData.breastfeeding_status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                             </div>
                             ` : ''}
                             ${clinicalData.visible_signs && clinicalData.visible_signs.length > 0 ? `
                             <div class="swal-clinical-item full-width">
                                 <span class="swal-clinical-label">Visible Signs:</span>
-                                <span class="swal-clinical-value">${clinicalData.visible_signs.join(', ')}</span>
+                                <span class="swal-clinical-value">${Array.isArray(clinicalData.visible_signs) ? clinicalData.visible_signs.join(', ') : clinicalData.visible_signs}</span>
                             </div>
                             ` : ''}
                         </div>
@@ -1706,6 +1750,11 @@ function printAssessmentDetails(assessmentId) {
     // Open PDF in new tab (browser will handle download based on headers)
     window.open(pdfUrl, '_blank');
 }
+
+// Global function for downloading assessment PDF (accessible from modal buttons)
+window.downloadAssessmentPDF = function(assessmentId) {
+    printAssessmentDetails(assessmentId);
+};
 
 // Modern UI Functionality
 document.addEventListener('DOMContentLoaded', function() {

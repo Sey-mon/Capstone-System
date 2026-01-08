@@ -37,6 +37,7 @@
                            value="{{ old('age_months', $patient->getAgeInMonths()) }}" 
                            min="0" 
                            max="240" 
+                           readonly
                            required>
                     <small class="form-text text-muted">Current age: {{ $patient->getAgeInMonths() }} months</small>
                 </div>
@@ -75,7 +76,7 @@
                 
                 <div class="mb-3">
                     <label for="gender" class="form-label required">Gender</label>
-                    <select class="form-control" id="gender" name="gender" required>
+                    <select class="form-control" id="gender" name="gender" disabled required>
                         <option value="male" {{ old('gender', $patient->sex) == 'male' ? 'selected' : '' }}>Male</option>
                         <option value="female" {{ old('gender', $patient->sex) == 'female' ? 'selected' : '' }}>Female</option>
                     </select>
@@ -397,47 +398,3 @@ textarea.form-control {
     overflow: hidden !important;
 }
 </style>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('assessmentForm');
-    if (!form) return;
-
-    form.addEventListener('submit', function(e) {
-        // Collect all clinical symptoms data
-        const clinicalData = {
-            appetite: document.getElementById('appetite')?.value || '',
-            edema: document.getElementById('edema')?.value || '',
-            muac: document.getElementById('muac')?.value || '',
-            gastrointestinal: {
-                diarrhea_days: document.getElementById('diarrhea_days')?.value || '0',
-                vomiting_frequency: document.getElementById('vomiting_frequency')?.value || '0'
-            },
-            fever_days: document.getElementById('fever_days')?.value || '0',
-            visible_signs: {
-                skin_changes: document.getElementById('skin_changes')?.checked || false,
-                hair_changes: document.getElementById('hair_changes')?.checked || false,
-                muscle_wasting: document.getElementById('muscle_wasting')?.checked || false,
-                lethargy: document.getElementById('lethargy')?.checked || false,
-                pallor: document.getElementById('pallor')?.checked || false
-            },
-            breastfeeding_status: document.getElementById('breastfeeding_status')?.value || ''
-        };
-
-        // Get the notes textarea
-        const notesField = document.getElementById('notes');
-        if (notesField) {
-            const currentNotes = notesField.value.trim();
-            
-            // Create a structured note with clinical data
-            const structuredNote = {
-                clinical_symptoms: clinicalData,
-                additional_notes: currentNotes,
-                recorded_at: new Date().toISOString()
-            };
-
-            // Store as JSON string in the notes field
-            notesField.value = JSON.stringify(structuredNote, null, 2);
-        }
-    });
-});
-</script>

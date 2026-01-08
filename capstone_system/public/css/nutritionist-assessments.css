@@ -2420,6 +2420,11 @@ button:focus-visible {
     background: white;
     padding: 1.5rem 2rem;
     border-bottom: 2px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .swal-header-title {
@@ -2436,6 +2441,22 @@ button:focus-visible {
     color: #666;
     font-size: 0.95rem;
     margin: 0;
+}
+
+.swal-pdf-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.swal-pdf-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
 }
 
 .swal-assessment-detail {
