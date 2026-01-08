@@ -909,10 +909,16 @@ function renderAssessmentHistory(assessments, patientName, currentIndex) {
                         ${patientName}
                     </h3>
                     <p class="swal-header-subtitle">Complete screening timeline and progress tracking</p>
-                    <button class="btn btn-success btn-sm swal-pdf-button" onclick="downloadAssessmentPDF(${assessment.assessment_id})">
-                        <i class="fas fa-file-pdf me-1"></i>
-                        Download PDF
-                    </button>
+                    <div class="swal-header-buttons">
+                        <button class="btn btn-primary btn-sm swal-treatment-button" onclick="showTreatmentPlan(${assessment.assessment_id}, '${patientName}', ${currentIndex})">
+                            <i class="fas fa-prescription me-1"></i>
+                            View Treatment Plan
+                        </button>
+                        <button class="btn btn-success btn-sm swal-pdf-button" onclick="downloadAssessmentPDF(${assessment.assessment_id})">
+                            <i class="fas fa-file-pdf me-1"></i>
+                            Download PDF
+                        </button>
+                    </div>
                 </div>
                 <div class="swal-assessment-detail">
                     <div class="swal-detail-header">
@@ -1099,6 +1105,222 @@ function getIndicatorClass(value) {
     if (lowerValue.includes('moderate') || lowerValue.includes('overweight')) return 'warning';
     if (lowerValue.includes('normal')) return 'normal';
     return '';
+}
+
+// Show treatment plan view
+function showTreatmentPlan(assessmentId, patientName, currentIndex) {
+    // Fetch treatment data
+    const url = window.assessmentsRoutes.assessmentDetails.replace(':assessmentId', assessmentId);
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.assessment) {
+                renderTreatmentPlanView(data.assessment, patientName, currentIndex);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to load treatment plan'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading treatment plan:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load treatment plan. Please try again.'
+            });
+        });
+}
+
+function renderTreatmentPlanView(assessment, patientName, currentIndex) {
+    // Parse treatment plan
+    let treatmentPlan = null;
+    if (assessment.treatment_plan) {
+        try {
+            treatmentPlan = typeof assessment.treatment_plan === 'string' ? 
+                JSON.parse(assessment.treatment_plan) : assessment.treatment_plan;
+        } catch (e) {
+            console.error('Failed to parse treatment_plan:', e);
+        }
+    }
+    if (!treatmentPlan && assessment.treatment) {
+        try {
+            treatmentPlan = typeof assessment.treatment === 'string' ? 
+                JSON.parse(assessment.treatment) : assessment.treatment;
+        } catch (e) {
+            console.error('Failed to parse treatment:', e);
+        }
+    }
+
+    if (!treatmentPlan) {
+        Swal.fire({
+            icon: 'info',
+            title: 'No Treatment Plan',
+            text: 'No treatment plan available for this screening.'
+        });
+        return;
+    }
+
+    // Helper function to safely convert to array
+    const toArray = (value) => {
+        if (!value) return [];
+        if (Array.isArray(value)) return value;
+        if (typeof value === 'string') return [value];
+        return [];
+    };
+
+    const diagnosis = treatmentPlan?.patient_info?.diagnosis || assessment.diagnosis || 'Status Unknown';
+    const confidence = treatmentPlan?.patient_info?.confidence_level || 'N/A';
+    
+    // Determine diagnosis styling
+    let diagnosisClass = 'unknown';
+    let diagnosisIcon = 'fa-question-circle';
+    if (diagnosis.includes('Severe')) {
+        diagnosisClass = 'critical';
+        diagnosisIcon = 'fa-exclamation-triangle';
+    } else if (diagnosis.includes('Moderate')) {
+        diagnosisClass = 'warning';
+        diagnosisIcon = 'fa-exclamation-circle';
+    } else if (diagnosis.includes('Normal')) {
+        diagnosisClass = 'normal';
+        diagnosisIcon = 'fa-check-circle';
+    }
+
+    // Convert all treatment plan sections to arrays
+    const immediateActions = toArray(treatmentPlan.immediate_actions);
+    const monitoring = toArray(treatmentPlan.monitoring);
+    const familyEducation = toArray(treatmentPlan.family_education);
+    const successCriteria = toArray(treatmentPlan.success_criteria);
+    const dischargeCriteria = toArray(treatmentPlan.discharge_criteria);
+    const emergencySigns = toArray(treatmentPlan.emergency_signs);
+
+    const htmlContent = `
+        <div class="swal-treatment-container">
+            <div class="swal-treatment-header">
+                <button class="btn btn-secondary btn-sm swal-back-button" onclick="backToScreeningDetails(${assessment.patient_id}, ${assessment.assessment_id})">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Screening
+                </button>
+                <h3 class="swal-header-title">
+                    <i class="fas fa-prescription"></i>
+                    Treatment & Care Plan
+                </h3>
+                <p class="swal-header-subtitle">${patientName} - ${formatDate(assessment.assessment_date)}</p>
+            </div>
+            
+            <div class="swal-treatment-content">
+                <div class="swal-diagnosis-header">
+                    <div class="swal-diagnosis-badge ${diagnosisClass}">
+                        <i class="fas ${diagnosisIcon}"></i>
+                        <span>${diagnosis}</span>
+                    </div>
+                    ${confidence !== 'N/A' ? `
+                    <div class="swal-confidence-badge">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Confidence: ${confidence}</span>
+                    </div>
+                    ` : ''}
+                </div>
+
+                ${immediateActions.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-bolt"></i>
+                        Immediate Actions
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${immediateActions.map(action => `<li>${action}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${monitoring.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-heartbeat"></i>
+                        Monitoring & Follow-up
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${monitoring.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${familyEducation.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-users"></i>
+                        Family Education & Support
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${familyEducation.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${successCriteria.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-check-circle"></i>
+                        Success Criteria
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${successCriteria.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${dischargeCriteria.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        Discharge Criteria
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${dischargeCriteria.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${emergencySigns.length > 0 ? `
+                <div class="swal-treatment-section swal-emergency">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Emergency Warning Signs
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${emergencySigns.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    Swal.fire({
+        html: htmlContent,
+        width: '90%',
+        showCancelButton: false,
+        showConfirmButton: false,
+        showCloseButton: true,
+        scrollbarPadding: false,
+        heightAuto: false,
+        customClass: {
+            container: 'assessment-history-modal',
+            popup: 'assessment-history-popup treatment-popup',
+            htmlContainer: 'p-0',
+            closeButton: 'swal-close-button'
+        },
+        buttonsStyling: false
+    });
+}
+
+function backToScreeningDetails(patientId, selectedAssessmentId) {
+    Swal.close();
+    showAssessmentHistoryModal(patientId, selectedAssessmentId);
 }
 
 // Old detailed view (keep for reference or remove)

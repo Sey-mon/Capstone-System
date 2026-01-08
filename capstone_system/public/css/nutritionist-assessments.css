@@ -2427,22 +2427,14 @@ button:focus-visible {
     gap: 1rem;
 }
 
-.swal-header-title {
-    color: #2e7d32;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
+.swal-header-buttons {
     display: flex;
-    align-items: center;
     gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
-.swal-header-subtitle {
-    color: #666;
-    font-size: 0.95rem;
-    margin: 0;
-}
-
+.swal-treatment-button,
 .swal-pdf-button {
     display: flex;
     align-items: center;
@@ -2452,6 +2444,18 @@ button:focus-visible {
     font-weight: 600;
     transition: all 0.3s ease;
     white-space: nowrap;
+}
+
+.swal-treatment-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+}
+
+.swal-treatment-button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .swal-pdf-button:hover {
@@ -2735,6 +2739,111 @@ button:focus-visible {
 .swal-assessment-detail::-webkit-scrollbar-thumb {
     background: #43A047;
     border-radius: 3px;
+}
+
+/* Treatment Plan View Styles */
+.swal-treatment-container {
+    display: flex;
+    flex-direction: column;
+    height: 75vh;
+    background: #f8f9fa;
+}
+
+.swal-treatment-header {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.swal-back-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.swal-back-button:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.swal-treatment-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2rem;
+}
+
+.swal-diagnosis-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.swal-confidence-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 24px;
+    font-weight: 600;
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.swal-treatment-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.swal-treatment-section.swal-emergency {
+    background: #fff3cd;
+    border-left: 4px solid #ff9800;
+}
+
+.swal-treatment-section.swal-emergency .swal-section-title {
+    color: #ff6f00;
+}
+
+.swal-treatment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.swal-treatment-list li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    border-bottom: 1px solid #f0f0f0;
+    line-height: 1.6;
+}
+
+.swal-treatment-list li:last-child {
+    border-bottom: none;
+}
+
+.swal-treatment-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 1rem;
+    width: 8px;
+    height: 8px;
+    background: #43A047;
+    border-radius: 50%;
+}
+
+.swal-emergency .swal-treatment-list li::before {
+    background: #ff9800;
 }
 
 /* Responsive */
