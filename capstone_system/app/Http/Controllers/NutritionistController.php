@@ -324,6 +324,8 @@ class NutritionistController extends Controller
                 'weight_kg' => $request->weight_kg,
                 'height_cm' => $request->height_cm,
                 'breastfeeding' => $request->breastfeeding,
+                'allergies' => $request->allergies,
+                'religion' => $request->religion,
                 'other_medical_problems' => $request->other_medical_problems,
                 'edema' => $request->edema,
             ]);
@@ -405,6 +407,8 @@ class NutritionistController extends Controller
                 'total_household_twins' => $request->total_household_twins ?? 0,
                 'is_4ps_beneficiary' => $request->has('is_4ps_beneficiary'),
                 'breastfeeding' => $request->breastfeeding,
+                'allergies' => $request->allergies,
+                'religion' => $request->religion,
                 'other_medical_problems' => $request->other_medical_problems,
                 'edema' => $request->edema,
             ]);

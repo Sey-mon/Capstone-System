@@ -45,8 +45,36 @@ function submitPatientForm(form) {
         formDataObj[key] = value;
     });
     
-    // Checkbox handling
-    formDataObj['is_4ps_beneficiary'] = form.querySelector('#is_4ps_beneficiary').checked ? 'on' : '';
+    // Checkbox handling - send boolean value or remove from request
+    const is4psBeneficiaryCheckbox = form.querySelector('#is_4ps_beneficiary');
+    if (is4psBeneficiaryCheckbox.checked) {
+        formDataObj['is_4ps_beneficiary'] = '1';
+    } else {
+        // Don't include the field at all when unchecked
+        delete formDataObj['is_4ps_beneficiary'];
+    }
+    
+    // Handle allergies - use custom value if "Other" is selected, otherwise use dropdown value
+    const allergiesSelect = form.querySelector('#allergies');
+    const allergiesOther = form.querySelector('#allergies_other');
+    if (allergiesSelect) {
+        if (allergiesSelect.value === 'Other' && allergiesOther && allergiesOther.value) {
+            formDataObj['allergies'] = allergiesOther.value;
+        } else if (allergiesSelect.value) {
+            formDataObj['allergies'] = allergiesSelect.value;
+        }
+    }
+    
+    // Handle religion - use custom value if "Other" is selected, otherwise use dropdown value
+    const religionSelect = form.querySelector('#religion');
+    const religionOther = form.querySelector('#religion_other');
+    if (religionSelect) {
+        if (religionSelect.value === 'Other' && religionOther && religionOther.value) {
+            formDataObj['religion'] = religionOther.value;
+        } else if (religionSelect.value) {
+            formDataObj['religion'] = religionSelect.value;
+        }
+    }
     
     // Handle empty parent_id - convert empty string to null
     if (!formDataObj['parent_id'] || formDataObj['parent_id'] === '') {
@@ -329,11 +357,6 @@ function clearFilters() {
     applyFilters();
 }
 
-function refreshPatients() {
-    // Reload current page with current filters
-    applyFilters();
-}
-
 function initializeViewToggle() {
     // Handle view toggle buttons
     const viewButtons = document.querySelectorAll('.btn-view');
@@ -480,7 +503,7 @@ function editPatient(patientId) {
                 cancelButtonText: 'Cancel',
                 customClass: {
                     popup: 'swal2-patient-modal',
-                    confirmButton: 'swal2-confirm',
+                    confirmButton: 'swal2-confirm-update',
                     cancelButton: 'swal2-cancel'
                 },
                 confirmButtonColor: '#2e7d32',
@@ -508,6 +531,32 @@ function editPatient(patientId) {
                     popup.querySelector('#breastfeeding').value = patient.breastfeeding ?? '';
                     popup.querySelector('#edema').value = patient.edema ?? '';
                     popup.querySelector('#other_medical_problems').value = patient.other_medical_problems ?? '';
+                    
+                    // Handle allergies field
+                    const allergiesSelect = popup.querySelector('#allergies');
+                    const allergiesOther = popup.querySelector('#allergies_other');
+                    const allergiesValue = patient.allergies ?? '';
+                    const commonAllergies = ['None', 'Milk/Dairy', 'Eggs', 'Peanuts', 'Tree Nuts', 'Shellfish/Seafood', 'Fish', 'Soy', 'Wheat/Gluten'];
+                    if (commonAllergies.includes(allergiesValue)) {
+                        allergiesSelect.value = allergiesValue;
+                    } else if (allergiesValue) {
+                        allergiesSelect.value = 'Other';
+                        allergiesOther.value = allergiesValue;
+                        allergiesOther.style.display = 'block';
+                    }
+                    
+                    // Handle religion field
+                    const religionSelect = popup.querySelector('#religion');
+                    const religionOther = popup.querySelector('#religion_other');
+                    const religionValue = patient.religion ?? '';
+                    const commonReligions = ['Roman Catholic', 'Islam', 'Iglesia ni Cristo', 'Protestant', 'Seventh-day Adventist', 'Aglipayan', 'Born Again Christian', 'Prefer not to say'];
+                    if (commonReligions.includes(religionValue)) {
+                        religionSelect.value = religionValue;
+                    } else if (religionValue) {
+                        religionSelect.value = 'Other';
+                        religionOther.value = religionValue;
+                        religionOther.style.display = 'block';
+                    }
                     
                     // Handle birthdate field
                     const birthdateField = popup.querySelector('#birthdate');
@@ -681,47 +730,7 @@ function viewPatient(patientId) {
             // Two Column Layout
             html += '<div class="details-container">';
             
-            // First Row: Parent Contact Information (left) + Medical Status (right)
-            html += '<div class="details-row">';
-            
-            // Contact Information Card - Compact with dynamic data
-            html += '<div class="info-card contact-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-address-card"></i> Parent Contact Information</div>';
-            html += '<div class="card-content">';
-            html += '<div class="status-list">';
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-phone"></i>`;
-            html += `<span class="status-label">Phone</span>`;
-            html += `<span class="status-value">${show(patient.contact_number)}</span>`;
-            html += `</div>`;
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-user-friends"></i>`;
-            html += `<span class="status-label">Parent/Guardian</span>`;
-            html += `<span class="status-value">${patient.parent ? show(patient.parent?.first_name) + ' ' + show(patient.parent?.last_name) : 'N/A'}</span>`;
-            html += `</div>`;
-            html += '</div></div></div>';
-            
-            // Medical Status Card with dynamic data
-            html += '<div class="info-card status-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-stethoscope"></i> Medical Status</div>';
-            html += '<div class="card-content">';
-            html += '<div class="status-list">';
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-baby"></i>`;
-            html += `<span class="status-label">Breastfeeding</span>`;
-            html += `${getStatusBadge(patient.breastfeeding, patient.breastfeeding === 'Yes' ? 'boolean' : 'default')}`;
-            html += `</div>`;
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-hand-holding-medical"></i>`;
-            html += `<span class="status-label">Edema</span>`;
-            html += `${getStatusBadge(patient.edema, patient.edema === 'Yes' ? 'boolean' : 'default')}`;
-            html += `</div>`;
-            html += '</div>';
-            html += '</div></div>';
-            
-            html += '</div>'; // End first row
-            
-            // Second Row: Health Metrics (full width)
+            // First Row: Health Metrics (full width)
             html += '<div class="details-row">';
             
             // Health Metrics Card - Compact with visual indicators and dynamic data
@@ -763,9 +772,31 @@ function viewPatient(patientId) {
             html += '</div>';
             html += '</div></div>';
             
-            html += '</div>'; // End second row
+            html += '</div>'; // End health metrics row
             
-            // Third Row: Household (full width)
+            // Dietary & Religious Information Row
+            html += '<div class="details-row">';
+            html += '<div class="info-card metrics-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-info-circle"></i> Dietary & Religious Information</div>';
+            html += '<div class="card-content">';
+            html += '<div class="metrics-row">';
+            html += `<div class="metric-box" style="padding: 10px; min-height: auto;">`;
+            html += `<div class="metric-data">`;
+            html += `<span class="metric-value" style="font-size: 1rem; font-weight: 600;">${show(patient.allergies)}</span>`;
+            html += `</div>`;
+            html += `<span class="metric-label" style="margin-top: 4px;">Allergies</span>`;
+            html += `</div>`;
+            html += `<div class="metric-box" style="padding: 10px; min-height: auto;">`;
+            html += `<div class="metric-data">`;
+            html += `<span class="metric-value" style="font-size: 1rem; font-weight: 600;">${show(patient.religion)}</span>`;
+            html += `</div>`;
+            html += `<span class="metric-label" style="margin-top: 4px;">Religion</span>`;
+            html += `</div>`;
+            html += '</div>';
+            html += '</div></div>';
+            html += '</div>'; // End dietary/religious row
+            
+            // Household Row (full width)
             html += '<div class="details-row">';
             
             // Household Information Card - Compact with dynamic data
@@ -782,7 +813,7 @@ function viewPatient(patientId) {
             html += '</div>';
             html += '</div></div>';
             
-            html += '</div>'; // End third row
+            html += '</div>'; // End household row
             
             // Medical Notes if exists with dynamic data
             if (patient.other_medical_problems && patient.other_medical_problems !== 'N/A' && patient.other_medical_problems.trim() !== '') {
@@ -794,6 +825,46 @@ function viewPatient(patientId) {
                 html += '</div></div>';
                 html += '</div>'; // End notes row
             }
+            
+            // Parent Contact Information (left) + Medical Status (right) - moved to bottom
+            html += '<div class="details-row">';
+            
+            // Contact Information Card - Compact with dynamic data
+            html += '<div class="info-card contact-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-address-card"></i> Parent Contact Information</div>';
+            html += '<div class="card-content">';
+            html += '<div class="status-list">';
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-phone"></i>`;
+            html += `<span class="status-label">Phone</span>`;
+            html += `<span class="status-value">${show(patient.contact_number)}</span>`;
+            html += `</div>`;
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-user-friends"></i>`;
+            html += `<span class="status-label">Parent/Guardian</span>`;
+            html += `<span class="status-value">${patient.parent ? show(patient.parent?.first_name) + ' ' + show(patient.parent?.last_name) : 'N/A'}</span>`;
+            html += `</div>`;
+            html += '</div></div></div>';
+            
+            // Medical Status Card with dynamic data
+            html += '<div class="info-card status-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-stethoscope"></i> Medical Status</div>';
+            html += '<div class="card-content">';
+            html += '<div class="status-list">';
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-baby"></i>`;
+            html += `<span class="status-label">Breastfeeding</span>`;
+            html += `${getStatusBadge(patient.breastfeeding, patient.breastfeeding === 'Yes' ? 'boolean' : 'default')}`;
+            html += `</div>`;
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-hand-holding-medical"></i>`;
+            html += `<span class="status-label">Edema</span>`;
+            html += `${getStatusBadge(patient.edema, patient.edema === 'Yes' ? 'boolean' : 'default')}`;
+            html += `</div>`;
+            html += '</div>';
+            html += '</div></div>';
+            
+            html += '</div>'; // End parent contact/medical status row
             
             html += '</div>'; // End details-container
             html += '</div>'; // End patient-details-modern
@@ -807,7 +878,7 @@ function viewPatient(patientId) {
                     popup: 'swal2-patient-modal',
                     confirmButton: 'swal2-confirm'
                 },
-                confirmButtonText: '<i class="fas fa-times"></i> Close',
+                confirmButtonText: 'Close',
                 confirmButtonColor: '#2e7d32',
                 showCloseButton: true,
                 focusConfirm: false
@@ -988,6 +1059,33 @@ window.editPatient = editPatient;
 window.viewPatient = viewPatient;
 window.deletePatient = deletePatient;
 window.clearFilters = clearFilters;
-window.refreshPatients = refreshPatients;
+window.handleAllergiesChange = handleAllergiesChange;
+window.handleReligionChange = handleReligionChange;
+
+// Handle allergies dropdown change
+function handleAllergiesChange(select) {
+    const otherInput = document.getElementById('allergies_other');
+    if (select.value === 'Other') {
+        otherInput.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherInput.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = '';
+    }
+}
+
+// Handle religion dropdown change
+function handleReligionChange(select) {
+    const otherInput = document.getElementById('religion_other');
+    if (select.value === 'Other') {
+        otherInput.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherInput.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = '';
+    }
+}
 
 console.log('Enhanced patient page functions loaded with filtering and pagination');
