@@ -99,6 +99,15 @@
                     <div class="control-panel">
                         <div class="control-panel-inner">
                             <div class="filter-section">
+                                <div class="filter-group search-group">
+                                    <label class="filter-label">
+                                        <i class="fas fa-search"></i> Search
+                                    </label>
+                                    <div class="search-wrapper">
+                                        <input type="text" id="searchInput" class="premium-search" placeholder="Search meal plans...">
+                                        <i class="fas fa-search search-icon"></i>
+                                    </div>
+                                </div>
                                 <div class="filter-group">
                                     <label class="filter-label">
                                         <i class="fas fa-filter"></i> Filter by Child
@@ -127,19 +136,6 @@
                                         </select>
                                         <i class="fas fa-chevron-down select-arrow"></i>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="view-controls">
-                                <label class="filter-label">
-                                    <i class="fas fa-eye"></i> View
-                                </label>
-                                <div class="view-toggle-group">
-                                    <button class="view-toggle-btn active" data-view="grid" title="Grid View">
-                                        <i class="fas fa-th-large"></i>
-                                    </button>
-                                    <button class="view-toggle-btn" data-view="list" title="List View">
-                                        <i class="fas fa-list"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -172,22 +168,6 @@
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end premium-dropdown">
-                                            <li>
-                                                <a class="dropdown-item" href="#" onclick="viewMealPlan({{ $plan->plan_id }}); return false;">
-                                                    <i class="fas fa-eye"></i> View Details
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" onclick="printMealPlan({{ $plan->plan_id }}); return false;">
-                                                    <i class="fas fa-print"></i> Print
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" onclick="downloadMealPlan({{ $plan->plan_id }}); return false;">
-                                                    <i class="fas fa-download"></i> Download PDF
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
                                             <li>
                                                 <a class="dropdown-item text-danger" href="#" onclick="deleteMealPlan({{ $plan->plan_id }}); return false;">
                                                     <i class="fas fa-trash"></i> Delete

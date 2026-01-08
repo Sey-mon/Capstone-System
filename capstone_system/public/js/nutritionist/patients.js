@@ -87,12 +87,14 @@ function submitPatientForm(form) {
         
         // Show success message
         Swal.fire({
-            icon: 'success',
             title: 'Success!',
             text: patientId ? 'Patient updated successfully!' : 'Patient added successfully!',
             confirmButtonColor: '#2e7d32',
             timer: 2000,
-            showConfirmButton: true
+            showConfirmButton: true,
+            customClass: {
+                popup: 'swal2-success-popup',
+            }
         }).then(() => {
             // Refresh the patient list
             applyFilters();
@@ -662,12 +664,11 @@ function viewPatient(patientId) {
             
             // Compact Patient Header with dynamic data
             html += '<div class="patient-header-compact">';
-            html += '<div class="patient-id-badge"><i class="fas fa-id-card"></i> ID: <strong>' + show(patient.custom_patient_id) + '</strong></div>';
             html += '<div class="header-left">';
-            html += `<div class="patient-avatar-sm">${patient.first_name.charAt(0)}${patient.last_name.charAt(0)}</div>`;
             html += '<div class="header-info">';
             html += `<h3 class="patient-name-sm">${show(patient.first_name)} ${patient.middle_name ? patient.middle_name.charAt(0) + '. ' : ''}${show(patient.last_name)}</h3>`;
             html += '<div class="patient-quick-info">';
+            html += '<span class="info-chip"><i class="fas fa-id-card"></i> ID: <strong>' + show(patient.custom_patient_id) + '</strong></span>';
             html += `<span class="info-chip"><i class="fas fa-birthday-cake"></i> ${ageDisplay}</span>`;
             html += `${getStatusBadge(patient.sex, 'sex')}`;
             html += `<span class="info-chip"><i class="fas fa-map-marker-alt"></i> ${show(patient.barangay?.barangay_name)}</span>`;
@@ -679,36 +680,49 @@ function viewPatient(patientId) {
             
             // Two Column Layout
             html += '<div class="details-container">';
-            html += '<div class="details-column details-main">';
+            
+            // First Row: Parent Contact Information (left) + Medical Status (right)
+            html += '<div class="details-row">';
             
             // Contact Information Card - Compact with dynamic data
-            html += '<div class="info-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-address-card"></i> Contact & Location</div>';
+            html += '<div class="info-card contact-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-address-card"></i> Parent Contact Information</div>';
             html += '<div class="card-content">';
-            html += '<div class="info-grid">';
-            html += `<div class="info-cell">`;
-            html += `<label><i class="fas fa-phone"></i> Phone</label>`;
-            html += `<span>${show(patient.contact_number)}</span>`;
+            html += '<div class="status-list">';
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-phone"></i>`;
+            html += `<span class="status-label">Phone</span>`;
+            html += `<span class="status-value">${show(patient.contact_number)}</span>`;
             html += `</div>`;
-            html += `<div class="info-cell">`;
-            html += `<label><i class="fas fa-user-friends"></i> Parent/Guardian</label>`;
-            html += `<span>${patient.parent ? show(patient.parent?.first_name) + ' ' + show(patient.parent?.last_name) : 'N/A'}</span>`;
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-user-friends"></i>`;
+            html += `<span class="status-label">Parent/Guardian</span>`;
+            html += `<span class="status-value">${patient.parent ? show(patient.parent?.first_name) + ' ' + show(patient.parent?.last_name) : 'N/A'}</span>`;
             html += `</div>`;
             html += '</div></div></div>';
             
-            // Household Information Card - Compact with dynamic data
-            html += '<div class="info-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-home"></i> Household</div>';
+            // Medical Status Card with dynamic data
+            html += '<div class="info-card status-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-stethoscope"></i> Medical Status</div>';
             html += '<div class="card-content">';
-            html += '<div class="stat-row">';
-            html += `<div class="stat-item"><i class="fas fa-users"></i><span class="stat-num">${show(patient.total_household_adults)}</span><span class="stat-text">Adults</span></div>`;
-            html += `<div class="stat-item"><i class="fas fa-child"></i><span class="stat-num">${show(patient.total_household_children)}</span><span class="stat-text">Children</span></div>`;
-            html += `<div class="stat-item"><i class="fas fa-user-friends"></i><span class="stat-num">${show(patient.total_household_twins)}</span><span class="stat-text">Twins</span></div>`;
-            html += '</div>';
-            html += '<div class="benefit-status">';
-            html += `<i class="fas fa-hand-holding-heart"></i> <span>4Ps Beneficiary:</span> ${getStatusBadge(patient.is_4ps_beneficiary, 'boolean')}`;
+            html += '<div class="status-list">';
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-baby"></i>`;
+            html += `<span class="status-label">Breastfeeding</span>`;
+            html += `${getStatusBadge(patient.breastfeeding, patient.breastfeeding === 'Yes' ? 'boolean' : 'default')}`;
+            html += `</div>`;
+            html += `<div class="status-row">`;
+            html += `<i class="fas fa-hand-holding-medical"></i>`;
+            html += `<span class="status-label">Edema</span>`;
+            html += `${getStatusBadge(patient.edema, patient.edema === 'Yes' ? 'boolean' : 'default')}`;
+            html += `</div>`;
             html += '</div>';
             html += '</div></div>';
+            
+            html += '</div>'; // End first row
+            
+            // Second Row: Health Metrics (full width)
+            html += '<div class="details-row">';
             
             // Health Metrics Card - Compact with visual indicators and dynamic data
             html += '<div class="info-card metrics-card">';
@@ -749,39 +763,38 @@ function viewPatient(patientId) {
             html += '</div>';
             html += '</div></div>';
             
-            html += '</div>'; // End main column
+            html += '</div>'; // End second row
             
-            // Sidebar Column
-            html += '<div class="details-column details-sidebar">';
+            // Third Row: Household (full width)
+            html += '<div class="details-row">';
             
-            // Medical Status Card with dynamic data
-            html += '<div class="info-card status-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-stethoscope"></i> Medical Status</div>';
+            // Household Information Card - Compact with dynamic data
+            html += '<div class="info-card household-card">';
+            html += '<div class="card-header-sm"><i class="fas fa-home"></i> Household</div>';
             html += '<div class="card-content">';
-            html += '<div class="status-list">';
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-baby"></i>`;
-            html += `<span class="status-label">Breastfeeding</span>`;
-            html += `${getStatusBadge(patient.breastfeeding, patient.breastfeeding === 'Yes' ? 'boolean' : 'default')}`;
-            html += `</div>`;
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-hand-holding-medical"></i>`;
-            html += `<span class="status-label">Edema</span>`;
-            html += `${getStatusBadge(patient.edema, patient.edema === 'Yes' ? 'boolean' : 'default')}`;
-            html += `</div>`;
+            html += '<div class="stat-row">';
+            html += `<div class="stat-item"><i class="fas fa-users"></i><span class="stat-num">${show(patient.total_household_adults)}</span><span class="stat-text">Adults</span></div>`;
+            html += `<div class="stat-item"><i class="fas fa-child"></i><span class="stat-num">${show(patient.total_household_children)}</span><span class="stat-text">Children</span></div>`;
+            html += `<div class="stat-item"><i class="fas fa-user-friends"></i><span class="stat-num">${show(patient.total_household_twins)}</span><span class="stat-text">Twins</span></div>`;
+            html += '</div>';
+            html += '<div class="benefit-status">';
+            html += `<i class="fas fa-hand-holding-heart"></i> <span>4Ps Beneficiary:</span> ${getStatusBadge(patient.is_4ps_beneficiary, 'boolean')}`;
             html += '</div>';
             html += '</div></div>';
             
+            html += '</div>'; // End third row
+            
             // Medical Notes if exists with dynamic data
             if (patient.other_medical_problems && patient.other_medical_problems !== 'N/A' && patient.other_medical_problems.trim() !== '') {
+                html += '<div class="details-row">';
                 html += '<div class="info-card notes-card">';
                 html += '<div class="card-header-sm"><i class="fas fa-clipboard-list"></i> Medical Notes</div>';
                 html += '<div class="card-content">';
                 html += `<div class="notes-text">${show(patient.other_medical_problems)}</div>`;
                 html += '</div></div>';
+                html += '</div>'; // End notes row
             }
             
-            html += '</div>'; // End sidebar column
             html += '</div>'; // End details-container
             html += '</div>'; // End patient-details-modern
             
@@ -815,7 +828,6 @@ function deletePatient(patientId) {
     Swal.fire({
         title: 'Are you sure?',
         text: "You won't be able to revert this! All patient data will be permanently deleted.",
-        icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',

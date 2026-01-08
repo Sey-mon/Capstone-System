@@ -300,40 +300,48 @@
     font-size: 12px;
 }
 
-.view-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.search-wrapper {
+    position: relative;
 }
 
-.view-toggle-group {
-    display: flex;
-    gap: 8px;
-    background: #f7fafc;
-    padding: 4px;
+.premium-search {
+    width: 100%;
+    padding: 12px 40px 12px 16px;
+    border: 2px solid #e2e8f0;
     border-radius: 12px;
-}
-
-.view-toggle-btn {
-    padding: 10px 16px;
-    border: none;
-    background: transparent;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #718096;
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2d3748;
+    background: white;
     transition: var(--transition);
 }
 
-.view-toggle-btn.active {
-    background: white;
-    color: #10b981;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.premium-search:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
-.view-toggle-btn:hover:not(.active) {
-    color: #10b981;
+.premium-search::placeholder {
+    color: #a0aec0;
+    font-weight: 400;
 }
+
+.search-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #718096;
+    pointer-events: none;
+    font-size: 14px;
+}
+
+.search-group {
+    flex: 1.5;
+}
+
+
 
 /* ===================================
    Premium Alert
@@ -1115,17 +1123,6 @@
         width: 100%;
     }
     
-    .view-controls {
-        width: 100%;
-    }
-    
-    .view-toggle-group {
-        width: 100%;
-    }
-    
-    .view-toggle-btn {
-        flex: 1;
-    }
     
     .meal-plans-grid-premium {
         grid-template-columns: 1fr;
@@ -1270,20 +1267,7 @@
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
 }
 
-.view-toggle {
-    display: flex;
-    gap: 5px;
-}
 
-.view-toggle .btn {
-    transition: all 0.3s ease;
-}
-
-.view-toggle .btn.active {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-}
 
 /* Meal Plans Grid */
 .meal-plans-grid {
@@ -1435,13 +1419,7 @@
         grid-template-columns: 1fr;
     }
     
-    .view-toggle {
-        width: 100%;
-    }
-    
-    .view-toggle .btn {
-        flex: 1;
-    }
+
 }
 
 /* Print Styles */
@@ -1724,12 +1702,6 @@
 .premium-select { 
     padding: 8px 12px; 
     font-size: 13px; 
-}
-
-.view-toggle-btn { 
-    width: 32px; 
-    height: 32px; 
-    font-size: 14px; 
 }
 
 .meal-plan-card-premium { 
