@@ -16,7 +16,7 @@ function safeMap(data, callback, fallback = '') {
 function openPatientSelectionModal() {
     // Show loading state
     Swal.fire({
-        title: '<i class="fas fa-user-plus me-2"></i> Select Patient to Assess',
+        title: '<i class="fas fa-user-plus me-2"></i> Select Patient to Screen',
         html: `
             <div class="patient-filters-wrapper">
                 <div class="row g-3 mb-3">
@@ -279,69 +279,7 @@ window.addNewPatient = function() {
                     </div>
                 </div>
 
-                <!-- Household Information -->
-                <div class="mb-4">
-                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-home me-2"></i>Household Information</h6>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Total Adults</label>
-                            <input type="number" name="total_household_adults" class="form-control" min="0" value="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Total Children</label>
-                            <input type="number" name="total_household_children" class="form-control" min="0" value="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Total Twins</label>
-                            <input type="number" name="total_household_twins" class="form-control" min="0" value="0">
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input type="checkbox" name="is_4ps_beneficiary" class="form-check-input" id="is_4ps">
-                                <label for="is_4ps" class="form-check-label">4Ps Beneficiary</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Health Information -->
-                <div class="mb-4">
-                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-heartbeat me-2"></i>Health Information</h6>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
-                            <input type="number" name="weight_kg" class="form-control" step="0.01" min="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Height (cm) <span class="text-danger">*</span></label>
-                            <input type="number" name="height_cm" class="form-control" step="0.01" min="0" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Weight for Age</label>
-                            <input type="text" name="weight_for_age" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Height for Age</label>
-                            <input type="text" name="height_for_age" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">BMI for Age</label>
-                            <input type="text" name="bmi_for_age" class="form-control">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Breastfeeding</label>
-                            <input type="text" name="breastfeeding" class="form-control">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Edema</label>
-                            <input type="text" name="edema" class="form-control">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Other Medical Problems</label>
-                            <textarea name="other_medical_problems" class="form-control" rows="3"></textarea>
-                        </div>
-                    </div>
-                </div>
             </form>
         `,
         width: '1200px',
@@ -359,7 +297,7 @@ window.addNewPatient = function() {
             const formData = new FormData(form);
             
             // Validate required fields
-            const requiredFields = ['first_name', 'last_name', 'barangay_id', 'contact_number', 'age_months', 'sex', 'date_of_admission', 'weight_kg', 'height_cm'];
+            const requiredFields = ['first_name', 'last_name', 'barangay_id', 'contact_number', 'age_months', 'sex', 'date_of_admission'];
             for (const field of requiredFields) {
                 if (!formData.get(field)) {
                     Swal.showValidationMessage(`Please fill in all required fields`);
@@ -403,7 +341,7 @@ window.addNewPatient = function() {
                 title: 'Patient Added!',
                 text: 'The patient has been successfully added.',
                 showCancelButton: true,
-                confirmButtonText: '<i class="fas fa-clipboard-check me-1"></i> Assess Now',
+                confirmButtonText: '<i class="fas fa-clipboard-check me-1"></i> Screen Now',
                 cancelButtonText: 'Back to List',
                 customClass: {
                     confirmButton: 'btn btn-success',
@@ -480,7 +418,7 @@ function loadPatientsForSelection() {
                          style="cursor: pointer; transition: all 0.2s;"
                          role="button"
                          tabindex="0"
-                         aria-label="Select ${patient.first_name} ${patient.last_name} for assessment">
+                         aria-label="Select ${patient.first_name} ${patient.last_name} for screening">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="flex-grow-1">
                                 <h6 class="mb-1 fw-bold">${patient.first_name} ${patient.last_name}</h6>
@@ -491,9 +429,9 @@ function loadPatientsForSelection() {
                                     ${patient.barangay ? '<span class="mx-1">•</span><i class="fas fa-map-marker-alt me-1" aria-hidden="true"></i>' + patient.barangay.barangay_name : ''}
                                 </small>
                             </div>
-                            <button class="btn btn-success btn-sm" aria-label="Assess ${patient.first_name} ${patient.last_name}">
+                            <button class="btn btn-success btn-sm" aria-label="Screen ${patient.first_name} ${patient.last_name}">
                                 <i class="fas fa-clipboard-check me-1" aria-hidden="true"></i>
-                                Assess
+                                Screen
                             </button>
                         </div>
                     </div>
@@ -529,7 +467,7 @@ function loadPatientsForSelection() {
                 container.innerHTML = `
                     <div class="text-center p-4" role="status" aria-live="polite">
                         <i class="fas fa-user-slash text-muted mb-2" style="font-size: 2rem;" aria-hidden="true"></i>
-                        <p class="text-muted">No patients available for assessment</p>
+                        <p class="text-muted">No patients available for screening</p>
                         <small class="text-muted d-block mt-2">Add a new patient to get started</small>
                     </div>
                 `;
@@ -599,14 +537,14 @@ function assessSpecificPatient(patientId) {
 
 function showAssessmentForm(patientId) {
     Swal.fire({
-        title: '<i class="fas fa-stethoscope me-2"></i> New Assessment',
+        title: '<i class="fas fa-stethoscope me-2"></i> New Screening',
         html: `
             <div id="swal-assessmentFormContent" style="max-height: 65vh; overflow-y: auto; padding: 0 0.5rem;">
                 <div class="text-center p-4">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p class="mt-2">Loading assessment form...</p>
+                    <p class="mt-2">Loading screening form...</p>
                 </div>
             </div>
         `,
@@ -614,7 +552,7 @@ function showAssessmentForm(patientId) {
         maxWidth: '1200px',
         showCancelButton: true,
         showConfirmButton: true,
-        confirmButtonText: '<i class="fas fa-save me-1"></i> Submit Assessment',
+        confirmButtonText: '<i class="fas fa-save me-1"></i> Submit Screening',
         cancelButtonText: 'Cancel',
         scrollbarPadding: false,
         heightAuto: false,
@@ -679,7 +617,40 @@ function submitAssessmentFormData(form, patientId) {
     // Show loading on the confirm button
     Swal.showLoading();
     
+    // Collect all clinical symptoms data BEFORE creating FormData
+    const clinicalData = {
+        appetite: document.getElementById('appetite')?.value || '',
+        edema: document.getElementById('edema')?.value || '',
+        muac: document.getElementById('muac')?.value || '',
+        diarrhea: document.getElementById('diarrhea_days')?.value || '0',
+        vomiting: document.getElementById('vomiting_frequency')?.value || '0',
+        fever: document.getElementById('fever_days')?.value || '0',
+        visible_signs: [],
+        breastfeeding_status: document.getElementById('breastfeeding_status')?.value || ''
+    };
+    
+    // Collect visible signs checkboxes
+    const visibleSigns = ['skin_changes', 'hair_changes', 'muscle_wasting', 'lethargy', 'pallor'];
+    visibleSigns.forEach(sign => {
+        if (document.getElementById(sign)?.checked) {
+            clinicalData.visible_signs.push(sign.replace('_', ' '));
+        }
+    });
+    
+    // Get the additional notes from the textarea
+    const notesField = document.getElementById('notes');
+    const additionalNotes = notesField ? notesField.value.trim() : '';
+    
+    // Create structured JSON note
+    const structuredNote = {
+        clinical_symptoms: clinicalData,
+        additional_notes: additionalNotes,
+        recorded_at: new Date().toISOString()
+    };
+    
+    // Create FormData and override the notes field with JSON
     const formData = new FormData(form);
+    formData.set('notes', JSON.stringify(structuredNote));
     
     return fetch(form.action, {
         method: 'POST',
@@ -703,7 +674,7 @@ function submitAssessmentFormData(form, patientId) {
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
-                text: 'Assessment submitted successfully!',
+                text: 'Screening submitted successfully!',
                 timer: 2000,
                 showConfirmButton: false
             });
@@ -713,7 +684,7 @@ function submitAssessmentFormData(form, patientId) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: data.message || 'Failed to submit assessment'
+                text: data.message || 'Failed to submit screening'
             });
             return false;
         }
@@ -723,7 +694,7 @@ function submitAssessmentFormData(form, patientId) {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'An error occurred while submitting the assessment'
+            text: 'An error occurred while submitting the screening'
         });
         return false;
     });
@@ -765,8 +736,597 @@ function showErrorMessage(message) {
 
 // Assessment details modal functions using SweetAlert2
 function viewAssessment(assessmentId) {
+    // Fetch the patient's full assessment history first
+    const url = window.assessmentsRoutes.assessmentDetails.replace(':assessmentId', assessmentId);
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.assessment) {
+                // Show assessment history modal using patient_id from assessment
+                showAssessmentHistoryModal(data.assessment.patient_id, assessmentId);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to load screening details'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading assessment details:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error loading screening details. Please try again.'
+            });
+        });
+}
+
+function showAssessmentHistoryModal(patientId, selectedAssessmentId = null) {
+    // Fetch all assessments for this patient
+    fetch(`/nutritionist/patients/${patientId}/assessments`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success || !data.assessments || data.assessments.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Screenings',
+                    text: 'No screening history available for this patient.',
+                });
+                return;
+            }
+
+            const assessments = data.assessments;
+            const patientName = data.patient.name;
+            let currentIndex = selectedAssessmentId ? 
+                assessments.findIndex(a => a.assessment_id == selectedAssessmentId) : 0;
+            if (currentIndex === -1) currentIndex = 0;
+
+            renderAssessmentHistory(assessments, patientName, currentIndex);
+        })
+        .catch(error => {
+            console.error('Error loading assessment history:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load screening history'
+            });
+        });
+}
+
+function renderAssessmentHistory(assessments, patientName, currentIndex) {
+    const assessment = assessments[currentIndex];
+    const isLatest = currentIndex === 0;
+    
+    // Parse treatment plan
+    let treatmentPlan = null;
+    if (assessment.treatment_plan) {
+        try {
+            treatmentPlan = typeof assessment.treatment_plan === 'string' ? 
+                JSON.parse(assessment.treatment_plan) : assessment.treatment_plan;
+        } catch (e) {
+            console.error('Failed to parse treatment_plan:', e);
+        }
+    }
+    if (!treatmentPlan && assessment.treatment) {
+        try {
+            treatmentPlan = typeof assessment.treatment === 'string' ? 
+                JSON.parse(assessment.treatment) : assessment.treatment;
+        } catch (e) {
+            console.error('Failed to parse treatment:', e);
+        }
+    }
+
+    const diagnosis = treatmentPlan?.patient_info?.diagnosis || assessment.diagnosis || 'Status Unknown';
+    
+    // Determine diagnosis styling
+    let diagnosisClass = 'unknown';
+    let diagnosisIcon = 'fa-question-circle';
+    if (diagnosis.includes('Severe')) {
+        diagnosisClass = 'critical';
+        diagnosisIcon = 'fa-exclamation-triangle';
+    } else if (diagnosis.includes('Moderate')) {
+        diagnosisClass = 'warning';
+        diagnosisIcon = 'fa-exclamation-circle';
+    } else if (diagnosis.includes('Normal')) {
+        diagnosisClass = 'normal';
+        diagnosisIcon = 'fa-check-circle';
+    }
+
+    const sidebar = assessments.map((item, idx) => {
+        const itemDiagnosis = item.treatment ? 
+            (JSON.parse(typeof item.treatment === 'string' ? item.treatment : JSON.stringify(item.treatment))?.patient_info?.diagnosis || item.diagnosis) : 
+            (item.diagnosis || 'Status Unknown');
+        
+        return `
+            <div class="swal-assessment-item ${idx === currentIndex ? 'active' : ''}" data-index="${idx}">
+                <div class="swal-assessment-item-date">
+                    <i class="fas fa-calendar-alt"></i>
+                    ${formatDate(item.assessment_date)}
+                </div>
+                <div class="swal-assessment-item-status">
+                    ${itemDiagnosis}
+                </div>
+                ${idx === 0 ? '<span class="swal-latest-badge">LATEST</span>' : ''}
+            </div>
+        `;
+    }).join('');
+
+    const assessmentCount = assessments.length;
+    const showSearch = assessmentCount > 10;
+
+    // Get nutritional indicators directly from assessment data (database columns)
+    let indicators = {
+        weight_for_age: assessment.weight_for_age,
+        height_for_age: assessment.height_for_age,
+        bmi_for_age: assessment.bmi_for_age
+    };
+
+    // Parse notes field (which contains JSON clinical symptoms data)
+    let clinicalData = null;
+    let additionalNotes = '';
+    
+    if (assessment.notes) {
+        try {
+            // Try to parse as JSON first
+            const parsedNotes = typeof assessment.notes === 'string' ? 
+                JSON.parse(assessment.notes) : assessment.notes;
+            
+            // Extract clinical symptoms and additional notes from the new structure
+            if (parsedNotes.clinical_symptoms) {
+                clinicalData = parsedNotes.clinical_symptoms;
+                additionalNotes = parsedNotes.additional_notes || '';
+            } else {
+                // Fallback for old structure
+                clinicalData = parsedNotes;
+                additionalNotes = parsedNotes.additional_notes || parsedNotes.additionalNotes || '';
+            }
+        } catch (e) {
+            // If not JSON, treat it as plain text notes
+            additionalNotes = assessment.notes;
+        }
+    }
+
+    const htmlContent = `
+        <div class="swal-assessment-container">
+            <div class="swal-sidebar" id="assessment-sidebar">
+                <div class="swal-sidebar-header">
+                    <h4>
+                        <i class="fas fa-history"></i>
+                        Screening History
+                    </h4>
+                    <p class="swal-count-badge">${assessmentCount} Total Screening${assessmentCount !== 1 ? 's' : ''}</p>
+                </div>
+                <div class="swal-assessment-list" id="assessment-list">
+                    ${sidebar}
+                </div>
+            </div>
+            <div class="swal-content-area">
+                <div class="swal-modal-header">
+                    <h3 class="swal-header-title">
+                        <i class="fas fa-chart-line"></i>
+                        ${patientName}
+                    </h3>
+                    <p class="swal-header-subtitle">Complete screening timeline and progress tracking</p>
+                    <div class="swal-header-buttons">
+                        <button class="btn btn-primary btn-sm swal-treatment-button" onclick="showTreatmentPlan(${assessment.assessment_id}, '${patientName}', ${currentIndex})">
+                            <i class="fas fa-prescription me-1"></i>
+                            View Treatment Plan
+                        </button>
+                        <button class="btn btn-success btn-sm swal-pdf-button" onclick="downloadAssessmentPDF(${assessment.assessment_id})">
+                            <i class="fas fa-file-pdf me-1"></i>
+                            Download PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="swal-assessment-detail">
+                    <div class="swal-detail-header">
+                        <div class="swal-detail-date">
+                            <i class="fas fa-calendar-check"></i>
+                            ${formatDate(assessment.assessment_date)}
+                            ${isLatest ? '<span class="swal-latest-badge">LATEST</span>' : ''}
+                        </div>
+                        <div class="swal-diagnosis-badge ${diagnosisClass}">
+                            <i class="fas ${diagnosisIcon}"></i>
+                            <span>${diagnosis}</span>
+                        </div>
+                    </div>
+                    <div class="swal-metrics-grid">
+                        <div class="swal-metric-card">
+                            <div class="swal-metric-icon weight">
+                                <i class="fas fa-weight"></i>
+                            </div>
+                            <div class="swal-metric-info">
+                                <span class="swal-metric-label">Weight</span>
+                                <span class="swal-metric-value">${assessment.weight_kg || assessment.weight || 'N/A'} kg</span>
+                            </div>
+                        </div>
+                        <div class="swal-metric-card">
+                            <div class="swal-metric-icon height">
+                                <i class="fas fa-ruler-vertical"></i>
+                            </div>
+                            <div class="swal-metric-info">
+                                <span class="swal-metric-label">Height</span>
+                                <span class="swal-metric-value">${assessment.height_cm || assessment.height || 'N/A'} cm</span>
+                            </div>
+                        </div>
+                        <div class="swal-metric-card">
+                            <div class="swal-metric-icon nutritionist">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <div class="swal-metric-info">
+                                <span class="swal-metric-label">Assessed By</span>
+                                <span class="swal-metric-value">${assessment.assessed_by || 'Nutritionist'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${(indicators.weight_for_age || indicators.height_for_age || indicators.bmi_for_age) ? `
+                    <div class="swal-indicators-section">
+                        <h4 class="swal-section-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Nutritional Indicators
+                        </h4>
+                        <div class="swal-indicators-grid">${indicators.weight_for_age ? `
+                            <div class="swal-indicator-card">
+                                <div class="swal-indicator-label">WEIGHT FOR AGE:</div>
+                                <div class="swal-indicator-value ${getIndicatorClass(indicators.weight_for_age)}">${indicators.weight_for_age}</div>
+                            </div>
+                            ` : ''}
+                            ${indicators.height_for_age ? `
+                            <div class="swal-indicator-card">
+                                <div class="swal-indicator-label">HEIGHT FOR AGE:</div>
+                                <div class="swal-indicator-value ${getIndicatorClass(indicators.height_for_age)}">${indicators.height_for_age}</div>
+                            </div>
+                            ` : ''}
+                            ${indicators.bmi_for_age ? `
+                            <div class="swal-indicator-card">
+                                <div class="swal-indicator-label">BMI FOR AGE:</div>
+                                <div class="swal-indicator-value ${getIndicatorClass(indicators.bmi_for_age)}">${indicators.bmi_for_age}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${clinicalData ? `
+                    <div class="swal-clinical-section">
+                        <h4 class="swal-section-title">
+                            <i class="fas fa-stethoscope"></i>
+                            Clinical Symptoms & Physical Signs
+                        </h4>
+                        <div class="swal-clinical-grid">
+                            ${clinicalData.appetite ? `
+                            <div class="swal-clinical-item">
+                                <span class="swal-clinical-label">Appetite:</span>
+                                <span class="swal-clinical-value">${clinicalData.appetite}</span>
+                            </div>
+                            ` : ''}
+                            ${clinicalData.edema ? `
+                            <div class="swal-clinical-item">
+                                <span class="swal-clinical-label">Edema:</span>
+                                <span class="swal-clinical-value">${clinicalData.edema}</span>
+                            </div>
+                            ` : ''}
+                            ${clinicalData.muac ? `
+                            <div class="swal-clinical-item">
+                                <span class="swal-clinical-label">MUAC:</span>
+                                <span class="swal-clinical-value">${clinicalData.muac} cm</span>
+                            </div>
+                            ` : ''}
+                            ${clinicalData.diarrhea && clinicalData.diarrhea !== '0' ? `
+                            <div class="swal-clinical-item">
+                                <span class="swal-clinical-label">Diarrhea:</span>
+                                <span class="swal-clinical-value">${clinicalData.diarrhea} day(s)</span>
+                            </div>
+                            ` : ''}
+                            ${clinicalData.vomiting && clinicalData.vomiting !== '0' ? `
+                            <div class="swal-clinical-item">
+                                <span class="swal-clinical-label">Vomiting:</span>
+                                <span class="swal-clinical-value">${clinicalData.vomiting} times/day</span>
+                            </div>
+                            ` : ''}
+                            ${clinicalData.fever && clinicalData.fever !== '0' ? `
+                            <div class="swal-clinical-item">
+                                <span class="swal-clinical-label">Fever:</span>
+                                <span class="swal-clinical-value">${clinicalData.fever} day(s)</span>
+                            </div>
+                            ` : ''}
+                            ${clinicalData.breastfeeding_status && clinicalData.breastfeeding_status !== 'not_applicable' ? `
+                            <div class="swal-clinical-item">
+                                <span class="swal-clinical-label">Breastfeeding Status:</span>
+                                <span class="swal-clinical-value">${clinicalData.breastfeeding_status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                            </div>
+                            ` : ''}
+                            ${clinicalData.visible_signs && clinicalData.visible_signs.length > 0 ? `
+                            <div class="swal-clinical-item full-width">
+                                <span class="swal-clinical-label">Visible Signs:</span>
+                                <span class="swal-clinical-value">${Array.isArray(clinicalData.visible_signs) ? clinicalData.visible_signs.join(', ') : clinicalData.visible_signs}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${additionalNotes ? `
+                    <div class="swal-notes-section">
+                        <h4 class="swal-section-title">
+                            <i class="fas fa-notes-medical"></i>
+                            Additional Notes
+                        </h4>
+                        <div class="swal-notes-content">
+                            ${additionalNotes}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+
     Swal.fire({
-        title: '<i class="fas fa-file-medical me-2" style="color: #4ade80;"></i> Assessment Details',
+        html: htmlContent,
+        width: '90%',
+        showCancelButton: false,
+        showConfirmButton: false,
+        showCloseButton: true,
+        scrollbarPadding: false,
+        heightAuto: false,
+        customClass: {
+            container: 'assessment-history-modal',
+            popup: 'assessment-history-popup',
+            htmlContainer: 'p-0',
+            closeButton: 'swal-close-button'
+        },
+        buttonsStyling: false,
+        didOpen: () => {
+            // Add click handlers to sidebar items
+            document.querySelectorAll('.swal-assessment-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    Swal.close();
+                    renderAssessmentHistory(assessments, patientName, index);
+                });
+            });
+        }
+    });
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' });
+}
+
+function getIndicatorClass(value) {
+    if (!value) return '';
+    const lowerValue = value.toLowerCase();
+    if (lowerValue.includes('severe')) return 'severe';
+    if (lowerValue.includes('stunted') || lowerValue.includes('wasted')) return 'severe';
+    if (lowerValue.includes('moderate') || lowerValue.includes('overweight')) return 'warning';
+    if (lowerValue.includes('normal')) return 'normal';
+    return '';
+}
+
+// Show treatment plan view
+function showTreatmentPlan(assessmentId, patientName, currentIndex) {
+    // Fetch treatment data
+    const url = window.assessmentsRoutes.assessmentDetails.replace(':assessmentId', assessmentId);
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.assessment) {
+                renderTreatmentPlanView(data.assessment, patientName, currentIndex);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to load treatment plan'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading treatment plan:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load treatment plan. Please try again.'
+            });
+        });
+}
+
+function renderTreatmentPlanView(assessment, patientName, currentIndex) {
+    // Parse treatment plan
+    let treatmentPlan = null;
+    if (assessment.treatment_plan) {
+        try {
+            treatmentPlan = typeof assessment.treatment_plan === 'string' ? 
+                JSON.parse(assessment.treatment_plan) : assessment.treatment_plan;
+        } catch (e) {
+            console.error('Failed to parse treatment_plan:', e);
+        }
+    }
+    if (!treatmentPlan && assessment.treatment) {
+        try {
+            treatmentPlan = typeof assessment.treatment === 'string' ? 
+                JSON.parse(assessment.treatment) : assessment.treatment;
+        } catch (e) {
+            console.error('Failed to parse treatment:', e);
+        }
+    }
+
+    if (!treatmentPlan) {
+        Swal.fire({
+            icon: 'info',
+            title: 'No Treatment Plan',
+            text: 'No treatment plan available for this screening.'
+        });
+        return;
+    }
+
+    // Helper function to safely convert to array
+    const toArray = (value) => {
+        if (!value) return [];
+        if (Array.isArray(value)) return value;
+        if (typeof value === 'string') return [value];
+        return [];
+    };
+
+    const diagnosis = treatmentPlan?.patient_info?.diagnosis || assessment.diagnosis || 'Status Unknown';
+    const confidence = treatmentPlan?.patient_info?.confidence_level || 'N/A';
+    
+    // Determine diagnosis styling
+    let diagnosisClass = 'unknown';
+    let diagnosisIcon = 'fa-question-circle';
+    if (diagnosis.includes('Severe')) {
+        diagnosisClass = 'critical';
+        diagnosisIcon = 'fa-exclamation-triangle';
+    } else if (diagnosis.includes('Moderate')) {
+        diagnosisClass = 'warning';
+        diagnosisIcon = 'fa-exclamation-circle';
+    } else if (diagnosis.includes('Normal')) {
+        diagnosisClass = 'normal';
+        diagnosisIcon = 'fa-check-circle';
+    }
+
+    // Convert all treatment plan sections to arrays
+    const immediateActions = toArray(treatmentPlan.immediate_actions);
+    const monitoring = toArray(treatmentPlan.monitoring);
+    const familyEducation = toArray(treatmentPlan.family_education);
+    const successCriteria = toArray(treatmentPlan.success_criteria);
+    const dischargeCriteria = toArray(treatmentPlan.discharge_criteria);
+    const emergencySigns = toArray(treatmentPlan.emergency_signs);
+
+    const htmlContent = `
+        <div class="swal-treatment-container">
+            <div class="swal-treatment-header">
+                <button class="btn btn-secondary btn-sm swal-back-button" onclick="backToScreeningDetails(${assessment.patient_id}, ${assessment.assessment_id})">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Screening
+                </button>
+                <h3 class="swal-header-title">
+                    <i class="fas fa-prescription"></i>
+                    Treatment & Care Plan
+                </h3>
+                <p class="swal-header-subtitle">${patientName} - ${formatDate(assessment.assessment_date)}</p>
+            </div>
+            
+            <div class="swal-treatment-content">
+                <div class="swal-diagnosis-header">
+                    <div class="swal-diagnosis-badge ${diagnosisClass}">
+                        <i class="fas ${diagnosisIcon}"></i>
+                        <span>${diagnosis}</span>
+                    </div>
+                    ${confidence !== 'N/A' ? `
+                    <div class="swal-confidence-badge">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Confidence: ${confidence}</span>
+                    </div>
+                    ` : ''}
+                </div>
+
+                ${immediateActions.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-bolt"></i>
+                        Immediate Actions
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${immediateActions.map(action => `<li>${action}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${monitoring.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-heartbeat"></i>
+                        Monitoring & Follow-up
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${monitoring.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${familyEducation.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-users"></i>
+                        Family Education & Support
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${familyEducation.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${successCriteria.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-check-circle"></i>
+                        Success Criteria
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${successCriteria.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${dischargeCriteria.length > 0 ? `
+                <div class="swal-treatment-section">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        Discharge Criteria
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${dischargeCriteria.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${emergencySigns.length > 0 ? `
+                <div class="swal-treatment-section swal-emergency">
+                    <h4 class="swal-section-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Emergency Warning Signs
+                    </h4>
+                    <ul class="swal-treatment-list">
+                        ${emergencySigns.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    Swal.fire({
+        html: htmlContent,
+        width: '90%',
+        showCancelButton: false,
+        showConfirmButton: false,
+        showCloseButton: true,
+        scrollbarPadding: false,
+        heightAuto: false,
+        customClass: {
+            container: 'assessment-history-modal',
+            popup: 'assessment-history-popup treatment-popup',
+            htmlContainer: 'p-0',
+            closeButton: 'swal-close-button'
+        },
+        buttonsStyling: false
+    });
+}
+
+function backToScreeningDetails(patientId, selectedAssessmentId) {
+    Swal.close();
+    showAssessmentHistoryModal(patientId, selectedAssessmentId);
+}
+
+// Old detailed view (keep for reference or remove)
+function viewAssessmentOld(assessmentId) {
+    Swal.fire({
+        title: '<i class="fas fa-file-medical me-2" style="color: #4ade80;"></i> Screening Details',
         html: `
             <div id="swal-assessmentDetailsContent" style="max-height: 65vh; overflow-y: auto; text-align: left; padding: 0 0.5rem;">
                 <div class="text-center p-5">
@@ -775,7 +1335,7 @@ function viewAssessment(assessmentId) {
                         <div class="spinner-ring"></div>
                         <div class="spinner-ring"></div>
                     </div>
-                    <p class="text-muted">Loading assessment details...</p>
+                    <p class="text-muted">Loading screening details...</p>
                 </div>
             </div>
         `,
@@ -820,7 +1380,7 @@ function loadAssessmentDetails(assessmentId) {
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-2">Loading assessment details...</p>
+            <p class="mt-2">Loading screening details...</p>
         </div>
     `;
     
@@ -835,7 +1395,7 @@ function loadAssessmentDetails(assessmentId) {
                 content.innerHTML = `
                     <div class="text-center p-4 text-danger">
                         <i class="fas fa-exclamation-triangle mb-2" style="font-size: 2rem;"></i>
-                        <p>${data.message || 'Failed to load assessment details'}</p>
+                        <p>${data.message || 'Failed to load screening details'}</p>
                     </div>
                 `;
             }
@@ -845,7 +1405,7 @@ function loadAssessmentDetails(assessmentId) {
             content.innerHTML = `
                 <div class="text-center p-4 text-danger">
                     <i class="fas fa-exclamation-triangle mb-2" style="font-size: 2rem;"></i>
-                    <p>Error loading assessment details. Please try again.</p>
+                    <p>Error loading screening details. Please try again.</p>
                 </div>
             `;
         });
@@ -887,12 +1447,12 @@ function displayAssessmentDetails(assessment) {
 
     content.innerHTML = `
         <div class="assessment-details">
-            <!-- Patient & Assessment Overview -->
+            <!-- Patient & Screening Overview -->
             <div class="card mb-3">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="fas fa-user-circle"></i>
-                        Patient & Assessment Overview
+                        Patient & Screening Overview
                     </h6>
                 </div>
                 <div class="card-body">
@@ -928,7 +1488,7 @@ function displayAssessmentDetails(assessment) {
                         <div class="detail-info-box">
                             <div class="detail-info-label">
                                 <i class="fas fa-calendar-alt"></i>
-                                Assessment Date
+                                Screening Date
                             </div>
                             <div class="detail-info-value">${assessment.assessment_date}</div>
                         </div>
@@ -1412,6 +1972,11 @@ function printAssessmentDetails(assessmentId) {
     // Open PDF in new tab (browser will handle download based on headers)
     window.open(pdfUrl, '_blank');
 }
+
+// Global function for downloading assessment PDF (accessible from modal buttons)
+window.downloadAssessmentPDF = function(assessmentId) {
+    printAssessmentDetails(assessmentId);
+};
 
 // Modern UI Functionality
 document.addEventListener('DOMContentLoaded', function() {

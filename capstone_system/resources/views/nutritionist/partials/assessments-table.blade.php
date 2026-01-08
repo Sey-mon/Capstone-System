@@ -49,7 +49,7 @@
                         @else
                             <span class="modern-status-badge no-assessment">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                No Assessment
+                                No Screening
                             </span>
                         @endif
                     </div>
@@ -62,13 +62,13 @@
                             <div class="info-item">
                                 <span class="info-label">
                                     <i class="fas fa-calendar-alt me-1"></i>
-                                    Last Assessment
+                                    Last Screening
                                 </span>
                                 <span class="info-value">
                                     @if($latestAssessment)
                                         {{ $latestAssessment->assessment_date->format('M d, Y') }}
                                     @else
-                                        <span class="no-data">No assessment</span>
+                                        <span class="no-data">No screening</span>
                                     @endif
                                 </span>
                             </div>
@@ -119,15 +119,15 @@
                 <!-- Action Buttons -->
                 <div class="patient-card-actions">
                     @if($latestAssessment && $latestAssessment->completed_at)
-                        <button class="action-btn view-btn" onclick="viewAssessment({{ $latestAssessment->assessment_id }})" title="View Assessment Details">
+                        <button class="action-btn view-btn" onclick="viewAssessment({{ $latestAssessment->assessment_id }})" title="View Screening Details">
                             <i class="fas fa-eye me-1"></i>
                             View Details
                         </button>
                     @endif
                     
-                    <button class="action-btn assess-btn" onclick="assessSpecificPatient({{ $patient->patient_id }})" title="{{ $latestAssessment ? 'New Assessment' : 'First Assessment' }}">
+                    <button class="action-btn assess-btn" onclick="assessSpecificPatient({{ $patient->patient_id }})" title="{{ $latestAssessment ? 'New Screening' : 'First Screening' }}">
                         <i class="fas fa-{{ $latestAssessment ? 'redo' : 'plus' }} me-1"></i>
-                        {{ $latestAssessment ? 'New Assessment' : 'First Assessment' }}
+                        {{ $latestAssessment ? 'New Screening' : 'First Screening' }}
                     </button>
                     
                     @if($latestAssessment)

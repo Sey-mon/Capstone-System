@@ -825,8 +825,10 @@ class NutritionistController extends Controller
             // Prepare response data
             $assessmentData = [
                 'assessment_id' => $assessment->assessment_id,
+                'patient_id' => $assessment->patient_id,
                 'assessment_date' => $assessment->assessment_date ? \Carbon\Carbon::parse($assessment->assessment_date)->format('M d, Y') : 'N/A',
                 'patient' => [
+                    'patient_id' => $assessment->patient->patient_id,
                     'name' => $assessment->patient->first_name . ' ' . $assessment->patient->last_name,
                     'age_months' => $assessment->patient->age_months,
                     'sex' => $assessment->patient->sex,
@@ -856,6 +858,88 @@ class NutritionistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Assessment not found or access denied.'
+            ], 404);
+        }
+    }
+
+    /**
+     * Get all assessments for a specific patient
+     */
+    public function getPatientAssessments($patientId)
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+
+        try {
+            // Get patient and verify access
+            $patient = Patient::findOrFail($patientId);
+
+            // Get all assessments for this patient, ordered by date (newest first)
+            $assessments = Assessment::with(['nutritionist'])
+                ->where('patient_id', $patientId)
+                ->orderBy('assessment_date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Format assessments data
+            $assessmentsData = $assessments->map(function ($assessment) {
+                // Calculate BMI if height and weight are available
+                $bmi = null;
+                if ($assessment->weight_kg && $assessment->height_cm) {
+                    $heightInMeters = $assessment->height_cm / 100;
+                    $bmi = round($assessment->weight_kg / ($heightInMeters * $heightInMeters), 2);
+                }
+
+                // Extract diagnosis from treatment plan
+                $diagnosis = 'Not specified';
+
+                if ($assessment->treatment) {
+                    $treatmentData = json_decode($assessment->treatment, true);
+                    if ($treatmentData) {
+                        // Extract diagnosis
+                        if (isset($treatmentData['patient_info']['diagnosis'])) {
+                            $diagnosis = $treatmentData['patient_info']['diagnosis'];
+                        }
+                    }
+                }
+
+                return [
+                    'assessment_id' => $assessment->assessment_id,
+                    'assessment_date' => $assessment->assessment_date ? \Carbon\Carbon::parse($assessment->assessment_date)->format('M d, Y') : 'N/A',
+                    'assessment_date_raw' => $assessment->assessment_date,
+                    'diagnosis' => $diagnosis,
+                    'weight_kg' => $assessment->weight_kg,
+                    'height_cm' => $assessment->height_cm,
+                    'bmi' => $bmi,
+                    'weight_for_age' => $assessment->weight_for_age,
+                    'height_for_age' => $assessment->height_for_age,
+                    'bmi_for_age' => $assessment->bmi_for_age,
+                    'treatment_plan' => $assessment->treatment,
+                    'notes' => $assessment->notes,
+                    'assessed_by' => $assessment->nutritionist->first_name . ' ' . $assessment->nutritionist->last_name,
+                    'recovery_status' => $assessment->recovery_status,
+                    'status' => $assessment->completed_at ? 'Completed' : 'Pending',
+                    'created_at' => $assessment->created_at->format('M d, Y g:i A')
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'patient' => [
+                    'patient_id' => $patient->patient_id,
+                    'name' => $patient->first_name . ' ' . $patient->last_name,
+                    'age_months' => $patient->age_months,
+                    'sex' => $patient->sex
+                ],
+                'assessments' => $assessmentsData,
+                'total' => $assessmentsData->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Patient not found or access denied.',
+                'error' => $e->getMessage()
             ], 404);
         }
     }

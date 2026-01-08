@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Nutritional Assessment Profile - {{ $patient->first_name }} {{ $patient->last_name }}</title>
+    <title>Nutritional Screening Profile - {{ $patient->first_name }} {{ $patient->last_name }}</title>
     <style>
         {!! file_get_contents(public_path('css/nutritionist/assessment-pdf.css')) !!}
     </style>
@@ -54,8 +54,8 @@
             </div>
             <div class="patient-title-section">
                 <h1 class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</h1>
-                <div class="assessment-title">Nutritional Assessment Profile</div>
-                <div class="assessment-date">Assessment Date: {{ $assessment->assessment_date->format('F d, Y') }}</div>
+                <div class="assessment-title">Nutritional Screening Profile</div>
+                <div class="assessment-date">Screening Date: {{ $assessment->assessment_date->format('F d, Y') }}</div>
             </div>
             <div class="status-indicator status-{{ strtolower(str_replace(' ', '-', $assessment->diagnosis)) }}">
                 {{ $assessment->diagnosis }}
@@ -68,20 +68,133 @@
                 <div class="experience-item">
                     <div class="experience-content">
                         <p><strong>Name:</strong> {{ $patient->first_name }} {{ $patient->last_name }}</p>
-                        <p><strong>Age months:</strong> {{ $patient->age_months }}</p>
-                        <p><strong>Diagnosis:</strong> {{ $assessment->diagnosis }}</p>
-                        @if($treatmentPlan && isset($treatmentPlan['patient_info']['confidence_level']))
-                        <p><strong>Confidence level:</strong> {{ $treatmentPlan['patient_info']['confidence_level'] }}</p>
-                        @endif
-                        <p><strong>Assessment date:</strong> {{ $assessment->assessment_date->format('Y-m-d') }}</p>
-                        <p><strong>Plan created by:</strong> AI-Enhanced Malnutrition Assessment System</p>
+                        <p><strong>Age:</strong> {{ $patient->age_months }} months</p>
+                        <p><strong>Sex:</strong> {{ $patient->sex }}</p>
+                        <p><strong>Barangay:</strong> {{ $patient->barangay->barangay_name ?? 'N/A' }}</p>
+                        <p><strong>Screening Date:</strong> {{ $assessment->assessment_date->format('F d, Y') }}</p>
+                        <p><strong>Assessed By:</strong> {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</p>
                     </div>
                 </div>
             </div>
+
+            <div class="section">
+                <h3 class="section-title">Essential Measurements</h3>
+                <div class="experience-item">
+                    <div class="experience-content">
+                        <p><strong>Weight:</strong> {{ $assessment->weight_kg }} kg</p>
+                        <p><strong>Height:</strong> {{ $assessment->height_cm }} cm</p>
+                        @if($assessment->weight_kg && $assessment->height_cm)
+                            @php
+                                $heightInMeters = $assessment->height_cm / 100;
+                                $bmi = round($assessment->weight_kg / ($heightInMeters * $heightInMeters), 2);
+                            @endphp
+                            <p><strong>BMI:</strong> {{ $bmi }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            @if($assessment->weight_for_age || $assessment->height_for_age || $assessment->bmi_for_age)
+            <div class="section">
+                <h3 class="section-title">Nutritional Indicators</h3>
+                <div class="experience-item">
+                    <div class="experience-content">
+                        @if($assessment->weight_for_age)
+                            <p><strong>Weight for Age:</strong> {{ $assessment->weight_for_age }}</p>
+                        @endif
+                        @if($assessment->height_for_age)
+                            <p><strong>Height for Age:</strong> {{ $assessment->height_for_age }}</p>
+                        @endif
+                        @if($assessment->bmi_for_age)
+                            <p><strong>BMI for Age:</strong> {{ $assessment->bmi_for_age }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <div class="section">
+                <h3 class="section-title">Diagnosis</h3>
+                <div class="experience-item">
+                    <div class="experience-content">
+                        <p><strong>Clinical Diagnosis:</strong> {{ $assessment->diagnosis }}</p>
+                        @if($treatmentPlan && isset($treatmentPlan['patient_info']['confidence_level']))
+                        <p><strong>Confidence Level:</strong> {{ number_format($treatmentPlan['patient_info']['confidence_level'] * 100, 1) }}%</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            @if($assessment->notes)
+                @php
+                    $clinicalData = null;
+                    $additionalNotes = '';
+                    try {
+                        $parsedNotes = json_decode($assessment->notes, true);
+                        if ($parsedNotes && isset($parsedNotes['clinical_symptoms'])) {
+                            $clinicalData = $parsedNotes['clinical_symptoms'];
+                            $additionalNotes = $parsedNotes['additional_notes'] ?? '';
+                        } else {
+                            $additionalNotes = $assessment->notes;
+                        }
+                    } catch (\Exception $e) {
+                        $additionalNotes = $assessment->notes;
+                    }
+                @endphp
+
+                @if($clinicalData)
+                <div class="section">
+                    <h3 class="section-title">Clinical Symptoms & Physical Signs</h3>
+                    <div class="experience-item">
+                        <div class="experience-content">
+                            @if(!empty($clinicalData['appetite']))
+                                <p><strong>Appetite:</strong> {{ ucfirst($clinicalData['appetite']) }}</p>
+                            @endif
+                            @if(!empty($clinicalData['edema']))
+                                <p><strong>Edema:</strong> {{ ucfirst($clinicalData['edema']) }}</p>
+                            @endif
+                            @if(!empty($clinicalData['muac']))
+                                <p><strong>MUAC:</strong> {{ $clinicalData['muac'] }} cm</p>
+                            @endif
+                            @if(!empty($clinicalData['diarrhea']) && $clinicalData['diarrhea'] !== '0')
+                                <p><strong>Diarrhea:</strong> {{ $clinicalData['diarrhea'] }} day(s)</p>
+                            @endif
+                            @if(!empty($clinicalData['vomiting']) && $clinicalData['vomiting'] !== '0')
+                                <p><strong>Vomiting:</strong> {{ $clinicalData['vomiting'] }} times/day</p>
+                            @endif
+                            @if(!empty($clinicalData['fever']) && $clinicalData['fever'] !== '0')
+                                <p><strong>Fever:</strong> {{ $clinicalData['fever'] }} day(s)</p>
+                            @endif
+                            @if(!empty($clinicalData['breastfeeding_status']) && $clinicalData['breastfeeding_status'] !== 'not_applicable')
+                                <p><strong>Breastfeeding Status:</strong> {{ ucwords(str_replace('_', ' ', $clinicalData['breastfeeding_status'])) }}</p>
+                            @endif
+                            @if(!empty($clinicalData['visible_signs']) && count($clinicalData['visible_signs']) > 0)
+                                <p><strong>Visible Signs:</strong></p>
+                                <ul>
+                                    @foreach($clinicalData['visible_signs'] as $sign)
+                                        <li>{{ ucfirst($sign) }}</li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                @if($additionalNotes)
+                <div class="section">
+                    <h3 class="section-title">Additional Notes</h3>
+                    <div class="notes-section">
+                        {{ $additionalNotes }}
+                    </div>
+                </div>
+                @endif
+            @endif
+
             @if($treatmentPlan)
 
             <div class="section">
-                <h3 class="section-title">Complete Treatment & Care Plan</h3>
+                <h3 class="section-title">Treatment & Care Plan</h3>
 
                 @if(isset($treatmentPlan['immediate_actions']))
                 <div class="experience-item">
@@ -90,11 +203,25 @@
                         @if(is_array($treatmentPlan['immediate_actions']))
                             <ul>
                                 @foreach($treatmentPlan['immediate_actions'] as $action)
-                                <li>{{ is_array($action) ? implode(', ', $action) : $action }}</li>
+                                    @php
+                                        $cleanAction = is_array($action) ? implode(', ', $action) : $action;
+                                        // Remove emoji and special characters
+                                        $cleanAction = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $cleanAction);
+                                        $cleanAction = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanAction);
+                                        $cleanAction = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanAction);
+                                        $cleanAction = trim($cleanAction);
+                                    @endphp
+                                <li>{{ $cleanAction }}</li>
                                 @endforeach
                             </ul>
                         @else
-                            <p>{{ $treatmentPlan['immediate_actions'] }}</p>
+                            @php
+                                $cleanText = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $treatmentPlan['immediate_actions']);
+                                $cleanText = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanText);
+                                $cleanText = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanText);
+                                $cleanText = trim($cleanText);
+                            @endphp
+                            <p>{{ $cleanText }}</p>
                         @endif
                     </div>
                 </div>
@@ -109,11 +236,24 @@
                                 <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong></p>
                                 <ul>
                                     @foreach($value as $item)
-                                        <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
+                                        @php
+                                            $cleanItem = is_array($item) ? implode(', ', $item) : $item;
+                                            $cleanItem = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $cleanItem);
+                                            $cleanItem = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanItem);
+                                            $cleanItem = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanItem);
+                                            $cleanItem = trim($cleanItem);
+                                        @endphp
+                                        <li>{{ $cleanItem }}</li>
                                     @endforeach
                                 </ul>
                             @else
-                                <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ $value }}</p>
+                                @php
+                                    $cleanValue = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $value);
+                                    $cleanValue = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanValue);
+                                    $cleanValue = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanValue);
+                                    $cleanValue = trim($cleanValue);
+                                @endphp
+                                <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ $cleanValue }}</p>
                             @endif
                         @endforeach
                     </div>
@@ -127,11 +267,24 @@
                         @if(is_array($treatmentPlan['family_education']))
                             <ul>
                                 @foreach($treatmentPlan['family_education'] as $item)
-                                <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
+                                    @php
+                                        $cleanItem = is_array($item) ? implode(', ', $item) : $item;
+                                        $cleanItem = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $cleanItem);
+                                        $cleanItem = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanItem);
+                                        $cleanItem = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanItem);
+                                        $cleanItem = trim($cleanItem);
+                                    @endphp
+                                <li>{{ $cleanItem }}</li>
                                 @endforeach
                             </ul>
                         @else
-                            <p>{{ $treatmentPlan['family_education'] }}</p>
+                            @php
+                                $cleanText = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $treatmentPlan['family_education']);
+                                $cleanText = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanText);
+                                $cleanText = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanText);
+                                $cleanText = trim($cleanText);
+                            @endphp
+                            <p>{{ $cleanText }}</p>
                         @endif
                     </div>
                 </div>
@@ -146,11 +299,24 @@
                                 <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong></p>
                                 <ul>
                                     @foreach($value as $item)
-                                        <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
+                                        @php
+                                            $cleanItem = is_array($item) ? implode(', ', $item) : $item;
+                                            $cleanItem = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $cleanItem);
+                                            $cleanItem = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanItem);
+                                            $cleanItem = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanItem);
+                                            $cleanItem = trim($cleanItem);
+                                        @endphp
+                                        <li>{{ $cleanItem }}</li>
                                     @endforeach
                                 </ul>
                             @else
-                                <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ $value }}</p>
+                                @php
+                                    $cleanValue = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $value);
+                                    $cleanValue = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanValue);
+                                    $cleanValue = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanValue);
+                                    $cleanValue = trim($cleanValue);
+                                @endphp
+                                <p><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ $cleanValue }}</p>
                             @endif
                         @endforeach
                     </div>
@@ -164,11 +330,24 @@
                         @if(is_array($treatmentPlan['discharge_criteria']))
                             <ul>
                                 @foreach($treatmentPlan['discharge_criteria'] as $item)
-                                <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
+                                    @php
+                                        $cleanItem = is_array($item) ? implode(', ', $item) : $item;
+                                        $cleanItem = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $cleanItem);
+                                        $cleanItem = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanItem);
+                                        $cleanItem = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanItem);
+                                        $cleanItem = trim($cleanItem);
+                                    @endphp
+                                <li>{{ $cleanItem }}</li>
                                 @endforeach
                             </ul>
                         @else
-                            <p>{{ $treatmentPlan['discharge_criteria'] }}</p>
+                            @php
+                                $cleanText = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $treatmentPlan['discharge_criteria']);
+                                $cleanText = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanText);
+                                $cleanText = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanText);
+                                $cleanText = trim($cleanText);
+                            @endphp
+                            <p>{{ $cleanText }}</p>
                         @endif
                     </div>
                 </div>
@@ -181,24 +360,28 @@
                         @if(is_array($treatmentPlan['emergency_signs']))
                             <ul>
                                 @foreach($treatmentPlan['emergency_signs'] as $item)
-                                <li>{{ is_array($item) ? implode(', ', $item) : $item }}</li>
+                                    @php
+                                        $cleanItem = is_array($item) ? implode(', ', $item) : $item;
+                                        $cleanItem = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $cleanItem);
+                                        $cleanItem = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanItem);
+                                        $cleanItem = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanItem);
+                                        $cleanItem = trim($cleanItem);
+                                    @endphp
+                                <li>{{ $cleanItem }}</li>
                                 @endforeach
                             </ul>
                         @else
-                            <p>{{ $treatmentPlan['emergency_signs'] }}</p>
+                            @php
+                                $cleanText = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $treatmentPlan['emergency_signs']);
+                                $cleanText = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $cleanText);
+                                $cleanText = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $cleanText);
+                                $cleanText = trim($cleanText);
+                            @endphp
+                            <p>{{ $cleanText }}</p>
                         @endif
                     </div>
                 </div>
                 @endif
-            </div>
-            @endif
-
-            @if($assessment->notes)
-            <div class="section">
-                <h3 class="section-title">Clinical Notes & Observations</h3>
-                <div class="notes-section">
-                    {{ $assessment->notes }}
-                </div>
             </div>
             @endif
         </div>
@@ -229,9 +412,9 @@
 
         <!-- Professional Footer -->
         <div class="footer">
-            <div class="footer-title">Professional Assessment Certification</div>
+            <div class="footer-title">Professional Screening Certification</div>
             <div class="footer-info">
-                This comprehensive nutritional assessment profile was professionally conducted, analyzed, and documented by<br>
+                This comprehensive nutritional screening profile was professionally conducted, analyzed, and documented by<br>
                 <strong>{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</strong> - Licensed Nutritionist<br>
                 <br>
                 Document Generated: {{ now()->format('l, F d, Y \a\t g:i A') }}<br>

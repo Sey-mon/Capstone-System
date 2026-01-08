@@ -75,7 +75,7 @@ return [
         [
             'route' => 'nutritionist.assessments',
             'icon' => 'fas fa-clipboard-list',
-            'text' => 'Assessments',
+            'text' => 'Screenings',
         ],
         [
             'route' => 'nutritionist.reports',

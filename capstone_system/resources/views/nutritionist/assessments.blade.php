@@ -1,9 +1,9 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Assessments')
+@section('title', 'Screenings')
 
-@section('page-title', 'Patient Assessments')
-@section('page-subtitle', 'View and manage latest malnutrition assessments for each patient')
+@section('page-title', 'Patient Screenings')
+@section('page-subtitle', 'View and manage latest malnutrition screenings for each patient')
 
 @section('navigation')
     @include('partials.nutritionist-navigation')
@@ -13,7 +13,6 @@
     <!-- Preload critical resources for better LCP -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preload" href="{{ asset('img/shares-logo.png') }}" as="image">
     <link rel="preload" href="{{ asset('css/nutritionist-assessments.css') }}" as="style">
 @endpush
 
@@ -62,11 +61,11 @@
                     <i class="fas fa-clipboard-check me-1" aria-hidden="true"></i>
                     Status
                 </label>
-                <select id="statusFilter" class="modern-filter-select" aria-label="Filter by assessment status">
+                <select id="statusFilter" class="modern-filter-select" aria-label="Filter by screening status">
                     <option value="">All Status</option>
                     <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="no_assessment" {{ request('status') == 'no_assessment' ? 'selected' : '' }}>No Assessment</option>
+                    <option value="no_assessment" {{ request('status') == 'no_assessment' ? 'selected' : '' }}>No Screening</option>
                 </select>
             </div>
             
@@ -94,7 +93,7 @@
                        id="dateFrom" 
                        class="modern-filter-input"
                        value="{{ request('date_from') }}"
-                       aria-label="Filter assessments from date">
+                       aria-label="Filter screenings from date">
             </div>
             
             <div class="filter-group">
@@ -106,7 +105,7 @@
                        id="dateTo" 
                        class="modern-filter-input"
                        value="{{ request('date_to') }}"
-                       aria-label="Filter assessments to date">
+                       aria-label="Filter screenings to date">
             </div>
             
             <div class="filter-group">
@@ -132,7 +131,7 @@
                 <div class="spinner-ring"></div>
                 <div class="spinner-ring"></div>
             </div>
-            <p class="loading-text">Loading patient assessments...</p>
+            <p class="loading-text">Loading patient screenings...</p>
             <span class="visually-hidden">Loading content, please wait</span>
         </div>
     </div>
@@ -143,9 +142,9 @@
             <div class="header-left">
                 <h2 class="modern-title">
                     <i class="fas fa-chart-line me-3"></i>
-                    Patient Assessments
+                    Patient Screenings
                 </h2>
-                <p class="modern-subtitle">Manage and track your assigned patients' nutritional assessments</p>
+                <p class="modern-subtitle">Manage and track your assigned patients' nutritional screenings</p>
             </div>
             <div class="header-right">
                 <div class="info-badges">
@@ -158,9 +157,9 @@
                         Loading...
                     </span>
                 </div>
-                <button class="btn btn-primary btn-lg" onclick="openPatientSelectionModal()" aria-label="Create new patient assessment">
+                <button class="btn btn-primary btn-lg" onclick="openPatientSelectionModal()" aria-label="Create new patient screening">
                     <i class="fas fa-plus me-2" aria-hidden="true"></i>
-                    New Assessment
+                    New Screening
                 </button>
             </div>
         </div>

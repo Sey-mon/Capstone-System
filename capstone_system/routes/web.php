@@ -307,6 +307,7 @@ Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nu
     
     // Assessment routes
     Route::get('/patients/{patientId}/assess', [NutritionistController::class, 'showAssessmentForm'])->name('patients.assess');
+    Route::get('/patients/{patientId}/assessments', [NutritionistController::class, 'getPatientAssessments'])->name('patients.assessments');
     Route::post('/assessment/perform', [ApiController::class, 'performAssessment'])->name('assessment.perform');
     Route::get('/assessment/{assessmentId}', [NutritionistController::class, 'getAssessmentDetails'])->name('assessment.details');
     Route::get('/assessment/{assessmentId}/pdf', [NutritionistController::class, 'downloadAssessmentPDF'])->name('assessment.pdf');

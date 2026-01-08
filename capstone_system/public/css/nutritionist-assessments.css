@@ -2244,3 +2244,625 @@ button:focus-visible {
     top: 0;
 }
 
+/* ============================================
+   SCREENING HISTORY MODAL STYLES
+   Modern sidebar layout for assessment history
+   ============================================ */
+
+.assessment-history-modal .swal2-html-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: 85vh !important;
+}
+
+.assessment-history-popup {
+    border-radius: 16px !important;
+    padding: 0 !important;
+    max-width: 1400px !important;
+}
+
+.swal-close-button {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    z-index: 1000 !important;
+    font-size: 1.5rem !important;
+    color: #666 !important;
+    background: white !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease !important;
+}
+
+.swal-close-button:hover {
+    background: #f5f5f5 !important;
+    color: #333 !important;
+    transform: rotate(90deg) !important;
+}
+
+.swal-assessment-container {
+    display: flex;
+    height: 75vh;
+    max-height: 75vh;
+    overflow: hidden;
+}
+
+/* Sidebar - Green */
+.swal-sidebar {
+    width: 320px;
+    background: linear-gradient(180deg, #43A047 0%, #2e7d32 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px 0 0 16px;
+    overflow: hidden;
+}
+
+.swal-sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.swal-sidebar-header h4 {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.swal-sidebar-header h4 i {
+    font-size: 1.2rem;
+}
+
+.swal-sidebar-header p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.swal-count-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.swal-assessment-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.swal-assessment-item {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.swal-assessment-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(4px);
+}
+
+.swal-assessment-item.active {
+    background: white;
+    color: #2e7d32;
+    border-color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.swal-assessment-item-date {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.swal-assessment-item.active .swal-assessment-item-date {
+    color: #2e7d32;
+}
+
+.swal-assessment-item-status {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.swal-assessment-item.active .swal-assessment-item-status {
+    color: #43A047;
+    opacity: 1;
+    font-weight: 500;
+}
+
+.swal-latest-badge {
+    display: inline-block;
+    background: #4ade80;
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 0.5rem;
+}
+
+.swal-assessment-item.active .swal-latest-badge {
+    background: #43A047;
+}
+
+/* Content Area */
+.swal-content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+    overflow: hidden;
+}
+
+.swal-modal-header {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.swal-header-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.swal-treatment-button,
+.swal-pdf-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.swal-treatment-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+}
+
+.swal-treatment-button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.swal-pdf-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
+}
+
+.swal-assessment-detail {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2rem;
+    max-height: calc(75vh - 100px);
+}
+
+.swal-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.swal-detail-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    color: #424242;
+    font-weight: 600;
+}
+
+.swal-detail-date i {
+    color: #43A047;
+}
+
+.swal-diagnosis-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.swal-diagnosis-badge.normal {
+    background: #d4edda;
+    color: #155724;
+}
+
+.swal-diagnosis-badge.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.swal-diagnosis-badge.critical {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.swal-diagnosis-badge.unknown {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Metrics Grid */
+.swal-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.swal-metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.swal-metric-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.swal-metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.swal-metric-icon.weight {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+}
+
+.swal-metric-icon.height {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+}
+
+.swal-metric-icon.nutritionist {
+    background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+}
+
+.swal-metric-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.swal-metric-label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.swal-metric-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2e7d32;
+}
+
+/* Indicators Section */
+.swal-indicators-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.swal-section-title {
+    color: #2e7d32;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.swal-indicators-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.swal-indicator-card {
+    background: #f0fdf4;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.swal-indicator-label {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+}
+
+.swal-indicator-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.swal-indicator-value.normal {
+    background: #d4edda;
+    color: #155724;
+}
+
+.swal-indicator-value.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.swal-indicator-value.severe {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Clinical Symptoms Section */
+.swal-clinical-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.swal-clinical-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.swal-clinical-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #43A047;
+}
+
+.swal-clinical-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.swal-clinical-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.swal-clinical-value {
+    display: block;
+    font-size: 1rem;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Additional Notes Section */
+.swal-notes-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.swal-notes-content {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 8px;
+    border-left: 4px solid #43A047;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Scrollbar Styling */
+.swal-assessment-list::-webkit-scrollbar,
+.swal-assessment-detail::-webkit-scrollbar {
+    width: 6px;
+}
+
+.swal-assessment-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.swal-assessment-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.swal-assessment-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.swal-assessment-detail::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+.swal-assessment-detail::-webkit-scrollbar-thumb {
+    background: #43A047;
+    border-radius: 3px;
+}
+
+/* Treatment Plan View Styles */
+.swal-treatment-container {
+    display: flex;
+    flex-direction: column;
+    height: 75vh;
+    background: #f8f9fa;
+}
+
+.swal-treatment-header {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.swal-back-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.swal-back-button:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.swal-treatment-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2rem;
+}
+
+.swal-diagnosis-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.swal-confidence-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 24px;
+    font-weight: 600;
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.swal-treatment-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.swal-treatment-section.swal-emergency {
+    background: #fff3cd;
+    border-left: 4px solid #ff9800;
+}
+
+.swal-treatment-section.swal-emergency .swal-section-title {
+    color: #ff6f00;
+}
+
+.swal-treatment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.swal-treatment-list li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    border-bottom: 1px solid #f0f0f0;
+    line-height: 1.6;
+}
+
+.swal-treatment-list li:last-child {
+    border-bottom: none;
+}
+
+.swal-treatment-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 1rem;
+    width: 8px;
+    height: 8px;
+    background: #43A047;
+    border-radius: 50%;
+}
+
+.swal-emergency .swal-treatment-list li::before {
+    background: #ff9800;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .swal-assessment-container {
+        flex-direction: column;
+    }
+    
+    .swal-sidebar {
+        width: 100%;
+        max-height: 200px;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .swal-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .swal-indicators-grid {
+        grid-template-columns: 1fr;
+    }
+}
