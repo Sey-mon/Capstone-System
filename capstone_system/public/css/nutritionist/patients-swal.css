@@ -8,6 +8,14 @@
     border: 2px solid #e8f5e9 !important;
 }
 
+.swal2-popup .swal2-content,
+.swal2-popup .swal2-html-container,
+.swal2-popup .swal2-actions {
+    border: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+}
+
 .swal2-popup.swal2-patient-modal {
     width: 80vw !important;
     max-width: 1100px !important;
@@ -351,36 +359,67 @@
     order: 1 !important;
     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
     color: white !important;
-    padding: 16px 24px !important;
+    padding: 20px 24px !important;
     margin: 0 !important;
     border-radius: 16px 16px 0 0 !important;
-    font-size: 1.25rem !important;
+    font-size: 1.3rem !important;
     font-weight: 700 !important;
-    text-align: left !important;
+    text-align: center !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 10px !important;
 }
 
 .delete-modal-custom .swal2-title::before {
-    content: '\f071' !important;
-    font-family: 'Font Awesome 5 Free' !important;
-    font-weight: 900 !important;
-    font-size: 1.1rem !important;
+    content: none !important;
 }
 
 .delete-modal-custom .swal2-icon {
-    order: 2 !important;
-    margin: 24px auto 0 auto !important;
+    display: none !important;
 }
 
 .delete-modal-custom .swal2-html-container {
     order: 3 !important;
-    margin-top: 16px !important;
+    margin: 1.5rem 0 1.5rem !important;
+    padding: 0 2rem !important;
+    background: #ffffff !important;
+    text-align: center !important;
+    border: none !important;
+    border-top: none !important;
 }
 
 .delete-modal-custom .swal2-actions {
     order: 4 !important;
+    margin: 0 0 1.5rem !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    border: none !important;
+    border-top: none !important;
+}
+
+.delete-modal-custom .swal2-content {
+    background: #ffffff !important;
+    border: none !important;
+}
+
+.delete-modal-custom {
+    background: #ffffff !important;
+}
+
+.delete-modal-custom .swal2-confirm {
+    background-color: #dc3545 !important;
+    border: none !important;
+    color: white !important;
+}
+
+.delete-modal-custom .swal2-confirm:hover {
+    background-color: #c82333 !important;
+    color: white !important;
+}
+
+.delete-modal-custom .swal2-confirm:focus {
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.5) !important;
 }
 
 /* Success Icon - Green Theme */
@@ -423,6 +462,57 @@
     display: flex;
     align-items: center;
     gap: 15px;
+    flex: 0 0 auto;
+    text-align: left;
+}
+
+.header-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 1 1 auto;
+    text-align: center;
+}
+
+.patient-id-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.25);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.patient-id-badge i {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.patient-id-badge strong {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.admission-date-subtext {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 4px 12px;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+}
+
+.admission-date-subtext i {
+    font-size: 0.75rem;
 }
 
 .patient-avatar-sm {
@@ -445,6 +535,8 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    align-items: flex-start;
+    text-align: left;
 }
 
 .patient-name-sm {
@@ -460,6 +552,7 @@
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
+    justify-content: flex-start;
 }
 
 .info-chip {
@@ -479,7 +572,9 @@
 }
 
 .header-right {
-    text-align: right;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
 }
 
 .admission-date {
@@ -510,12 +605,24 @@
     font-weight: 700;
 }
 
-/* Two Column Layout - More Compact */
+/* Row-based Layout */
 .details-container {
-    display: grid;
-    grid-template-columns: 1fr 280px;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
     padding: 12px;
+}
+
+.details-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.details-row .info-card.household-card,
+.details-row .info-card.metrics-card,
+.details-row .info-card.notes-card {
+    grid-column: 1 / -1;
 }
 
 .details-main {
@@ -858,6 +965,13 @@
     flex: 1;
 }
 
+.status-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1b4332;
+    text-align: right;
+}
+
 /* Medical Notes Card */
 .notes-card {
     background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
@@ -917,9 +1031,9 @@
 
 /* Responsive Design - Optimized */
 @media (max-width: 1200px) {
-    .details-container {
-        grid-template-columns: 1fr 280px;
-        gap: 15px;
+    .details-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
     }
     
     .metrics-row {
@@ -928,28 +1042,41 @@
 }
 
 @media (max-width: 992px) {
-    .details-container {
+    .details-row {
         grid-template-columns: 1fr;
-    }
-    
-    .details-sidebar {
-        order: -1;
     }
     
     .patient-header-compact {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
         gap: 15px;
     }
     
-    .header-right {
+    .header-left {
+        order: 1;
+    }
+    
+    .header-center {
+        order: 2;
         width: 100%;
     }
     
-    .admission-date {
+    .header-right {
+        order: 3;
         width: 100%;
-        flex-direction: row;
-        justify-content: space-between;
+        justify-content: center;
+    }
+    
+    .header-info {
+        align-items: center;
+        text-align: center;
+    }
+    
+    .patient-quick-info {
+        justify-content: center;
+    }
+    
+    .admission-date {
         align-items: center;
     }
 }
@@ -1317,4 +1444,53 @@
 .patient-form-swal .form-label:has(+ .form-control[required])::after,
 .patient-form-swal .form-label:has(+ .form-select[required])::after {
     animation: requiredPulse 2s ease-in-out infinite;
+}
+
+/* Success Modal Styling */
+.swal2-success-popup {
+    background: #ffffff !important;
+}
+
+.swal2-success-popup .swal2-title {
+    background: linear-gradient(135deg, #388E3C 0%, #43A047 100%) !important;
+    color: white !important;
+    text-align: center !important;
+    padding: 20px !important;
+    border-radius: 16px 16px 0 0 !important;
+    margin: 0 !important;
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+}
+
+.swal2-success-popup .swal2-title::before {
+    content: none !important;
+}
+
+.swal2-success-popup .swal2-html-container {
+    margin: 1.5rem 0 1.5rem !important;
+    padding: 0 2rem !important;
+    text-align: center !important;
+    font-size: 1.05rem !important;
+    color: #2d6a4f !important;
+    font-weight: 500 !important;
+    background: #ffffff !important;
+    border: none !important;
+}
+
+.swal2-success-popup .swal2-actions {
+    margin: 0 0 1.5rem !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    border: none !important;
+    border-top: none !important;
+}
+
+.swal2-success-popup .swal2-confirm {
+    margin: 0 !important;
+    padding: 10px 30px !important;
+}
+
+.swal2-success-popup .swal2-content {
+    background: #ffffff !important;
+    border: none !important;
 }
