@@ -28,29 +28,173 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        // Cache dashboard stats for 5 minutes to improve performance
-        $stats = cache()->remember('admin_dashboard_stats', 300, function () {
+        // Cache dashboard stats using configured duration (default 15 minutes)
+        $cacheDuration = config('dashboard.cache_duration', 900);
+        
+        $stats = cache()->remember('admin_dashboard_stats_v4', $cacheDuration, function () {
+            // Get current month dates
+            $currentMonthStart = now()->startOfMonth();
+            $currentMonthEnd = now()->endOfMonth();
+            $previousMonthStart = now()->subMonth()->startOfMonth();
+            $previousMonthEnd = now()->subMonth()->endOfMonth();
+            
+            // Current counts
+            $currentUsers = User::count();
+            $currentPatients = Patient::count();
+            $currentScreenings = Assessment::count();
+            $currentInventory = InventoryItem::count();
+            
+            // Previous month counts for percentage calculations
+            $previousUsers = User::where('created_at', '<=', $previousMonthEnd)->count();
+            $previousPatients = Patient::where('created_at', '<=', $previousMonthEnd)->count();
+            $previousScreenings = Assessment::where('created_at', '<=', $previousMonthEnd)->count();
+            
+            // Calculate percentage changes
+            $usersChange = $previousUsers > 0 ? round((($currentUsers - $previousUsers) / $previousUsers) * 100, 1) : 0;
+            $patientsChange = $previousPatients > 0 ? round((($currentPatients - $previousPatients) / $previousPatients) * 100, 1) : 0;
+            $screeningsChange = $previousScreenings > 0 ? round((($currentScreenings - $previousScreenings) / $previousScreenings) * 100, 1) : 0;
+            
+            // Low stock items by severity
+            $lowStockThreshold = config('dashboard.low_stock_threshold', 10);
+            $warningThreshold = config('dashboard.stock_warning_threshold', 5);
+            
+            $criticalStock = InventoryItem::where('quantity', '=', 0)->get();
+            $warningStock = InventoryItem::where('quantity', '>', 0)
+                ->where('quantity', '<=', $warningThreshold)->get();
+            $lowStock = InventoryItem::where('quantity', '>', $warningThreshold)
+                ->where('quantity', '<=', $lowStockThreshold)->get();
+            
+            $totalLowStock = $criticalStock->count() + $warningStock->count() + $lowStock->count();
+            
+            // Items expiring soon
+            $expiringDays = config('dashboard.expiring_soon_days', 30);
+            $expiringItems = InventoryItem::whereNotNull('expiry_date')
+                ->whereBetween('expiry_date', [now(), now()->addDays($expiringDays)])
+                ->orderBy('expiry_date', 'asc')
+                ->get();
+            
+            // Expired items
+            $expiredItems = InventoryItem::whereNotNull('expiry_date')
+                ->where('expiry_date', '<', now())
+                ->orderBy('expiry_date', 'desc')
+                ->get();
+            
+            // Pending screenings
+            $pendingScreenings = Assessment::whereNull('completed_at')->count();
+            
+            // Active vs inactive users
+            $activeUsers = User::where('is_active', true)->count();
+            $inactiveUsers = User::where('is_active', false)->count();
+            $activePercentage = $currentUsers > 0 ? round(($activeUsers / $currentUsers) * 100, 1) : 0;
+            
+            // Nutritional status distribution - get latest assessment per patient
+            // Get latest assessment ID for each patient
+            $latestAssessments = DB::table('assessments')
+                ->select('patient_id', DB::raw('MAX(assessment_id) as latest_assessment_id'))
+                ->groupBy('patient_id')
+                ->pluck('latest_assessment_id');
+            
+            // Count by diagnosis from treatment JSON field (stored at $.patient_info.diagnosis)
+            $samCount = Assessment::whereIn('assessment_id', $latestAssessments)
+                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%SEVERE ACUTE MALNUTRITION%'")
+                ->count();
+            
+            $mamCount = Assessment::whereIn('assessment_id', $latestAssessments)
+                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%MODERATE ACUTE MALNUTRITION%'")
+                ->count();
+            
+            $normalCount = Assessment::whereIn('assessment_id', $latestAssessments)
+                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%NORMAL NUTRITIONAL STATUS%'")
+                ->count();
+            
+            // Inventory by category
+            $inventoryByCategory = InventoryItem::leftJoin('item_categories', 'inventory_items.category_id', '=', 'item_categories.category_id')
+                ->select('item_categories.category_name', DB::raw('COUNT(inventory_items.item_id) as count'))
+                ->groupBy('item_categories.category_id', 'item_categories.category_name')
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'category' => $item->category_name ?? 'Uncategorized',
+                        'count' => $item->count
+                    ];
+                });
+            
+            // Add uncategorized items if any
+            $uncategorizedCount = InventoryItem::whereNull('category_id')->count();
+            if ($uncategorizedCount > 0) {
+                $inventoryByCategory->push([
+                    'category' => 'Uncategorized',
+                    'count' => $uncategorizedCount
+                ]);
+            }
+            
+            // Monthly screening trends (last 6 months)
+            $screeningTrends = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $monthStart = now()->subMonths($i)->startOfMonth();
+                $monthEnd = now()->subMonths($i)->endOfMonth();
+                $count = Assessment::whereBetween('created_at', [$monthStart, $monthEnd])->count();
+                $screeningTrends[] = [
+                    'month' => $monthStart->format('M Y'),
+                    'count' => $count
+                ];
+            }
+            
             return [
-                'total_users' => User::count(),
-                'total_patients' => Patient::count(),
-                'total_assessments' => Assessment::count(),
-                'total_inventory_items' => InventoryItem::count(),
-                'total_knowledge_articles' => \App\Models\KnowledgeBase::count(),
-                'new_articles_this_month' => \App\Models\KnowledgeBase::whereMonth('added_at', now()->month)
-                    ->whereYear('added_at', now()->year)
-                    ->count(),
-                'total_kb_categories' => 1, // Placeholder for future categories feature
+                // Original stats
+                'total_users' => $currentUsers,
+                'total_patients' => $currentPatients,
+                'total_screenings' => $currentScreenings,
+                'total_inventory_items' => $currentInventory,
+                'recent_audit_logs' => AuditLog::with('user')->latest()->take(10)->get(),
+                
+                // New percentage changes
+                'users_change' => $usersChange,
+                'patients_change' => $patientsChange,
+                'screenings_change' => $screeningsChange,
+                'inventory_change' => 0, // Inventory doesn't have created_at typically
+                
+                // Low stock data
+                'total_low_stock' => $totalLowStock,
+                'critical_stock' => $criticalStock,
+                'warning_stock' => $warningStock,
+                'low_stock' => $lowStock,
+                'critical_count' => $criticalStock->count(),
+                'warning_count' => $warningStock->count(),
+                'low_count' => $lowStock->count(),
+                
+                // Expiring items
+                'expiring_items' => $expiringItems,
+                'expiring_count' => $expiringItems->count(),
+                'expiring_days' => $expiringDays,
+                
+                // Expired items
+                'expired_items' => $expiredItems,
+                'expired_count' => $expiredItems->count(),
+                
+                // Pending screenings
+                'pending_screenings' => $pendingScreenings,
+                'completed_screenings' => $currentScreenings - $pendingScreenings,
+                'completion_rate' => $currentScreenings > 0 ? round((($currentScreenings - $pendingScreenings) / $currentScreenings) * 100, 1) : 0,
+                
+                // Active users
+                'active_users' => $activeUsers,
+                'inactive_users' => $inactiveUsers,
+                'active_percentage' => $activePercentage,
+                
+                // Pending nutritionist applications
                 'pending_nutritionist_applications' => User::whereHas('role', function($query) {
-                        $query->where('role_name', 'Nutritionist');
+                    $query->where('role_name', 'Nutritionist');
                 })->where('is_active', false)->count(),
-                'recent_transactions' => InventoryTransaction::with(['user', 'inventoryItem'])
-                    ->latest()
-                    ->take(5)
-                    ->get(),
-                'recent_audit_logs' => AuditLog::with('user')
-                    ->latest()
-                    ->take(10)
-                    ->get(),
+                
+                // Chart data
+                'nutritional_status' => [
+                    'sam' => $samCount,
+                    'mam' => $mamCount,
+                    'normal' => $normalCount,
+                ],
+                'inventory_by_category' => $inventoryByCategory,
+                'screening_trends' => $screeningTrends,
             ];
         });
 
@@ -58,6 +202,139 @@ class AdminController extends Controller
         $barangays = $this->getBarangayPatientData();
 
         return view('admin.dashboard', compact('stats', 'barangays'));
+    }
+
+    /**
+     * Get chart data for AJAX requests
+     */
+    public function getChartData($type, Request $request)
+    {
+        try {
+            switch ($type) {
+                case 'screening-trends':
+                    $startDate = $request->input('start_date', now()->subMonths(6)->startOfMonth());
+                    $endDate = $request->input('end_date', now()->endOfMonth());
+                    
+                    // Parse dates
+                    $start = \Carbon\Carbon::parse($startDate);
+                    $end = \Carbon\Carbon::parse($endDate);
+                    
+                    $trends = [];
+                    $current = $start->copy();
+                    
+                    while ($current <= $end) {
+                        $monthStart = $current->copy()->startOfMonth();
+                        $monthEnd = $current->copy()->endOfMonth();
+                        
+                        $count = Assessment::whereBetween('created_at', [$monthStart, $monthEnd])->count();
+                        
+                        $trends[] = [
+                            'month' => $current->format('M Y'),
+                            'count' => $count
+                        ];
+                        
+                        $current->addMonth();
+                    }
+                    
+                    return response()->json([
+                        'success' => true,
+                        'data' => $trends
+                    ]);
+                    
+                case 'nutritional-status':
+                    // Get latest assessment ID for each patient
+                    $latestAssessments = DB::table('assessments')
+                        ->select('patient_id', DB::raw('MAX(assessment_id) as latest_assessment_id'))
+                        ->groupBy('patient_id')
+                        ->pluck('latest_assessment_id');
+                    
+                    // Count by diagnosis from treatment JSON field (stored at $.patient_info.diagnosis)
+                    $samCount = Assessment::whereIn('assessment_id', $latestAssessments)
+                        ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%SEVERE ACUTE MALNUTRITION%'")
+                        ->count();
+                    
+                    $mamCount = Assessment::whereIn('assessment_id', $latestAssessments)
+                        ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%MODERATE ACUTE MALNUTRITION%'")
+                        ->count();
+                    
+                    $normalCount = Assessment::whereIn('assessment_id', $latestAssessments)
+                        ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%NORMAL NUTRITIONAL STATUS%'")
+                        ->count();
+                    
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'sam' => $samCount,
+                            'mam' => $mamCount,
+                            'normal' => $normalCount,
+                        ]
+                    ]);
+                    
+                case 'inventory-category':
+                    $inventoryByCategory = InventoryItem::leftJoin('item_categories', 'inventory_items.category_id', '=', 'item_categories.category_id')
+                        ->select('item_categories.category_name', DB::raw('COUNT(inventory_items.item_id) as count'))
+                        ->groupBy('item_categories.category_id', 'item_categories.category_name')
+                        ->get()
+                        ->map(function($item) {
+                            return [
+                                'category' => $item->category_name ?? 'Uncategorized',
+                                'count' => $item->count
+                            ];
+                        });
+                    
+                    // Add uncategorized items if any
+                    $uncategorizedCount = InventoryItem::whereNull('category_id')->count();
+                    if ($uncategorizedCount > 0) {
+                        $inventoryByCategory->push([
+                            'category' => 'Uncategorized',
+                            'count' => $uncategorizedCount
+                        ]);
+                    }
+                    
+                    return response()->json([
+                        'success' => true,
+                        'data' => $inventoryByCategory
+                    ]);
+                    
+                case 'low-stock-alerts':
+                    $lowStockThreshold = config('dashboard.low_stock_threshold', 10);
+                    $warningThreshold = config('dashboard.stock_warning_threshold', 5);
+                    
+                    $items = InventoryItem::where('quantity', '<=', $lowStockThreshold)
+                        ->orderBy('quantity', 'asc')
+                        ->get()
+                        ->map(function($item) use ($warningThreshold) {
+                            $severity = 'low';
+                            if ($item->quantity == 0) {
+                                $severity = 'critical';
+                            } elseif ($item->quantity <= $warningThreshold) {
+                                $severity = 'warning';
+                            }
+                            
+                            return [
+                                'name' => $item->item_name,
+                                'quantity' => $item->quantity,
+                                'severity' => $severity
+                            ];
+                        });
+                    
+                    return response()->json([
+                        'success' => true,
+                        'data' => $items
+                    ]);
+                    
+                default:
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid chart type'
+                    ], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading chart data: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -2316,20 +2593,24 @@ class AdminController extends Controller
                     $diagnosis = null;
                     if ($latestAssessment->treatment) {
                         $treatment = json_decode($latestAssessment->treatment, true);
-                        if (isset($treatment['diagnosis'])) {
-                            // Normalize: lowercase, remove parentheses and their contents, trim spaces
-                            $diagnosis = strtolower($treatment['diagnosis']);
-                            $diagnosis = trim($diagnosis);
+                        
+                        // Try patient_info.diagnosis first (new format)
+                        if (isset($treatment['patient_info']['diagnosis'])) {
+                            $diagnosis = $treatment['patient_info']['diagnosis'];
+                        }
+                        // Fallback to diagnosis (old format)
+                        elseif (isset($treatment['diagnosis'])) {
+                            $diagnosis = $treatment['diagnosis'];
                         }
                     }
                     
                     if ($diagnosis) {
-                        // Use regex to match both full and short forms, with or without parentheses
-                        if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
+                        // Match the exact strings from the database
+                        if (stripos($diagnosis, 'SEVERE ACUTE MALNUTRITION') !== false) {
                             $sam++;
-                        } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
+                        } elseif (stripos($diagnosis, 'MODERATE ACUTE MALNUTRITION') !== false) {
                             $mam++;
-                        } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
+                        } elseif (stripos($diagnosis, 'NORMAL NUTRITIONAL STATUS') !== false) {
                             $normal++;
                         } else {
                             $unknown++;
@@ -2337,6 +2618,9 @@ class AdminController extends Controller
                     } else {
                         $unknown++;
                     }
+                } else {
+                    // Patient has no assessment - count as unknown
+                    $unknown++;
                 }
             }
 
