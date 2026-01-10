@@ -31,7 +31,70 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
     initializeDateRangePicker();
     initializeMapFilters();
+    initializeChartResize();
 });
+
+/**
+ * Initialize chart resize handler for responsive behavior
+ */
+function initializeChartResize() {
+    let resizeTimeout;
+    
+    const handleResize = function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            // Force update all chart instances
+            const charts = [
+                screeningTrendsChart, 
+                nutritionalStatusChart, 
+                inventoryCategoryChart, 
+                lowStockChart
+            ];
+            
+            charts.forEach(chart => {
+                if (chart && chart.canvas) {
+                    try {
+                        // Get parent container dimensions
+                        const container = chart.canvas.parentElement;
+                        if (container) {
+                            // Reset canvas size to force recalculation
+                            chart.canvas.style.width = '';
+                            chart.canvas.style.height = '';
+                            
+                            // Force chart to resize
+                            chart.resize();
+                            chart.update('none');
+                        }
+                    } catch (e) {
+                        console.warn('Chart resize failed:', e);
+                    }
+                }
+            });
+            
+            // Also resize the map if it exists
+            if (window.adminMap) {
+                try {
+                    window.adminMap.invalidateSize();
+                } catch (e) {
+                    console.warn('Map resize failed:', e);
+                }
+            }
+        }, 100);
+    };
+    
+    // Listen to both resize and zoom events
+    window.addEventListener('resize', handleResize);
+    
+    // Handle browser zoom (detect via resize + visualViewport)
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleResize);
+    }
+    
+    // Also handle orientation change for mobile
+    window.addEventListener('orientationchange', function() {
+        setTimeout(handleResize, 100);
+    });
+}
 
 /**
  * Initialize collapsible sections with localStorage persistence
@@ -394,22 +457,73 @@ function fetchChartData(type, params = {}) {
 function initializeMapFilters() {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const searchInput = document.getElementById('barangaySearch');
+    let searchTimeout = null;
     
-    // Filter buttons
+    // Filter buttons with visual feedback
     filterButtons.forEach(btn => {
         btn.addEventListener('click', function() {
+            // Update active state
             filterButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             
             const filter = this.dataset.filter;
+            
+            // Add ripple effect
+            const ripple = document.createElement('span');
+            ripple.style.position = 'absolute';
+            ripple.style.width = '100%';
+            ripple.style.height = '100%';
+            ripple.style.top = '0';
+            ripple.style.left = '0';
+            ripple.style.background = 'rgba(255,255,255,0.5)';
+            ripple.style.borderRadius = '6px';
+            ripple.style.pointerEvents = 'none';
+            ripple.style.opacity = '1';
+            ripple.style.transition = 'opacity 0.3s';
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.style.opacity = '0';
+                setTimeout(() => ripple.remove(), 300);
+            }, 100);
+            
             filterMapMarkers(filter);
         });
     });
     
-    // Search input
+    // Search input with debouncing
     if (searchInput) {
         searchInput.addEventListener('input', function() {
-            searchBarangays(this.value);
+            const value = this.value;
+            
+            // Clear previous timeout
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            // Debounce search - wait 300ms after user stops typing
+            searchTimeout = setTimeout(() => {
+                searchBarangays(value);
+            }, 300);
+        });
+
+        // Clear search on Escape key
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                searchBarangays('');
+            }
+        });
+
+        // Add search icon feedback
+        searchInput.addEventListener('focus', function() {
+            this.style.borderColor = '#3b82f6';
+            this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+        });
+
+        searchInput.addEventListener('blur', function() {
+            this.style.borderColor = '';
+            this.style.boxShadow = '';
         });
     }
 }
@@ -421,6 +535,9 @@ function filterMapMarkers(filter) {
     // This will be handled by the existing admin-dashboard.js
     // Dispatch custom event
     window.dispatchEvent(new CustomEvent('filterMapMarkers', { detail: filter }));
+    
+    // Visual feedback - update count display if exists
+    updateFilterCount(filter);
 }
 
 /**
@@ -429,6 +546,15 @@ function filterMapMarkers(filter) {
 function searchBarangays(query) {
     // Dispatch custom event for map search
     window.dispatchEvent(new CustomEvent('searchBarangays', { detail: query }));
+}
+
+/**
+ * Update filter count display
+ */
+function updateFilterCount(filter) {
+    // This could show how many markers are currently visible
+    // Can be enhanced based on data from admin-dashboard.js
+    console.log('Active filter:', filter);
 }
 
 /**

@@ -395,6 +395,7 @@
                         <button class="filter-btn" data-filter="sam" style="color: #ef4444;">SAM</button>
                         <button class="filter-btn" data-filter="mam" style="color: #f59e0b;">MAM</button>
                         <button class="filter-btn" data-filter="normal" style="color: #3b82f6;">Normal</button>
+                        <button class="filter-btn" data-filter="unknown" style="color: #6b7280;">Unknown</button>
                     </div>
                 </div>
             </div>

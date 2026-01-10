@@ -113,6 +113,12 @@
     position: relative;
 }
 
+@media (max-width: 768px) {
+    .chart-card {
+        height: 300px;
+    }
+}
+
 .chart-header {
     display: flex;
     justify-content: space-between;
@@ -174,7 +180,12 @@
 .chart-container {
     flex: 1;
     position: relative;
-    min-height: 0;
+    height: 100%;
+}
+
+.chart-container canvas {
+    max-width: 100% !important;
+    height: auto !important;
 }
 
 .chart-loading {
@@ -513,4 +524,109 @@
     .preset-buttons {
         flex-wrap: wrap;
     }
+}
+/* Enhanced Map Styles */
+.custom-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.custom-div-icon div {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.custom-div-icon:hover div {
+    transform: scale(1.1);
+}
+
+/* Custom popup styling */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+    margin: 12px 16px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.barangay-popup h6 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: #1f2937;
+}
+
+/* Map controls enhancement */
+.map-controls {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.search-wrapper input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-buttons .filter-btn {
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-buttons .filter-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.filter-buttons .filter-btn:active::before {
+    width: 200px;
+    height: 200px;
+}
+
+.filter-buttons .filter-btn.active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Leaflet zoom control positioning */
+.leaflet-top.leaflet-right {
+    top: 70px;
+}
+
+/* Map container */
+#admin-map {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Marker pulse animation for highlighted markers */
+@keyframes marker-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.marker-highlighted {
+    animation: marker-pulse 1.5s infinite;
 }

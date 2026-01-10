@@ -2593,20 +2593,24 @@ class AdminController extends Controller
                     $diagnosis = null;
                     if ($latestAssessment->treatment) {
                         $treatment = json_decode($latestAssessment->treatment, true);
-                        if (isset($treatment['diagnosis'])) {
-                            // Normalize: lowercase, remove parentheses and their contents, trim spaces
-                            $diagnosis = strtolower($treatment['diagnosis']);
-                            $diagnosis = trim($diagnosis);
+                        
+                        // Try patient_info.diagnosis first (new format)
+                        if (isset($treatment['patient_info']['diagnosis'])) {
+                            $diagnosis = $treatment['patient_info']['diagnosis'];
+                        }
+                        // Fallback to diagnosis (old format)
+                        elseif (isset($treatment['diagnosis'])) {
+                            $diagnosis = $treatment['diagnosis'];
                         }
                     }
                     
                     if ($diagnosis) {
-                        // Use regex to match both full and short forms, with or without parentheses
-                        if (preg_match('/severe\s*acute\s*malnutrition(\s*\(sam\))?|^sam$/i', $diagnosis)) {
+                        // Match the exact strings from the database
+                        if (stripos($diagnosis, 'SEVERE ACUTE MALNUTRITION') !== false) {
                             $sam++;
-                        } elseif (preg_match('/moderate\s*acute\s*malnutrition(\s*\(mam\))?|^mam$/i', $diagnosis)) {
+                        } elseif (stripos($diagnosis, 'MODERATE ACUTE MALNUTRITION') !== false) {
                             $mam++;
-                        } elseif (preg_match('/^normal$/i', $diagnosis) || preg_match('/normal/i', $diagnosis)) {
+                        } elseif (stripos($diagnosis, 'NORMAL NUTRITIONAL STATUS') !== false) {
                             $normal++;
                         } else {
                             $unknown++;
@@ -2614,6 +2618,9 @@ class AdminController extends Controller
                     } else {
                         $unknown++;
                     }
+                } else {
+                    // Patient has no assessment - count as unknown
+                    $unknown++;
                 }
             }
 
