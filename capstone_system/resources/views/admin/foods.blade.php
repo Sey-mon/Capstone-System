@@ -18,6 +18,8 @@
         .alert{padding:10px 14px;border-radius:6px;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-weight:500;font-size:13px}
         .alert-success{background:#ecfdf5;color:#047857;border-left:3px solid #10b981}
         .alert-danger{background:#fee2e2;color:#991b1b;border-left:3px solid #ef4444}
+        /* Hide SweetAlert2 validation message by default */
+        #swal2-validation-message:empty,#swal2-validation-message:not(.swal2-show){display:none!important}
     </style>
     <link rel="stylesheet" href="{{ asset('css/admin/foods.css') }}">
 @endpush
@@ -72,9 +74,6 @@
             @endif
         </select>
 
-        <button class="btn btn-secondary" onclick="toggleBulkActions()" id="bulkActionBtn" style="display:none;">
-            <i class="fas fa-tasks"></i> <span id="selectedCount">0</span> Selected
-        </button>
         <button class="btn btn-secondary" onclick="document.getElementById('importForm').style.display='block'">
             <i class="fas fa-file-import"></i> Import CSV
         </button>
@@ -195,5 +194,4 @@
 
 @push('scripts')
     <script defer src="{{ asset('js/admin/foods.js') }}"></script>
-    <script defer src="{{ asset('js/admin/foods-enhanced.js') }}"></script>
 @endpush
