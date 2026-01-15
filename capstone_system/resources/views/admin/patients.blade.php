@@ -658,33 +658,4 @@
 
 @push('scripts')
     <script src="{{ asset('js/admin/admin-patients.js') }}"></script>
-    <script src="{{ asset('js/admin/admin-patients-enhanced.js') }}"></script>
-    <script>
-        // Auto-calculate age from birthdate
-        document.addEventListener('DOMContentLoaded', function() {
-            const birthdateInput = document.getElementById('birthdate');
-            const ageMonthsInput = document.getElementById('age_months');
-            
-            if (birthdateInput && ageMonthsInput) {
-                birthdateInput.addEventListener('change', function() {
-                    const birthdate = new Date(this.value);
-                    const today = new Date();
-                    
-                    if (birthdate && !isNaN(birthdate.getTime())) {
-                        // Calculate age in months
-                        let months = (today.getFullYear() - birthdate.getFullYear()) * 12;
-                        months -= birthdate.getMonth();
-                        months += today.getMonth();
-                        
-                        // Adjust if birth day hasn't occurred this month yet
-                        if (today.getDate() < birthdate.getDate()) {
-                            months--;
-                        }
-                        
-                        ageMonthsInput.value = Math.max(0, months);
-                    }
-                });
-            }
-        });
-    </script>
 @endpush
