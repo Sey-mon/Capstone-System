@@ -1552,7 +1552,43 @@ class AdminController extends Controller
         $categories = ItemCategory::withCount('inventoryItems')->paginate(10, ['*'], 'categories_page');
         $barangays = Barangay::withCount('patients')->paginate(10, ['*'], 'barangays_page');
         
-        return view('admin.system-management', compact('categories', 'barangays'));
+        // System Health Data
+        $systemHealth = [
+            'total_users' => User::count(),
+            'active_users' => User::whereNull('deleted_at')->count(),
+            'total_patients' => Patient::count(),
+            'total_inventory_items' => InventoryItem::count(),
+            'low_stock_items' => InventoryItem::where('quantity', '<', 10)->count(),
+            'total_assessments' => Assessment::count(),
+            'total_categories' => ItemCategory::count(),
+            'total_barangays' => Barangay::count(),
+            'recent_activity' => AuditLog::latest()->take(5)->get(),
+            'database_size' => $this->getDatabaseSize(),
+            'laravel_version' => app()->version(),
+            'php_version' => phpversion(),
+        ];
+        
+        return view('admin.system-management', compact('categories', 'barangays', 'systemHealth'));
+    }
+    
+    /**
+     * Get database size
+     */
+    private function getDatabaseSize()
+    {
+        try {
+            $databaseName = config('database.connections.mysql.database');
+            $result = DB::select("
+                SELECT 
+                    ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb
+                FROM information_schema.tables 
+                WHERE table_schema = ?
+            ", [$databaseName]);
+            
+            return $result[0]->size_mb ?? 0;
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
     /**
