@@ -7,6 +7,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/admin-users.css') }}">
+    <meta name="user-id" content="{{ Auth::id() }}">
 @endpush
 
 @section('navigation')
@@ -14,40 +15,76 @@
 @endsection
 
 @section('content')
-    <div class="content-card">
-        <div class="card-header">
-            <h3 class="card-title">All Users</h3>
-            <button class="btn btn-primary" onclick="openAddUserModal()">
-                <i class="fas fa-user-plus"></i>
-                Add New User
-            </button>
+    <!-- Filter Section -->
+    <div class="filter-container">
+        <div class="filter-header-bar">
+            <h3><i class="fas fa-filter"></i> Filters & Search</h3>
+            <a href="{{ route('admin.users') }}" class="btn-clear-all">
+                <i class="fas fa-times"></i> Clear All
+            </a>
         </div>
-        <div class="card-content">
-            <div class="filter-bar">
-                <form method="GET" action="" id="userFilterForm">
-                    <div class="filter-input-group">
-                        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by name, email, contact..." oninput="document.getElementById('userFilterForm').submit();">
+        <div class="filter-content">
+            <form method="GET" action="" id="userFilterForm">
+                <div class="filter-grid">
+                    <div class="filter-field">
+                        <label>Search Patient</label>
+                        <div class="search-input-wrapper">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" name="search" value="{{ request('search') }}" class="form-control search-input" placeholder="Search by name, contact..." id="searchInput">
+                        </div>
                     </div>
-                    <div class="filter-select-group">
-                        <select name="role" class="form-control" onchange="document.getElementById('userFilterForm').submit();">
+                    <div class="filter-field">
+                        <label>Role</label>
+                        <select name="role" class="form-control" id="roleFilter">
                             <option value="">All Roles</option>
                             @foreach($roles as $role)
                                 <option value="{{ $role->role_id }}" @if(request('role') == $role->role_id) selected @endif>{{ $role->role_name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="filter-select-group">
-                        <select name="status" class="form-control" onchange="document.getElementById('userFilterForm').submit();">
+                    <div class="filter-field">
+                        <label>Status</label>
+                        <select name="status" class="form-control" id="statusFilter">
                             <option value="">All Status</option>
                             <option value="1" @if(request('status')==='1') selected @endif>Active</option>
                             <option value="0" @if(request('status')==='0') selected @endif>Inactive</option>
                         </select>
                     </div>
-                    <div>
-                        <a href="{{ route('admin.users') }}" class="btn btn-outline-light">&#10006; Clear Filter</a>
+                    <div class="filter-field">
+                        <label>Per Page</label>
+                        <select name="per_page" class="form-control" id="perPageFilter">
+                            <option value="10" @if(request('per_page')=='10') selected @endif>10</option>
+                            <option value="25" @if(request('per_page')=='25') selected @endif>25</option>
+                            <option value="50" @if(request('per_page')=='50') selected @endif>50</option>
+                            <option value="100" @if(request('per_page')=='100') selected @endif>100</option>
+                        </select>
                     </div>
-                </form>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Content Card -->
+    <div class="content-card">
+        <div class="card-header-modern">
+            <div class="header-title-section">
+                <div class="title-with-icon">
+                    <i class="fas fa-users"></i>
+                    <h3 class="card-title-modern">Users Management</h3>
+                </div>
+                <p class="card-subtitle">Manage and organize all system users and their roles</p>
             </div>
+            <div class="header-actions">
+                <button class="btn-count">
+                    <i class="fas fa-user"></i> {{ $users->total() }} users
+                </button>
+                <button class="btn btn-primary" onclick="openAddUserModal()">
+                    <i class="fas fa-plus"></i>
+                    Add New User
+                </button>
+            </div>
+        </div>
+        <div class="card-content">
             <div class="users-table-container">
                 <table class="users-table">
                     <thead>
@@ -137,164 +174,19 @@
         </div>
     </div>
 
-    <!-- Add User Modal -->
-    <div id="addUserModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add New User</h3>
-                <span class="close" onclick="closeModal('addUserModal')">&times;</span>
-            </div>
-            <form id="addUserForm" data-route="{{ route('admin.users.store') }}" data-user-url-base="{{ url('admin/users') }}">
-                @csrf
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="add_first_name">First Name *</label>
-                        <input type="text" id="add_first_name" name="first_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="add_middle_name">Middle Name</label>
-                        <input type="text" id="add_middle_name" name="middle_name">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="add_last_name">Last Name *</label>
-                        <input type="text" id="add_last_name" name="last_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="add_role_id">Role *</label>
-                        <select id="add_role_id" name="role_id" required>
-                            <option value="">Select Role</option>
-                            @foreach($roles as $role)
-                                <option value="{{ $role->role_id }}">{{ $role->role_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="add_email">Email *</label>
-                        <input type="email" id="add_email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="add_contact_number">Contact Number</label>
-                        <input type="text" id="add_contact_number" name="contact_number">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="add_password">Password *</label>
-                        <input type="password" id="add_password" name="password" required minlength="8">
-                    </div>
-                    <div class="form-group">
-                        <label for="add_password_confirmation">Confirm Password *</label>
-                        <input type="password" id="add_password_confirmation" name="password_confirmation" required>
-                    </div>
-                </div>
-                <input type="hidden" name="is_active" value="1">
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add User</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit User Modal -->
-    <div id="editUserModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Edit User</h3>
-                <span class="close" onclick="closeModal('editUserModal')">&times;</span>
-            </div>
-            <form id="editUserForm">
-                @csrf
-                @method('PUT')
-                <input type="hidden" id="edit_user_id" name="user_id">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_first_name">First Name *</label>
-                        <input type="text" id="edit_first_name" name="first_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_middle_name">Middle Name</label>
-                        <input type="text" id="edit_middle_name" name="middle_name">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_last_name">Last Name *</label>
-                        <input type="text" id="edit_last_name" name="last_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_role_id">Role *</label>
-                        <select id="edit_role_id" name="role_id" required>
-                            <option value="">Select Role</option>
-                            @foreach($roles as $role)
-                                <option value="{{ $role->role_id }}">{{ $role->role_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_email">Email *</label>
-                        <input type="email" id="edit_email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_contact_number">Contact Number</label>
-                        <input type="text" id="edit_contact_number" name="contact_number">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_password">New Password (leave blank to keep current)</label>
-                        <input type="password" id="edit_password" name="password" minlength="8">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_password_confirmation">Confirm New Password</label>
-                        <input type="password" id="edit_password_confirmation" name="password_confirmation">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="checkbox-label-flex">
-                            <input type="checkbox" id="edit_is_active" name="is_active" value="1">
-                            <span>Active Account</span>
-                        </label>
-                        <small class="help-text-small">
-                            For staff members (Nutritionist, Health Worker, BHW): Activating will also verify their email automatically.
-                        </small>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update User</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteUserModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Confirm Delete</h3>
-                <span class="close" onclick="closeModal('deleteUserModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the user <strong id="deleteUserName"></strong>?</p>
-                <p class="warning-text">This action cannot be undone.</p>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('deleteUserModal')">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteUser">Delete</button>
-            </div>
-        </div>
+    <!-- Hidden data for JavaScript -->
+    <div id="userData" 
+         data-route="{{ route('admin.users.store') }}" 
+         data-user-url-base="{{ url('admin/users') }}"
+         style="display:none;">
     </div>
 
 @endsection
 
 @push('scripts')
+    <script>
+        // Pass roles data to JavaScript
+        window.rolesData = @json($roles);
+    </script>
     <script src="{{ asset('js/admin/admin-users.js') }}"></script>
 @endpush

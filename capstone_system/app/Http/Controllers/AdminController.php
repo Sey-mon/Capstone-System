@@ -415,26 +415,48 @@ class AdminController extends Controller
     /**
      * Show users management
      */
-    public function users()
+    public function users(Request $request)
     {
+        $perPage = $request->input('per_page', 10);
+        
         $query = User::with('role');
-        if (request('search')) {
-            $search = request('search');
+        
+        if ($request->input('search')) {
+            $search = $request->input('search');
             $query->where(function($q) use ($search) {
                 $q->where('first_name', 'like', "%$search%")
                   ->orWhere('last_name', 'like', "%$search%")
                   ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('contact_number', 'like', "%$search%") ;
+                  ->orWhere('contact_number', 'like', "%$search%");
             });
         }
-        if (request('role')) {
-            $query->where('role_id', request('role'));
+        
+        if ($request->input('role')) {
+            $query->where('role_id', $request->input('role'));
         }
-        if (request('status') !== null && request('status') !== '') {
-            $query->where('is_active', request('status'));
+        
+        if ($request->input('status') !== null && $request->input('status') !== '') {
+            $query->where('is_active', $request->input('status'));
         }
-        $users = $query->paginate(10)->appends(request()->query());
+        
+        $users = $query->paginate($perPage)->appends($request->query());
         $roles = Role::all();
+        
+        // Handle AJAX requests
+        if ($request->ajax() || $request->input('ajax')) {
+            return response()->json([
+                'success' => true,
+                'users' => $users->items(),
+                'total' => $users->total(),
+                'pagination' => [
+                    'current_page' => $users->currentPage(),
+                    'last_page' => $users->lastPage(),
+                    'per_page' => $users->perPage(),
+                    'total' => $users->total(),
+                ]
+            ]);
+        }
+        
         return view('admin.users', compact('users', 'roles'));
     }
 
