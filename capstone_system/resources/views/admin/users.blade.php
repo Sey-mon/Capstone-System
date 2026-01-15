@@ -168,7 +168,17 @@
 
             @if(method_exists($users, 'links'))
             <div class="pagination-container">
-                {{ $users->links() }}
+                <div class="pagination-info-text">
+                    Showing <strong>{{ $users->firstItem() ?? 0 }}</strong> to <strong>{{ $users->lastItem() ?? 0 }}</strong> of <strong>{{ $users->total() }}</strong> users
+                </div>
+                <div class="pagination-links">
+                    {{ $users->appends(request()->query())->links() }}
+                </div>
+                <div class="pagination-jump-section">
+                    <label>Go to page:</label>
+                    <input type="number" id="pageJump" min="1" max="{{ $users->lastPage() }}" value="{{ $users->currentPage() }}" class="page-jump-input">
+                    <button class="btn-page-jump" id="jumpToPage">Go</button>
+                </div>
             </div>
             @endif
         </div>

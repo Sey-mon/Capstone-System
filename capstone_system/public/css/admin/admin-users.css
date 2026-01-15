@@ -209,10 +209,102 @@
     background: #dc2626;
 }
 
+/* ========== PAGINATION CONTAINER ========== */
 .pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-light);
+    padding: 1rem 0;
+    border-top: 1px solid #e9ecef;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.pagination-info-text {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.pagination-info-text strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+.pagination-links {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination-links nav {
+    display: inline-block;
+}
+
+/* Hide Laravel's default text */
+.pagination-links nav p {
+    display: none !important;
+}
+
+.pagination-jump-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-jump-section label {
+    margin: 0;
+    font-size: 14px;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.page-jump-input {
+    width: 60px;
+    height: 36px;
+    text-align: center;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 14px;
+}
+
+.page-jump-input:focus {
+    border-color: #28a745;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.btn-page-jump {
+    height: 36px;
+    padding: 0 16px;
+    background: #28a745;
+    border: 1px solid #28a745;
+    color: white;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-page-jump:hover {
+    background: #218838;
+    border-color: #1e7e34;
+}
+
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .pagination-info-text,
+    .pagination-links,
+    .pagination-jump-section {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 /* Filter Container Styles */

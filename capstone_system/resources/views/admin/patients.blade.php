@@ -85,7 +85,8 @@
         <!-- Results Summary -->
         <div class="results-summary">
             <div class="summary-stats">
-                <span class="total-count">Total: <strong id="totalPatients">{{ $patients->count() }}</strong> patients</span>
+                <span class="total-count">Total: <strong id="totalPatients">{{ $patients->total() }}</strong> patients</span>
+                <span class="page-count">Page <strong>{{ $patients->currentPage() }}</strong> of <strong>{{ $patients->lastPage() }}</strong></span>
                 <span class="filtered-count filtered-count-hidden" id="filteredCount">Showing: <strong id="visiblePatients">0</strong> patients</span>
             </div>
             <div class="view-options">
@@ -213,9 +214,21 @@
                                 @endforeach
                             </tbody>
                         </table>
-                        <!-- Pagination Links -->
-                        <div class="pagination-wrapper">
-                            {{ $patients->links() }}
+                        <!-- Pagination Controls -->
+                        <div class="pagination-controls">
+                            <div class="pagination-info">
+                                <span id="pageInfo">
+                                    Showing <strong>{{ $patients->firstItem() ?? 0 }}</strong> to <strong>{{ $patients->lastItem() ?? 0 }}</strong> of <strong>{{ $patients->total() }}</strong> patients
+                                </span>
+                            </div>
+                            <div class="pagination-wrapper">
+                                {{ $patients->links() }}
+                            </div>
+                            <div class="pagination-jump">
+                                <label for="pageJump">Go to page:</label>
+                                <input type="number" id="pageJump" min="1" max="{{ $patients->lastPage() }}" value="{{ $patients->currentPage() }}" class="form-control">
+                                <button class="btn btn-sm btn-primary" id="jumpToPage">Go</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -287,6 +300,22 @@
                                 </div>
                             </div>
                         @endforeach
+                    </div>
+                    <!-- Grid Pagination Controls -->
+                    <div class="pagination-controls">
+                        <div class="pagination-info">
+                            <span id="gridPageInfo">
+                                Showing <strong>{{ $patients->firstItem() ?? 0 }}</strong> to <strong>{{ $patients->lastItem() ?? 0 }}</strong> of <strong>{{ $patients->total() }}</strong> patients
+                            </span>
+                        </div>
+                        <div class="pagination-wrapper">
+                            {{ $patients->links() }}
+                        </div>
+                        <div class="pagination-jump">
+                            <label for="gridPageJump">Go to page:</label>
+                            <input type="number" id="gridPageJump" min="1" max="{{ $patients->lastPage() }}" value="{{ $patients->currentPage() }}" class="form-control">
+                            <button class="btn btn-sm btn-primary" id="gridJumpToPage">Go</button>
+                        </div>
                     </div>
                 </div>
 

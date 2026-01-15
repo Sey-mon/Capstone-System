@@ -159,6 +159,8 @@ Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->
     Route::get('/patients/{id}', [AdminController::class, 'getPatient'])->name('patients.get');
     Route::put('/patients/{id}', [AdminController::class, 'updatePatient'])->name('patients.update');
     Route::delete('/patients/{id}', [AdminController::class, 'deletePatient'])->name('patients.delete');
+    Route::get('/patients/{id}/assessments', [AdminController::class, 'getPatientAssessments'])->name('patients.assessments');
+    Route::get('/assessments/{id}', [AdminController::class, 'getAssessmentDetails'])->name('assessments.details');
     
     // Inventory CRUD routes
     Route::post('/inventory', [AdminController::class, 'storeInventoryItem'])->name('inventory.store');
