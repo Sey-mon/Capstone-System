@@ -1449,10 +1449,14 @@ class NutritionistController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
+            // Reload the plan to get the formatted generated_at timestamp
+            $plan->refresh();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Feeding program meal plan saved successfully',
-                'plan_id' => $plan->program_plan_id
+                'plan_id' => $plan->program_plan_id,
+                'plan' => $plan
             ]);
 
         } catch (\Exception $e) {
