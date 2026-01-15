@@ -547,6 +547,71 @@
     transform: translateY(-2px);
 }
 
+/* Compact Modal Variant */
+.user-modal-popup.compact-modal .swal2-title {
+    padding: 1rem 1.5rem;
+    font-size: 1.25rem;
+}
+
+.user-modal-popup.compact-modal .modal-header-title i {
+    font-size: 1.5rem;
+}
+
+.user-modal-popup.compact-modal .swal-form {
+    padding: 1.25rem 1.5rem;
+}
+
+.user-modal-popup.compact-modal .form-row {
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-modal-popup.compact-modal .form-group {
+    gap: 0.35rem;
+}
+
+.user-modal-popup.compact-modal .form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 0.15rem;
+}
+
+.user-modal-popup.compact-modal .swal2-input,
+.user-modal-popup.compact-modal .swal2-select {
+    padding: 0.6rem;
+    font-size: 0.875rem;
+}
+
+.user-modal-popup.compact-modal .field-hint,
+.user-modal-popup.compact-modal .help-text-small {
+    font-size: 0.75rem;
+    margin-top: 0.15rem;
+}
+
+.user-modal-popup.compact-modal .password-strength {
+    height: 3px;
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    padding: 0.2rem;
+}
+
+.user-modal-popup.compact-modal .password-toggle {
+    font-size: 0.9rem;
+}
+
+.user-modal-popup.compact-modal .checkbox-label-flex {
+    font-size: 0.875rem;
+}
+
+.user-modal-popup.compact-modal .swal2-actions {
+    padding: 1rem 1.5rem;
+}
+
+.user-modal-popup.compact-modal .modal-btn {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.875rem;
+    min-width: 100px;
+}
+
 /* Responsive Modal */
 @media (max-width: 768px) {
     .user-modal-popup {

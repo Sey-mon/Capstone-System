@@ -33,7 +33,7 @@ function openAddUserModal() {
                 <div class="form-row">
                     <div class="form-group">
                         <label for="add_email">Email *</label>
-                        <input type="email" id="add_email" name="email" class="swal2-input" required autocomplete="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Enter a valid email address">
+                        <input type="email" id="add_email" name="email" class="swal2-input" required autocomplete="email">
                         <small class="field-hint">Valid email format required</small>
                     </div>
                     <div class="form-group">
@@ -70,9 +70,9 @@ function openAddUserModal() {
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-check"></i> Add User',
         cancelButtonText: '<i class="fas fa-times"></i> Cancel',
-        width: '750px',
+        width: '650px',
         customClass: {
-            popup: 'user-modal-popup modern-modal',
+            popup: 'user-modal-popup modern-modal compact-modal',
             confirmButton: 'btn btn-primary modal-btn',
             cancelButton: 'btn btn-secondary modal-btn'
         },
@@ -217,23 +217,25 @@ function editUser(userId) {
         if (data.success) {
             const user = data.user;
             Swal.fire({
-                title: 'Edit User',
+                title: '<div class="modal-header-title"><i class="fas fa-user-edit"></i> Edit User</div>',
                 html: `
                     <form id="editUserForm" class="swal-form">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="edit_first_name">First Name *</label>
-                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${user.first_name}" required>
+                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${user.first_name}" required pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed">
+                                <small class="field-hint">Letters only</small>
                             </div>
                             <div class="form-group">
                                 <label for="edit_middle_name">Middle Name</label>
-                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${user.middle_name || ''}">
+                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${user.middle_name || ''}" pattern="[A-Za-z\\s]*" title="Only letters and spaces allowed">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="edit_last_name">Last Name *</label>
-                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${user.last_name}" required>
+                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${user.last_name}" required pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed">
+                                <small class="field-hint">Letters only</small>
                             </div>
                             <div class="form-group">
                                 <label for="edit_role_id">Role *</label>
@@ -247,20 +249,35 @@ function editUser(userId) {
                             <div class="form-group">
                                 <label for="edit_email">Email *</label>
                                 <input type="email" id="edit_email" name="email" class="swal2-input" value="${user.email}" required autocomplete="email">
+                                <small class="field-hint">Valid email format required</small>
                             </div>
                             <div class="form-group">
                                 <label for="edit_contact_number">Contact Number</label>
-                                <input type="text" id="edit_contact_number" name="contact_number" class="swal2-input" value="${user.contact_number || ''}">
+                                <input type="text" id="edit_contact_number" name="contact_number" class="swal2-input" value="${user.contact_number || ''}" pattern="09[0-9]{9}" maxlength="11" title="Format: 09XXXXXXXXX">
+                                <small class="field-hint">Format: 09XXXXXXXXX</small>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="edit_password">New Password (leave blank to keep current)</label>
-                                <input type="password" id="edit_password" name="password" class="swal2-input" minlength="8" autocomplete="new-password">
+                                <label for="edit_password">New Password (optional)</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="edit_password" name="password" class="swal2-input password-input" minlength="8" autocomplete="new-password">
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('edit_password', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength" id="edit_password_strength"></div>
+                                <small class="field-hint">Leave blank to keep current password</small>
                             </div>
                             <div class="form-group">
                                 <label for="edit_password_confirmation">Confirm New Password</label>
-                                <input type="password" id="edit_password_confirmation" name="password_confirmation" class="swal2-input" autocomplete="new-password">
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="edit_password_confirmation" name="password_confirmation" class="swal2-input password-input" autocomplete="new-password">
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('edit_password_confirmation', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="field-hint">Re-enter your new password</small>
                             </div>
                         </div>
                         <div class="form-row">
@@ -277,33 +294,106 @@ function editUser(userId) {
                     </form>
                 `,
                 showCancelButton: true,
-                confirmButtonText: 'Update User',
-                cancelButtonText: 'Cancel',
-                width: '700px',
+                confirmButtonText: '<i class="fas fa-check"></i> Update User',
+                cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+                width: '650px',
                 customClass: {
-                    popup: 'user-modal-popup',
-                    confirmButton: 'btn btn-primary',
-                    cancelButton: 'btn btn-secondary'
+                    popup: 'user-modal-popup modern-modal compact-modal',
+                    confirmButton: 'btn btn-primary modal-btn',
+                    cancelButton: 'btn btn-secondary modal-btn'
+                },
+                didOpen: () => {
+                    // Real-time password strength indicator
+                    const passwordInput = document.getElementById('edit_password');
+                    const strengthDiv = document.getElementById('edit_password_strength');
+                    
+                    passwordInput.addEventListener('input', function() {
+                        const password = this.value;
+                        if (password.length > 0) {
+                            const strength = checkPasswordStrength(password);
+                            strengthDiv.className = 'password-strength ' + strength.class;
+                            strengthDiv.textContent = strength.text;
+                        } else {
+                            strengthDiv.className = 'password-strength';
+                            strengthDiv.textContent = '';
+                        }
+                    });
+                    
+                    // Real-time contact number formatting
+                    const contactInput = document.getElementById('edit_contact_number');
+                    contactInput.addEventListener('input', function() {
+                        this.value = this.value.replace(/[^0-9]/g, '');
+                    });
                 },
                 preConfirm: () => {
-                    const firstName = document.getElementById('edit_first_name').value;
-                    const middleName = document.getElementById('edit_middle_name').value;
-                    const lastName = document.getElementById('edit_last_name').value;
+                    const firstName = document.getElementById('edit_first_name').value.trim();
+                    const middleName = document.getElementById('edit_middle_name').value.trim();
+                    const lastName = document.getElementById('edit_last_name').value.trim();
                     const roleId = document.getElementById('edit_role_id').value;
-                    const email = document.getElementById('edit_email').value;
-                    const contactNumber = document.getElementById('edit_contact_number').value;
+                    const email = document.getElementById('edit_email').value.trim();
+                    const contactNumber = document.getElementById('edit_contact_number').value.trim();
                     const password = document.getElementById('edit_password').value;
                     const passwordConfirmation = document.getElementById('edit_password_confirmation').value;
                     const isActive = document.getElementById('edit_is_active').checked;
 
+                    // Required fields validation
                     if (!firstName || !lastName || !roleId || !email) {
                         Swal.showValidationMessage('Please fill in all required fields');
                         return false;
                     }
-
-                    if (password && password !== passwordConfirmation) {
-                        Swal.showValidationMessage('Passwords do not match');
+                    
+                    // Name validation (letters and spaces only)
+                    const namePattern = /^[A-Za-z\\s]+$/;
+                    if (!namePattern.test(firstName)) {
+                        Swal.showValidationMessage('First name should contain only letters');
                         return false;
+                    }
+                    if (!namePattern.test(lastName)) {
+                        Swal.showValidationMessage('Last name should contain only letters');
+                        return false;
+                    }
+                    if (middleName && !namePattern.test(middleName)) {
+                        Swal.showValidationMessage('Middle name should contain only letters');
+                        return false;
+                    }
+                    
+                    // Email validation
+                    const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+                    if (!emailPattern.test(email)) {
+                        Swal.showValidationMessage('Please enter a valid email address');
+                        return false;
+                    }
+                    
+                    // Contact number validation (if provided)
+                    if (contactNumber) {
+                        const phonePattern = /^09[0-9]{9}$/;
+                        if (!phonePattern.test(contactNumber)) {
+                            Swal.showValidationMessage('Contact number must be in format: 09XXXXXXXXX');
+                            return false;
+                        }
+                    }
+                    
+                    // Password validation (only if provided)
+                    if (password) {
+                        if (password.length < 8) {
+                            Swal.showValidationMessage('Password must be at least 8 characters long');
+                            return false;
+                        }
+                        
+                        const hasUpperCase = /[A-Z]/.test(password);
+                        const hasLowerCase = /[a-z]/.test(password);
+                        const hasNumber = /[0-9]/.test(password);
+                        
+                        if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+                            Swal.showValidationMessage('Password must contain uppercase, lowercase, and numbers');
+                            return false;
+                        }
+                        
+                        // Password match validation
+                        if (password !== passwordConfirmation) {
+                            Swal.showValidationMessage('Passwords do not match');
+                            return false;
+                        }
                     }
 
                     return { firstName, middleName, lastName, roleId, email, contactNumber, password, passwordConfirmation, isActive };
