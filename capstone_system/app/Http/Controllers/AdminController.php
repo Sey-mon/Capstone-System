@@ -623,12 +623,178 @@ class AdminController extends Controller
     }
 
     /**
+     * Get patient assessments (Admin)
+     */
+    public function getPatientAssessments($id)
+    {
+        try {
+            // Get patient
+            $patient = Patient::findOrFail($id);
+
+            // Get all assessments for this patient, ordered by date (newest first)
+            $assessments = Assessment::with(['nutritionist'])
+                ->where('patient_id', $id)
+                ->orderBy('assessment_date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Format assessments data
+            $assessmentsData = $assessments->map(function ($assessment) {
+                // Calculate BMI if height and weight are available
+                $bmi = null;
+                if ($assessment->weight_kg && $assessment->height_cm) {
+                    $heightInMeters = $assessment->height_cm / 100;
+                    $bmi = round($assessment->weight_kg / ($heightInMeters * $heightInMeters), 2);
+                }
+
+                // Extract diagnosis/classification from treatment plan
+                $classification = 'Not specified';
+
+                if ($assessment->treatment) {
+                    $treatmentData = json_decode($assessment->treatment, true);
+                    if ($treatmentData) {
+                        // Try to extract classification from various possible locations
+                        if (isset($treatmentData['patient_info']['diagnosis'])) {
+                            $classification = $treatmentData['patient_info']['diagnosis'];
+                        } elseif (isset($treatmentData['diagnosis'])) {
+                            $classification = $treatmentData['diagnosis'];
+                        } elseif (isset($treatmentData['classification'])) {
+                            $classification = $treatmentData['classification'];
+                        }
+                    }
+                }
+
+                return [
+                    'assessment_id' => $assessment->assessment_id,
+                    'assessment_date' => $assessment->assessment_date ? \Carbon\Carbon::parse($assessment->assessment_date)->format('F d, Y') : 'N/A',
+                    'assessment_date_raw' => $assessment->assessment_date,
+                    'classification' => $classification,
+                    'weight_kg' => $assessment->weight_kg,
+                    'height_cm' => $assessment->height_cm,
+                    'bmi' => $bmi,
+                    'weight_for_age' => $assessment->weight_for_age,
+                    'height_for_age' => $assessment->height_for_age,
+                    'bmi_for_age' => $assessment->bmi_for_age,
+                    'treatment_plan' => $assessment->treatment,
+                    'notes' => $assessment->notes,
+                    'assessor_name' => $assessment->nutritionist ? $assessment->nutritionist->first_name . ' ' . $assessment->nutritionist->last_name : 'N/A',
+                    'recovery_status' => $assessment->recovery_status,
+                    'status' => $assessment->completed_at ? 'Completed' : 'Pending',
+                    'created_at' => $assessment->created_at->format('M d, Y g:i A')
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'patient' => [
+                    'patient_id' => $patient->patient_id,
+                    'name' => $patient->first_name . ' ' . $patient->last_name,
+                    'age_months' => $patient->age_months,
+                    'sex' => $patient->sex
+                ],
+                'assessments' => $assessmentsData,
+                'total' => $assessmentsData->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Patient not found.',
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
      * Show assessments management
      */
     public function assessments()
     {
         $assessments = Assessment::with(['patient.barangay'])->paginate(15);
         return view('admin.assessments', compact('assessments'));
+    }
+
+    /**
+     * Get assessment details (Admin)
+     */
+    public function getAssessmentDetails($id)
+    {
+        try {
+            // Get assessment with related data
+            $assessment = Assessment::with(['patient.barangay', 'nutritionist'])
+                ->where('assessment_id', $id)
+                ->firstOrFail();
+
+            // Calculate BMI if height and weight are available
+            $bmi = null;
+            if ($assessment->weight_kg && $assessment->height_cm) {
+                $heightInMeters = $assessment->height_cm / 100;
+                $bmi = round($assessment->weight_kg / ($heightInMeters * $heightInMeters), 2);
+            }
+
+            // Decode treatment plan if it exists
+            $treatmentPlan = null;
+            $diagnosis = 'Not specified';
+            if ($assessment->treatment) {
+                $treatmentData = json_decode($assessment->treatment, true);
+                if ($treatmentData) {
+                    $treatmentPlan = $treatmentData;
+                    // Extract diagnosis from treatment plan if available
+                    if (isset($treatmentData['patient_info']['diagnosis'])) {
+                        $diagnosis = $treatmentData['patient_info']['diagnosis'];
+                    } elseif (isset($treatmentData['diagnosis'])) {
+                        $diagnosis = $treatmentData['diagnosis'];
+                    } elseif (isset($treatmentData['classification'])) {
+                        $diagnosis = $treatmentData['classification'];
+                    }
+                }
+            }
+
+            // Prepare response data
+            $assessmentData = [
+                'assessment_id' => $assessment->assessment_id,
+                'patient_id' => $assessment->patient_id,
+                'assessment_date' => $assessment->assessment_date ? \Carbon\Carbon::parse($assessment->assessment_date)->format('F d, Y') : 'N/A',
+                'patient' => [
+                    'patient_id' => $assessment->patient->patient_id,
+                    'name' => $assessment->patient->first_name . ' ' . $assessment->patient->last_name,
+                    'age_months' => $assessment->patient->age_months,
+                    'sex' => $assessment->patient->sex,
+                    'barangay' => $assessment->patient->barangay->barangay_name ?? 'Unknown'
+                ],
+                'measurements' => [
+                    'weight_kg' => $assessment->weight_kg,
+                    'height_cm' => $assessment->height_cm,
+                    'bmi' => $bmi
+                ],
+                'weight_kg' => $assessment->weight_kg,
+                'height_cm' => $assessment->height_cm,
+                'bmi' => $bmi,
+                'weight_for_age' => $assessment->weight_for_age,
+                'height_for_age' => $assessment->height_for_age,
+                'bmi_for_age' => $assessment->bmi_for_age,
+                'diagnosis' => $diagnosis,
+                'recovery_status' => $assessment->recovery_status,
+                'treatment' => $assessment->treatment,
+                'treatment_plan' => $treatmentPlan,
+                'notes' => $assessment->notes,
+                'assessor_name' => $assessment->nutritionist ? $assessment->nutritionist->first_name . ' ' . $assessment->nutritionist->last_name : 'N/A',
+                'completed_at' => $assessment->completed_at ? $assessment->completed_at->format('M d, Y g:i A') : null,
+                'status' => $assessment->completed_at ? 'Completed' : 'Pending'
+            ];
+
+            return response()->json([
+                'success' => true,
+                'assessment' => $assessmentData
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Assessment not found.',
+                'error' => $e->getMessage()
+            ], 404);
+        }
     }
 
     /**

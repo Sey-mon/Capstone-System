@@ -529,7 +529,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup AJAX filters
     setupFilters();
     setupPaginationLinks();
+    setupPaginationControls();
 });
+
+// Setup pagination controls
+function setupPaginationControls() {
+    const jumpToPageBtn = document.getElementById('jumpToPage');
+    const pageJumpInput = document.getElementById('pageJump');
+    
+    if (jumpToPageBtn && pageJumpInput) {
+        jumpToPageBtn.addEventListener('click', function() {
+            const page = parseInt(pageJumpInput.value);
+            const maxPage = parseInt(pageJumpInput.getAttribute('max'));
+            
+            if (page >= 1 && page <= maxPage) {
+                loadUsers(page);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Page',
+                    text: `Please enter a page number between 1 and ${maxPage}`,
+                    confirmButtonColor: '#28a745'
+                });
+            }
+        });
+        
+        pageJumpInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                jumpToPageBtn.click();
+            }
+        });
+    }
+}
 
 // Setup filter event listeners for AJAX
 function setupFilters() {
@@ -676,35 +707,62 @@ function renderPagination(pagination) {
     if (!paginationContainer || !pagination) return;
 
     if (pagination.last_page <= 1) {
-        paginationContainer.innerHTML = '';
+        paginationContainer.style.display = 'none';
         return;
     }
+    
+    paginationContainer.style.display = 'flex';
 
-    let html = '<nav><ul class="pagination">';
+    // Update pagination info
+    const firstItem = pagination.from || 0;
+    const lastItem = pagination.to || 0;
+    const total = pagination.total || 0;
     
-    // Previous button
-    if (pagination.current_page > 1) {
-        html += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${pagination.current_page - 1}); return false;">Previous</a></li>`;
+    const paginationInfo = paginationContainer.querySelector('.pagination-info-text');
+    if (paginationInfo) {
+        paginationInfo.innerHTML = `Showing <strong>${firstItem}</strong> to <strong>${lastItem}</strong> of <strong>${total}</strong> users`;
     }
-    
-    // Page numbers
-    for (let i = 1; i <= pagination.last_page; i++) {
-        if (i === pagination.current_page) {
-            html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
-        } else if (i === 1 || i === pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination.current_page + 2)) {
-            html += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${i}); return false;">${i}</a></li>`;
-        } else if (i === pagination.current_page - 3 || i === pagination.current_page + 3) {
-            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+
+    // Update pagination links
+    const paginationLinks = paginationContainer.querySelector('.pagination-links');
+    if (paginationLinks) {
+        let html = '<nav><ul class="pagination">';
+        
+        // Previous button
+        if (pagination.current_page > 1) {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${pagination.current_page - 1}); return false;">‹</a></li>`;
+        } else {
+            html += `<li class="page-item disabled"><span class="page-link">‹</span></li>`;
         }
+        
+        // Page numbers
+        for (let i = 1; i <= pagination.last_page; i++) {
+            if (i === pagination.current_page) {
+                html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+            } else if (i === 1 || i === pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination.current_page + 2)) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${i}); return false;">${i}</a></li>`;
+            } else if (i === pagination.current_page - 3 || i === pagination.current_page + 3) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+        
+        // Next button
+        if (pagination.current_page < pagination.last_page) {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${pagination.current_page + 1}); return false;">›</a></li>`;
+        } else {
+            html += `<li class="page-item disabled"><span class="page-link">›</span></li>`;
+        }
+        
+        html += '</ul></nav>';
+        paginationLinks.innerHTML = html;
     }
     
-    // Next button
-    if (pagination.current_page < pagination.last_page) {
-        html += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${pagination.current_page + 1}); return false;">Next</a></li>`;
+    // Update page jump input
+    const pageJumpInput = paginationContainer.querySelector('#pageJump');
+    if (pageJumpInput) {
+        pageJumpInput.setAttribute('max', pagination.last_page);
+        pageJumpInput.value = pagination.current_page;
     }
-    
-    html += '</ul></nav>';
-    paginationContainer.innerHTML = html;
 }
 
 // Update user count in header
