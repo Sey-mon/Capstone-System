@@ -74,6 +74,13 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -170,6 +177,24 @@ class User extends Authenticatable implements MustVerifyEmail
         }
         
         return $value;
+    }
+
+    /**
+     * Override toArray to ensure encrypted fields are decrypted in JSON responses
+     */
+    public function toArray()
+    {
+        $array = parent::toArray();
+        
+        // Decrypt encrypted fields for JSON serialization
+        foreach ($this->encrypted as $field) {
+            if (isset($array[$field]) && !empty($array[$field])) {
+                $decrypted = $this->getEncryptionService()->decryptUserData($array[$field]);
+                $array[$field] = $decrypted !== null ? $decrypted : $array[$field];
+            }
+        }
+        
+        return $array;
     }
 
     /**

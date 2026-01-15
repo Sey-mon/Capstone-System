@@ -11,7 +11,6 @@ class MealPlansManager {
     init() {
         this.bindEvents();
         this.setupCSRF();
-        this.setupSearch();
     }
 
     setupCSRF() {
@@ -23,78 +22,25 @@ class MealPlansManager {
         });
     }
 
-    setupSearch() {
-        // Patient search functionality
-        $('#patient-search').on('focus', () => {
-            $('#patients-list-container').slideDown(300);
-        });
-
-        $('#patient-search').on('input', (e) => {
-            const searchTerm = $(e.target).val().toLowerCase();
-            if (searchTerm.length > 0) {
-                $('#patients-list-container').slideDown(300);
-            }
-            this.filterPatients(searchTerm);
-        });
-
-        // Hide list when clicking outside
-        $(document).on('click', (e) => {
-            if (!$(e.target).closest('.search-container, .patients-list-container').length) {
-                $('#patients-list-container').slideUp(300);
-            }
-        });
-    }
-
-    filterPatients(searchTerm) {
-        $('.patient-item').each(function() {
-            const name = $(this).data('name');
-            const age = $(this).data('age').toString();
-            const location = $(this).data('location');
-            
-            const matches = name.includes(searchTerm) || 
-                          age.includes(searchTerm) || 
-                          location.includes(searchTerm);
-            
-            $(this).toggleClass('hidden', !matches);
-        });
-    }
-
     bindEvents() {
         // Test API connection
         $(document).on('click', '#test-api-btn', () => this.testAPIConnection());
-
-        // Generate nutrition analysis
-        $(document).on('click', '.generate-analysis-btn', (e) => {
-            e.stopPropagation();
-            const patientId = $(e.currentTarget).data('patient-id');
-            this.generateNutritionAnalysis(patientId);
-        });
-
-        // Show meal plan modal
-        $(document).on('click', '.generate-meal-plan-btn', (e) => {
-            e.stopPropagation();
-            const patientId = $(e.currentTarget).data('patient-id');
-            this.showMealPlanModal(patientId);
-        });
-
-        // View meal plan history
-        $(document).on('click', '.view-meal-plans-btn', (e) => {
-            e.stopPropagation();
-            const patientId = $(e.currentTarget).data('patient-id');
-            this.viewMealPlanHistory(patientId);
-        });
 
         // Close results
         $(document).on('click', '#close-results-btn', () => this.hideResults());
 
         // Feeding Program - Open modal
-        $(document).on('click', '#open-feeding-program-btn', () => this.showFeedingProgramModal());
+        $(document).on('click', '#open-feeding-program-btn, #open-feeding-program-btn-empty', () => this.showFeedingProgramModal());
+        
+        // Show all plans
+        $(document).on('click', '#show-all-plans', () => {
+            $('.plan-card').show();
+        });
         
         // Download PDF button
         $(document).on('click', '#download-feeding-pdf, .download-pdf-btn', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('PDF button clicked!');
             this.downloadPDF();
         });
     }
@@ -177,24 +123,9 @@ class MealPlansManager {
                         <textarea id="swal-ingredients" class="swal2-textarea" placeholder="List available ingredients from suppliers or donations (e.g., manok, bangus, monggo, kangkong, saging, kalabasa)"></textarea>
                         <small>Comma-separated list helps customize meal plans based on what you have</small>
                     </div>
-                    
-                    <div style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); padding: 1.25rem; border-radius: 12px; border-left: 4px solid #10b981; margin-top: 1.5rem;">
-                        <div style="display: flex; align-items: flex-start; gap: 0.875rem;">
-                            <i class="fas fa-lightbulb" style="color: #10b981; font-size: 1.375rem; margin-top: 0.125rem;"></i>
-                            <div>
-                                <strong style="color: #059669; display: block; margin-bottom: 0.625rem; font-size: 1rem;">Benefits:</strong>
-                                <ul style="margin: 0; padding-left: 1.5rem; color: #374151; font-size: 0.9375rem; line-height: 1.7;">
-                                    <li>NO dish repetition across entire program</li>
-                                    <li>Budget-conscious Filipino cuisine</li>
-                                    <li>Age-appropriate texture adaptations</li>
-                                    <li>Shopping lists for bulk purchasing</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             `,
-            width: '900px',
+            width: '1000px',
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-check"></i> Generate Plan',
             cancelButtonText: '<i class="fas fa-times"></i> Cancel',
@@ -219,66 +150,6 @@ class MealPlansManager {
 
         if (formValues) {
             this.generateFeedingProgram(formValues);
-        }
-    }
-
-    async showMealPlanModal(patientId) {
-        const { value: availableFoods } = await Swal.fire({
-            title: '<i class="fas fa-utensils"></i> Generate Individual Meal Plan',
-            html: `
-                <div style="text-align: left; padding: 0 1.5rem;">
-                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #2d7a4f;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <i class="fas fa-info-circle" style="color: #2d7a4f; font-size: 1.25rem;"></i>
-                            <div>
-                                <strong style="color: #2d7a4f; display: block; margin-bottom: 0.25rem;">Personalized Meal Plan</strong>
-                                <p style="margin: 0; color: #2c3e50; font-size: 0.875rem;">Creating a customized meal plan based on the patient's nutritional assessment and growth data.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
-                        <i class="fas fa-shopping-basket"></i> Available Foods (Optional)
-                    </label>
-                    <textarea id="swal-available-foods" class="swal2-textarea" 
-                              placeholder="List any specific foods available at home or in the area (e.g., manok, bangus, monggo, kangkong, saging, gatas, itlog)"
-                              style="width: 100%; min-height: 120px; resize: vertical; font-size: 0.9375rem;"></textarea>
-                    <small style="color: #6c757d; font-size: 0.8125rem; display: block; margin-top: 0.5rem;">
-                        <i class="fas fa-lightbulb"></i> This will help customize the meal plan based on local availability and family preferences.
-                    </small>
-                    
-                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-top: 1.25rem; border: 1px solid #e1e8ed;">
-                        <strong style="color: #2c3e50; display: block; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                            <i class="fas fa-check-circle" style="color: #2d7a4f;"></i> What you'll get:
-                        </strong>
-                        <ul style="margin: 0; padding-left: 1.5rem; color: #6c757d; font-size: 0.8125rem; line-height: 1.6;">
-                            <li>Age-appropriate meal plan</li>
-                            <li>Nutritional analysis per meal</li>
-                            <li>Filipino-friendly recipes</li>
-                            <li>Preparation instructions</li>
-                        </ul>
-                    </div>
-                </div>
-            `,
-            width: '700px',
-            padding: '2rem 1rem',
-            showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-check"></i> Generate Meal Plan',
-            cancelButtonText: '<i class="fas fa-times"></i> Cancel',
-            confirmButtonColor: '#2d7a4f',
-            cancelButtonColor: '#95a5a6',
-            focusConfirm: false,
-            customClass: {
-                confirmButton: 'swal-confirm-btn',
-                cancelButton: 'swal-cancel-btn'
-            },
-            preConfirm: () => {
-                return document.getElementById('swal-available-foods').value;
-            }
-        });
-
-        if (availableFoods !== undefined) {
-            this.generateMealPlan(patientId, availableFoods);
         }
     }
 
@@ -327,7 +198,7 @@ class MealPlansManager {
                 }
                 
                 // Save to database
-                await this.saveFeedingProgramToDatabase(formData, response.data);
+                const savedPlan = await this.saveFeedingProgramToDatabase(formData, response.data);
                 
                 const programHtml = this.formatFeedingProgram(response.data);
                 
@@ -341,15 +212,15 @@ class MealPlansManager {
                         width: '90%',
                         confirmButtonText: 'Close',
                         confirmButtonColor: '#f59e0b',
+                        timer: 5000,
+                        timerProgressBar: true,
                         customClass: {
                             popup: 'meal-plan-result'
                         },
                         footer: '<p style="color: #856404;">The meal plan was created but had formatting issues. Try generating again for better results.</p>'
                     }).then(() => {
-                        // Reload page after closing the modal
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 100);
+                        // Add the new plan to the list dynamically
+                        this.addPlanToList(savedPlan);
                     });
                 } else {
                     Swal.fire({
@@ -358,14 +229,14 @@ class MealPlansManager {
                         width: '90%',
                         confirmButtonText: 'Close',
                         confirmButtonColor: '#10b981',
+                        timer: 5000,
+                        timerProgressBar: true,
                         customClass: {
                             popup: 'meal-plan-result'
                         }
                     }).then(() => {
-                        // Reload page after closing the modal
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 100);
+                        // Add the new plan to the list dynamically
+                        this.addPlanToList(savedPlan);
                     });
                 }
             } else {
@@ -408,7 +279,7 @@ class MealPlansManager {
 
     async saveFeedingProgramToDatabase(formData, apiResponse) {
         try {
-            await $.ajax({
+            const response = await $.ajax({
                 url: '/nutritionist/feeding-program/save',
                 method: 'POST',
                 headers: {
@@ -422,71 +293,13 @@ class MealPlansManager {
                     budget_level: formData.budget,
                     barangay: formData.barangay || null,
                     available_ingredients: formData.ingredients || null,
-                    meal_plan: apiResponse.meal_plan  // This is just the string, not the whole response
+                    meal_plan: apiResponse.meal_plan
                 })
             });
-            console.log('Feeding program saved to database');
-            
-            // Reload page seamlessly after successful save
-            setTimeout(() => {
-                window.location.reload();
-            }, 100);
+            return response.plan; // Return the saved plan data
         } catch (error) {
             console.error('Failed to save to database:', error);
-            // Don't show error to user - plan was still generated successfully
-        }
-    }
-
-    async generateMealPlan(patientId, availableFoods) {
-        Swal.fire({
-            title: 'Generating Meal Plan...',
-            html: 'Creating personalized meal plan for patient...',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        try {
-            const apiUrl = window.API_CONFIG?.LLM_API_URL || 'http://127.0.0.1:8002';
-            const response = await $.ajax({
-                url: `${apiUrl}/generate_meal_plan`,
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    patient_id: patientId,
-                    available_foods: availableFoods || null
-                })
-            });
-
-            if (response.meal_plan) {
-                const mealPlanHtml = this.formatIndividualMealPlan(response.meal_plan);
-                Swal.fire({
-                    title: '<i class="fas fa-check-circle" style="color: #2d7a4f;"></i> Meal Plan Generated!',
-                    html: mealPlanHtml,
-                    width: '90%',
-                    confirmButtonText: 'Close',
-                    confirmButtonColor: '#2d7a4f',
-                    customClass: {
-                        popup: 'meal-plan-result'
-                    }
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Generation Failed',
-                    text: 'Failed to generate meal plan',
-                    confirmButtonColor: '#2d7a4f'
-                });
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.responseJSON?.error || 'Failed to connect to AI service',
-                confirmButtonColor: '#2d7a4f'
-            });
+            throw error;
         }
     }
 
@@ -591,7 +404,6 @@ class MealPlansManager {
             // Now try to parse the JSON
             try {
                 parsedData = JSON.parse(jsonString);
-                console.log('Successfully parsed meal plan as JSON');
             } catch (e) {
                 console.warn('JSON parsing failed, falling back to markdown parsing:', e.message);
                 // Keep as string for markdown parsing
@@ -618,6 +430,7 @@ class MealPlansManager {
                         
                         if (dayData.meals && Array.isArray(dayData.meals)) {
                             dayData.meals.forEach(meal => {
+                                
                                 // Build ingredients string from array or object
                                 let ingredientsStr = '';
                                 if (Array.isArray(meal.ingredients)) {
@@ -629,10 +442,13 @@ class MealPlansManager {
                                     ingredientsStr = meal.ingredients;
                                 }
                                 
+                                // Try multiple possible field names for meal type
+                                const mealTypeValue = meal.meal_name_tagalog || meal.meal_name || meal.meal_type || meal.mealType || meal.type || meal.meal || '';
+                                
                                 mealEntries.push({
                                     day: `Day ${dayData.day}`,
-                                    mealType: this.normalizeMealType(meal.meal_type || meal.mealType || ''),
-                                    dishName: meal.dish_name || meal.dishName || 'N/A',
+                                    mealType: this.normalizeMealType(mealTypeValue),
+                                    dishName: meal.dish_name || meal.dishName || meal.name || 'N/A',
                                     ingredients: ingredientsStr
                                 });
                             });
@@ -647,7 +463,6 @@ class MealPlansManager {
         
         // If no entries found and we have a string, try markdown parsing
         if (mealEntries.length === 0 && typeof parsedData === 'string') {
-            console.log('Attempting markdown parsing as fallback...');
             
             const lines = mealPlanText.split('\n');
             let currentDay = '';
@@ -739,7 +554,6 @@ class MealPlansManager {
         // Render table
         if (mealEntries.length === 0) {
             console.error('Failed to extract meal entries from response');
-            console.log('Raw meal plan text:', typeof parsedData === 'string' ? parsedData.substring(0, 500) : parsedData);
             html += `
                 <tr>
                     <td colspan="4" style="padding: 20px; text-align: center;">
@@ -841,6 +655,141 @@ class MealPlansManager {
             .replace(/\n/g, '<br>');
     }
 
+    addPlanToList(plan) {
+        // Remove empty state if it exists
+        $('.empty-state').remove();
+
+        // Format age group label
+        let ageGroupLabel = '';
+        let ageGroupShort = '';
+        if (plan.target_age_group === 'all') {
+            ageGroupLabel = 'All Ages (6mo-5y)';
+            ageGroupShort = 'All Ages';
+        } else if (plan.target_age_group === '6-12months') {
+            ageGroupLabel = 'Infants (6-12mo)';
+            ageGroupShort = '6-12mo';
+        } else if (plan.target_age_group === '12-24months') {
+            ageGroupLabel = 'Toddlers (12-24mo)';
+            ageGroupShort = '12-24mo';
+        } else {
+            ageGroupLabel = 'Preschoolers (24-60mo)';
+            ageGroupShort = '24-60mo';
+        }
+
+        // Format the generated_at timestamp
+        const generatedDate = new Date(plan.generated_at);
+        const formattedDate = generatedDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric'
+        });
+
+        // Build the HTML for the new plan card
+        const planHtml = `
+            <div class="plan-card" 
+                 data-plan-id="${plan.program_plan_id}"
+                 data-budget="${plan.budget_level}"
+                 data-age-group="${plan.target_age_group}"
+                 data-barangay="${(plan.barangay || '').toLowerCase()}"
+                 data-duration="${plan.program_duration_days}"
+                 data-timestamp="${Math.floor(generatedDate.getTime() / 1000)}">
+                <div class="plan-card-header">
+                    <div class="plan-avatar">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="plan-info">
+                        <h3 class="plan-title">
+                            ${plan.budget_level.charAt(0).toUpperCase() + plan.budget_level.slice(1)} Budget Plan
+                        </h3>
+                        <div class="plan-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-baby"></i>
+                                ${ageGroupShort}
+                            </span>
+                            ${plan.total_children ? `
+                            <span class="meta-item">
+                                <i class="fas fa-users"></i>
+                                ${plan.total_children} children
+                            </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="plan-status">
+                        <span class="status-badge status-completed">
+                            <i class="fas fa-check-circle"></i>
+                            COMPLETED
+                        </span>
+                    </div>
+                </div>
+
+                <div class="plan-card-body">
+                    <div class="plan-detail-row">
+                        <div class="detail-item">
+                            <label>
+                                <i class="fas fa-calendar"></i>
+                                GENERATED DATE
+                            </label>
+                            <div class="detail-value">
+                                ${formattedDate}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <label>
+                                <i class="fas fa-map-marker-alt"></i>
+                                LOCATION
+                            </label>
+                            <div class="detail-value budget-badge budget-${plan.budget_level}">
+                                ${plan.barangay || 'Not Specified'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="plan-detail-row">
+                        <div class="detail-item full-width">
+                            <label>
+                                <i class="fas fa-hourglass-half"></i>
+                                PROGRAM DURATION
+                            </label>
+                            <div class="detail-value">${plan.program_duration_days} Days Program</div>
+                        </div>
+                    </div>
+
+                    ${plan.available_ingredients ? `
+                    <div class="plan-detail-row">
+                        <div class="detail-item full-width">
+                            <label>
+                                <i class="fas fa-carrot"></i>
+                                AVAILABLE INGREDIENTS
+                            </label>
+                            <div class="detail-value ingredients-text">
+                                ${plan.available_ingredients.length > 100 ? plan.available_ingredients.substring(0, 100) + '...' : plan.available_ingredients}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="plan-card-footer">
+                    <button type="button" class="btn-action btn-view view-program-plan-btn" 
+                            data-plan-id="${plan.program_plan_id}">
+                        <i class="fas fa-eye"></i>
+                        View Details
+                    </button>
+                    <button type="button" class="btn-action btn-delete delete-program-plan-btn" 
+                            data-plan-id="${plan.program_plan_id}">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Add the new plan to the top of the grid with animation
+        const $planElement = $(planHtml).hide();
+        $('#program-plans-list').prepend($planElement);
+        $planElement.fadeIn(400);
+    }
+
     downloadPDF() {
         if (!this.currentProgramData) {
             Swal.fire({
@@ -852,8 +801,6 @@ class MealPlansManager {
         }
 
         const data = this.currentProgramData;
-        
-        console.log('Starting PDF generation with data:', data);
         
         // Show loading
         Swal.fire({
@@ -885,7 +832,6 @@ class MealPlansManager {
                 
                 // Get the entire meal plan results div
                 const resultsDiv = document.querySelector('.feeding-program-results');
-                console.log('Found results div:', resultsDiv);
                 
                 if (!resultsDiv) {
                     throw new Error('Cannot find meal plan content');
@@ -913,9 +859,6 @@ class MealPlansManager {
                 // Add the cloned content
                 pdfWrapper.appendChild(clonedContent);
                 
-                console.log('PDF wrapper created:', pdfWrapper);
-                console.log('PDF wrapper HTML length:', pdfWrapper.innerHTML.length);
-                
                 // Configure PDF options
                 const opt = {
                     margin: 10,
@@ -935,12 +878,9 @@ class MealPlansManager {
                     }
                 };
                 
-                console.log('Starting html2pdf conversion...');
-                
                 // Generate PDF
                 html2pdf().set(opt).from(pdfWrapper).save()
                     .then(() => {
-                        console.log('PDF generated successfully');
                         Swal.fire({
                             icon: 'success',
                             title: 'PDF Downloaded!',
@@ -1041,200 +981,6 @@ class MealPlansManager {
         }
     }
 
-    async generateNutritionAnalysis(patientId) {
-        this.showLoading('Generating nutrition analysis...');
-
-        try {
-            const response = await $.post('/nutritionist/nutrition/analysis', {
-                patient_id: patientId
-            });
-
-            if (response.success) {
-                const analysisHtml = this.formatNutritionAnalysis(response.data.nutrition_analysis);
-                this.showSuccess('Nutrition Analysis', analysisHtml);
-            } else {
-                this.showError(response.message);
-            }
-        } catch (error) {
-            this.showError('Failed to generate nutrition analysis');
-            console.error('Nutrition analysis error:', error);
-        }
-    }
-
-    formatNutritionAnalysis(analysis) {
-        let html = '<div class="analysis-results">';
-        
-        for (const [key, value] of Object.entries(analysis)) {
-            const title = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            html += `
-                <div class="analysis-section">
-                    <h4>${title}</h4>
-                    <p>${value}</p>
-                </div>
-            `;
-        }
-        
-        html += '</div>';
-        return html;
-    }
-
-    showMealPlanModal(patientId) {
-        $('#modal-patient-id').val(patientId);
-        $('#available-foods').val('');
-        
-        // Get patient name for modal title
-        const patientCard = $(`.patient-card[data-patient-id="${patientId}"]`);
-        const patientName = patientCard.find('.patient-name').text();
-        $('#mealPlanModalLabel').text(`Generate Meal Plan - ${patientName}`);
-        
-        $('#mealPlanModal').modal('show');
-    }
-
-    async generateMealPlan() {
-        const patientId = $('#modal-patient-id').val();
-        const availableFoods = $('#available-foods').val();
-
-        $('#mealPlanModal').modal('hide');
-        this.showLoading('Generating personalized meal plan...');
-
-        try {
-            const response = await $.post('/nutritionist/nutrition/meal-plan', {
-                patient_id: patientId,
-                available_foods: availableFoods
-            });
-
-            if (response.success) {
-                const mealPlanHtml = this.formatMealPlan(response.data.meal_plan);
-                this.showSuccess('Generated Meal Plan', mealPlanHtml);
-            } else {
-                this.showError(response.message);
-            }
-        } catch (error) {
-            this.showError('Failed to generate meal plan');
-            console.error('Meal plan generation error:', error);
-        }
-    }
-
-    formatMealPlan(mealPlanText) {
-        // Parse the meal plan text and format it nicely
-        const sections = mealPlanText.split(/(?=[A-Z][A-Z\s]*:)/);
-        let html = '<div class="meal-plan-content">';
-        
-        sections.forEach(section => {
-            if (section.trim()) {
-                const [title, ...contentParts] = section.split(':');
-                const content = contentParts.join(':').trim();
-                
-                if (title && content) {
-                    html += `
-                        <div class="meal-plan-day">
-                            <div class="day-title">${title.trim()}</div>
-                            <div class="meal-description">${content}</div>
-                        </div>
-                    `;
-                }
-            }
-        });
-        
-        html += '</div>';
-        return html;
-    }
-
-    formatIndividualMealPlan(mealPlanText) {
-        // Format individual patient meal plan from FastAPI
-        let html = `
-            <div class="individual-meal-plan-container" style="background: #f8f9fa; padding: 2rem; border-radius: 12px;">
-                <div style="background: linear-gradient(135deg, #2d7a4f 0%, #1e5a3a 100%); color: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.5rem;">
-                        <i class="fas fa-utensils"></i> Personalized Meal Plan
-                    </h3>
-                    <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Customized nutrition plan based on patient's needs</p>
-                </div>
-        `;
-
-        // Parse and display sections
-        const sections = mealPlanText.split(/(?=[A-Z][A-Z\s]*:)/).filter(s => s.trim());
-        
-        sections.forEach(section => {
-            if (section.trim()) {
-                const colonIndex = section.indexOf(':');
-                if (colonIndex > 0) {
-                    const title = section.substring(0, colonIndex).trim();
-                    const content = section.substring(colonIndex + 1).trim();
-                    
-                    html += `
-                        <div class="meal-plan-section" style="background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <h4 style="color: #2d7a4f; margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem; border-bottom: 2px solid #2d7a4f; padding-bottom: 0.5rem;">
-                                ${title}
-                            </h4>
-                            <div style="color: #2c3e50; line-height: 1.8; white-space: pre-wrap;">
-                                ${content}
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-        });
-
-        html += `
-                <div class="action-buttons" style="margin-top: 1.5rem; text-align: right;">
-                    <button class="btn btn-success" onclick="window.print()" style="background-color: #2d7a4f; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; color: white; font-weight: 500; cursor: pointer;">
-                        <i class="fas fa-print"></i> Print Meal Plan
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        return html;
-    }
-
-    async viewMealPlanHistory(patientId) {
-        this.showLoading('Loading meal plan history...');
-
-        try {
-            const response = await $.post('/nutritionist/nutrition/patient-meal-plans', {
-                patient_id: patientId,
-                most_recent: false
-            });
-
-            if (response.success) {
-                const historyHtml = this.formatMealPlanHistory(response.data.meal_plans);
-                this.showSuccess('Meal Plan History', historyHtml);
-            } else {
-                this.showError(response.message);
-            }
-        } catch (error) {
-            this.showError('Failed to load meal plan history');
-            console.error('Meal plan history error:', error);
-        }
-    }
-
-    formatMealPlanHistory(mealPlans) {
-        if (!mealPlans || mealPlans.length === 0) {
-            return '<div class="empty-state"><p>No meal plans found for this patient.</p></div>';
-        }
-
-        let html = '<div class="meal-plan-history">';
-        
-        mealPlans.forEach(plan => {
-            const createdDate = new Date(plan.created_at).toLocaleDateString();
-            html += `
-                <div class="history-item">
-                    <div class="history-header">
-                        <strong>Meal Plan - ${createdDate}</strong>
-                        <span class="badge badge-info">${plan.duration_days || 7} days</span>
-                    </div>
-                    <div class="history-content">
-                        ${this.formatMealPlan(plan.plan_details || 'No details available')}
-                    </div>
-                </div>
-            `;
-        });
-        
-        html += '</div>';
-        return html;
-    }
-
     // Utility methods
     showNotification(message, type = 'info') {
         // You can implement a notification system here
@@ -1272,10 +1018,10 @@ $(document).ready(function() {
     // Delete saved plan
     $(document).on('click', '.delete-program-plan-btn', function() {
         const planId = $(this).data('plan-id');
-        const $planItem = $(`.program-plan-item[data-plan-id="${planId}"]`);
+        const $planItem = $(`.plan-card[data-plan-id="${planId}"]`);
         
         // Extract plan details
-        const planTitle = $planItem.find('.program-plan-item-title').text().trim();
+        const planTitle = $planItem.find('.plan-title').text().trim();
         const duration = $planItem.data('duration');
         const budget = $planItem.data('budget');
         const ageGroup = $planItem.data('age-group');
@@ -1286,81 +1032,29 @@ $(document).ready(function() {
 
     // Program plans search functionality
     $('#program-search').on('input', function() {
-        // Show container when user starts typing
-        if ($(this).val().length > 0) {
-            $('#program-plans-list-container').show();
-            $('.program-plan-item').show(); // Show all items first
-        } else {
-            // When search is cleared, show only the latest
-            showOnlyLatestProgramPlan();
-        }
         filterProgramPlans();
     });
 
     // Program plans filter functionality
-    $('#program-budget-filter, #program-age-filter').on('change', function() {
-        // Show all items when filter is changed
-        $('#program-plans-list-container').show();
-        $('.program-plan-item').show();
+    $('#program-budget-filter, #program-age-filter, #date-from-filter, #date-to-filter').on('change', function() {
         filterProgramPlans();
     });
 
-    // Program plans sort functionality
-    $('#program-sort').on('change', function() {
-        $('#program-plans-list-container').show();
-        $('.program-plan-item').show();
-        sortProgramPlans($(this).val());
-    });
-
-    // Show only the latest program plan on initial load
-    showOnlyLatestProgramPlan();
-
     // Reset filters button
     $('#reset-program-filters').on('click', function() {
-        // Clear search input
+        // Clear all filters
         $('#program-search').val('');
-        
-        // Reset all filter selects
         $('#program-budget-filter').val('');
         $('#program-age-filter').val('');
-        $('#program-sort').val('newest');
+        $('#date-from-filter').val('');
+        $('#date-to-filter').val('');
+        $('#per-page-filter').val('12');
         
-        // Show only the latest plan
-        showOnlyLatestProgramPlan();
+        // Show all plans
+        $('.plan-card').show();
+        $('#program-no-results').remove();
     });
 });
-
-/**
- * Show only the most recent program plan
- */
-function showOnlyLatestProgramPlan() {
-    const $items = $('.program-plan-item');
-    
-    if ($items.length > 0) {
-        // Find the item with the highest timestamp
-        let latestItem = null;
-        let latestTimestamp = 0;
-        
-        $items.each(function() {
-            const timestamp = $(this).data('timestamp');
-            if (timestamp > latestTimestamp) {
-                latestTimestamp = timestamp;
-                latestItem = this;
-            }
-        });
-        
-        // Hide all items
-        $items.hide();
-        
-        // Show only the latest
-        if (latestItem) {
-            $(latestItem).show();
-        }
-        
-        // Show the container
-        $('#program-plans-list-container').show();
-    }
-}
 
 /**
  * Filter program plans based on search and filters
@@ -1370,7 +1064,7 @@ function filterProgramPlans() {
     const budgetFilter = $('#program-budget-filter').val().toLowerCase();
     const ageFilter = $('#program-age-filter').val().toLowerCase();
     
-    $('.program-plan-item').each(function() {
+    $('.plan-card').each(function() {
         const $item = $(this);
         const budget = $item.data('budget').toString().toLowerCase();
         const ageGroup = $item.data('age-group').toString().toLowerCase();
@@ -1397,13 +1091,14 @@ function filterProgramPlans() {
     });
     
     // Show "no results" message if needed
-    const visibleCount = $('.program-plan-item:visible').length;
+    const visibleCount = $('.plan-card:visible').length;
     if (visibleCount === 0) {
         if (!$('#program-no-results').length) {
             $('#program-plans-list').append(`
-                <div id="program-no-results" class="empty-state" style="padding: 2rem; text-align: center; color: #6c757d;">
-                    <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 1rem; display: block; color: #dee2e6;"></i>
-                    <p style="margin: 0;">No feeding program plans match your search criteria.</p>
+                <div id="program-no-results" class="empty-state" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">
+                    <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; color: #9E9E9E;"></i>
+                    <h3>No Plans Found</h3>
+                    <p>No feeding program plans match your search criteria.</p>
                 </div>
             `);
         }
@@ -1522,27 +1217,27 @@ function viewFeedingProgramPlan(planId) {
                 Swal.fire({
                     title: 'Feeding Program Meal Plan',
                     html: `
-                        <div id="pdf-content">
+                        <div id="pdf-content" class="modal-scrollable-content">
                             ${metadata}
                             ${mealPlanHtml}
                         </div>
-                        <div class="action-buttons" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                        <div class="action-buttons" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; padding-top: 1rem; border-top: 2px solid #E0E0E0;">
                             <button type="button" class="btn-primary" id="download-pdf-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; padding: 0.75rem 1.5rem; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
                                 <i class="fas fa-file-pdf"></i> Save as PDF
                             </button>
                         </div>
                     `,
-                    width: '90vw',
+                    width: '900px',
                     customClass: {
-                        container: 'feeding-program-modal',
-                        popup: 'feeding-program-popup'
+                        container: 'feeding-program-view-modal',
+                        popup: 'feeding-program-view-popup',
+                        htmlContainer: 'feeding-program-view-container'
                     },
                     showCloseButton: true,
                     showConfirmButton: false,
                     didOpen: () => {
                         // Add click handler for PDF download
                         document.getElementById('download-pdf-btn')?.addEventListener('click', function() {
-                            console.log('PDF button clicked');
                             
                             try {
                                 const { jsPDF } = window.jspdf;
@@ -1702,7 +1397,7 @@ function deleteFeedingProgramPlan(planId, planTitle, duration, budget, ageGroup,
                     <div style="color: #7f1d1d; font-size: 0.9375rem; line-height: 1.8;">
                         <div style="margin-bottom: 0.5rem;"><i class="fas fa-utensils" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Plan:</strong> ${planTitle}</div>
                         <div style="margin-bottom: 0.5rem;"><i class="fas fa-calendar-alt" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Duration:</strong> ${duration} ${duration > 1 ? 'Days' : 'Day'}</div>
-                        <div style="margin-bottom: 0.5rem;"><i class="fas fa-wallet" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Budget:</strong> ${budget.charAt(0).toUpperCase() + budget.slice(1)}</div>
+                        <div style="margin-bottom: 0.5rem;"><i class="fas fa-wallet" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Budget:</strong> ${budget ? (budget.charAt(0).toUpperCase() + budget.slice(1)) : 'N/A'}</div>
                         <div style="margin-bottom: 0.5rem;"><i class="fas fa-child" style="color: #10b981; margin-right: 0.5rem;"></i><strong>Age Group:</strong> ${ageGroupDisplay}</div>
                         ${barangayText}
                     </div>
