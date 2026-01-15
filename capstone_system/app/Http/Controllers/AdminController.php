@@ -803,7 +803,7 @@ class AdminController extends Controller
     public function inventory()
     {
         $items = InventoryItem::with(['category', 'inventoryTransactions'])
-            ->paginate(15);
+            ->paginate(10);
         $categories = ItemCategory::all();
         $patients = Patient::select('patient_id', 'first_name', 'last_name')
             ->orderBy('first_name')
