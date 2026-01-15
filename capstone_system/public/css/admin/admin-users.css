@@ -381,3 +381,79 @@
     font-size: 0.875rem;
     color: var(--text-primary);
 }
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Filter Bar Styles */
+.filter-bar {
+    background: #54a854;
+    border-radius: 18px 18px 0 0;
+    padding: 1.5rem 2rem 1rem 2rem;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#userFilterForm {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    background: #54a854;
+    border-radius: 18px 18px 0 0;
+    align-items: center;
+}
+
+.filter-input-group {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-select-group {
+    flex: 1;
+    min-width: 140px;
+}
+
+.filter-input-group input.form-control {
+    padding-left: 2.2rem;
+}
+
+/* Checkbox Label Styles */
+.checkbox-label-flex {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-label-flex input[type="checkbox"] {
+    width: auto;
+}
+
+.help-text-small {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
