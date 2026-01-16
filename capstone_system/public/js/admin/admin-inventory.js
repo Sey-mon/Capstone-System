@@ -1,6 +1,6 @@
 /**
- * Admin Inventory JavaScript
- * Handles inventory management functionality
+ * Admin Inventory JavaScript with SweetAlert2
+ * Handles inventory management functionality using AJAX
  */
 
 let currentItemId = null;
@@ -8,6 +8,8 @@ let isEditMode = false;
 let currentStockItemId = null;
 let currentStockItemName = '';
 let currentAvailableStock = 0;
+let categoriesData = [];
+let patientsData = [];
 
 // CSRF token for AJAX requests
 const csrfToken = document.querySelector('meta[name="csrf-token"]');
@@ -16,24 +18,151 @@ if (!csrfToken) {
 }
 const csrfTokenValue = csrfToken ? csrfToken.getAttribute('content') : null;
 
-// Modal functions
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.toString().replace(/[&<>"']/g, m => map[m]);
+}
+
+// Load categories and patients data
+function loadData() {
+    const categoriesEl = document.getElementById('categoriesData');
+    const patientsEl = document.getElementById('patientsData');
+    
+    if (categoriesEl) {
+        categoriesData = JSON.parse(categoriesEl.dataset.categories || '[]');
+    }
+    if (patientsEl) {
+        patientsData = JSON.parse(patientsEl.dataset.patients || '[]');
+    }
+}
+
+// Generate category options HTML
+function getCategoryOptions(selectedId = '') {
+    let options = '<option value="">Select Category</option>';
+    categoriesData.forEach(category => {
+        const selected = category.category_id == selectedId ? 'selected' : '';
+        options += `<option value="${category.category_id}" ${selected}>${category.category_name}</option>`;
+    });
+    return options;
+}
+
+// Generate patient options HTML
+function getPatientOptions(selectedId = '') {
+    let options = '<option value="">Select patient (if applicable)</option>';
+    patientsData.forEach(patient => {
+        const selected = patient.patient_id == selectedId ? 'selected' : '';
+        options += `<option value="${patient.patient_id}" ${selected}>${patient.first_name} ${patient.last_name}</option>`;
+    });
+    return options;
+}
+
+// Add/Edit Item Modal using SweetAlert2
 function openAddModal() {
-    console.log('Opening Add Modal...');
     isEditMode = false;
     currentItemId = null;
-    document.getElementById('modalTitle').textContent = 'Add New Item';
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-plus"></i> Add Item';
-    document.getElementById('itemForm').reset();
-    document.getElementById('itemId').value = '';
-    showModal();
+    
+    // Get tomorrow's date for min date
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = tomorrow.toISOString().split('T')[0];
+    
+    Swal.fire({
+        title: 'Add New Item',
+        html: `
+            <form id="itemForm" style="text-align: left;">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-itemName" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Item Name *</label>
+                    <input type="text" id="swal-itemName" name="item_name" required class="swal2-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-categoryId" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Category *</label>
+                    <select id="swal-categoryId" name="category_id" required class="swal2-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                        ${getCategoryOptions()}
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-group">
+                        <label for="swal-unit" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Unit *</label>
+                        <input type="text" id="swal-unit" name="unit" required placeholder="e.g., kg, pcs, bottles" class="swal2-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-quantity" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Quantity *</label>
+                        <input type="number" id="swal-quantity" name="quantity" required min="0" class="swal2-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-expiryDate" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Expiry Date</label>
+                    <input type="date" id="swal-expiryDate" name="expiry_date" min="${minDate}" class="swal2-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                </div>
+            </form>
+        `,
+        width: '600px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-plus"></i> Add Item',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#43a047',
+        cancelButtonColor: '#6c757d',
+        customClass: {
+            popup: 'inventory-modal',
+            confirmButton: 'btn btn-primary',
+            cancelButton: 'btn btn-secondary'
+        },
+        preConfirm: () => {
+            const itemName = document.getElementById('swal-itemName').value;
+            const categoryId = document.getElementById('swal-categoryId').value;
+            const unit = document.getElementById('swal-unit').value;
+            const quantity = document.getElementById('swal-quantity').value;
+            const expiryDate = document.getElementById('swal-expiryDate').value;
+            
+            if (!itemName || !categoryId || !unit || !quantity) {
+                Swal.showValidationMessage('Please fill in all required fields');
+                return false;
+            }
+            
+            return {
+                item_name: itemName,
+                category_id: categoryId,
+                unit: unit,
+                quantity: quantity,
+                expiry_date: expiryDate || null
+            };
+        },
+        didOpen: () => {
+            // Focus on first input
+            document.getElementById('swal-itemName').focus();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            saveItem(result.value, false);
+        }
+    });
 }
 
 function openEditModal(itemId) {
-    console.log('Opening Edit Modal for item:', itemId);
     isEditMode = true;
     currentItemId = itemId;
-    document.getElementById('modalTitle').textContent = 'Edit Item';
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Item';
+    
+    // Show loading
+    Swal.fire({
+        title: 'Loading...',
+        html: 'Please wait while we fetch the item details',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
     
     // Fetch item data
     fetch(`/admin/inventory/${itemId}`, {
@@ -45,85 +174,241 @@ function openEditModal(itemId) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            const item = data.item;
-            document.getElementById('itemId').value = item.item_id;
-            document.getElementById('itemName').value = item.item_name;
-            document.getElementById('categoryId').value = item.category_id;
-            document.getElementById('unit').value = item.unit;
-            document.getElementById('quantity').value = item.quantity;
-            document.getElementById('expiryDate').value = item.expiry_date || '';
-            showModal();
+        // Handle different response structures
+        let item = null;
+        if (data.success && data.inventoryitem) {
+            // Laravel response with inventoryitem key
+            item = data.inventoryitem;
+        } else if (data.success && data.item) {
+            // Alternative response with item key
+            item = data.item;
+        } else if (data.item_id) {
+            // Data is the item itself
+            item = data;
+        } else if (data.data) {
+            // Data is wrapped in a data property
+            item = data.data;
+        } else if (data.inventoryitem) {
+            // Direct inventoryitem property
+            item = data.inventoryitem;
+        }
+        
+        if (item && item.item_name) {
+            showEditModal(item);
         } else {
-            showNotification('Error loading item data', 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load item data - invalid response format',
+                confirmButtonColor: '#43a047'
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error loading item data', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while loading item data',
+            confirmButtonColor: '#43a047'
+        });
     });
 }
 
-function showModal() {
-    console.log('Showing modal...');
-    const modal = document.getElementById('itemModal');
-    if (!modal) {
-        console.error('Modal element not found!');
-        return;
-    }
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    // Force a reflow then add the show class for proper animation
-    modal.offsetHeight;
-    modal.classList.add('show');
-    console.log('Modal should now be visible');
+function showEditModal(item) {
+    // Get tomorrow's date for min date
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = tomorrow.toISOString().split('T')[0];
+    
+    const itemName = escapeHtml(item.item_name || '');
+    const unit = escapeHtml(item.unit || '');
+    const quantity = escapeHtml(item.quantity || 0);
+    const expiryDate = item.expiry_date || '';
+    
+    Swal.fire({
+        title: 'Edit Item',
+        html: `
+            <form id="itemForm" style="text-align: left;">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-itemName" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Item Name *</label>
+                    <input type="text" id="swal-itemName" name="item_name" required class="swal2-input" value="${itemName}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-categoryId" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Category *</label>
+                    <select id="swal-categoryId" name="category_id" required class="swal2-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                        ${getCategoryOptions(item.category_id)}
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-group">
+                        <label for="swal-unit" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Unit *</label>
+                        <input type="text" id="swal-unit" name="unit" required placeholder="e.g., kg, pcs, bottles" class="swal2-input" value="${unit}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-quantity" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Quantity *</label>
+                        <input type="number" id="swal-quantity" name="quantity" required min="0" class="swal2-input" value="${quantity}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-expiryDate" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Expiry Date</label>
+                    <input type="date" id="swal-expiryDate" name="expiry_date" min="${minDate}" class="swal2-input" value="${expiryDate}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                </div>
+            </form>
+        `,
+        width: '600px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-save"></i> Update Item',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#43a047',
+        cancelButtonColor: '#6c757d',
+        customClass: {
+            popup: 'inventory-modal',
+            confirmButton: 'btn btn-primary',
+            cancelButton: 'btn btn-secondary'
+        },
+        preConfirm: () => {
+            const itemName = document.getElementById('swal-itemName').value;
+            const categoryId = document.getElementById('swal-categoryId').value;
+            const unit = document.getElementById('swal-unit').value;
+            const quantity = document.getElementById('swal-quantity').value;
+            const expiryDate = document.getElementById('swal-expiryDate').value;
+            
+            if (!itemName || !categoryId || !unit || !quantity) {
+                Swal.showValidationMessage('Please fill in all required fields');
+                return false;
+            }
+            
+            return {
+                item_name: itemName,
+                category_id: categoryId,
+                unit: unit,
+                quantity: quantity,
+                expiry_date: expiryDate || null
+            };
+        },
+        didOpen: () => {
+            // Focus on first input
+            document.getElementById('swal-itemName').focus();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            saveItem(result.value, true);
+        }
+    });
 }
 
-function closeModal() {
-    const modal = document.getElementById('itemModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        document.getElementById('itemForm').reset();
-    }, 300);
+// Save Item using AJAX
+function saveItem(data, isEdit) {
+    const method = isEdit ? 'PUT' : 'POST';
+    const url = isEdit ? `/admin/inventory/${currentItemId}` : '/admin/inventory';
+    
+    // Show loading
+    Swal.fire({
+        title: isEdit ? 'Updating Item...' : 'Adding Item...',
+        html: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'X-CSRF-TOKEN': csrfTokenValue,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message,
+                confirmButtonColor: '#43a047',
+                timer: 2000,
+                timerProgressBar: true
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message,
+                confirmButtonColor: '#43a047'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while saving the item',
+            confirmButtonColor: '#43a047'
+        });
+    });
 }
 
+// Delete Confirmation using SweetAlert2
 function confirmDelete(itemId, itemName) {
-    console.log('Opening Delete Modal for item:', itemId, itemName);
     currentItemId = itemId;
-    document.getElementById('deleteItemName').textContent = itemName;
-    const modal = document.getElementById('deleteModal');
-    if (!modal) {
-        console.error('Delete modal element not found!');
-        return;
-    }
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    // Force a reflow then add the show class for proper animation
-    modal.offsetHeight;
-    modal.classList.add('show');
-    console.log('Delete modal should now be visible');
-}
-
-function closeDeleteModal() {
-    const modal = document.getElementById('deleteModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        currentItemId = null;
-    }, 300);
+    const safeName = escapeHtml(itemName);
+    
+    Swal.fire({
+        title: 'Confirm Deletion',
+        html: `
+            <div style="text-align: center; padding: 1rem;">
+                <div style="font-size: 4rem; color: #f44336; margin-bottom: 1rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p style="font-size: 1rem; margin-bottom: 0.5rem;">
+                    Are you sure you want to delete <strong>${safeName}</strong>?
+                </p>
+                <p style="color: #f44336; font-size: 0.875rem;">
+                    This action cannot be undone.
+                </p>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-trash"></i> Delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#f44336',
+        cancelButtonColor: '#6c757d',
+        customClass: {
+            confirmButton: 'btn btn-danger',
+            cancelButton: 'btn btn-secondary'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteItem();
+        }
+    });
 }
 
 function deleteItem() {
     if (!currentItemId) return;
-
-    const submitButton = event.target;
-    const originalText = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
-    submitButton.disabled = true;
-
+    
+    // Show loading
+    Swal.fire({
+        title: 'Deleting Item...',
+        html: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
     fetch(`/admin/inventory/${currentItemId}`, {
         method: 'DELETE',
         headers: {
@@ -134,60 +419,112 @@ function deleteItem() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
-            setTimeout(() => location.reload(), 1000);
+            Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: data.message,
+                confirmButtonColor: '#43a047',
+                timer: 2000,
+                timerProgressBar: true
+            }).then(() => {
+                location.reload();
+            });
         } else {
-            showNotification(data.message, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message,
+                confirmButtonColor: '#43a047'
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('An error occurred while deleting the item', 'error');
-    })
-    .finally(() => {
-        submitButton.innerHTML = originalText;
-        submitButton.disabled = false;
-        closeDeleteModal();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while deleting the item',
+            confirmButtonColor: '#43a047'
+        });
     });
 }
 
-// Stock In Modal Functions
+// Stock In Modal using SweetAlert2
 function openStockInModal(itemId, itemName) {
     currentStockItemId = itemId;
     currentStockItemName = itemName;
-    document.getElementById('stockInItemName').value = itemName;
-    document.getElementById('stockInForm').reset();
-    document.getElementById('stockInItemName').value = itemName; // Reset clears this, so set it again
-    const modal = document.getElementById('stockInModal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    // Force a reflow then add the show class for proper animation
-    modal.offsetHeight;
-    modal.classList.add('show');
+    const safeName = escapeHtml(itemName);
+    
+    Swal.fire({
+        title: 'Stock In',
+        html: `
+            <form id="stockInForm" style="text-align: left;">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Item Name</label>
+                    <input type="text" value="${safeName}" class="swal2-input" readonly style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0; background-color: #f5f5f5;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-stockInQuantity" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Quantity to Add <span style="color: #f44336;">*</span></label>
+                    <input type="number" id="swal-stockInQuantity" name="quantity" class="swal2-input" min="1" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                    <small style="display: block; margin-top: 0.25rem; color: #666; font-size: 0.875rem;">Enter the number of units to add to stock</small>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-stockInRemarks" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Remarks</label>
+                    <textarea id="swal-stockInRemarks" name="remarks" class="swal2-textarea" rows="3" placeholder="Optional notes about this stock in..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0; resize: vertical;"></textarea>
+                </div>
+            </form>
+        `,
+        width: '600px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-plus"></i> Add Stock',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#43a047',
+        cancelButtonColor: '#6c757d',
+        customClass: {
+            popup: 'inventory-modal',
+            confirmButton: 'btn btn-success',
+            cancelButton: 'btn btn-secondary'
+        },
+        preConfirm: () => {
+            const quantity = document.getElementById('swal-stockInQuantity').value;
+            const remarks = document.getElementById('swal-stockInRemarks').value;
+            
+            if (!quantity || quantity < 1) {
+                Swal.showValidationMessage('Please enter a valid quantity');
+                return false;
+            }
+            
+            return {
+                quantity: quantity,
+                remarks: remarks || ''
+            };
+        },
+        didOpen: () => {
+            document.getElementById('swal-stockInQuantity').focus();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            processStockIn(result.value);
+        }
+    });
 }
 
-function closeStockInModal() {
-    const modal = document.getElementById('stockInModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        currentStockItemId = null;
-        currentStockItemName = '';
-    }, 300);
-}
-
-function processStockIn(event) {
-    event.preventDefault();
+function processStockIn(data) {
+    // Show loading
+    Swal.fire({
+        title: 'Processing Stock In...',
+        html: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
     
-    const form = event.target;
-    const submitButton = form.querySelector('button[type="submit"]');
-    const originalText = submitButton.innerHTML;
-    
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    submitButton.disabled = true;
-    
-    const formData = new FormData(form);
+    const formData = new FormData();
+    formData.append('quantity', data.quantity);
+    formData.append('remarks', data.remarks);
     
     fetch(`/admin/inventory/${currentStockItemId}/stock-in`, {
         method: 'POST',
@@ -200,73 +537,137 @@ function processStockIn(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
-            closeStockInModal();
-            setTimeout(() => location.reload(), 1000);
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message,
+                confirmButtonColor: '#43a047',
+                timer: 2000,
+                timerProgressBar: true
+            }).then(() => {
+                location.reload();
+            });
         } else {
-            showNotification(data.message, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message,
+                confirmButtonColor: '#43a047'
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('An error occurred while processing stock in', 'error');
-    })
-    .finally(() => {
-        submitButton.innerHTML = originalText;
-        submitButton.disabled = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while processing stock in',
+            confirmButtonColor: '#43a047'
+        });
     });
 }
 
-// Stock Out Modal Functions
+// Stock Out Modal using SweetAlert2
 function openStockOutModal(itemId, itemName, availableStock) {
     currentStockItemId = itemId;
     currentStockItemName = itemName;
-    currentAvailableStock = availableStock;
+    currentAvailableStock = parseInt(availableStock);
+    const safeName = escapeHtml(itemName);
+    const safeStock = escapeHtml(availableStock);
     
-    document.getElementById('stockOutItemName').value = itemName;
-    document.getElementById('stockOutAvailable').value = `${availableStock} units`;
-    document.getElementById('stockOutForm').reset();
-    document.getElementById('stockOutItemName').value = itemName; // Reset clears this, so set it again
-    document.getElementById('stockOutAvailable').value = `${availableStock} units`; // Reset clears this, so set it again
-    document.getElementById('stockOutQuantity').setAttribute('max', availableStock);
-    const modal = document.getElementById('stockOutModal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    // Force a reflow then add the show class for proper animation
-    modal.offsetHeight;
-    modal.classList.add('show');
+    Swal.fire({
+        title: 'Stock Out',
+        html: `
+            <form id="stockOutForm" style="text-align: left;">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Item Name</label>
+                    <input type="text" value="${safeName}" class="swal2-input" readonly style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0; background-color: #f5f5f5;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Available Stock</label>
+                    <input type="text" value="${safeStock} units" class="swal2-input" readonly style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0; background-color: #f5f5f5;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-stockOutQuantity" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Quantity to Remove <span style="color: #f44336;">*</span></label>
+                    <input type="number" id="swal-stockOutQuantity" name="quantity" class="swal2-input" min="1" max="${availableStock}" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                    <small style="display: block; margin-top: 0.25rem; color: #666; font-size: 0.875rem;">Enter the number of units to remove from stock</small>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-stockOutPatient" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Patient (Optional)</label>
+                    <select id="swal-stockOutPatient" name="patient_id" class="swal2-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                        ${getPatientOptions()}
+                    </select>
+                    <small style="display: block; margin-top: 0.25rem; color: #666; font-size: 0.875rem;">Select a patient if this stock out is for a specific patient</small>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="swal-stockOutRemarks" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Remarks</label>
+                    <textarea id="swal-stockOutRemarks" name="remarks" class="swal2-textarea" rows="3" placeholder="Optional notes about this stock out..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0; resize: vertical;"></textarea>
+                </div>
+            </form>
+        `,
+        width: '600px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-minus"></i> Remove Stock',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ff9800',
+        cancelButtonColor: '#6c757d',
+        customClass: {
+            popup: 'inventory-modal',
+            confirmButton: 'btn btn-warning',
+            cancelButton: 'btn btn-secondary'
+        },
+        preConfirm: () => {
+            const quantity = parseInt(document.getElementById('swal-stockOutQuantity').value);
+            const patientId = document.getElementById('swal-stockOutPatient').value;
+            const remarks = document.getElementById('swal-stockOutRemarks').value;
+            
+            if (!quantity || quantity < 1) {
+                Swal.showValidationMessage('Please enter a valid quantity');
+                return false;
+            }
+            
+            if (quantity > currentAvailableStock) {
+                Swal.showValidationMessage(`Cannot remove ${quantity} units. Only ${currentAvailableStock} units available.`);
+                return false;
+            }
+            
+            return {
+                quantity: quantity,
+                patient_id: patientId || '',
+                remarks: remarks || ''
+            };
+        },
+        didOpen: () => {
+            document.getElementById('swal-stockOutQuantity').focus();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            processStockOut(result.value);
+        }
+    });
 }
 
-function closeStockOutModal() {
-    const modal = document.getElementById('stockOutModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        currentStockItemId = null;
-        currentStockItemName = '';
-        currentAvailableStock = 0;
-    }, 300);
-}
-
-function processStockOut(event) {
-    event.preventDefault();
+function processStockOut(data) {
+    // Show loading
+    Swal.fire({
+        title: 'Processing Stock Out...',
+        html: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
     
-    const form = event.target;
-    const submitButton = form.querySelector('button[type="submit"]');
-    const originalText = submitButton.innerHTML;
-    const quantity = parseInt(document.getElementById('stockOutQuantity').value);
-    
-    // Validate quantity against available stock
-    if (quantity > currentAvailableStock) {
-        showNotification(`Cannot remove ${quantity} units. Only ${currentAvailableStock} units available.`, 'error');
-        return;
+    const formData = new FormData();
+    formData.append('quantity', data.quantity);
+    if (data.patient_id) {
+        formData.append('patient_id', data.patient_id);
     }
-    
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    submitButton.disabled = true;
-    
-    const formData = new FormData(form);
+    formData.append('remarks', data.remarks);
     
     fetch(`/admin/inventory/${currentStockItemId}/stock-out`, {
         method: 'POST',
@@ -279,78 +680,54 @@ function processStockOut(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
-            closeStockOutModal();
-            setTimeout(() => location.reload(), 1000);
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message,
+                confirmButtonColor: '#43a047',
+                timer: 2000,
+                timerProgressBar: true
+            }).then(() => {
+                location.reload();
+            });
         } else {
-            showNotification(data.message, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message,
+                confirmButtonColor: '#43a047'
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('An error occurred while processing stock out', 'error');
-    })
-    .finally(() => {
-        submitButton.innerHTML = originalText;
-        submitButton.disabled = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while processing stock out',
+            confirmButtonColor: '#43a047'
+        });
     });
 }
 
-// Notification function
+// Notification function (kept for backwards compatibility)
 function showNotification(message, type = 'info') {
-    // Remove existing notifications
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
-
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 1.5rem;
-        border-radius: 0.5rem;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 0.3s ease;
-    `;
-
-    // Set background color based on type
-    const colors = {
-        'success': 'var(--success-color)',
-        'error': 'var(--danger-color)',
-        'warning': 'var(--warning-color)',
-        'info': 'var(--primary-color)'
-    };
-    notification.style.backgroundColor = colors[type] || colors['info'];
-
-    // Add icon
     const icons = {
-        'success': 'fa-check-circle',
-        'error': 'fa-exclamation-circle',
-        'warning': 'fa-exclamation-triangle',
-        'info': 'fa-info-circle'
+        'success': 'success',
+        'error': 'error',
+        'warning': 'warning',
+        'info': 'info'
     };
-    const icon = icons[type] || icons['info'];
-    notification.innerHTML = `<i class="fas ${icon}" style="margin-right: 0.5rem;"></i>${message}`;
-
-    document.body.appendChild(notification);
-
-    // Animate in
-    setTimeout(() => {
-        notification.style.opacity = '1';
-        notification.style.transform = 'translateX(0)';
-    }, 100);
-
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => notification.remove(), 300);
-    }, 5000);
+    
+    Swal.fire({
+        icon: icons[type] || 'info',
+        title: message,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
 }
 
 // Real-time filtering functionality
@@ -362,7 +739,6 @@ function setupRealTimeFilters() {
     if (searchFilter) {
         searchFilter.addEventListener('input', filterTable);
         
-        // Add placeholder animation
         searchFilter.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary-color)';
             this.style.boxShadow = '0 0 0 3px rgba(67, 160, 71, 0.1)';
@@ -383,7 +759,7 @@ function setupRealTimeFilters() {
         statusFilter.addEventListener('change', filterTable);
     }
     
-    // Add keyboard shortcut for search (Ctrl+F or Cmd+F)
+    // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'f' && searchFilter) {
             e.preventDefault();
@@ -391,7 +767,6 @@ function setupRealTimeFilters() {
             searchFilter.select();
         }
         
-        // ESC to clear filters
         if (e.key === 'Escape') {
             clearFilters();
             if (searchFilter) {
@@ -406,33 +781,48 @@ function filterTable() {
     const categoryValue = document.getElementById('categoryFilter')?.value.toLowerCase() || '';
     const statusValue = document.getElementById('statusFilter')?.value.toLowerCase() || '';
     
-    const tableRows = document.querySelectorAll('.inventory-table tbody tr');
+    const tableRows = document.querySelectorAll('.inventory-table tbody tr, .table-modern tbody tr');
     let visibleCount = 0;
     
     tableRows.forEach(row => {
-        // Skip the "no items found" row
         if (row.querySelector('td[colspan]')) {
             return;
         }
         
-        const itemNameCell = row.querySelector('td:nth-child(1) div:first-child');
-        const categoryCell = row.querySelector('td:nth-child(2) span');
-        const statusElement = row.querySelector('.stock-status');
+        // Get item name from user-info structure or item-name-main
+        const userInfo = row.querySelector('.user-info .user-name');
+        const itemNameMain = row.querySelector('.item-name-main');
+        const itemName = (userInfo?.textContent || itemNameMain?.textContent || '').toLowerCase();
         
-        const itemName = itemNameCell?.textContent.toLowerCase() || '';
-        const category = categoryCell?.textContent.toLowerCase() || '';
-        const status = statusElement?.className.toLowerCase() || '';
+        // Get category from badge
+        const categoryBadge = row.querySelector('.badge-role, .badge-admin, .category-badge');
+        const category = categoryBadge?.textContent.toLowerCase().trim() || '';
         
-        // Check search filter (search in name and category)
+        // Get status from status-badge or stock-status
+        const statusElement = row.querySelector('.status-badge, .stock-status');
+        const status = statusElement?.textContent.toLowerCase().trim() || '';
+        
         const matchesSearch = searchValue === '' || 
             itemName.includes(searchValue) || 
             category.includes(searchValue);
         
-        // Check category filter
         const matchesCategory = categoryValue === '' || category.includes(categoryValue);
         
-        // Check status filter
-        const matchesStatus = statusValue === '' || status.includes(statusValue);
+        // Handle status filtering
+        let matchesStatus = true;
+        if (statusValue !== '') {
+            if (statusValue === 'in-stock') {
+                matchesStatus = status.includes('active') || status.includes('in stock');
+            } else if (statusValue === 'low-stock') {
+                matchesStatus = status.includes('low stock');
+            } else if (statusValue === 'critical') {
+                matchesStatus = status.includes('critical');
+            } else if (statusValue === 'out-of-stock') {
+                matchesStatus = status.includes('out of stock');
+            } else if (statusValue === 'expired') {
+                matchesStatus = status.includes('expired');
+            }
+        }
         
         const shouldShow = matchesSearch && matchesCategory && matchesStatus;
         
@@ -440,21 +830,20 @@ function filterTable() {
             row.style.display = '';
             visibleCount++;
             
-            // Highlight matching search terms
             if (searchValue && matchesSearch) {
-                highlightSearchTerms(itemNameCell, searchValue);
-                highlightSearchTerms(categoryCell, searchValue);
+                if (userInfo) highlightSearchTerms(userInfo, searchValue);
+                if (itemNameMain) highlightSearchTerms(itemNameMain, searchValue);
+                if (categoryBadge) highlightSearchTerms(categoryBadge, searchValue);
             } else {
-                // Remove existing highlights
-                removeHighlights(itemNameCell);
-                removeHighlights(categoryCell);
+                if (userInfo) removeHighlights(userInfo);
+                if (itemNameMain) removeHighlights(itemNameMain);
+                if (categoryBadge) removeHighlights(categoryBadge);
             }
         } else {
             row.style.display = 'none';
         }
     });
     
-    // Update filter results info
     updateFilterResults(visibleCount);
 }
 
@@ -480,13 +869,11 @@ function removeHighlights(element) {
 }
 
 function updateFilterResults(visibleCount) {
-    // Remove existing filter info
     const existingInfo = document.querySelector('.filter-results-info');
     if (existingInfo) {
         existingInfo.remove();
     }
     
-    // Remove existing "no results" row
     const existingNoResults = document.querySelector('.no-filter-results');
     if (existingNoResults) {
         existingNoResults.remove();
@@ -496,7 +883,6 @@ function updateFilterResults(visibleCount) {
     const tableBody = document.querySelector('.inventory-table tbody');
     
     if (visibleCount === 0) {
-        // Add "no results found" message
         if (tableBody) {
             const noResultsRow = document.createElement('tr');
             noResultsRow.className = 'no-filter-results';
@@ -516,7 +902,6 @@ function updateFilterResults(visibleCount) {
         }
     }
     
-    // Add filter info
     if (filterSection && visibleCount !== undefined) {
         const filterInfo = document.createElement('div');
         filterInfo.className = 'filter-results-info';
@@ -552,34 +937,32 @@ function clearFilters() {
     if (categoryFilter) categoryFilter.value = '';
     if (statusFilter) statusFilter.value = '';
     
-    // Show all rows and remove highlights
-    const tableRows = document.querySelectorAll('.inventory-table tbody tr');
+    const tableRows = document.querySelectorAll('.inventory-table tbody tr, .table-modern tbody tr');
     tableRows.forEach(row => {
         if (!row.querySelector('td[colspan]')) {
             row.style.display = '';
             
-            // Remove highlights from all cells
-            const itemNameCell = row.querySelector('td:nth-child(1) div:first-child');
-            const categoryCell = row.querySelector('td:nth-child(2) span');
+            // Remove highlights from all potential cells
+            const userInfo = row.querySelector('.user-info .user-name');
+            const itemNameMain = row.querySelector('.item-name-main');
+            const categoryBadge = row.querySelector('.badge-role, .badge-admin, .category-badge');
             
-            removeHighlights(itemNameCell);
-            removeHighlights(categoryCell);
+            if (userInfo) removeHighlights(userInfo);
+            if (itemNameMain) removeHighlights(itemNameMain);
+            if (categoryBadge) removeHighlights(categoryBadge);
         }
     });
     
-    // Remove filter results info
     const existingInfo = document.querySelector('.filter-results-info');
     if (existingInfo) {
         existingInfo.remove();
     }
     
-    // Remove "no results" row
     const existingNoResults = document.querySelector('.no-filter-results');
     if (existingNoResults) {
         existingNoResults.remove();
     }
     
-    // Reset filter section appearance
     const searchFilter2 = document.getElementById('searchFilter');
     if (searchFilter2) {
         searchFilter2.style.borderColor = 'var(--border-light)';
@@ -587,20 +970,17 @@ function clearFilters() {
     }
 }
 
-// Setup event listeners for buttons (replacing onclick handlers)
+// Setup event listeners for buttons
 function setupEventListeners() {
-    // Add Item buttons
     document.querySelectorAll('.btn-add-item').forEach(btn => {
         btn.addEventListener('click', openAddModal);
     });
     
-    // Clear Filters button
-    document.querySelectorAll('.btn-clear-filters').forEach(btn => {
+    document.querySelectorAll('.btn-clear-filters, .btn-clear-all, #clearAllBtn').forEach(btn => {
         btn.addEventListener('click', clearFilters);
     });
     
-    // Stock In buttons
-    document.querySelectorAll('.action-btn.stock-in').forEach(btn => {
+    document.querySelectorAll('.action-btn.stock-in, .action-btn-stock-in').forEach(btn => {
         btn.addEventListener('click', function() {
             const itemId = this.dataset.itemId;
             const itemName = this.dataset.itemName;
@@ -608,8 +988,7 @@ function setupEventListeners() {
         });
     });
     
-    // Stock Out buttons
-    document.querySelectorAll('.action-btn.stock-out').forEach(btn => {
+    document.querySelectorAll('.action-btn.stock-out, .action-btn-stock-out').forEach(btn => {
         btn.addEventListener('click', function() {
             const itemId = this.dataset.itemId;
             const itemName = this.dataset.itemName;
@@ -618,24 +997,21 @@ function setupEventListeners() {
         });
     });
     
-    // Edit buttons
-    document.querySelectorAll('.action-btn.edit').forEach(btn => {
+    document.querySelectorAll('.action-btn.edit, .action-btn-edit').forEach(btn => {
         btn.addEventListener('click', function() {
             const itemId = this.dataset.itemId;
             openEditModal(itemId);
         });
     });
     
-    // View buttons (redirect to audit logs)
-    document.querySelectorAll('.action-btn.view').forEach(btn => {
+    document.querySelectorAll('.action-btn.view, .action-btn-view').forEach(btn => {
         btn.addEventListener('click', function() {
             const auditUrl = this.dataset.auditUrl;
             window.location.href = auditUrl;
         });
     });
     
-    // Delete buttons
-    document.querySelectorAll('.action-btn.delete').forEach(btn => {
+    document.querySelectorAll('.action-btn.delete, .action-btn-delete').forEach(btn => {
         btn.addEventListener('click', function() {
             const itemId = this.dataset.itemId;
             const itemName = this.dataset.itemName;
@@ -643,45 +1019,7 @@ function setupEventListeners() {
         });
     });
     
-    // Modal close buttons
-    document.querySelectorAll('.modal-close').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const modal = this.closest('.modal-overlay');
-            if (modal.id === 'itemModal') {
-                closeModal();
-            } else if (modal.id === 'deleteModal') {
-                closeDeleteModal();
-            } else if (modal.id === 'stockInModal') {
-                closeStockInModal();
-            } else if (modal.id === 'stockOutModal') {
-                closeStockOutModal();
-            }
-        });
-    });
-    
-    // Modal cancel buttons
-    document.querySelectorAll('.btn-cancel').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const modal = this.closest('.modal-overlay');
-            if (modal.id === 'itemModal') {
-                closeModal();
-            } else if (modal.id === 'deleteModal') {
-                closeDeleteModal();
-            } else if (modal.id === 'stockInModal') {
-                closeStockInModal();
-            } else if (modal.id === 'stockOutModal') {
-                closeStockOutModal();
-            }
-        });
-    });
-    
-    // Delete confirmation button
-    document.querySelectorAll('.btn-delete-confirm').forEach(btn => {
-        btn.addEventListener('click', deleteItem);
-    });
-    
-    // Row hover events (replacing onmouseover/onmouseout)
-    document.querySelectorAll('.inventory-table tbody tr').forEach(row => {
+    document.querySelectorAll('.inventory-table tbody tr, .table-modern tbody tr').forEach(row => {
         if (!row.querySelector('td[colspan]')) {
             row.addEventListener('mouseenter', function() {
                 this.style.backgroundColor = 'var(--bg-tertiary)';
@@ -696,139 +1034,23 @@ function setupEventListeners() {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Load categories and patients data
+    loadData();
+    
     // Set up real-time filtering
     setupRealTimeFilters();
     
     // Setup event listeners for buttons
     setupEventListeners();
-    
-    // Form submission
-    const itemForm = document.getElementById('itemForm');
-    if (itemForm) {
-        itemForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const submitButton = document.getElementById('submitBtn');
-            const originalText = submitButton.innerHTML;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            submitButton.disabled = true;
-
-            const formData = new FormData(this);
-            const method = isEditMode ? 'PUT' : 'POST';
-            const url = isEditMode ? `/admin/inventory/${currentItemId}` : '/admin/inventory';
-
-            // Convert FormData to JSON for PUT request
-            const data = {};
-            formData.forEach((value, key) => {
-                if (key !== 'itemId') {
-                    data[key] = value;
-                }
-            });
-
-            fetch(url, {
-                method: method,
-                headers: {
-                    'X-CSRF-TOKEN': csrfTokenValue,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    closeModal();
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showNotification(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('An error occurred while saving the item', 'error');
-            })
-            .finally(() => {
-                submitButton.innerHTML = originalText;
-                submitButton.disabled = false;
-            });
-        });
-    }
-
-    // Close modals when clicking outside
-    const itemModal = document.getElementById('itemModal');
-    if (itemModal) {
-        itemModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-    }
-
-    const deleteModal = document.getElementById('deleteModal');
-    if (deleteModal) {
-        deleteModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDeleteModal();
-            }
-        });
-    }
-
-    const stockInModal = document.getElementById('stockInModal');
-    if (stockInModal) {
-        stockInModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeStockInModal();
-            }
-        });
-    }
-
-    const stockOutModal = document.getElementById('stockOutModal');
-    if (stockOutModal) {
-        stockOutModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeStockOutModal();
-            }
-        });
-    }
-
-    // Setup form event listeners for stock in/out forms
-    const stockInForm = document.getElementById('stockInForm');
-    if (stockInForm) {
-        stockInForm.addEventListener('submit', function(e) {
-            processStockIn(e);
-        });
-    }
-
-    const stockOutForm = document.getElementById('stockOutForm');
-    if (stockOutForm) {
-        stockOutForm.addEventListener('submit', function(e) {
-            processStockOut(e);
-        });
-    }
-
-    // Set minimum date for expiry date to tomorrow
-    const expiryDateInput = document.getElementById('expiryDate');
-    if (expiryDateInput) {
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const minDate = tomorrow.toISOString().split('T')[0];
-        expiryDateInput.setAttribute('min', minDate);
-    }
 });
 
 // Make functions globally available
 window.openAddModal = openAddModal;
 window.openEditModal = openEditModal;
-window.closeModal = closeModal;
 window.confirmDelete = confirmDelete;
-window.closeDeleteModal = closeDeleteModal;
 window.deleteItem = deleteItem;
 window.openStockInModal = openStockInModal;
-window.closeStockInModal = closeStockInModal;
 window.processStockIn = processStockIn;
 window.openStockOutModal = openStockOutModal;
-window.closeStockOutModal = closeStockOutModal;
 window.processStockOut = processStockOut;
 window.clearFilters = clearFilters;

@@ -1,0 +1,644 @@
+/**
+ * Modern System Management Styles
+ * Matching inventory modern UI design
+ */
+
+:root {
+    --primary-green: #5cb85c;
+    --primary-green-dark: #4cae4c;
+    --primary-green-light: #d4edda;
+    --text-dark: #1f2937;
+    --text-gray: #6b7280;
+    --border-light: #e5e7eb;
+    --success: #5cb85c;
+    --warning: #ff9800;
+    --danger: #dc3545;
+    --info: #17a2b8;
+}
+
+/* ============================================
+   FILTER CARD
+   ============================================ */
+
+.filter-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.filter-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filter-title-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: white;
+}
+
+.filter-title-section i {
+    font-size: 1.25rem;
+}
+
+.filter-title-section h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.btn-clear-all {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.btn-clear-all:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.filter-grid-modern {
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+}
+
+.filter-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-gray);
+}
+
+.filter-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.input-with-icon .filter-input {
+    padding-left: 2.5rem;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.1);
+}
+
+/* ============================================
+   MANAGEMENT HEADER
+   ============================================ */
+
+.management-header {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.management-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icon-wrapper {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.management-title-wrapper h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.management-title-wrapper h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: var(--primary-green);
+    border-radius: 2px;
+}
+
+.item-count-badge {
+    background: var(--primary-green-light);
+    color: var(--primary-green-dark);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+    display: inline-block;
+}
+
+/* ============================================
+   STAT CARDS
+   ============================================ */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card-modern {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid var(--primary-green);
+    transition: all 0.3s;
+}
+
+.stat-card-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-modern.warning {
+    border-left-color: var(--warning);
+}
+
+.stat-card-modern.danger {
+    border-left-color: var(--danger);
+}
+
+.stat-card-modern.info {
+    border-left-color: var(--info);
+}
+
+.stat-header-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.stat-title-modern {
+    font-size: 0.875rem;
+    color: var(--text-gray);
+    font-weight: 500;
+}
+
+.stat-icon-modern {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.stat-icon-modern.success {
+    background: rgba(92, 184, 92, 0.1);
+    color: var(--success);
+}
+
+.stat-icon-modern.warning {
+    background: rgba(255, 152, 0, 0.1);
+    color: var(--warning);
+}
+
+.stat-icon-modern.danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger);
+}
+
+.stat-icon-modern.info {
+    background: rgba(23, 162, 184, 0.1);
+    color: var(--info);
+}
+
+.stat-value-modern {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.stat-change-modern {
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-change-modern.positive {
+    color: var(--success);
+}
+
+.stat-change-modern.negative {
+    color: var(--danger);
+}
+
+/* ============================================
+   TABS
+   ============================================ */
+
+.content-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tab-button {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-gray);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tab-button:hover {
+    color: var(--primary-green);
+    background: rgba(92, 184, 92, 0.05);
+}
+
+.tab-button.active {
+    color: var(--primary-green);
+    border-bottom-color: var(--primary-green);
+}
+
+.tab-content {
+    padding: 1.5rem;
+}
+
+/* ============================================
+   TABLE
+   ============================================ */
+
+.table-modern {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.table-modern thead {
+    background: #f9fafb;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.table-modern th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table-modern tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background-color 0.2s;
+}
+
+.table-modern tbody tr:hover {
+    background: #f9fafb;
+}
+
+.table-modern td {
+    padding: 1rem;
+    font-size: 0.9375rem;
+    color: var(--text-dark);
+}
+
+/* ============================================
+   STATUS BADGES
+   ============================================ */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.primary {
+    background: rgba(92, 184, 92, 0.1);
+    color: var(--primary-green-dark);
+}
+
+.status-badge.success {
+    background: rgba(92, 184, 92, 0.1);
+    color: var(--success);
+}
+
+.status-badge.warning {
+    background: rgba(255, 152, 0, 0.1);
+    color: var(--warning);
+}
+
+.status-badge.danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger);
+}
+
+.status-badge.info {
+    background: rgba(23, 162, 184, 0.1);
+    color: var(--info);
+}
+
+/* ============================================
+   ACTION BUTTONS
+   ============================================ */
+
+.action-buttons-modern {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+}
+
+.action-btn.edit {
+    background: rgba(92, 184, 92, 0.1);
+    color: var(--success);
+}
+
+.action-btn.edit:hover {
+    background: var(--success);
+    color: white;
+}
+
+.action-btn.delete {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger);
+}
+
+.action-btn.delete:hover:not(:disabled) {
+    background: var(--danger);
+    color: white;
+}
+
+.action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(92, 184, 92, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.empty-state-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+}
+
+.empty-state h3 {
+    margin: 0 0 0.5rem;
+    color: var(--text-dark);
+    font-size: 1.25rem;
+}
+
+.empty-state p {
+    color: var(--text-gray);
+    margin: 0 0 1.5rem;
+}
+
+/* ============================================
+   PAGINATION FOOTER
+   ============================================ */
+
+.pagination-footer-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-light);
+    margin-top: 1.5rem;
+    gap: 1rem;
+}
+
+.pagination-info-modern {
+    color: var(--text-gray);
+    font-size: 0.875rem;
+}
+
+.pagination-controls-modern {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pagination-btn {
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--border-light);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-dark);
+    transition: all 0.2s;
+    min-width: 36px;
+    text-align: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+    background: rgba(92, 184, 92, 0.05);
+}
+
+.pagination-btn.active {
+    background: var(--primary-green);
+    color: white;
+    border-color: var(--primary-green);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .filter-grid-modern {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .pagination-footer-modern {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-grid-modern {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .management-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .pagination-controls-modern {
+        flex-wrap: wrap;
+    }
+    
+    .table-modern {
+        font-size: 0.875rem;
+    }
+    
+    .table-modern th,
+    .table-modern td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+/* ============================================
+   HIGHLIGHT FOR SEARCH
+   ============================================ */
+
+mark {
+    background-color: rgba(255, 235, 59, 0.5);
+    padding: 0.125rem 0.25rem;
+    border-radius: 2px;
+}
