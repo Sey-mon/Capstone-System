@@ -76,9 +76,11 @@
                 
                 <div class="mb-3">
                     <label for="gender" class="form-label required">Gender</label>
-                    <select class="form-control" id="gender" name="gender" disabled required>
-                        <option value="male" {{ old('gender', $patient->sex) == 'male' ? 'selected' : '' }}>Male</option>
-                        <option value="female" {{ old('gender', $patient->sex) == 'female' ? 'selected' : '' }}>Female</option>
+                    <!-- Hidden input to ensure gender is submitted with form -->
+                    <input type="hidden" name="gender" value="{{ strtolower($patient->sex) }}">
+                    <select class="form-control" id="gender" disabled required>
+                        <option value="male" {{ strtolower(old('gender', $patient->sex)) == 'male' ? 'selected' : '' }}>Male</option>
+                        <option value="female" {{ strtolower(old('gender', $patient->sex)) == 'female' ? 'selected' : '' }}>Female</option>
                     </select>
                     <small class="form-text text-muted">Patient gender: {{ ucfirst($patient->sex) }}</small>
                 </div>
