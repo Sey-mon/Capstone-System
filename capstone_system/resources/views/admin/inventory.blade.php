@@ -82,7 +82,7 @@
             </div>
             <button class="btn-add-new btn-add-item">
                 <i class="fas fa-plus"></i>
-                <span>Add New User</span>
+                <span>Add New Item</span>
             </button>
         </div>
     </div>
