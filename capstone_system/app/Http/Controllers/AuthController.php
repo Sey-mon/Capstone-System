@@ -752,7 +752,6 @@ class AuthController extends Controller
             'contact_number' => 'required|string|max:20',
             'sex' => 'nullable|string|in:male,female,other',
             'address' => 'nullable|string|max:255',
-            'license_number' => 'required|string|max:255',
             'years_experience' => 'nullable|integer|min:0|max:50',
             // Educational qualifications: allow short entries for real-world cases
             'qualifications' => 'required|string|min:2|max:1000',
@@ -791,7 +790,6 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
                 'contact_number' => $request->contact_number,
                 'address' => $request->address,
-                'license_number' => $request->license_number,
                 'years_experience' => $request->years_experience,
                 'qualifications' => $request->qualifications,
                 'professional_experience' => $request->professional_experience,
@@ -804,7 +802,7 @@ class AuthController extends Controller
             AuditLog::create([
                 'user_id' => $user->user_id,
                 'action' => 'application_submitted',
-                'description' => "Nutritionist application submitted. License: {$request->license_number}, Qualifications: {$request->qualifications}, Experience: {$request->professional_experience}",
+                'description' => "Nutritionist application submitted. Qualifications: {$request->qualifications}, Experience: {$request->professional_experience}",
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -822,11 +820,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             Log::error('Nutritionist application error: ' . $e->getMessage(), ['exception' => $e]);
             $errorMsg = $e->getMessage();
-            if (strpos($errorMsg, 'Duplicate entry') !== false && strpos($errorMsg, 'users_license_number_unique') !== false) {
-                $friendlyMsg = 'This license number is already registered. Please use a different license number or contact support if you believe this is an error.';
-            } else {
-                $friendlyMsg = 'Application submission failed. Error: ' . $errorMsg;
-            }
+            $friendlyMsg = 'Application submission failed. Error: ' . $errorMsg;
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'errors' => [$friendlyMsg]]);
             }

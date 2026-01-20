@@ -226,19 +226,6 @@
                         <div class="form-row">
                             <div class="form-col">
                                 <div class="form-group">
-                                    <label class="form-label" for="license_number">Professional License Number *</label>
-                                    <input type="text" class="form-control" name="license_number" id="license_number" 
-                                           placeholder="Enter your nutritionist license number" 
-                                           value="{{ old('license_number') }}" 
-                                           maxlength="255"
-                                           required>
-                                    @error('license_number')
-                                        <span class="error-text">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="form-col">
-                                <div class="form-group">
                                     <label class="form-label" for="years_experience">Years of Experience (Optional)</label>
                                     <input type="number" class="form-control" name="years_experience" id="years_experience" 
                                            placeholder="0" min="0" max="50" step="1"

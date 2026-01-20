@@ -36,7 +36,6 @@ class NutritionistApplicationController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'contact_number' => ['required', 'string', 'max:20'],
             'gender' => ['nullable', 'in:male,female,other'],
-            'license_number' => ['required', 'string', 'max:100', 'unique:users,license_number'],
             'years_experience' => ['nullable', 'integer', 'min:0', 'max:50'],
             'qualifications' => ['required', 'string', 'max:2000'],
             'experience' => ['required', 'string', 'max:2000'],
@@ -68,7 +67,6 @@ class NutritionistApplicationController extends Controller
                 'email' => $request->email,
                 'password' => $request->password, // Will be hashed automatically
                 'contact_number' => $request->contact_number,
-                'license_number' => $request->license_number,
                 'years_experience' => $request->years_experience ?? 0,
                 'qualifications' => $request->qualifications,
                 'professional_experience' => $request->experience,

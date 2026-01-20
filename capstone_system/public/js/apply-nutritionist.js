@@ -6,15 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (applicationForm) {
         // Form validation
         applicationForm.addEventListener('submit', function(e) {
-            const licenseNumber = document.getElementById('license_number').value.trim();
             const qualifications = document.getElementById('qualifications').value.trim();
             const experience = document.getElementById('experience').value.trim();
-            
-            if (!licenseNumber) {
-                e.preventDefault();
-                showAlert('Professional license number is required!', 'error');
-                return false;
-            }
             
             if (qualifications.length < 50) {
                 e.preventDefault();
@@ -56,19 +49,6 @@ document.addEventListener("DOMContentLoaded", function () {
             textarea.parentNode.appendChild(counter);
             updateCounter();
         });
-        
-        // License number validation
-        const licenseField = document.getElementById('license_number');
-        if (licenseField) {
-            licenseField.addEventListener('input', function() {
-                const value = this.value.trim();
-                if (value.length > 0 && value.length < 5) {
-                    this.style.borderColor = '#dc3545';
-                } else {
-                    this.style.borderColor = '#dcdcdc';
-                }
-            });
-        }
     }
     
     // Show alert function
