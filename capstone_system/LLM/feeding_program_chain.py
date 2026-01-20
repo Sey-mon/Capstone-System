@@ -527,8 +527,8 @@ Return a JSON object with this EXACT structure:
 2. Use exact field names: "meal_name_tagalog", "dish_name", "ingredients", "portions"
 3. meal_name_tagalog values MUST be in this order: "Almusal", "Tanghalian", "Meryenda", "Hapunan" (4 meals per day)
 4. ingredients: array of strings, each string is "quantity + ingredient name"
-5. CRITICAL: Generate {program_duration_days} days following the EXACT SAME FORMAT as Day 1 shown above
-6. Each day MUST have 4 meals: Almusal, Tanghalian, Meryenda, Hapunan (in that order)
+5. CRITICAL: Generate EXACTLY {program_duration_days} day(s) - NO MORE, NO LESS
+6. Each day MUST have EXACTLY 4 meals: Almusal, Tanghalian, Meryenda, Hapunan (in that order)
 7. NO DISH REPETITION across all {program_duration_days} days - every dish must be unique
 8. Each day must have DIFFERENT dishes than all other days
 9. Start response with {{ and end with }}
@@ -536,9 +536,11 @@ Return a JSON object with this EXACT structure:
 11. DO NOT use markdown formatting (no **, no ##, no ---)
 12. DO NOT wrap in code blocks (no ```json)
 
-🔴 CRITICAL: Follow Day 1 format exactly for all {program_duration_days} days. Each day should have the same structure with 4 meals (Almusal, Tanghalian, Meryenda, Hapunan) but different dishes.
+🔴 CRITICAL: Generate EXACTLY {program_duration_days} day(s) only. If duration is 1 day, generate only Day 1. If 2 days, generate Day 1 and Day 2. If 3 days, generate Day 1, Day 2, and Day 3, etc.
 
 🔴 CRITICAL: Your response must be PURE JSON starting with {{ and ending with }}. NO markdown, NO text before or after.
+
+🔴 REMINDER: You are generating a {program_duration_days}-day meal plan. Generate EXACTLY {program_duration_days} day(s) in the "days" array.
 
 BEGIN JSON OUTPUT NOW:
 """

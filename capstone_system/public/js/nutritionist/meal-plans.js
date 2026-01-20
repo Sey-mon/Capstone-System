@@ -200,6 +200,9 @@ class MealPlansManager {
                 // Save to database
                 const savedPlan = await this.saveFeedingProgramToDatabase(formData, response.data);
                 
+                // Add the new plan to the list immediately (before showing success modal)
+                this.addPlanToList(savedPlan);
+                
                 const programHtml = this.formatFeedingProgram(response.data);
                 
                 // Check if parsing was successful
@@ -218,9 +221,6 @@ class MealPlansManager {
                             popup: 'meal-plan-result'
                         },
                         footer: '<p style="color: #856404;">The meal plan was created but had formatting issues. Try generating again for better results.</p>'
-                    }).then(() => {
-                        // Add the new plan to the list dynamically
-                        this.addPlanToList(savedPlan);
                     });
                 } else {
                     Swal.fire({
@@ -234,9 +234,6 @@ class MealPlansManager {
                         customClass: {
                             popup: 'meal-plan-result'
                         }
-                    }).then(() => {
-                        // Add the new plan to the list dynamically
-                        this.addPlanToList(savedPlan);
                     });
                 }
             } else {
@@ -656,8 +653,9 @@ class MealPlansManager {
     }
 
     addPlanToList(plan) {
-        // Remove empty state if it exists
-        $('.empty-state').remove();
+        // Hide empty state and show grid
+        $('.empty-state').hide();
+        $('#program-plans-list').show();
 
         // Format age group label
         let ageGroupLabel = '';
@@ -788,6 +786,15 @@ class MealPlansManager {
         const $planElement = $(planHtml).hide();
         $('#program-plans-list').prepend($planElement);
         $planElement.fadeIn(400);
+        
+        // Update the plan count in the header
+        this.updatePlanCount();
+    }
+    
+    updatePlanCount() {
+        const totalPlans = $('#program-plans-list .plan-card').length;
+        const planText = totalPlans === 1 ? 'plan' : 'plans';
+        $('.btn-count').html(`<i class="fas fa-file-alt"></i> ${totalPlans} ${planText}`);
     }
 
     downloadPDF() {
@@ -1009,8 +1016,8 @@ if (typeof jQuery !== 'undefined') {
 // ========================================
 
 $(document).ready(function() {
-    // View saved plan
-    $('.view-program-plan-btn').on('click', function() {
+    // View saved plan - use event delegation for dynamically added plans
+    $(document).on('click', '.view-program-plan-btn', function() {
         const planId = $(this).data('plan-id');
         viewFeedingProgramPlan(planId);
     });
@@ -1018,16 +1025,16 @@ $(document).ready(function() {
     // Delete saved plan
     $(document).on('click', '.delete-program-plan-btn', function() {
         const planId = $(this).data('plan-id');
-        const $planItem = $(`.plan-card[data-plan-id="${planId}"]`);
+        const $planCard = $(this).closest('.plan-card');
         
         // Extract plan details
-        const planTitle = $planItem.find('.plan-title').text().trim();
-        const duration = $planItem.data('duration');
-        const budget = $planItem.data('budget');
-        const ageGroup = $planItem.data('age-group');
-        const barangay = $planItem.data('barangay');
+        const planTitle = $planCard.find('.plan-title').text().trim();
+        const duration = $planCard.data('duration');
+        const budget = $planCard.data('budget');
+        const ageGroup = $planCard.data('age-group');
+        const barangay = $planCard.data('barangay');
         
-        deleteFeedingProgramPlan(planId, planTitle, duration, budget, ageGroup, barangay);
+        deleteFeedingProgramPlan(planId, $planCard, planTitle, duration, budget, ageGroup, barangay);
     });
 
     // Program plans search functionality
@@ -1364,7 +1371,7 @@ function getAgeGroupLabel(ageGroup) {
 /**
  * Delete saved feeding program plan
  */
-function deleteFeedingProgramPlan(planId, planTitle, duration, budget, ageGroup, barangay) {
+function deleteFeedingProgramPlan(planId, $planCard, planTitle, duration, budget, ageGroup, barangay) {
     // Format age group display
     let ageGroupDisplay = '';
     switch(ageGroup) {
@@ -1465,10 +1472,21 @@ function deleteFeedingProgramPlan(planId, planTitle, duration, budget, ageGroup,
                             timer: 2500,
                             timerProgressBar: true
                         }).then(() => {
-                            // Reload page seamlessly without showing the process
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 100);
+                            // Remove the card from DOM with animation
+                            $planCard.fadeOut(400, function() {
+                                $(this).remove();
+                                
+                                // Update plan count using the global instance
+                                if (window.mealPlansManager && window.mealPlansManager.updatePlanCount) {
+                                    window.mealPlansManager.updatePlanCount();
+                                }
+                                
+                                // Check if there are no more plans, show empty state
+                                if ($('#program-plans-list .plan-card').length === 0) {
+                                    $('#program-plans-list').hide();
+                                    $('.empty-state').show();
+                                }
+                            });
                         });
                     } else {
                         Swal.fire({

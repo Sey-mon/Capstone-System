@@ -94,8 +94,7 @@
             </div>
 
             <!-- Meal Plans Grid -->
-            @if($feedingProgramPlans->count() > 0)
-            <div class="plans-grid" id="program-plans-list">
+            <div class="plans-grid" id="program-plans-list" @if($feedingProgramPlans->count() === 0) style="display: none;" @endif>
                 @foreach($feedingProgramPlans as $plan)
                 <div class="plan-card" 
                      data-plan-id="{{ $plan->program_plan_id }}"
@@ -203,8 +202,7 @@
                 </div>
                 @endforeach
             </div>
-            @else
-            <div class="empty-state">
+            <div class="empty-state" @if($feedingProgramPlans->count() > 0) style="display: none;" @endif>
                 <i class="fas fa-clipboard-list"></i>
                 <h3>No Meal Plans Yet</h3>
                 <p>Create your first feeding program meal plan to get started!</p>
@@ -213,7 +211,6 @@
                     Create Program Plan
                 </button>
             </div>
-            @endif
         </div>
 
         <!-- Results Section -->
