@@ -49,12 +49,6 @@
                             <i class="fas fa-award"></i>
                             {{ $nutritionist->years_experience ?? 0 }}+ years experience
                         </span>
-                        @if($nutritionist->license_number)
-                        <span class="meta-item">
-                            <i class="fas fa-id-card"></i>
-                            License #{{ $nutritionist->license_number }}
-                        </span>
-                        @endif
                     </div>
                 </div>
                 <div class="profile-actions">
@@ -197,13 +191,6 @@
                     </div>
                     <div class="card-content">
                         <div class="info-list">
-                            <div class="info-row">
-                                <div class="info-label">
-                                    <i class="fas fa-id-badge"></i>
-                                    License Number
-                                </div>
-                                <div class="info-value badge-value">{{ $nutritionist->license_number ?? 'Not provided' }}</div>
-                            </div>
                             <div class="info-row">
                                 <div class="info-label">
                                     <i class="fas fa-clock"></i>

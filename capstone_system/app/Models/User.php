@@ -51,7 +51,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'address',
         'is_active',
         // Nutritionist specific fields
-        'license_number',
         'years_experience',
         'qualifications',
         'professional_experience',
