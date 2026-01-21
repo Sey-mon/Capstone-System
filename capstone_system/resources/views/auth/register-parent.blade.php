@@ -313,6 +313,8 @@
                                placeholder="Create a strong password (minimum 8 characters)" 
                                value="{{ old('password') }}"
                                autocomplete="new-password"
+                               pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_\-^(){}\[\]:;'&quot;<>,.~`|/+=]).{8,}"
+                               title="Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#_-^(){}[]:;'&quot;<>,.~`|/+=)"
                                required>
                         <button type="button" class="password-visibility-toggle" data-target="password" aria-label="Toggle password visibility">
                             <i class="fas fa-eye show-icon"></i>
@@ -326,7 +328,7 @@
                             <li class="requirement" data-requirement="uppercase">One uppercase letter (A-Z)</li>
                             <li class="requirement" data-requirement="lowercase">One lowercase letter (a-z)</li>
                             <li class="requirement" data-requirement="number">One number (0-9)</li>
-                            <li class="requirement" data-requirement="special">One special character (e.g., !@#$%^&*)</li>
+                            <li class="requirement" data-requirement="special">One special character (@$!%*?&#_-^(){}[]:;'"<>,.~`|/+=)</li>
                         </ul>
                     </div>
                     @error('password')
@@ -628,7 +630,7 @@
                     uppercase: /[A-Z]/.test(password),
                     lowercase: /[a-z]/.test(password),
                     number: /[0-9]/.test(password),
-                    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+                    special: /[@$!%*?&#_\-^(){}\[\]:;'"<>,.~`|/+=]/.test(password)
                 };
 
                 // Update requirement indicators
