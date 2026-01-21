@@ -534,7 +534,7 @@ class AuthController extends Controller
                 'string',
                 'min:8',
                 'confirmed',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]/' // Strong password with more special chars
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_\-^(){}\[\]:;\'\"<>,.~`|\/+=])[A-Za-z\d@$!%*?&#_\-^(){}\[\]:;\'\"<>,.~`|\/+=]+$/' // Strong password with expanded special chars
             ],
             'contact_number' => [
                 'required',
