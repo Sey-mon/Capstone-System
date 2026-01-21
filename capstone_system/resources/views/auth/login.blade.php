@@ -385,50 +385,29 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/login.js') }}"></script>
-    
     <script>
+        // reCAPTCHA v3 - Generate token on form submit
         document.addEventListener('DOMContentLoaded', function() {
-            // Password visibility toggle
-            const togglePassword = document.getElementById('togglePassword');
-            const passwordField = document.getElementById('password');
-
-            if (togglePassword && passwordField) {
-                togglePassword.addEventListener('click', function(e) {
-                    e.preventDefault();
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                // Remove existing submit handlers from login.js to add reCAPTCHA
+                loginForm.addEventListener('submit', function(e) {
+                    const recaptchaToken = document.getElementById('recaptchaToken');
                     
-                    // Toggle the password field type
-                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordField.setAttribute('type', type);
-                    
-                    // Toggle the icon
-                    const icon = this.querySelector('i');
-                    if (type === 'password') {
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                    } else {
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
+                    // Only intercept if reCAPTCHA token is empty
+                    if (recaptchaToken && !recaptchaToken.value) {
+                        e.preventDefault();
+                        
+                        grecaptcha.ready(function() {
+                            grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'login'})
+                                .then(function(token) {
+                                    recaptchaToken.value = token;
+                                    loginForm.submit();
+                                });
+                        });
                     }
                 });
             }
-
-            // Smooth scroll for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    const href = this.getAttribute('href');
-                    if (href !== '#' && href.length > 1) {
-                        e.preventDefault();
-                        const target = document.querySelector(href);
-                        if (target) {
-                            target.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'start'
-                            });
-                        }
-                    }
-                });
-            });
 
             // Auto-hide alerts after 10 seconds
             const alerts = document.querySelectorAll('.alert');
@@ -441,23 +420,9 @@
                     }, 500);
                 }, 10000);
             });
-
-            // reCAPTCHA v3 - Generate token on form submit
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    grecaptcha.ready(function() {
-                        grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'login'})
-                            .then(function(token) {
-                                document.getElementById('recaptchaToken').value = token;
-                                loginForm.submit();
-                            });
-                    });
-                });
-            }
         });
     </script>
+    
+    <script src="{{ asset('js/login.js') }}"></script>
 </body>
 </html>

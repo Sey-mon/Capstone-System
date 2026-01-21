@@ -239,11 +239,14 @@
                             <option value="Laram" {{ old('barangay') == 'Laram' ? 'selected' : '' }}>Laram</option>
                             <option value="Magsaysay" {{ old('barangay') == 'Magsaysay' ? 'selected' : '' }}>Magsaysay</option>
                             <option value="Maharlika" {{ old('barangay') == 'Maharlika' ? 'selected' : '' }}>Maharlika</option>
+                            <option value="Narra" {{ old('barangay') == 'Narra' ? 'selected' : '' }}>Narra</option>
                             <option value="Nueva" {{ old('barangay') == 'Nueva' ? 'selected' : '' }}>Nueva</option>
                             <option value="Pacita I" {{ old('barangay') == 'Pacita I' ? 'selected' : '' }}>Pacita I</option>
                             <option value="Pacita II" {{ old('barangay') == 'Pacita II' ? 'selected' : '' }}>Pacita II</option>
                             <option value="Poblacion" {{ old('barangay') == 'Poblacion' ? 'selected' : '' }}>Poblacion</option>
+                            <option value="Riverside" {{ old('barangay') == 'Riverside' ? 'selected' : '' }}>Riverside</option>
                             <option value="Rosario" {{ old('barangay') == 'Rosario' ? 'selected' : '' }}>Rosario</option>
+                            <option value="Sampaguita Village" {{ old('barangay') == 'Sampaguita Village' ? 'selected' : '' }}>Sampaguita Village</option>
                             <option value="San Antonio" {{ old('barangay') == 'San Antonio' ? 'selected' : '' }}>San Antonio</option>
                             <option value="San Lorenzo Ruiz" {{ old('barangay') == 'San Lorenzo Ruiz' ? 'selected' : '' }}>San Lorenzo Ruiz</option>
                             <option value="San Roque" {{ old('barangay') == 'San Roque' ? 'selected' : '' }}>San Roque</option>
@@ -323,7 +326,7 @@
                             <li class="requirement" data-requirement="uppercase">One uppercase letter (A-Z)</li>
                             <li class="requirement" data-requirement="lowercase">One lowercase letter (a-z)</li>
                             <li class="requirement" data-requirement="number">One number (0-9)</li>
-                            <li class="requirement" data-requirement="special">One special character (@$!%*?&#)</li>
+                            <li class="requirement" data-requirement="special">One special character (e.g., !@#$%^&*)</li>
                         </ul>
                     </div>
                     @error('password')
@@ -625,7 +628,7 @@
                     uppercase: /[A-Z]/.test(password),
                     lowercase: /[a-z]/.test(password),
                     number: /[0-9]/.test(password),
-                    special: /[@$!%*?&#]/.test(password)
+                    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
                 };
 
                 // Update requirement indicators
