@@ -39,7 +39,7 @@
                             </span>
                         @endif
                     </div>
-                    <p class="profile-title"><i class="fas fa-stethoscope"></i> Licensed Nutritionist-Dietitian</p>
+                    <p class="profile-title"><i class="fas fa-stethoscope"></i> Barangay Nutritionist Scholar</p>
                     <div class="profile-meta">
                         <span class="meta-item">
                             <i class="fas fa-calendar-check"></i>
@@ -454,12 +454,6 @@
                         </div>
                         <div>
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
-                                <i class="fas fa-calendar" style="color: #10b981; margin-right: 5px;"></i>Date of Birth
-                            </label>
-                            <input id="swal-birth-date" type="date" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${nutritionistData.birth_date}">
-                        </div>
-                        <div>
-                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-venus-mars" style="color: #10b981; margin-right: 5px;"></i>Gender
                             </label>
                             <select id="swal-gender" class="swal2-select" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;">
@@ -468,12 +462,6 @@
                                 <option value="female" ${nutritionistData.sex === 'female' ? 'selected' : ''}>Female</option>
                                 <option value="other" ${nutritionistData.sex === 'other' ? 'selected' : ''}>Other</option>
                             </select>
-                        </div>
-                        <div style="grid-column: 1 / -1;">
-                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
-                                <i class="fas fa-map-marker-alt" style="color: #10b981; margin-right: 5px;"></i>Address
-                            </label>
-                            <textarea id="swal-address" class="swal2-textarea" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; min-height: 80px;" rows="3">${nutritionistData.address}</textarea>
                         </div>
                     </div>
                 </div>
@@ -516,9 +504,7 @@
                     middle_name: document.getElementById('swal-middle-name').value,
                     last_name: lastName,
                     contact_number: document.getElementById('swal-contact').value,
-                    birth_date: document.getElementById('swal-birth-date').value,
-                    sex: document.getElementById('swal-gender').value,
-                    address: document.getElementById('swal-address').value
+                    sex: document.getElementById('swal-gender').value
                 };
             }
         }).then((result) => {
@@ -715,20 +701,69 @@
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>Current Password *
                             </label>
-                            <input id="swal-current-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter current password" required>
+                            <div style="position: relative;">
+                                <input id="swal-current-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px 45px 12px 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter current password" required>
+                                <button type="button" onclick="togglePasswordVisibility('swal-current-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6b7280; cursor: pointer; padding: 8px; font-size: 16px;" title="Toggle password visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>New Password *
                             </label>
-                            <input id="swal-new-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter new password (min. 8 characters)" required>
-                            <small style="color: #6b7280; font-size: 12px; margin-top: 5px; display: block;">Password must be at least 8 characters long</small>
+                            <div style="position: relative;">
+                                <input id="swal-new-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px 45px 12px 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Enter new password (min. 8 characters)" required>
+                                <button type="button" onclick="togglePasswordVisibility('swal-new-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6b7280; cursor: pointer; padding: 8px; font-size: 16px;" title="Toggle password visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div id="password-strength" style="margin-top: 8px; display: none;">
+                                <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #e5e7eb; border-radius: 2px;"></div>
+                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #e5e7eb; border-radius: 2px;"></div>
+                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #e5e7eb; border-radius: 2px;"></div>
+                                    <div class="strength-bar" style="flex: 1; height: 4px; background: #e5e7eb; border-radius: 2px;"></div>
+                                </div>
+                                <div id="strength-text" style="font-size: 12px; font-weight: 600; color: #6b7280;"></div>
+                            </div>
+                            <div id="password-requirements" style="margin-top: 10px; padding: 12px; background: #f9fafb; border-radius: 6px; border-left: 3px solid #10b981;">
+                                <div style="font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">Password must contain:</div>
+                                <div id="req-length" style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+                                    <i class="fas fa-circle" style="font-size: 6px; margin-right: 8px; color: #d1d5db;"></i>At least 8 characters
+                                </div>
+                                <div id="req-uppercase" style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+                                    <i class="fas fa-circle" style="font-size: 6px; margin-right: 8px; color: #d1d5db;"></i>One uppercase letter (A-Z)
+                                </div>
+                                <div id="req-lowercase" style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+                                    <i class="fas fa-circle" style="font-size: 6px; margin-right: 8px; color: #d1d5db;"></i>One lowercase letter (a-z)
+                                </div>
+                                <div id="req-number" style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+                                    <i class="fas fa-circle" style="font-size: 6px; margin-right: 8px; color: #d1d5db;"></i>One number (0-9)
+                                </div>
+                                <div id="req-special" style="font-size: 12px; color: #6b7280;">
+                                    <i class="fas fa-circle" style="font-size: 6px; margin-right: 8px; color: #d1d5db;"></i>One special character (!@#$%...)
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-lock" style="color: #10b981; margin-right: 5px;"></i>Confirm New Password *
                             </label>
-                            <input id="swal-confirm-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Re-enter new password" required>
+                            <div style="position: relative;">
+                                <input id="swal-confirm-password" type="password" class="swal2-input" style="width: 100%; margin: 0; padding: 12px 45px 12px 12px; border: 2px solid #e5e7eb; border-radius: 8px;" placeholder="Re-enter new password" required>
+                                <button type="button" onclick="togglePasswordVisibility('swal-confirm-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6b7280; cursor: pointer; padding: 8px; font-size: 16px;" title="Toggle password visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div id="password-match" style="margin-top: 8px; font-size: 12px; display: none;">
+                                <i class="fas fa-check-circle" style="color: #10b981; margin-right: 5px;"></i>
+                                <span style="color: #10b981; font-weight: 500;">Passwords match</span>
+                            </div>
+                            <div id="password-mismatch" style="margin-top: 8px; font-size: 12px; display: none;">
+                                <i class="fas fa-times-circle" style="color: #ef4444; margin-right: 5px;"></i>
+                                <span style="color: #ef4444; font-weight: 500;">Passwords do not match</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -756,24 +791,69 @@
                         this.style.boxShadow = 'none';
                     });
                 });
+                
+                // Real-time password validation
+                const newPasswordInput = document.getElementById('swal-new-password');
+                const confirmPasswordInput = document.getElementById('swal-confirm-password');
+                
+                newPasswordInput.addEventListener('input', function() {
+                    validatePasswordStrength(this.value);
+                });
+                
+                confirmPasswordInput.addEventListener('input', function() {
+                    validatePasswordMatch(newPasswordInput.value, this.value);
+                });
             },
             preConfirm: () => {
                 const currentPassword = document.getElementById('swal-current-password').value;
                 const newPassword = document.getElementById('swal-new-password').value;
                 const confirmPassword = document.getElementById('swal-confirm-password').value;
                 
+                // Check if all fields are filled
                 if (!currentPassword || !newPassword || !confirmPassword) {
                     Swal.showValidationMessage('All fields are required');
                     return false;
                 }
                 
+                // Check minimum length
                 if (newPassword.length < 8) {
-                    Swal.showValidationMessage('New password must be at least 8 characters long');
+                    Swal.showValidationMessage('Password must be at least 8 characters long');
                     return false;
                 }
                 
+                // Check for uppercase letter
+                if (!/[A-Z]/.test(newPassword)) {
+                    Swal.showValidationMessage('Password must contain at least one uppercase letter');
+                    return false;
+                }
+                
+                // Check for lowercase letter
+                if (!/[a-z]/.test(newPassword)) {
+                    Swal.showValidationMessage('Password must contain at least one lowercase letter');
+                    return false;
+                }
+                
+                // Check for number
+                if (!/[0-9]/.test(newPassword)) {
+                    Swal.showValidationMessage('Password must contain at least one number');
+                    return false;
+                }
+                
+                // Check for special character
+                if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+                    Swal.showValidationMessage('Password must contain at least one special character (!@#$%^&*...)');
+                    return false;
+                }
+                
+                // Check if passwords match
                 if (newPassword !== confirmPassword) {
                     Swal.showValidationMessage('New passwords do not match');
+                    return false;
+                }
+                
+                // Check if new password is different from current
+                if (currentPassword === newPassword) {
+                    Swal.showValidationMessage('New password must be different from current password');
                     return false;
                 }
                 
@@ -834,59 +914,4 @@
     }
 </script>
 <script src="{{ asset('js/nutritionist/profile.js') }}"></script>
-
-<style>
-    /* SweetAlert Custom Styling for Nutritionist Profile */
-    .nutritionist-swal-popup {
-        border-radius: 16px !important;
-        padding: 0 !important;
-    }
-
-    .nutritionist-swal-popup .swal2-title {
-        padding: 20px 30px 10px !important;
-        margin: 0 !important;
-    }
-
-    .nutritionist-swal-popup .swal2-html-container {
-        padding: 0 30px 20px !important;
-        margin: 0 !important;
-    }
-
-    .nutritionist-swal-confirm {
-        background: linear-gradient(135deg, #10b981, #059669) !important;
-        border: none !important;
-        border-radius: 10px !important;
-        padding: 12px 30px !important;
-        font-weight: 600 !important;
-        font-size: 15px !important;
-        transition: all 0.3s ease !important;
-    }
-
-    .nutritionist-swal-confirm:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
-    }
-
-    .nutritionist-swal-cancel {
-        background: #f3f4f6 !important;
-        color: #374151 !important;
-        border: 2px solid #d1d5db !important;
-        border-radius: 10px !important;
-        padding: 12px 30px !important;
-        font-weight: 600 !important;
-        font-size: 15px !important;
-        transition: all 0.3s ease !important;
-    }
-
-    .nutritionist-swal-cancel:hover {
-        background: #e5e7eb !important;
-        transform: translateY(-2px) !important;
-    }
-
-    .swal2-actions {
-        gap: 15px !important;
-        padding: 20px 30px 30px !important;
-        margin: 0 !important;
-    }
-</style>
 @endpush

@@ -128,3 +128,124 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Password strength validation function
+function validatePasswordStrength(password) {
+    const strengthIndicator = document.getElementById('password-strength');
+    const strengthText = document.getElementById('strength-text');
+    const strengthBars = document.querySelectorAll('.strength-bar');
+    
+    if (!password) {
+        strengthIndicator.style.display = 'none';
+        return;
+    }
+    
+    strengthIndicator.style.display = 'block';
+    
+    let strength = 0;
+    const requirements = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+    
+    // Update requirements checklist
+    updateRequirement('req-length', requirements.length);
+    updateRequirement('req-uppercase', requirements.uppercase);
+    updateRequirement('req-lowercase', requirements.lowercase);
+    updateRequirement('req-number', requirements.number);
+    updateRequirement('req-special', requirements.special);
+    
+    // Calculate strength
+    Object.values(requirements).forEach(met => {
+        if (met) strength++;
+    });
+    
+    // Reset bars
+    strengthBars.forEach(bar => {
+        bar.style.background = '#e5e7eb';
+    });
+    
+    // Update strength indicator
+    if (strength <= 2) {
+        strengthText.textContent = 'Weak';
+        strengthText.style.color = '#ef4444';
+        strengthBars[0].style.background = '#ef4444';
+    } else if (strength === 3) {
+        strengthText.textContent = 'Fair';
+        strengthText.style.color = '#f59e0b';
+        strengthBars[0].style.background = '#f59e0b';
+        strengthBars[1].style.background = '#f59e0b';
+    } else if (strength === 4) {
+        strengthText.textContent = 'Good';
+        strengthText.style.color = '#3b82f6';
+        strengthBars[0].style.background = '#3b82f6';
+        strengthBars[1].style.background = '#3b82f6';
+        strengthBars[2].style.background = '#3b82f6';
+    } else if (strength === 5) {
+        strengthText.textContent = 'Strong';
+        strengthText.style.color = '#10b981';
+        strengthBars.forEach(bar => {
+            bar.style.background = '#10b981';
+        });
+    }
+}
+
+// Update requirement item
+function updateRequirement(id, met) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    
+    const icon = element.querySelector('i');
+    if (met) {
+        element.style.color = '#10b981';
+        icon.className = 'fas fa-check-circle';
+        icon.style.color = '#10b981';
+        icon.style.fontSize = '12px';
+    } else {
+        element.style.color = '#6b7280';
+        icon.className = 'fas fa-circle';
+        icon.style.color = '#d1d5db';
+        icon.style.fontSize = '6px';
+    }
+}
+
+// Password match validation
+function validatePasswordMatch(password, confirmPassword) {
+    const matchIndicator = document.getElementById('password-match');
+    const mismatchIndicator = document.getElementById('password-mismatch');
+    
+    if (!confirmPassword) {
+        matchIndicator.style.display = 'none';
+        mismatchIndicator.style.display = 'none';
+        return;
+    }
+    
+    if (password === confirmPassword) {
+        matchIndicator.style.display = 'block';
+        mismatchIndicator.style.display = 'none';
+    } else {
+        matchIndicator.style.display = 'none';
+        mismatchIndicator.style.display = 'block';
+    }
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        button.style.color = '#10b981';
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+        button.style.color = '#6b7280';
+    }
+}
