@@ -1115,3 +1115,56 @@
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* SweetAlert Custom Styling for Nutritionist Profile */
+.nutritionist-swal-popup {
+    border-radius: 16px !important;
+    padding: 0 !important;
+}
+
+.nutritionist-swal-popup .swal2-title {
+    padding: 20px 30px 10px !important;
+    margin: 0 !important;
+}
+
+.nutritionist-swal-popup .swal2-html-container {
+    padding: 0 30px 20px !important;
+    margin: 0 !important;
+}
+
+.nutritionist-swal-confirm {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 12px 30px !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    transition: all 0.3s ease !important;
+}
+
+.nutritionist-swal-confirm:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+.nutritionist-swal-cancel {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+    border: 2px solid #d1d5db !important;
+    border-radius: 10px !important;
+    padding: 12px 30px !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    transition: all 0.3s ease !important;
+}
+
+.nutritionist-swal-cancel:hover {
+    background: #e5e7eb !important;
+    transform: translateY(-2px) !important;
+}
+
+.swal2-actions {
+    gap: 15px !important;
+    padding: 20px 30px 30px !important;
+    margin: 0 !important;
+}
