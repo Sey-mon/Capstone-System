@@ -2048,6 +2048,14 @@ class AdminController extends Controller
                 ], 403);
             }
 
+            // Prevent deleting users with Admin role
+            if ($user->role && $user->role->role_name === 'Admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin users cannot be deleted.'
+                ], 403);
+            }
+
             DB::beginTransaction();
 
             $userName = "{$user->first_name} {$user->last_name}";
