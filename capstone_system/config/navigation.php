@@ -55,6 +55,11 @@ return [
             'text' => 'Reports',
         ],
         [
+            'route' => 'admin.support-tickets',
+            'icon' => 'fas fa-ticket-alt',
+            'text' => 'Support Tickets',
+        ],
+        [
             'route' => 'admin.audit.logs',
             'icon' => 'fas fa-clipboard-check',
             'text' => 'Audit Logs',

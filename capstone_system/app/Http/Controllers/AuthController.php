@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\AuditLog;
+use App\Models\SupportTicket;
 use App\Mail\WelcomeEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -77,31 +78,35 @@ class AuthController extends Controller
     }
 
     /**
-     * Handle sending contact admin message
+     * Handle submitting support ticket (problem report)
      */
-    public function sendContactAdmin(Request $request)
+    public function submitSupportTicket(Request $request)
     {
         // LAYER 1: Honeypot Protection - Check if bot filled hidden field
         if ($request->filled('website')) {
             // Bot detected, silently reject
             return back()->withErrors([
                 'email' => 'Invalid submission attempt.',
-            ])->withInput($request->except('message'));
+            ])->withInput($request->except('description'));
         }
 
-        // LAYER 2: Google reCAPTCHA v3 Validation
+        // LAYER 2: Validation
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'message' => 'required|string|max:1000',
+            'email' => 'required|email|max:255',
+            'category' => 'required|in:authentication,account_access,patient_management,assessment_issues,meal_planning,inventory_system,reports_analytics,ai_service,technical_bug,data_error,feature_request,performance_issue,mobile_display,other',
+            'subject' => 'required|string|max:255',
+            'description' => 'required|string|max:2000',
+            'other_specify' => 'required_if:category,other|nullable|string|max:255',
             'recaptcha_token' => 'required',
         ], [
             'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
+            'other_specify.required_if' => 'Please specify your issue type when selecting "Other".',
         ]);
 
         if ($validator->fails()) {
             return back()
                 ->withErrors($validator)
-                ->withInput($request->except('message'));
+                ->withInput($request->except('description'));
         }
 
         // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
@@ -118,17 +123,31 @@ class AuthController extends Controller
             if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
                 return back()->withErrors([
                     'recaptcha_token' => 'Security verification failed. Please try again.',
-                ])->withInput($request->except('message'));
+                ])->withInput($request->except('description'));
             }
         }
 
-        // Send email to admin (replace with actual admin email)
-        $adminEmail = config('mail.from.address', 'admin@example.com');
-        Mail::raw('From: ' . $request->email . "\n\nMessage:\n" . $request->message, function ($message) use ($request, $adminEmail) {
-            $message->to($adminEmail)
-                ->subject('Contact Admin Message');
-        });
-        return back()->with('success', 'Your message has been sent to the admin.');
+        // Create support ticket
+        $ticket = SupportTicket::create([
+            'reporter_email' => $request->email,
+            'category' => $request->category,
+            'subject' => $request->subject,
+            'description' => $request->description,
+            'other_specify' => $request->category === 'other' ? $request->other_specify : null,
+            'status' => 'unread',
+            'ip_address' => $request->ip(),
+        ]);
+
+        return back()->with('success', 'Your problem report has been submitted successfully. Ticket #' . $ticket->ticket_number . ' has been created. An administrator will review it soon.');
+    }
+    
+    /**
+     * Handle sending contact admin message (DEPRECATED - Use submitSupportTicket instead)
+     */
+    public function sendContactAdmin(Request $request)
+    {
+        // Redirect to new method
+        return $this->submitSupportTicket($request);
     }
     /**
      * Show the login form (Public/Parent Login)

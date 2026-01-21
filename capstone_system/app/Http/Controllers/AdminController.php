@@ -13,6 +13,7 @@ use App\Models\AuditLog;
 use App\Models\Role;
 use App\Models\Food;
 use App\Models\FoodRequest;
+use App\Models\SupportTicket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -186,6 +187,10 @@ class AdminController extends Controller
                 'pending_nutritionist_applications' => User::whereHas('role', function($query) {
                     $query->where('role_name', 'Nutritionist');
                 })->where('is_active', false)->count(),
+                
+                // Support tickets (only active, non-archived)
+                'unread_support_tickets' => SupportTicket::active()->where('status', 'unread')->count(),
+                'urgent_support_tickets' => SupportTicket::active()->where('priority', 'urgent')->whereIn('status', ['unread', 'read'])->count(),
                 
                 // Chart data
                 'nutritional_status' => [
@@ -3092,5 +3097,233 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.profile')->with('success', 'Password updated successfully!');
+    }
+    
+    /**
+     * Display support tickets
+     */
+    public function supportTickets(Request $request)
+    {
+        $filter = $request->get('filter', 'all');
+        $search = $request->get('search');
+        $priority = $request->get('priority');
+        $status = $request->get('status');
+        $category = $request->get('category');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        
+        $query = SupportTicket::query();
+        
+        // Apply search filter if provided
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('ticket_number', 'LIKE', "%{$search}%")
+                  ->orWhere('reporter_email', 'LIKE', "%{$search}%")
+                  ->orWhere('subject', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        // Apply priority filter
+        if ($priority) {
+            $query->where('priority', $priority);
+        }
+        
+        // Apply status filter
+        if ($status) {
+            $query->where('status', $status);
+        }
+        
+        // Apply category filter
+        if ($category) {
+            $query->where('category', $category);
+        }
+        
+        // Apply date range filter
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+        
+        // Apply filters
+        switch ($filter) {
+            case 'unread':
+                $query->active()->where('status', 'unread');
+                break;
+            case 'urgent':
+                $query->active()->where('priority', 'urgent')->where('status', '!=', 'resolved');
+                break;
+            case 'resolved':
+                $query->active()->where('status', 'resolved');
+                break;
+            case 'archived':
+                $query->archived();
+                break;
+            default:
+                // Show only active (non-archived, non-resolved) tickets by default
+                $query->active()->where('status', '!=', 'resolved');
+                break;
+        }
+        
+        // Optimize query with indexes and latest ordering
+        $tickets = $query->select([
+                'ticket_id', 
+                'ticket_number', 
+                'reporter_email', 
+                'category', 
+                'subject', 
+                'status', 
+                'priority', 
+                'created_at',
+                'archived_at'
+            ])
+            ->latest('created_at')
+            ->paginate(20)
+            ->withQueryString(); // Preserve all query parameters in pagination
+        
+        // Get stats (optimized with single queries)
+        $stats = [
+            'total' => SupportTicket::active()->where('status', '!=', 'resolved')->count(),
+            'unread' => SupportTicket::active()->where('status', 'unread')->count(),
+            'urgent' => SupportTicket::active()->where('priority', 'urgent')->where('status', '!=', 'resolved')->count(),
+            'resolved' => SupportTicket::active()->where('status', 'resolved')->count(),
+            'archived' => SupportTicket::archived()->count(),
+        ];
+        
+        // Get unique categories for filter dropdown
+        $categories = SupportTicket::select('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category')
+            ->toArray();
+        
+        // Handle AJAX requests
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'tickets' => $tickets->map(function($ticket) {
+                    return [
+                        'ticket_id' => $ticket->ticket_id,
+                        'ticket_number' => $ticket->ticket_number,
+                        'reporter_email' => $ticket->reporter_email,
+                        'category' => $ticket->category,
+                        'category_name' => ucwords(str_replace('_', ' ', $ticket->category)),
+                        'subject' => $ticket->subject,
+                        'status' => $ticket->status,
+                        'priority' => $ticket->priority,
+                        'created_at' => $ticket->created_at->toISOString(),
+                        'archived_at' => $ticket->archived_at,
+                    ];
+                }),
+                'stats' => $stats,
+                'pagination' => [
+                    'total' => $tickets->total(),
+                    'from' => $tickets->firstItem(),
+                    'to' => $tickets->lastItem(),
+                    'current_page' => $tickets->currentPage(),
+                    'last_page' => $tickets->lastPage(),
+                    'per_page' => $tickets->perPage(),
+                    'links' => $tickets->links()->toHtml(),
+                ]
+            ]);
+        }
+        
+        return view('admin.support-tickets', compact('tickets', 'stats', 'search', 'categories'));
+    }
+    
+    /**
+     * View single support ticket and mark as read
+     */
+    public function viewSupportTicket($id)
+    {
+        $ticket = SupportTicket::findOrFail($id);
+        
+        // Mark as read if first time viewing
+        if (!$ticket->read_at) {
+            $ticket->update([
+                'read_at' => now(),
+                'status' => 'read'
+            ]);
+        }
+        
+        return response()->json($ticket);
+    }
+    
+    /**
+     * Update admin notes for a ticket
+     */
+    public function updateTicketNotes(Request $request, $id)
+    {
+        $ticket = SupportTicket::findOrFail($id);
+        
+        $ticket->update([
+            'admin_notes' => $request->input('admin_notes')
+        ]);
+        
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Mark ticket as resolved
+     */
+    public function resolveTicket($id)
+    {
+        $ticket = SupportTicket::findOrFail($id);
+        
+        $ticket->update([
+            'status' => 'resolved'
+        ]);
+        
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Archive support ticket
+     */
+    public function archiveSupportTicket($id)
+    {
+        $ticket = SupportTicket::findOrFail($id);
+        
+        $ticket->update([
+            'archived_at' => now()
+        ]);
+        
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Unarchive support ticket
+     */
+    public function unarchiveSupportTicket($id)
+    {
+        $ticket = SupportTicket::withoutGlobalScopes()->findOrFail($id);
+        
+        $ticket->update([
+            'archived_at' => null
+        ]);
+        
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Permanently delete support ticket (only for archived tickets)
+     */
+    public function permanentDeleteSupportTicket($id)
+    {
+        $ticket = SupportTicket::withoutGlobalScopes()->findOrFail($id);
+        
+        // Only allow permanent deletion of archived tickets
+        if (!$ticket->archived_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only archived tickets can be permanently deleted'
+            ], 403);
+        }
+        
+        // Permanently delete the ticket
+        $ticket->forceDelete();
+        
+        return response()->json(['success' => true]);
     }
 }

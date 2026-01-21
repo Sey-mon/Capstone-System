@@ -386,9 +386,9 @@
                     </div>
 
                     <div class="extra-links">
-                        <a href="{{ route('contact.admin') }}" class="contact-admin-btn">
-                            <i class="fas fa-headset"></i>
-                            Contact Admin
+                        <a href="{{ route('support.report') }}" class="contact-admin-btn">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Report a Problem
                         </a>
                     </div>
                 </form>
@@ -487,7 +487,7 @@
                     <span>|</span>
                     <a href="#">Terms of Service</a>
                     <span>|</span>
-                    <a href="{{ route('contact.admin') }}">Contact Admin</a>
+                    <a href="{{ route('support.report') }}">Report a Problem</a>
                 </div>
             </div>
         </div>
