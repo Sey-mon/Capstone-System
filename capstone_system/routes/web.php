@@ -24,13 +24,13 @@ Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
     ->middleware('throttle:5,1') // 5 attempts per minute
     ->name('password.email');
 
-// Contact Admin
-Route::get('/contact-admin', function() {
-    return view('auth.contact-admin');
-})->name('contact.admin');
-Route::post('/contact-admin', [AuthController::class, 'sendContactAdmin'])
+// Support Ticket - Report a Problem
+Route::get('/report-problem', function() {
+    return view('auth.report-problem');
+})->name('support.report');
+Route::post('/report-problem', [AuthController::class, 'submitSupportTicket'])
     ->middleware('throttle:5,1') // 5 attempts per minute
-    ->name('contact.admin.send');
+    ->name('support.report.submit');
 
 // Public Login (Default)
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
@@ -195,6 +195,15 @@ Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->
     
     // Reports
     Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+    
+    // Support Tickets
+    Route::get('/support-tickets', [AdminController::class, 'supportTickets'])->name('support-tickets');
+    Route::get('/support-tickets/{id}', [AdminController::class, 'viewSupportTicket'])->name('support-tickets.view');
+    Route::post('/support-tickets/{id}/update-notes', [AdminController::class, 'updateTicketNotes'])->name('support-tickets.update-notes');
+    Route::post('/support-tickets/{id}/resolve', [AdminController::class, 'resolveTicket'])->name('support-tickets.resolve');
+    Route::post('/support-tickets/{id}/archive', [AdminController::class, 'archiveSupportTicket'])->name('support-tickets.archive');
+    Route::post('/support-tickets/{id}/unarchive', [AdminController::class, 'unarchiveSupportTicket'])->name('support-tickets.unarchive');
+    Route::delete('/support-tickets/{id}/permanent-delete', [AdminController::class, 'permanentDeleteSupportTicket'])->name('support-tickets.permanent-delete');
     
     // Dynamic report API endpoints
     Route::get('/reports/malnutrition-cases', [AdminController::class, 'getMalnutritionCasesReport'])->name('reports.malnutrition-cases');

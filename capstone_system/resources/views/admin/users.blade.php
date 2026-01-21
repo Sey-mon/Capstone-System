@@ -155,9 +155,11 @@
                                             </button>
                                         @endif
                                     @endif
-                                    <button class="action-btn delete" onclick="deleteUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    @if($roleName !== 'Admin')
+                                        <button class="action-btn delete" onclick="deleteUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

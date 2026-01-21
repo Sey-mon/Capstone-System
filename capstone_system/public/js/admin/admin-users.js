@@ -691,9 +691,11 @@ function renderUsersTable(users) {
                                    </button>`
                             }
                         ` : ''}
-                        <button class="action-btn delete" onclick="deleteUser(${user.user_id}, '${user.first_name} ${user.last_name}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        ${roleName !== 'Admin' ? `
+                            <button class="action-btn delete" onclick="deleteUser(${user.user_id}, '${user.first_name} ${user.last_name}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </td>
             </tr>
