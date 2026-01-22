@@ -156,6 +156,7 @@
                                                      data-value="{{ $child->patient_id }}"
                                                      data-name="{{ $child->first_name }} {{ $child->last_name }}"
                                                      data-age="{{ $child->age_months }}"
+                                                     data-age-months="{{ $child->age_months }}"
                                                      data-search="{{ strtolower($child->first_name . ' ' . $child->last_name) }}">
                                                     <div class="option-avatar">
                                                         <i class="fas fa-baby"></i>
@@ -180,6 +181,18 @@
                                 @error('patient_id')
                                     <div class="field-error">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            <!-- Breastfeeding Notice for Babies Under 6 Months -->
+                            <div class="ultra-alert info" id="breastfeedingNotice" style="display: none;">
+                                <div class="alert-icon">
+                                    <i class="fas fa-baby"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <h4>Exclusive Breastfeeding Recommended</h4>
+                                    <p>For babies under 6 months old, the World Health Organization (WHO) recommends exclusive breastfeeding. Breast milk provides all the nutrition your baby needs during this period.</p>
+                                    <small><strong>Note:</strong> This meal plan generator is designed for children 6 months and older who are ready for complementary foods. Please consult with your pediatrician or health worker for specific feeding guidance for babies under 6 months.</small>
+                                </div>
                             </div>
 
                             <!-- Available Foods Section -->

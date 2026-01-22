@@ -142,6 +142,7 @@ function initializeCustomDropdown() {
             const value = this.getAttribute('data-value');
             const name = this.getAttribute('data-name');
             const age = this.getAttribute('data-age');
+            const ageMonths = parseInt(this.getAttribute('data-age-months') || age);
             
             // Update hidden input
             hiddenInput.value = value;
@@ -159,6 +160,9 @@ function initializeCustomDropdown() {
             // Update selected state
             options.forEach(opt => opt.classList.remove('selected'));
             this.classList.add('selected');
+            
+            // Check if child is under 6 months
+            checkChildAge(ageMonths, name);
             
             // Close dropdown
             closeDropdown();
@@ -191,6 +195,75 @@ function initializeCustomDropdown() {
         if (searchInput) {
             searchInput.value = '';
             searchInput.dispatchEvent(new Event('input'));
+        }
+    }
+}
+
+// Check child age for breastfeeding notice
+function checkChildAge(ageMonths, childName) {
+    const breastfeedingNotice = document.getElementById('breastfeedingNotice');
+    const availableFoodsSection = document.querySelector('.form-section:has(#available_foods)');
+    const submitButton = document.querySelector('.ultra-button.primary[type="submit"]');
+    
+    if (!breastfeedingNotice) return;
+    
+    if (ageMonths < 6) {
+        // Show breastfeeding notice
+        breastfeedingNotice.style.display = 'flex';
+        
+        // Scroll to notice
+        setTimeout(() => {
+            breastfeedingNotice.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }, 300);
+        
+        // Optional: Disable available foods section and submit button
+        if (availableFoodsSection) {
+            availableFoodsSection.style.opacity = '0.5';
+            availableFoodsSection.style.pointerEvents = 'none';
+            const foodsInput = availableFoodsSection.querySelector('#available_foods');
+            if (foodsInput) {
+                foodsInput.disabled = true;
+                foodsInput.placeholder = 'Not applicable for babies under 6 months';
+            }
+        }
+        
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.style.opacity = '0.5';
+            submitButton.style.pointerEvents = 'none';
+            const buttonText = submitButton.querySelector('.button-text');
+            if (buttonText) {
+                buttonText.textContent = 'Meal Plans Not Available for Babies Under 6 Months';
+            }
+        }
+        
+        showToast(`${childName} is under 6 months - Exclusive breastfeeding recommended`, 'info');
+    } else {
+        // Hide breastfeeding notice
+        breastfeedingNotice.style.display = 'none';
+        
+        // Re-enable available foods section and submit button
+        if (availableFoodsSection) {
+            availableFoodsSection.style.opacity = '1';
+            availableFoodsSection.style.pointerEvents = 'auto';
+            const foodsInput = availableFoodsSection.querySelector('#available_foods');
+            if (foodsInput) {
+                foodsInput.disabled = false;
+                foodsInput.placeholder = 'e.g., chicken, rice, vegetables, eggs, fish, fruits';
+            }
+        }
+        
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.style.opacity = '1';
+            submitButton.style.pointerEvents = 'auto';
+            const buttonText = submitButton.querySelector('.button-text');
+            if (buttonText) {
+                buttonText.textContent = 'Generate Smart Meal Plan';
+            }
         }
     }
 }
