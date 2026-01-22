@@ -8,6 +8,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="Login to SHARES - Smart Health and Recommender System for Excellence in Nutrition. Access your San Pedro City nutrition management account.">
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('img/cho.png') }}">
+    
     <!-- Preconnect to external resources for better performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -169,7 +172,7 @@
     </section>
 
     <!-- About Section -->
-    <section id="about" class="content-section dark-section">
+    <section id="about" class="content-section dark-section" style="background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('{{ asset('img/city-hall.jpg') }}'); background-size: cover; background-position: center; background-attachment: fixed;">
         <div class="section-container">
             <div class="section-content">
                 <div class="content-text">
@@ -193,11 +196,6 @@
                             <h3>Smart City</h3>
                             <p>Nutrition-Smart Goal by 2032</p>
                         </div>
-                    </div>
-                </div>
-                <div class="content-image">
-                    <div class="image-placeholder">
-                        <i class="fas fa-heartbeat"></i>
                     </div>
                 </div>
             </div>
