@@ -1,8 +1,8 @@
 @extends('layouts.dashboard')
 
-@section('title', 'My Child Assessments')
-@section('page-title', 'My Child Assessments')
-@section('page-subtitle', 'View all child assessments for your children.')
+@section('title', 'Screening History')
+@section('page-title', 'Screening History')
+@section('page-subtitle', 'View all screening records for your children.')
 
 @section('navigation')
     @include('partials.navigation')
@@ -64,7 +64,7 @@
                     </div>
                     <div class="header-stat-content">
                         <div class="header-stat-value">{{ $childrenWithAssessments }}</div>
-                        <div class="header-stat-label">With Assessments</div>
+                        <div class="header-stat-label">With Screenings</div>
                     </div>
                 </div>
                 <div class="header-stat-item">
@@ -73,7 +73,7 @@
                     </div>
                     <div class="header-stat-content">
                         <div class="header-stat-value">{{ $totalAssessments }}</div>
-                        <div class="header-stat-label">Total Assessments</div>
+                        <div class="header-stat-label">Total Screenings</div>
                     </div>
                 </div>
                 @if($latestAssessmentDate)
@@ -83,7 +83,7 @@
                     </div>
                     <div class="header-stat-content">
                         <div class="header-stat-value" style="font-size: 1rem;">{{ $latestAssessmentDate->diffForHumans() }}</div>
-                        <div class="header-stat-label">Last Assessment</div>
+                        <div class="header-stat-label">Last Screening</div>
                     </div>
                 </div>
                 @endif
@@ -119,7 +119,7 @@
                                         <span class="meta-divider">•</span>
                                         <span class="meta-item">
                                             <i class="fas fa-chart-line"></i>
-                                            {{ $child->assessments->count() }} {{ $child->assessments->count() === 1 ? 'Assessment' : 'Assessments' }}
+                                            {{ $child->assessments->count() }} {{ $child->assessments->count() === 1 ? 'Screening' : 'Screenings' }}
                                         </span>
                                     @endif
                                 </div>
@@ -134,7 +134,7 @@
                             @else
                                 <span class="no-data-badge">
                                     <i class="fas fa-info-circle"></i>
-                                    No Assessments
+                                    No Screenings
                                 </span>
                             @endif
                         </div>
@@ -149,7 +149,7 @@
                             <div class="latest-assessment">
                                 <div class="assessment-header-inline">
                                     <div class="assessment-title-section">
-                                        <h4><i class="fas fa-file-medical-alt"></i> Latest Assessment</h4>
+                                        <h4><i class="fas fa-file-medical-alt"></i> Latest Screening</h4>
                                         <span class="assessment-date">
                                             <i class="fas fa-calendar"></i>
                                             {{ $latestAssessment->created_at->format('F d, Y') }}
@@ -238,8 +238,8 @@
                                 <div class="no-assessment-icon">
                                     <i class="fas fa-clipboard-list"></i>
                                 </div>
-                                <h4>No Assessments Available</h4>
-                                <p>This child has not received any nutritional assessments yet. Please contact your nutritionist to schedule an assessment.</p>
+                                <h4>No Screenings Available</h4>
+                                <p>This child has not received any nutritional screenings yet. Please contact your nutritionist to schedule a screening.</p>
                             </div>
                         @endif
                     </div>
@@ -253,7 +253,7 @@
                     <i class="fas fa-clipboard-list"></i>
                 </div>
                 <h3>No Children Registered</h3>
-                <p>You don't have any children registered in the system yet. Once children are added to your account, their nutritional assessments and health information will appear here.</p>
+                <p>You don't have any children registered in the system yet. Once children are added to your account, their nutritional screenings and health information will appear here.</p>
                 <div class="empty-state-actions">
                     <button class="empty-state-btn primary">
                         <i class="fas fa-user-plus"></i>

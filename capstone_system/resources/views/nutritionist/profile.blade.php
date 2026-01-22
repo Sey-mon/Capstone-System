@@ -56,10 +56,6 @@
                         <i class="fas fa-edit"></i>
                         Edit Profile
                     </button>
-                    <button class="btn btn-outline" onclick="window.print()">
-                        <i class="fas fa-print"></i>
-                        Print
-                    </button>
                 </div>
             </div>
         </div>
@@ -153,24 +149,10 @@
                             </div>
                             <div class="info-row">
                                 <div class="info-label">
-                                    <i class="fas fa-birthday-cake"></i>
-                                    Date of Birth
-                                </div>
-                                <div class="info-value">{{ $nutritionist->birth_date ? $nutritionist->birth_date->format('F d, Y') : 'Not provided' }}</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">
                                     <i class="fas fa-venus-mars"></i>
                                     Gender
                                 </div>
                                 <div class="info-value">{{ $nutritionist->sex ? ucfirst($nutritionist->sex) : 'Not specified' }}</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    Address
-                                </div>
-                                <div class="info-value">{{ $nutritionist->address ?? 'Not provided' }}</div>
                             </div>
                         </div>
                     </div>
@@ -240,15 +222,6 @@
                                     <div class="status-value">{{ ucfirst($nutritionist->account_status) }}</div>
                                 </div>
                             </div>
-                            <div class="status-item {{ $nutritionist->verification_status === 'verified' ? 'verified' : 'pending' }}">
-                                <div class="status-icon">
-                                    <i class="fas fa-certificate"></i>
-                                </div>
-                                <div class="status-details">
-                                    <div class="status-title">Verification Status</div>
-                                    <div class="status-value">{{ ucfirst($nutritionist->verification_status) }}</div>
-                                </div>
-                            </div>
                             <div class="status-item {{ $nutritionist->email_verified_at ? 'verified' : 'pending' }}">
                                 <div class="status-icon">
                                     <i class="fas fa-envelope-circle-check"></i>
@@ -305,54 +278,6 @@
                                     Last Updated
                                 </div>
                                 <div class="info-value">{{ $nutritionist->updated_at->format('M d, Y') }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Activity Timeline Card -->
-                <div class="content-card">
-                    <div class="card-header">
-                        <div class="card-title-group">
-                            <div class="card-icon activity">
-                                <i class="fas fa-history"></i>
-                            </div>
-                            <h3 class="card-title">Recent Activity</h3>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <div class="timeline">
-                            <div class="timeline-item">
-                                <div class="timeline-marker active"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Profile Viewed</div>
-                                    <div class="timeline-date">Just now</div>
-                                </div>
-                            </div>
-                            @if($nutritionist->assessments()->latest()->first())
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Latest Assessment</div>
-                                    <div class="timeline-date">{{ $nutritionist->assessments()->latest()->first()->created_at->diffForHumans() }}</div>
-                                </div>
-                            </div>
-                            @endif
-                            @if($nutritionist->email_verified_at)
-                            <div class="timeline-item">
-                                <div class="timeline-marker success"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Email Verified</div>
-                                    <div class="timeline-date">{{ $nutritionist->email_verified_at->format('M d, Y') }}</div>
-                                </div>
-                            </div>
-                            @endif
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Account Created</div>
-                                    <div class="timeline-date">{{ $nutritionist->created_at->format('M d, Y') }}</div>
-                                </div>
                             </div>
                         </div>
                     </div>

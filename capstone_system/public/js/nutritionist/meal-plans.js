@@ -221,6 +221,9 @@ class MealPlansManager {
                             popup: 'meal-plan-result'
                         },
                         footer: '<p style="color: #856404;">The meal plan was created but had formatting issues. Try generating again for better results.</p>'
+                    }).then(() => {
+                        // Reload the page when modal is closed (either by timer or manual close)
+                        location.reload();
                     });
                 } else {
                     Swal.fire({
@@ -234,6 +237,9 @@ class MealPlansManager {
                         customClass: {
                             popup: 'meal-plan-result'
                         }
+                    }).then(() => {
+                        // Reload the page when modal is closed (either by timer or manual close)
+                        location.reload();
                     });
                 }
             } else {

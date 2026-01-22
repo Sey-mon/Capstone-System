@@ -102,7 +102,7 @@ function initializeGrowthChart() {
         insights.push(`
             <div class=\"insight-item\">
                 <i class=\"fas fa-clipboard-check\"></i>
-                <span><strong>${history.length}</strong> assessment${history.length > 1 ? 's' : ''} recorded</span>
+                <span><strong>${history.length}</strong> screening${history.length > 1 ? 's' : ''} recorded</span>
             </div>
         `);
         

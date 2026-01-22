@@ -43,7 +43,7 @@ function showAssessmentHistory(childId, childName) {
         Swal.fire({
             icon: 'error',
             title: 'Data Not Found',
-            text: 'Could not load assessment data for this child. Please refresh the page and try again.',
+            text: 'Could not load screening data for this child. Please refresh the page and try again.',
         });
         return;
     }
@@ -51,8 +51,8 @@ function showAssessmentHistory(childId, childName) {
     if (!childData.assessments || childData.assessments.length === 0) {
         Swal.fire({
             icon: 'info',
-            title: 'No Assessments',
-            text: 'No assessment history available for this child.',
+            title: 'No Screenings',
+            text: 'No screening history available for this child.',
         });
         return;
     }
@@ -123,10 +123,10 @@ function showAssessmentHistory(childId, childName) {
                     <div class="swal-sidebar-header">
                         <h4>
                             <i class="fas fa-history"></i>
-                            Assessment History
+                            Screening History
                             <span class="swal-assessment-counter">${assessmentCount}</span>
                         </h4>
-                        <p>${assessmentCount} Total Assessment${countDisplay}</p>
+                        <p>${assessmentCount} Total Screening${countDisplay}</p>
                         ${showSearch ? `
                         <div class="swal-assessment-search has-many">
                             <input 
@@ -152,7 +152,7 @@ function showAssessmentHistory(childId, childName) {
                             <i class="fas fa-chart-line"></i>
                             ${childName}
                         </h3>
-                        <p class="swal-header-subtitle">Complete assessment timeline and progress tracking</p>
+                        <p class="swal-header-subtitle">Complete screening timeline and progress tracking</p>
                     </div>
                     <div class="swal-assessment-detail">
                         <div class="swal-detail-header">
@@ -270,9 +270,9 @@ function showAssessmentHistory(childId, childName) {
         // Update header count
         const headerP = document.querySelector('.swal-sidebar-header p');
         if (headerP && searchTerm !== '') {
-            headerP.textContent = `${visibleCount} of ${items.length} Assessment${items.length !== 1 ? 's' : ''}`;
+            headerP.textContent = `${visibleCount} of ${items.length} Screening${items.length !== 1 ? 's' : ''}`;
         } else if (headerP) {
-            headerP.textContent = `${items.length} Total Assessment${items.length !== 1 ? 's' : ''}`;
+            headerP.textContent = `${items.length} Total Screening${items.length !== 1 ? 's' : ''}`;
         }
     };
     
