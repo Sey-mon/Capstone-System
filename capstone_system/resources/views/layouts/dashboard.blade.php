@@ -89,13 +89,13 @@
         
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Floating Menu Button (shown when sidebar is hidden) -->
+            <button class="floating-menu-btn" id="floatingMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            
             <!-- Page Content -->
             <div class="page-content">
-                <!-- Floating Menu Button (shown when sidebar is hidden) -->
-                <button class="floating-menu-btn" id="floatingMenuBtn">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
                 @yield('content')
             </div>
         </main>

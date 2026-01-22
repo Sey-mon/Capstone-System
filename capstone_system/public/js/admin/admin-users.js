@@ -343,17 +343,17 @@ function editUser(userId) {
                     }
                     
                     // Name validation (letters and spaces only)
-                    const namePattern = /^[A-Za-z\\s]+$/;
+                    const namePattern = /^[A-Za-z\s]+$/;
                     if (!namePattern.test(firstName)) {
-                        Swal.showValidationMessage('First name should contain only letters');
+                        Swal.showValidationMessage('First name should contain only letters and spaces');
                         return false;
                     }
                     if (!namePattern.test(lastName)) {
-                        Swal.showValidationMessage('Last name should contain only letters');
+                        Swal.showValidationMessage('Last name should contain only letters and spaces');
                         return false;
                     }
                     if (middleName && !namePattern.test(middleName)) {
-                        Swal.showValidationMessage('Middle name should contain only letters');
+                        Swal.showValidationMessage('Middle name should contain only letters and spaces');
                         return false;
                     }
                     

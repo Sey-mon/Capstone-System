@@ -364,6 +364,13 @@ class ApiController extends Controller
             ->where('parent_id', $parent->user_id)
             ->firstOrFail();
 
+        // Check if child is under 6 months old
+        if ($child->age_months < 6) {
+            return back()->withErrors([
+                'age_restriction' => "Meal plans are not available for babies under 6 months old. According to WHO guidelines, {$child->first_name} should be exclusively breastfed at this age ({$child->age_months} months). Please consult with your pediatrician or health worker for feeding guidance."
+            ])->withInput();
+        }
+
         // Check if a meal plan was generated within the last 7 days
         $latestMealPlan = MealPlan::where('patient_id', $validated['patient_id'])
             ->orderBy('generated_at', 'desc')

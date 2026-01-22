@@ -170,6 +170,7 @@ body {
     top: 0;
     left: 0;
     height: 100vh;
+    max-height: 100vh;
     z-index: 999;
     display: flex;
     flex-direction: column;
@@ -285,6 +286,8 @@ body {
     flex: 1;
     padding: 1.5rem 0;
     overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
 }
 
 /* User Info */
@@ -451,6 +454,8 @@ body {
 .sidebar-footer {
     padding: 1rem 1.25rem;
     border-top: 1px solid var(--border-light);
+    flex-shrink: 0;
+    background-color: var(--bg-primary);
 }
 
 .logout-form {
@@ -503,8 +508,7 @@ body {
     width: calc(100% - var(--sidebar-width));
     max-width: 100%;
     overflow-x: hidden;
-    /* Performance optimizations */
-    contain: layout;
+    position: relative;
 }
 
 .sidebar.collapsed + .main-content {
@@ -557,10 +561,10 @@ body {
 
 /* Floating Hamburger Button for when sidebar is hidden */
 .floating-menu-btn {
-    position: fixed;
+    position: fixed !important;
     top: 1rem;
     left: 1rem;
-    z-index: 1000;
+    z-index: 9999;
     background: var(--primary-color);
     border: 1px solid var(--primary-dark);
     color: var(--text-white);
@@ -575,6 +579,7 @@ body {
     justify-content: center;
     box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
     display: none;
+    pointer-events: auto;
 }
 
 /* Show floating button when sidebar is collapsed on desktop */
@@ -677,10 +682,7 @@ body {
 .page-content {
     flex: 1;
     padding: 2rem;
-    /* Performance optimizations */
-    contain: layout;
-    will-change: transform;
-    background-color: rgb(245, 245, 245) ;
+    background-color: rgb(245, 245, 245);
 }
 
 /* Stats Grid */

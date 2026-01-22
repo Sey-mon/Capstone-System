@@ -8,6 +8,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="Login to SHARES - Smart Health and Recommender System for Excellence in Nutrition. Access your San Pedro City nutrition management account.">
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('img/cho.png') }}">
+    
     <!-- Preconnect to external resources for better performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -169,7 +172,7 @@
     </section>
 
     <!-- About Section -->
-    <section id="about" class="content-section dark-section">
+    <section id="about" class="content-section dark-section" style="background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('{{ asset('img/city-hall.jpg') }}'); background-size: cover; background-position: center; background-attachment: fixed;">
         <div class="section-container">
             <div class="section-content">
                 <div class="content-text">
@@ -193,11 +196,6 @@
                             <h3>Smart City</h3>
                             <p>Nutrition-Smart Goal by 2032</p>
                         </div>
-                    </div>
-                </div>
-                <div class="content-image">
-                    <div class="image-placeholder">
-                        <i class="fas fa-heartbeat"></i>
                     </div>
                 </div>
             </div>
@@ -313,12 +311,6 @@
                     <p class="footer-about">
                         Smart Health and Recommender System for San Pedro City's Nutrition Program - Building a healthier, food-secure future for all San Pedrenses.
                     </p>
-                    <div class="footer-social">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    </div>
                 </div>
 
                 <!-- Quick Links -->
@@ -334,17 +326,15 @@
                     </ul>
                 </div>
 
-                <!-- Services -->
+                <!-- Social Media -->
                 <div class="footer-section">
-                    <h4>Services</h4>
-                    <ul class="footer-list">
-                        <li><a href="#">Nutrition Monitoring</a></li>
-                        <li><a href="#">Patient Assessment</a></li>
-                        <li><a href="#">Meal Planning</a></li>
-                        <li><a href="#">Food Inventory</a></li>
-                        <li><a href="#">Health Analytics</a></li>
-                        <li><a href="{{ route('staff.login') }}">Staff Portal</a></li>
-                    </ul>
+                    <h4>Connect With Us</h4>
+                    <div class="footer-social" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start;">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    </div>
                 </div>
 
                 <!-- Contact Information -->
