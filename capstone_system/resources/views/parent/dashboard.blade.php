@@ -13,7 +13,7 @@
                     <span class="active">Dashboard</span>
                 </div>
                 <h1 class="page-title">Parent Dashboard</h1>
-                <p class="page-subtitle">Welcome back, {{ Auth::user()->first_name }}! Monitor your children's health, track growth progress, and stay updated on nutritional assessments.</p>
+                <p class="page-subtitle">Welcome back, {{ Auth::user()->first_name }}! Monitor your children's health, track growth progress, and stay updated on nutritional screenings.</p>
             </div>
         </div>
         <div class="header-actions">
@@ -91,7 +91,7 @@
                 <i class="fas fa-clipboard-list"></i>
             </div>
             <div class="stat-content">
-                <div class="stat-title">Total Assessments</div>
+                <div class="stat-title">Total Screenings</div>
                 <div class="stat-value">{{ $stats['total_assessments'] }}</div>
                 <div class="stat-change positive">
                     <i class="fas fa-chart-line"></i>
@@ -105,7 +105,7 @@
                 <i class="fas fa-calendar-check"></i>
             </div>
             <div class="stat-content">
-                <div class="stat-title">Recent Assessments</div>
+                <div class="stat-title">Recent Screenings</div>
                 <div class="stat-value">{{ $stats['recent_assessments'] }}</div>
                 <div class="stat-change positive">
                     <i class="fas fa-clock"></i>
@@ -152,7 +152,7 @@
                                 @if($childData['assessment_history'] && count($childData['assessment_history']) > 0)
                                     <option value="{{ $index }}" {{ $loop->first ? 'selected' : '' }}>
                                         {{ $childData['child']->first_name }} {{ $childData['child']->last_name }}
-                                        ({{ count($childData['assessment_history']) }} assessments)
+                                        ({{ count($childData['assessment_history']) }} screenings)
                                     </option>
                                 @endif
                             @endforeach
@@ -243,7 +243,7 @@
                                     <span class="meta-divider">•</span>
                                     <span class="meta-item">
                                         <i class="fas fa-clipboard-check"></i>
-                                        {{ $childData['assessments_count'] }} assessments
+                                        {{ $childData['assessments_count'] }} screenings
                                     </span>
                                 </div>
                             </div>
@@ -299,8 +299,8 @@
                             <div class="no-assessment-compact">
                                 <i class="fas fa-clipboard"></i>
                                 <div>
-                                    <span class="no-assessment-title">No assessments yet</span>
-                                    <p>Schedule a nutritional assessment</p>
+                                    <span class="no-assessment-title">No screenings yet</span>
+                                    <p>Schedule a nutritional screening</p>
                                 </div>
                             </div>
                         @endif
@@ -344,7 +344,7 @@
                             <div class="activity-header">
                                 <div class="activity-title">
                                     <strong>{{ $assessment->patient->first_name }} {{ $assessment->patient->last_name }}</strong>
-                                    <span class="activity-badge">Assessment Completed</span>
+                                    <span class="activity-badge">Screening Completed</span>
                                 </div>
                                 <span class="activity-date">{{ $assessment->created_at->format('M d, Y') }}</span>
                             </div>
@@ -366,8 +366,8 @@
                         <div class="empty-icon">
                             <i class="fas fa-clipboard"></i>
                         </div>
-                        <h4>No assessments found</h4>
-                        <p>Your children's nutritional assessments will appear here once they're completed.</p>
+                        <h4>No screenings found</h4>
+                        <p>Your children's nutritional screenings will appear here once they're completed.</p>
                     </div>
                 @endforelse
             </div>

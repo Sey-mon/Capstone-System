@@ -339,7 +339,7 @@ class ParentController extends Controller
             return 'Normal';
         }
         
-        return 'Assessment Needed';
+        return 'Screening Needed';
     }
 
     /**

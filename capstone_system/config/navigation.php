@@ -113,7 +113,7 @@ return [
         [
             'route' => 'parent.assessments',
             'icon' => 'fas fa-clipboard-list',
-            'text' => 'Child Assessments',
+            'text' => 'Screening History',
         ],
         [
             'route' => 'parent.meal-plans',
