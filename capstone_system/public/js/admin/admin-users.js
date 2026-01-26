@@ -529,6 +529,92 @@ function toggleUserStatus(userId, activate, userName) {
     });
 }
 
+// Reactivate suspended user
+function reactivateSuspendedUser(userId, userName) {
+    Swal.fire({
+        title: 'Reactivate Suspended Account',
+        html: `
+            <p>Are you sure you want to reactivate <strong>${userName}</strong>?</p>
+            <p class="text-muted">This will restore full account access.</p>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-user-check"></i> Reactivate',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#28a745',
+        customClass: {
+            confirmButton: 'btn btn-success',
+            cancelButton: 'btn btn-secondary'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${window.userUrlBase}/${userId}/reactivate`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', data.message || 'User reactivated successfully', 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to reactivate user', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'An error occurred while reactivating user', 'error');
+            });
+        }
+    });
+}
+
+// Restore deleted user
+function restoreUser(userId, userName) {
+    Swal.fire({
+        title: 'Restore Deleted Account',
+        html: `
+            <p>Are you sure you want to restore <strong>${userName}</strong>?</p>
+            <p class="text-muted">This will undelete the account and restore access.</p>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-undo"></i> Restore',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#17a2b8',
+        customClass: {
+            confirmButton: 'btn btn-info',
+            cancelButton: 'btn btn-secondary'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${window.userUrlBase}/${userId}/restore`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', data.message || 'User restored successfully', 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to restore user', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'An error occurred while restoring user', 'error');
+            });
+        }
+    });
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     // Store routes and data globally from hidden data div
@@ -578,7 +664,7 @@ function setupPaginationControls() {
 function setupFilters() {
     const searchInput = document.getElementById('searchInput');
     const roleFilter = document.getElementById('roleFilter');
-    const statusFilter = document.getElementById('statusFilter');
+    const accountStatusFilter = document.getElementById('accountStatusFilter');
     const perPageFilter = document.getElementById('perPageFilter');
 
     let searchTimeout;
@@ -597,8 +683,8 @@ function setupFilters() {
     if (roleFilter) {
         roleFilter.addEventListener('change', loadUsers);
     }
-    if (statusFilter) {
-        statusFilter.addEventListener('change', loadUsers);
+    if (accountStatusFilter) {
+        accountStatusFilter.addEventListener('change', loadUsers);
     }
     if (perPageFilter) {
         perPageFilter.addEventListener('change', loadUsers);

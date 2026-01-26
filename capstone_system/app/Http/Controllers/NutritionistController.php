@@ -743,6 +743,55 @@ class NutritionistController extends Controller
         }
     }
 
+    /**
+     * Soft delete nutritionist account
+     */
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            DB::beginTransaction();
+
+            // Soft delete the user account
+            $user->is_active = false; // Deactivate account immediately
+            $user->account_status = 'suspended'; // Update status to suspended
+            $user->save();
+            
+            // Perform soft delete
+            $user->delete();
+
+            DB::commit();
+
+            // Logout the user
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Your account has been deactivated successfully. Contact the administrator to reactivate it.',
+                    'redirect' => route('login')
+                ]);
+            }
+
+            return redirect()->route('login')->with('success', 'Your account has been deactivated successfully. Contact the administrator to reactivate it.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to deactivate account: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('nutritionist.profile')->withErrors(['error' => 'Failed to deactivate account.']);
+        }
+    }
+
     // ========================================
     // MALNUTRITION ASSESSMENT METHODS
     // ========================================

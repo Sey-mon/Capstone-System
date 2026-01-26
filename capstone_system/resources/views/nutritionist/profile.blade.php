@@ -314,6 +314,33 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Danger Zone Card -->
+                <div class="content-card danger-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h3 class="card-title" style="color: #dc2626;">Danger Zone</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="danger-content" style="padding: 16px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #dc2626;">
+                            <div style="margin-bottom: 12px;">
+                                <h4 style="color: #991b1b; font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">
+                                    <i class="fas fa-user-slash" style="margin-right: 8px;"></i>Deactivate Account
+                                </h4>
+                                <p style="color: #7f1d1d; font-size: 14px; margin: 0; line-height: 1.5;">
+                                    Once you deactivate your account, you will be logged out and will need to contact an administrator to reactivate it. Your patient data and assessments will be preserved for compliance purposes.
+                                </p>
+                            </div>
+                            <button onclick="confirmAccountDeletion()" class="btn btn-danger" style="background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                                <i class="fas fa-user-slash"></i> Deactivate Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -833,6 +860,164 @@
                 icon: 'error',
                 title: 'Error!',
                 text: 'An error occurred while updating password',
+                confirmButtonColor: '#ef4444'
+            });
+        });
+    }
+
+    // Confirm Account Deactivation
+    function confirmAccountDeletion() {
+        Swal.fire({
+            title: `
+                <div style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #dc2626, #991b1b); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-exclamation-triangle" style="color: white; font-size: 24px;"></i>
+                    </div>
+                    <div style="text-align: left;">
+                        <h3 style="margin: 0; color: #991b1b; font-size: 24px; font-weight: 700;">Deactivate Account?</h3>
+                        <p style="margin: 5px 0 0 0; color: #7f1d1d; font-size: 14px;">This action will disable your account</p>
+                    </div>
+                </div>
+            `,
+            html: `
+                <div style="text-align: left; padding: 20px 10px;">
+                    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="color: #991b1b; font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">
+                            <i class="fas fa-info-circle" style="margin-right: 8px;"></i>What happens when you deactivate:
+                        </h4>
+                        <ul style="color: #7f1d1d; font-size: 14px; margin: 0; padding-left: 24px; line-height: 1.8;">
+                            <li>You will be immediately logged out</li>
+                            <li>Your account will be deactivated and marked as inactive</li>
+                            <li>All your patient data and assessments will be preserved for compliance</li>
+                            <li>You will need to contact an administrator to reactivate your account</li>
+                            <li>Assessment records will still show your name for audit trail purposes</li>
+                        </ul>
+                    </div>
+                    <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px;">
+                        <p style="color: #92400e; font-size: 14px; margin: 0; font-weight: 500;">
+                            <i class="fas fa-shield-alt" style="margin-right: 8px; color: #f59e0b;"></i>
+                            <strong>Note:</strong> As a healthcare provider, your account information cannot be permanently deleted due to regulatory compliance and audit requirements.
+                        </p>
+                    </div>
+                </div>
+            `,
+            width: '700px',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-user-slash"></i> Yes, Deactivate My Account',
+            cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            customClass: {
+                popup: 'nutritionist-swal-popup',
+                confirmButton: 'nutritionist-swal-danger',
+                cancelButton: 'nutritionist-swal-cancel'
+            },
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show final confirmation
+                Swal.fire({
+                    title: 'Final Confirmation',
+                    html: `
+                        <div style="padding: 20px 10px;">
+                            <p style="color: #374151; font-size: 16px; margin: 0 0 20px 0;">
+                                Type <strong style="color: #dc2626;">DEACTIVATE</strong> to confirm account deactivation:
+                            </p>
+                            <input id="confirm-text" type="text" class="swal2-input" placeholder="Type DEACTIVATE" style="width: 80%; margin: 0 auto; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; font-weight: 600;">
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Deactivate Account',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    preConfirm: () => {
+                        const confirmText = document.getElementById('confirm-text').value;
+                        if (confirmText !== 'DEACTIVATE') {
+                            Swal.showValidationMessage('Please type DEACTIVATE to confirm');
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then((finalResult) => {
+                    if (finalResult.isConfirmed) {
+                        deleteAccount();
+                    }
+                });
+            }
+        });
+    }
+
+    // Delete Account
+    function deleteAccount() {
+        // Show loading
+        Swal.fire({
+            title: 'Processing...',
+            text: 'Deactivating your account',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('{{ route("nutritionist.account.delete") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                _method: 'DELETE'
+            })
+        })
+        .then(response => {
+            // Log response for debugging
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+            
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Error response:', text);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Account Deactivated',
+                    text: data.message || 'Your account has been deactivated successfully',
+                    confirmButtonColor: '#10b981',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        window.location.href = '{{ route("login") }}';
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: data.message || 'Failed to deactivate account',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'An error occurred while deactivating account. Please try again.',
                 confirmButtonColor: '#ef4444'
             });
         });

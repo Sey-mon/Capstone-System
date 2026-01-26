@@ -155,6 +155,7 @@ Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->
         // User activation/deactivation
         Route::post('/users/{id}/activate', [AdminController::class, 'activateUser'])->name('admin.users.activate');
         Route::post('/users/{id}/deactivate', [AdminController::class, 'deactivateUser'])->name('admin.users.deactivate');
+        Route::post('/users/{id}/reactivate', [AdminController::class, 'reactivateUser'])->name('admin.users.reactivate');
     Route::get('/users-with-trashed', [AdminController::class, 'getUsersWithTrashed'])->name('users.with-trashed');
     
     // Nutritionist application routes
@@ -324,6 +325,7 @@ Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nu
     Route::put('/profile/personal', [NutritionistController::class, 'updatePersonalInfo'])->name('profile.update.personal');
     Route::put('/profile/professional', [NutritionistController::class, 'updateProfessionalInfo'])->name('profile.update.professional');
     Route::put('/profile/password', [NutritionistController::class, 'updatePassword'])->name('profile.update.password');
+    Route::delete('/account', [NutritionistController::class, 'deleteAccount'])->name('account.delete');
     
     // Assessment routes
     Route::get('/patients/{patientId}/assess', [NutritionistController::class, 'showAssessmentForm'])->name('patients.assess');
