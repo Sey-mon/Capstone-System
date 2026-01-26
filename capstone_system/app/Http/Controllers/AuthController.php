@@ -70,11 +70,147 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'No account found with that email.']);
         }
         
-        // Generate token and send email
-        $token = app('auth.password.broker')->createToken($user);
-        $resetUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
-        Mail::to($user->email)->queue(new \App\Mail\PasswordResetMail($user, $resetUrl));
-        return back()->with('success', 'A password reset link has been sent to your email.');
+        // Delete any existing reset codes for this email
+        DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->delete();
+        
+        // Generate 6-digit verification code
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        // Store code in database with 15-minute expiration
+        DB::table('password_reset_tokens')->insert([
+            'email' => $request->email,
+            'code' => $code,
+            'created_at' => Carbon::now(),
+            'expires_at' => Carbon::now()->addMinutes(15),
+        ]);
+        
+        // Send email with verification code
+        Mail::to($user->email)->queue(new \App\Mail\PasswordResetMail($user, $code));
+        
+        // Log password reset request
+        AuditLog::create([
+            'user_id' => $user->user_id,
+            'action' => 'password_reset_request',
+            'description' => 'Password reset verification code requested',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+        
+        // Redirect to reset password form with email and success message
+        return redirect()->route('password.reset')
+            ->with('email', $request->email)
+            ->with('success', 'A verification code has been sent to your email. Please check your inbox and enter it below.');
+    }
+
+    /**
+     * Show the password reset form
+     */
+    public function showResetForm(Request $request)
+    {
+        // Simply show the form - user will enter email and code
+        return view('auth.reset-password');
+    }
+
+    /**
+     * Handle password reset
+     */
+    public function resetPassword(Request $request)
+    {
+        // LAYER 1: Honeypot Protection - Check if bot filled hidden field
+        if ($request->filled('website')) {
+            // Bot detected, silently reject
+            return back()->withErrors([
+                'email' => 'Invalid submission attempt.',
+            ])->withInput($request->except('password', 'password_confirmation'));
+        }
+
+        // LAYER 2: Google reCAPTCHA v3 Validation
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'code' => 'required|digits:6',
+            'password' => 'required|min:8|confirmed',
+            'recaptcha_token' => 'required',
+        ], [
+            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
+            'code.required' => 'Verification code is required.',
+            'code.digits' => 'Verification code must be 6 digits.',
+            'password.confirmed' => 'The password confirmation does not match.',
+            'password.min' => 'Password must be at least 8 characters.',
+        ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput($request->except('password', 'password_confirmation', 'code'));
+        }
+
+        // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
+        $recaptchaSecret = config('services.recaptcha.secret_key');
+        if ($recaptchaSecret) {
+            $recaptchaResponse = file_get_contents(
+                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
+                '&response=' . $request->input('recaptcha_token') . 
+                '&remoteip=' . $request->ip()
+            );
+            $recaptchaData = json_decode($recaptchaResponse);
+            
+            // Check if verification was successful and score is above threshold (0.5)
+            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
+                return back()->withErrors([
+                    'recaptcha_token' => 'Security verification failed. Please try again.',
+                ])->withInput($request->except('password', 'password_confirmation', 'code'));
+            }
+        }
+
+        // Find user by email
+        $user = User::findByEmail($request->email);
+        if (!$user) {
+            return back()->withErrors(['email' => 'No account found with that email.'])->withInput($request->only('email'));
+        }
+
+        // Verify code validity
+        $resetRecord = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->where('code', $request->code)
+            ->first();
+
+        if (!$resetRecord) {
+            return back()->withErrors(['code' => 'Invalid verification code.'])->withInput($request->only('email'));
+        }
+
+        // Check if code is expired
+        if (Carbon::now()->greaterThan(Carbon::parse($resetRecord->expires_at))) {
+            // Delete expired code
+            DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->where('code', $request->code)
+                ->delete();
+                
+            return back()->withErrors(['code' => 'Verification code has expired. Please request a new one.'])->withInput($request->only('email'));
+        }
+
+        // Update user password
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Delete the used code
+        DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->where('code', $request->code)
+            ->delete();
+
+        // Log successful password reset
+        AuditLog::create([
+            'user_id' => $user->user_id,
+            'action' => 'password_reset_success',
+            'description' => 'Password successfully reset',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect()->route('login')->with('success', 'Your password has been reset successfully. You can now log in with your new password.');
     }
 
     /**

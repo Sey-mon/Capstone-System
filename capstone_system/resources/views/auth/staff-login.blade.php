@@ -300,7 +300,7 @@
             <div class="login-card">
                 <div class="login-header">
                     <h2>Staff Portal</h2>
-                    <p class="subtitle">For Administrators, Nutritionists & Health Workers</p>
+                    <p class="subtitle">For Barangay Nutrition Scholars</p>
                 </div>
             
                 <!-- Display Success Messages -->

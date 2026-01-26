@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Auth\Passwords\CanResetPassword;
 use App\Notifications\CustomVerifyEmail;
 use App\Services\DataEncryptionService;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, MustVerifyEmailTrait {
+    use HasFactory, Notifiable, SoftDeletes, MustVerifyEmailTrait, CanResetPassword {
         MustVerifyEmailTrait::sendEmailVerificationNotification as originalSendEmailVerificationNotification;
     }
 

@@ -16,13 +16,21 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
 // Authentication Routes
-// Forgot Password
+// Forgot Password - Request verification code
 Route::get('/forgot-password', function() {
     return view('auth.forgot-password');
 })->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
-    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->middleware('throttle:password.reset.email') // Email-based rate limiting
     ->name('password.email');
+
+// Reset Password - Verify code and set new password
+Route::get('/reset-password', [AuthController::class, 'showResetForm'])
+    ->middleware('throttle:6,1') // 6 attempts per minute
+    ->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->name('password.update');
 
 // Support Ticket - Report a Problem
 Route::get('/report-problem', function() {
