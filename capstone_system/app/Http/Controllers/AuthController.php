@@ -49,18 +49,24 @@ class AuthController extends Controller
         // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
         if ($recaptchaSecret) {
-            $recaptchaResponse = file_get_contents(
-                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
-                '&response=' . $request->input('recaptcha_token') . 
-                '&remoteip=' . $request->ip()
-            );
-            $recaptchaData = json_decode($recaptchaResponse);
-            
-            // Check if verification was successful and score is above threshold (0.5)
-            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
-                return back()->withErrors([
-                    'recaptcha_token' => 'Security verification failed. Please try again.',
-                ])->withInput($request->except('email'));
+            try {
+                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
+                    'secret' => $recaptchaSecret,
+                    'response' => $request->input('recaptcha_token'),
+                    'remoteip' => $request->ip()
+                ]);
+                
+                $recaptchaData = $recaptchaResponse->json();
+                
+                // Check if verification was successful and score is above threshold (0.5)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                    return back()->withErrors([
+                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                    ])->withInput($request->except('email'));
+                }
+            } catch (\Exception $e) {
+                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                // Continue without reCAPTCHA on live server if API fails
             }
         }
 
@@ -149,18 +155,24 @@ class AuthController extends Controller
         // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
         if ($recaptchaSecret) {
-            $recaptchaResponse = file_get_contents(
-                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
-                '&response=' . $request->input('recaptcha_token') . 
-                '&remoteip=' . $request->ip()
-            );
-            $recaptchaData = json_decode($recaptchaResponse);
-            
-            // Check if verification was successful and score is above threshold (0.5)
-            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
-                return back()->withErrors([
-                    'recaptcha_token' => 'Security verification failed. Please try again.',
-                ])->withInput($request->except('password', 'password_confirmation', 'code'));
+            try {
+                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
+                    'secret' => $recaptchaSecret,
+                    'response' => $request->input('recaptcha_token'),
+                    'remoteip' => $request->ip()
+                ]);
+                
+                $recaptchaData = $recaptchaResponse->json();
+                
+                // Check if verification was successful and score is above threshold (0.5)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                    return back()->withErrors([
+                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                    ])->withInput($request->except('password', 'password_confirmation', 'code'));
+                }
+            } catch (\Exception $e) {
+                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                // Continue without reCAPTCHA on live server if API fails
             }
         }
 
@@ -248,18 +260,24 @@ class AuthController extends Controller
         // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
         if ($recaptchaSecret) {
-            $recaptchaResponse = file_get_contents(
-                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
-                '&response=' . $request->input('recaptcha_token') . 
-                '&remoteip=' . $request->ip()
-            );
-            $recaptchaData = json_decode($recaptchaResponse);
-            
-            // Check if verification was successful and score is above threshold (0.5)
-            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
-                return back()->withErrors([
-                    'recaptcha_token' => 'Security verification failed. Please try again.',
-                ])->withInput($request->except('description'));
+            try {
+                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
+                    'secret' => $recaptchaSecret,
+                    'response' => $request->input('recaptcha_token'),
+                    'remoteip' => $request->ip()
+                ]);
+                
+                $recaptchaData = $recaptchaResponse->json();
+                
+                // Check if verification was successful and score is above threshold (0.5)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                    return back()->withErrors([
+                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                    ])->withInput($request->except('description'));
+                }
+            } catch (\Exception $e) {
+                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                // Continue without reCAPTCHA on live server if API fails
             }
         }
 
@@ -342,18 +360,24 @@ class AuthController extends Controller
         // Verify reCAPTCHA v3 with Google and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
         if ($recaptchaSecret) {
-            $recaptchaResponse = file_get_contents(
-                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
-                '&response=' . $request->input('recaptcha_token') . 
-                '&remoteip=' . $request->ip()
-            );
-            $recaptchaData = json_decode($recaptchaResponse);
-            
-            // Check if verification was successful and score is above threshold (0.5)
-            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
-                return back()->withErrors([
-                    'recaptcha_token' => 'Security verification failed. Please try again.',
-                ])->withInput($request->except('password'));
+            try {
+                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
+                    'secret' => $recaptchaSecret,
+                    'response' => $request->input('recaptcha_token'),
+                    'remoteip' => $request->ip()
+                ]);
+                
+                $recaptchaData = $recaptchaResponse->json();
+                
+                // Check if verification was successful and score is above threshold (0.5)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                    return back()->withErrors([
+                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                    ])->withInput($request->except('password'));
+                }
+            } catch (\Exception $e) {
+                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                // Continue without reCAPTCHA on live server if API fails
             }
         }
 
@@ -440,18 +464,24 @@ class AuthController extends Controller
         // Verify reCAPTCHA v3 with Google and check score
         $recaptchaSecret = config('services.recaptcha.secret_key');
         if ($recaptchaSecret) {
-            $recaptchaResponse = file_get_contents(
-                'https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptchaSecret . 
-                '&response=' . $request->input('recaptcha_token') . 
-                '&remoteip=' . $request->ip()
-            );
-            $recaptchaData = json_decode($recaptchaResponse);
-            
-            // Check if verification was successful and score is above threshold (0.5)
-            if (!$recaptchaData->success || $recaptchaData->score < 0.5) {
-                return back()->withErrors([
-                    'recaptcha_token' => 'Security verification failed. Please try again.',
-                ])->withInput($request->except('password'));
+            try {
+                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
+                    'secret' => $recaptchaSecret,
+                    'response' => $request->input('recaptcha_token'),
+                    'remoteip' => $request->ip()
+                ]);
+                
+                $recaptchaData = $recaptchaResponse->json();
+                
+                // Check if verification was successful and score is above threshold (0.5)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                    return back()->withErrors([
+                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                    ])->withInput($request->except('password'));
+                }
+            } catch (\Exception $e) {
+                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                // Continue without reCAPTCHA on live server if API fails
             }
         }
 
