@@ -43,11 +43,13 @@
                         </select>
                     </div>
                     <div class="filter-field">
-                        <label>Status</label>
-                        <select name="status" class="form-control" id="statusFilter">
+                        <label>Account Status</label>
+                        <select name="account_status" class="form-control" id="accountStatusFilter">
                             <option value="">All Status</option>
-                            <option value="1" @if(request('status')==='1') selected @endif>Active</option>
-                            <option value="0" @if(request('status')==='0') selected @endif>Inactive</option>
+                            <option value="active" @if(request('account_status')==='active') selected @endif>Active</option>
+                            <option value="inactive" @if(request('account_status')==='inactive') selected @endif>Inactive</option>
+                            <option value="suspended" @if(request('account_status')==='suspended') selected @endif>Suspended</option>
+                            <option value="deleted" @if(request('account_status')==='deleted') selected @endif>Deleted</option>
                         </select>
                     </div>
                     <div class="filter-field">
@@ -126,7 +128,17 @@
                                 </span>
                             </td>
                             <td>
-                                @if($user->is_active)
+                                @if($user->deleted_at)
+                                    <span class="status-badge status-deleted" style="background-color: #6b7280; color: white;">
+                                        <i class="fas fa-trash"></i>
+                                        Deleted
+                                    </span>
+                                @elseif($user->account_status === 'suspended')
+                                    <span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;">
+                                        <i class="fas fa-ban"></i>
+                                        Suspended
+                                    </span>
+                                @elseif($user->is_active)
                                     <span class="status-badge status-active">
                                         <i class="fas fa-check-circle"></i>
                                         Active
@@ -141,11 +153,21 @@
                             <td class="user-created">{{ $user->created_at ? $user->created_at->format('M d, Y') : 'N/A' }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="action-btn edit" onclick="editUser({{ $user->user_id }})">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                    @if(!$user->deleted_at)
+                                        <button class="action-btn edit" onclick="editUser({{ $user->user_id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    @endif
                                     @if($user->user_id !== Auth::id())
-                                        @if($user->is_active)
+                                        @if($user->deleted_at)
+                                            <button class="action-btn activate" onclick="restoreUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')" title="Restore User">
+                                                <i class="fas fa-undo"></i>
+                                            </button>
+                                        @elseif($user->account_status === 'suspended')
+                                            <button class="action-btn activate" onclick="reactivateSuspendedUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')" title="Reactivate User">
+                                                <i class="fas fa-user-check"></i>
+                                            </button>
+                                        @elseif($user->is_active)
                                             <button class="action-btn deactivate" onclick="toggleUserStatus({{ $user->user_id }}, false, '{{ $user->first_name }} {{ $user->last_name }}')">
                                                 <i class="fas fa-user-slash"></i>
                                             </button>
@@ -155,7 +177,7 @@
                                             </button>
                                         @endif
                                     @endif
-                                    @if($roleName !== 'Admin')
+                                    @if($roleName !== 'Admin' && !$user->deleted_at)
                                         <button class="action-btn delete" onclick="deleteUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')">
                                             <i class="fas fa-trash"></i>
                                         </button>

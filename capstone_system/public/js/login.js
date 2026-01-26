@@ -137,7 +137,9 @@ function initializePasswordToggle() {
             passwordInput.type = type;
             
             const icon = toggleButton.querySelector('i');
-            icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+            if (icon) {
+                icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+            }
             
             // Update aria-label for accessibility
             toggleButton.setAttribute('aria-label', 

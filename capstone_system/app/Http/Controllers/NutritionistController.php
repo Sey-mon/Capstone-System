@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Barangay;
 use App\Models\Food;
 use App\Models\FeedingProgramPlan;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -740,6 +741,64 @@ class NutritionistController extends Controller
                 'success' => false,
                 'message' => 'Error updating password: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Soft delete nutritionist account
+     */
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            DB::beginTransaction();
+
+            // Soft delete the user account
+            $user->is_active = false; // Deactivate account immediately
+            $user->account_status = 'suspended'; // Update status to suspended
+            $user->save();
+            
+            // Perform soft delete
+            $user->delete();
+
+            // Log the account deactivation
+            AuditLog::create([
+                'user_id' => $user->user_id,
+                'action' => 'DEACTIVATE',
+                'table_name' => 'users',
+                'record_id' => $user->user_id,
+                'description' => "Nutritionist self-deactivated account: {$user->first_name} {$user->last_name}",
+            ]);
+
+            DB::commit();
+
+            // Logout the user
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Your account has been deactivated successfully. Contact the administrator to reactivate it.',
+                    'redirect' => route('login')
+                ]);
+            }
+
+            return redirect()->route('login')->with('success', 'Your account has been deactivated successfully. Contact the administrator to reactivate it.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to deactivate account: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('nutritionist.profile')->withErrors(['error' => 'Failed to deactivate account.']);
         }
     }
 

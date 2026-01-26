@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -424,7 +425,8 @@ class AdminController extends Controller
     {
         $perPage = $request->input('per_page', 10);
         
-        $query = User::with('role');
+        // Include soft-deleted users
+        $query = User::with('role')->withTrashed();
         
         if ($request->input('search')) {
             $search = $request->input('search');
@@ -440,7 +442,22 @@ class AdminController extends Controller
             $query->where('role_id', $request->input('role'));
         }
         
-        if ($request->input('status') !== null && $request->input('status') !== '') {
+        // Filter by account status (active, inactive, suspended, deleted)
+        if ($request->input('account_status')) {
+            $accountStatus = $request->input('account_status');
+            if ($accountStatus === 'suspended') {
+                $query->where('account_status', 'suspended');
+            } elseif ($accountStatus === 'deleted') {
+                $query->whereNotNull('deleted_at');
+            } elseif ($accountStatus === 'active') {
+                $query->where('is_active', 1)->whereNull('deleted_at');
+            } elseif ($accountStatus === 'inactive') {
+                $query->where('is_active', 0)->whereNull('deleted_at');
+            }
+        }
+        
+        // Legacy status filter support
+        if ($request->input('status') !== null && $request->input('status') !== '' && !$request->input('account_status')) {
             $query->where('is_active', $request->input('status'));
         }
         
@@ -1963,7 +1980,7 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($id);
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -1978,7 +1995,17 @@ class AdminController extends Controller
             'contact_number' => 'nullable|string|max:15',
             'password' => 'nullable|string|min:8|confirmed',
             'is_active' => 'boolean',
+        ], [
+            'email.unique' => 'This email address is already in use by another user.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         try {
             DB::beginTransaction();
@@ -2096,39 +2123,50 @@ class AdminController extends Controller
     /**
      * Restore a soft-deleted user
      */
+    /**
+     * Restore deleted user (enhanced version)
+     */
     public function restoreUser($id)
     {
         try {
-            $user = User::withTrashed()->findOrFail($id);
+            $user = User::onlyTrashed()->findOrFail($id);
 
-            if (!$user->trashed()) {
+            // Prevent modifying the current authenticated user
+            if ($user->user_id === Auth::id()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User is not deleted.'
-                ], 400);
+                    'message' => 'You cannot modify your own account status.'
+                ], 403);
             }
 
             DB::beginTransaction();
 
             $userName = "{$user->first_name} {$user->last_name}";
 
-            // Log the action before restoration
+            // Restore deleted user
+            $user->restore();
+
+            // Reactivate the account
+            $user->update([
+                'is_active' => true,
+                'account_status' => 'active'
+            ]);
+
+            // Log the action
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'RESTORE',
                 'table_name' => 'users',
                 'record_id' => $user->user_id,
-                'description' => "Restored user: {$userName}",
+                'description' => "Restored deleted user account: {$userName}",
             ]);
-
-            // Restore the user
-            $user->restore();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'User restored successfully.'
+                'message' => 'User restored successfully.',
+                'user' => $user->load('role')
             ]);
 
         } catch (\Exception $e) {
@@ -2271,6 +2309,61 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to deactivate user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reactivate suspended user
+     */
+    public function reactivateUser($id)
+    {
+        try {
+            $user = User::withTrashed()->findOrFail($id);
+
+            // Prevent modifying the current authenticated user
+            if ($user->user_id === Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You cannot modify your own account status.'
+                ], 403);
+            }
+
+            DB::beginTransaction();
+
+            // Reactivate suspended account
+            $user->update([
+                'is_active' => true,
+                'account_status' => 'active'
+            ]);
+
+            // If soft-deleted, restore it
+            if ($user->trashed()) {
+                $user->restore();
+            }
+
+            // Log the action
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'REACTIVATE',
+                'table_name' => 'users',
+                'record_id' => $user->user_id,
+                'description' => "Reactivated suspended user account: {$user->first_name} {$user->last_name}",
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User reactivated successfully.',
+                'user' => $user->load('role')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reactivate user: ' . $e->getMessage()
             ], 500);
         }
     }

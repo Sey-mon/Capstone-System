@@ -16,13 +16,21 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
 // Authentication Routes
-// Forgot Password
+// Forgot Password - Request verification code
 Route::get('/forgot-password', function() {
     return view('auth.forgot-password');
 })->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
-    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->middleware('throttle:password.reset.email') // Email-based rate limiting
     ->name('password.email');
+
+// Reset Password - Verify code and set new password
+Route::get('/reset-password', [AuthController::class, 'showResetForm'])
+    ->middleware('throttle:6,1') // 6 attempts per minute
+    ->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->name('password.update');
 
 // Support Ticket - Report a Problem
 Route::get('/report-problem', function() {
@@ -147,6 +155,7 @@ Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->
         // User activation/deactivation
         Route::post('/users/{id}/activate', [AdminController::class, 'activateUser'])->name('admin.users.activate');
         Route::post('/users/{id}/deactivate', [AdminController::class, 'deactivateUser'])->name('admin.users.deactivate');
+        Route::post('/users/{id}/reactivate', [AdminController::class, 'reactivateUser'])->name('admin.users.reactivate');
     Route::get('/users-with-trashed', [AdminController::class, 'getUsersWithTrashed'])->name('users.with-trashed');
     
     // Nutritionist application routes
@@ -316,6 +325,7 @@ Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nu
     Route::put('/profile/personal', [NutritionistController::class, 'updatePersonalInfo'])->name('profile.update.personal');
     Route::put('/profile/professional', [NutritionistController::class, 'updateProfessionalInfo'])->name('profile.update.professional');
     Route::put('/profile/password', [NutritionistController::class, 'updatePassword'])->name('profile.update.password');
+    Route::delete('/account', [NutritionistController::class, 'deleteAccount'])->name('account.delete');
     
     // Assessment routes
     Route::get('/patients/{patientId}/assess', [NutritionistController::class, 'showAssessmentForm'])->name('patients.assess');
@@ -372,6 +382,8 @@ Route::middleware(['auth', 'account.verified', 'role:Parent'])->prefix('parent')
     Route::get('/profile', [ParentController::class, 'profile'])->name('profile');
     Route::put('/profile', [ParentController::class, 'updateProfile'])->name('profile.update');
     Route::put('/password', [ParentController::class, 'updatePassword'])->name('password.update');
+    Route::delete('/account', [ParentController::class, 'deleteAccount'])->name('account.delete');
+    Route::post('/account/cancel-deletion', [ParentController::class, 'cancelDeletion'])->name('account.cancel-deletion');
     Route::get('/bind-child', [ParentController::class, 'showBindChildForm'])->name('showBindChildForm');
     Route::post('/bind-child', [ParentController::class, 'bindChild'])->name('bindChild');
     Route::post('/preview-child', [ParentController::class, 'previewChildByCode'])->name('preview-child');

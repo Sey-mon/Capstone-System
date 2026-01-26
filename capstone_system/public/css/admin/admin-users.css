@@ -857,6 +857,16 @@
     color: #991b1b;
 }
 
+.status-badge.status-suspended {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.status-deleted {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
 /* Additional Action Button Styles */
 .action-btn.activate {
     background-color: #10b981;

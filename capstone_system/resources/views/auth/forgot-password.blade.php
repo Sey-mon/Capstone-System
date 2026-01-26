@@ -31,7 +31,7 @@
                         <i class="fas fa-key" style="font-size: 2.5rem; color: var(--primary-color);"></i>
                     </div>
                     <h2>Forgot Password</h2>
-                    <p class="subtitle">Enter your email address and we'll send you a link to reset your password.</p>
+                    <p class="subtitle">Enter your email address and we'll send you a verification code to reset your password.</p>
                 </div>
                 
                 <!-- Display Success Messages -->
