@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Barangay;
 use App\Models\Food;
 use App\Models\FeedingProgramPlan;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -760,6 +761,15 @@ class NutritionistController extends Controller
             
             // Perform soft delete
             $user->delete();
+
+            // Log the account deactivation
+            AuditLog::create([
+                'user_id' => $user->user_id,
+                'action' => 'DEACTIVATE',
+                'table_name' => 'users',
+                'record_id' => $user->user_id,
+                'description' => "Nutritionist self-deactivated account: {$user->first_name} {$user->last_name}",
+            ]);
 
             DB::commit();
 
