@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -1963,7 +1964,7 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($id);
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -1978,7 +1979,17 @@ class AdminController extends Controller
             'contact_number' => 'nullable|string|max:15',
             'password' => 'nullable|string|min:8|confirmed',
             'is_active' => 'boolean',
+        ], [
+            'email.unique' => 'This email address is already in use by another user.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         try {
             DB::beginTransaction();

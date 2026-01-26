@@ -422,7 +422,12 @@ function editUser(userId) {
                         },
                         body: formData
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok && response.status === 422) {
+                            return response.json().then(err => Promise.reject(err));
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.success) {
                             Swal.fire('Success!', 'User updated successfully!', 'success').then(() => location.reload());
@@ -431,7 +436,14 @@ function editUser(userId) {
                         }
                     })
                     .catch(error => {
-                        Swal.fire('Error', 'An error occurred while updating the user', 'error');
+                        if (error.message) {
+                            Swal.fire('Validation Error', error.message, 'error');
+                        } else if (error.errors) {
+                            const errorMessages = Object.values(error.errors).flat().join('<br>');
+                            Swal.fire('Validation Error', errorMessages, 'error');
+                        } else {
+                            Swal.fire('Error', 'An error occurred while updating the user', 'error');
+                        }
                     });
                 }
             });
