@@ -380,6 +380,8 @@ Route::middleware(['auth', 'account.verified', 'role:Parent'])->prefix('parent')
     Route::get('/profile', [ParentController::class, 'profile'])->name('profile');
     Route::put('/profile', [ParentController::class, 'updateProfile'])->name('profile.update');
     Route::put('/password', [ParentController::class, 'updatePassword'])->name('password.update');
+    Route::delete('/account', [ParentController::class, 'deleteAccount'])->name('account.delete');
+    Route::post('/account/cancel-deletion', [ParentController::class, 'cancelDeletion'])->name('account.cancel-deletion');
     Route::get('/bind-child', [ParentController::class, 'showBindChildForm'])->name('showBindChildForm');
     Route::post('/bind-child', [ParentController::class, 'bindChild'])->name('bindChild');
     Route::post('/preview-child', [ParentController::class, 'previewChildByCode'])->name('preview-child');

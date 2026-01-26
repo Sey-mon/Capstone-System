@@ -318,54 +318,6 @@
                     </div>
                 </div>
 
-                <!-- Activity Timeline Card -->
-                <div class="content-card">
-                    <div class="card-header">
-                        <div class="card-title-group">
-                            <div class="card-icon activity">
-                                <i class="fas fa-history"></i>
-                            </div>
-                            <h3 class="card-title">Recent Activity</h3>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <div class="timeline">
-                            <div class="timeline-item">
-                                <div class="timeline-marker active"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Profile Viewed</div>
-                                    <div class="timeline-date">Just now</div>
-                                </div>
-                            </div>
-                            @if(Auth::user()->patientsAsParent()->latest()->first())
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Latest Child Registration</div>
-                                    <div class="timeline-date">{{ Auth::user()->patientsAsParent()->latest()->first()->created_at->diffForHumans() }}</div>
-                                </div>
-                            </div>
-                            @endif
-                            @if(Auth::user()->email_verified_at)
-                            <div class="timeline-item">
-                                <div class="timeline-marker success"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Email Verified</div>
-                                    <div class="timeline-date">{{ Auth::user()->email_verified_at->format('M d, Y') }}</div>
-                                </div>
-                            </div>
-                            @endif
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Account Created</div>
-                                    <div class="timeline-date">{{ Auth::user()->created_at->format('M d, Y') }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Quick Actions Card -->
                 <div class="content-card actions-card">
                     <div class="card-header">
@@ -389,6 +341,10 @@
                             <button class="action-btn" onclick="changePassword()">
                                 <i class="fas fa-key"></i>
                                 <span>Change Password</span>
+                            </button>
+                            <button class="action-btn action-btn-danger" onclick="deleteAccount()">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>Delete Account</span>
                             </button>
                         </div>
                     </div>
@@ -416,6 +372,7 @@
     // Set update routes for the profile functions
     window.updateProfileRoute = '{{ route("parent.profile.update") }}';
     window.updatePasswordRoute = '{{ route("parent.password.update") }}';
+    window.deleteAccountRoute = '{{ route("parent.account.delete") }}';
 </script>
 @endpush
 

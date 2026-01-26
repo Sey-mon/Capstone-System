@@ -13,3 +13,6 @@ Schedule::command('users:permanent-delete')->weekly()->sundays()->at('02:00');
 
 // Schedule cleanup of expired password reset tokens daily at 2 AM
 Schedule::command('password:cleanup')->daily()->at('02:00');
+
+// Schedule deletion of accounts scheduled for deletion (runs daily at 3 AM)
+Schedule::command('accounts:delete-scheduled')->daily()->at('03:00');

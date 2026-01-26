@@ -827,6 +827,24 @@
     transform: scale(1.2);
 }
 
+.action-btn-danger {
+    color: #ef4444;
+}
+
+.action-btn-danger i {
+    color: #ef4444;
+}
+
+.action-btn-danger:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: var(--white);
+}
+
+.action-btn-danger:hover i {
+    color: var(--white);
+}
+
 /* Button Styles */
 .btn {
     display: inline-flex;

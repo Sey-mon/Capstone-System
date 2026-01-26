@@ -609,3 +609,121 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Delete Account Function
+function deleteAccount() {
+    Swal.fire({
+        title: '<div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); margin: -20px -20px 0 -20px; padding: 6px 12px; border-radius: 16px 16px 0 0;"><div style="display: flex; align-items: center; gap: 8px;"><div style="width: 28px; height: 28px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 6px; display: flex; align-items: center; justify-content: center; border: 1.5px solid rgba(255, 255, 255, 0.3); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); flex-shrink: 0;"><i class="fas fa-exclamation-triangle" style="color: white; font-size: 13px;"></i></div><div style="text-align: left; flex: 1; line-height: 1;"><div style="color: white; font-size: 14px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 1px;">Schedule Account Deletion</div><div style="color: rgba(255, 255, 255, 0.85); font-size: 10px; line-height: 1;">30-day grace period before permanent deletion</div></div></div></div>',
+        html: `
+            <div style="text-align: left; padding: 20px 10px;">
+                <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <p style="margin: 0; color: #92400e; font-weight: 600; font-size: 14px;">
+                        <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                        30-Day Grace Period
+                    </p>
+                    <p style="margin: 8px 0 0 0; color: #78350f; font-size: 13px; line-height: 1.5;">
+                        Your account will be scheduled for deletion, but you can cancel anytime within 30 days by simply logging back in.
+                    </p>
+                </div>
+                <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <p style="margin: 0; color: #991b1b; font-weight: 600; font-size: 14px;">
+                        <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
+                        What happens when you schedule deletion:
+                    </p>
+                    <ul style="margin: 8px 0 0 0; color: #7f1d1d; font-size: 13px; padding-left: 24px;">
+                        <li>Your account will be deactivated immediately</li>
+                        <li>All children will be unlinked (but not deleted)</li>
+                        <li>After 30 days, your account and data will be permanently deleted</li>
+                        <li><strong>You can cancel anytime by logging in again</strong></li>
+                    </ul>
+                </div>
+                <p style="color: #374151; margin: 0; font-size: 14px;">
+                    Do you want to schedule your account for deletion?
+                </p>
+            </div>
+        `,
+        width: '650px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-clock"></i> Schedule Deletion (30 Days)',
+        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#6b7280',
+        customClass: {
+            popup: 'parent-swal-popup',
+            confirmButton: 'parent-swal-confirm',
+            cancelButton: 'parent-swal-cancel'
+        },
+        focusCancel: true,
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: 'Scheduling Deletion...',
+                html: 'Please wait while we process your request.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Send delete request
+            fetch(window.deleteAccountRoute, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deletion Scheduled',
+                        html: `
+                            <div style="text-align: left;">
+                                <p style="margin: 0 0 12px 0;">${data.message || 'Your account is scheduled for deletion in 30 days.'}</p>
+                                <div style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                                    <p style="margin: 0; color: #065f46; font-size: 13px; font-weight: 600;">
+                                        <i class="fas fa-undo" style="margin-right: 8px;"></i>
+                                        Changed your mind?
+                                    </p>
+                                    <p style="margin: 6px 0 0 0; color: #047857; font-size: 12px;">
+                                        Simply log in again within 30 days to cancel the deletion and restore your account.
+                                    </p>
+                                </div>
+                            </div>
+                        `,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#10b981',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        window.location.href = data.redirect || '/login';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to schedule account deletion. Please try again.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while scheduling account deletion. Please try again.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#ef4444'
+                });
+                console.error('Delete account error:', error);
+            });
+        }
+    });
+}
+

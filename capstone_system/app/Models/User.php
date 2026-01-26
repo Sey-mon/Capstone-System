@@ -94,6 +94,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'birth_date' => 'date',
             'years_experience' => 'integer',
             'verified_at' => 'datetime',
+            'scheduled_deletion_at' => 'datetime',
         ];
     }
 

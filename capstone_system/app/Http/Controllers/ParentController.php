@@ -851,4 +851,82 @@ class ParentController extends Controller
 
         return redirect()->route('parent.profile')->with('success', 'Password updated successfully!');
     }
+
+    /**
+     * Delete the authenticated parent's account (soft delete with 30-day grace period)
+     */
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            DB::beginTransaction();
+
+            // Set scheduled deletion date to 30 days from now
+            $user->scheduled_deletion_at = now()->addDays(30);
+            $user->is_active = false; // Deactivate account immediately
+            $user->save();
+
+            DB::commit();
+
+            // Logout the user
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Account scheduled for deletion in 30 days. You can login anytime to cancel this request.',
+                    'redirect' => route('login')
+                ]);
+            }
+
+            return redirect()->route('login')->with('success', 'Your account is scheduled for deletion in 30 days. You can login anytime to cancel this request.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to schedule account deletion: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('parent.profile')->withErrors(['error' => 'Failed to schedule account deletion.']);
+        }
+    }
+
+    /**
+     * Cancel scheduled account deletion
+     */
+    public function cancelDeletion(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($user->scheduled_deletion_at) {
+            $user->scheduled_deletion_at = null;
+            $user->is_active = true;
+            $user->save();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Account deletion cancelled successfully!'
+                ]);
+            }
+
+            return redirect()->route('parent.dashboard')->with('success', 'Account deletion cancelled successfully!');
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No scheduled deletion found.'
+            ], 400);
+        }
+
+        return redirect()->route('parent.dashboard')->withErrors(['error' => 'No scheduled deletion found.']);
+    }
 }

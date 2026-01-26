@@ -476,6 +476,37 @@ class AuthController extends Controller
 
         // Check password manually since we're using encrypted emails
         if (Hash::check($credentials['password'], $user->password)) {
+            // Check if account is scheduled for deletion
+            if ($user->scheduled_deletion_at) {
+                $deletionDate = $user->scheduled_deletion_at;
+                $daysRemaining = now()->diffInDays($deletionDate, false);
+                
+                // Cancel the scheduled deletion
+                $user->scheduled_deletion_at = null;
+                $user->is_active = true;
+                $user->save();
+                
+                // Log the user in
+                Auth::login($user, $request->filled('remember'));
+                $request->session()->regenerate();
+                $request->session()->put('login_portal', 'parent');
+                
+                // Log account deletion cancellation
+                AuditLog::create([
+                    'user_id' => Auth::id(),
+                    'action' => 'account_deletion_cancelled',
+                    'description' => 'Account deletion cancelled by logging in',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+                
+                // Show cancellation message
+                return redirect()->route('parent.dashboard')->with('success', 
+                    "Welcome back! Your account deletion has been cancelled. Your account was scheduled to be deleted on " . 
+                    $deletionDate->format('M d, Y') . " (" . abs($daysRemaining) . " days remaining)."
+                );
+            }
+            
             // Check if user is active
             if (!$user->is_active) {
                 return back()->withErrors([
