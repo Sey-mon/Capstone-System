@@ -58,14 +58,24 @@ class AuthController extends Controller
                 
                 $recaptchaData = $recaptchaResponse->json();
                 
-                // Check if verification was successful and score is above threshold (0.5)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                // Log reCAPTCHA response for debugging
+                Log::info('reCAPTCHA Response', [
+                    'success' => $recaptchaData['success'] ?? false,
+                    'score' => $recaptchaData['score'] ?? 'N/A',
+                    'action' => $recaptchaData['action'] ?? 'N/A',
+                    'hostname' => $recaptchaData['hostname'] ?? 'N/A',
+                    'error-codes' => $recaptchaData['error-codes'] ?? []
+                ]);
+                
+                // Check if verification was successful and score is above threshold (0.3 - more lenient)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
+                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
                     return back()->withErrors([
                         'recaptcha_token' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('email'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
                 // Continue without reCAPTCHA on live server if API fails
             }
         }
@@ -164,14 +174,18 @@ class AuthController extends Controller
                 
                 $recaptchaData = $recaptchaResponse->json();
                 
-                // Check if verification was successful and score is above threshold (0.5)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                // Log reCAPTCHA response for debugging
+                Log::info('reCAPTCHA Response', $recaptchaData);
+                
+                // Check if verification was successful and score is above threshold (0.3 - more lenient)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
+                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
                     return back()->withErrors([
                         'recaptcha_token' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('password', 'password_confirmation', 'code'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
                 // Continue without reCAPTCHA on live server if API fails
             }
         }
@@ -269,14 +283,18 @@ class AuthController extends Controller
                 
                 $recaptchaData = $recaptchaResponse->json();
                 
-                // Check if verification was successful and score is above threshold (0.5)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                // Log reCAPTCHA response for debugging
+                Log::info('reCAPTCHA Response', $recaptchaData);
+                
+                // Check if verification was successful and score is above threshold (0.3 - more lenient)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
+                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
                     return back()->withErrors([
                         'recaptcha_token' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('description'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
                 // Continue without reCAPTCHA on live server if API fails
             }
         }
@@ -369,14 +387,18 @@ class AuthController extends Controller
                 
                 $recaptchaData = $recaptchaResponse->json();
                 
-                // Check if verification was successful and score is above threshold (0.5)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                // Log reCAPTCHA response for debugging
+                Log::info('reCAPTCHA Response (Staff Login)', $recaptchaData);
+                
+                // Check if verification was successful and score is above threshold (0.3 - more lenient)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
+                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
                     return back()->withErrors([
                         'recaptcha_token' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('password'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
                 // Continue without reCAPTCHA on live server if API fails
             }
         }
@@ -473,14 +495,18 @@ class AuthController extends Controller
                 
                 $recaptchaData = $recaptchaResponse->json();
                 
-                // Check if verification was successful and score is above threshold (0.5)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.5) {
+                // Log reCAPTCHA response for debugging
+                Log::info('reCAPTCHA Response (Public Login)', $recaptchaData);
+                
+                // Check if verification was successful and score is above threshold (0.3 - more lenient)
+                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
+                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
                     return back()->withErrors([
                         'recaptcha_token' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('password'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
                 // Continue without reCAPTCHA on live server if API fails
             }
         }
