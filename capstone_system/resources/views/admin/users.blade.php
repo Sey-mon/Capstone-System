@@ -27,7 +27,7 @@
             <form method="GET" action="" id="userFilterForm">
                 <div class="filter-grid">
                     <div class="filter-field">
-                        <label>Search Patient</label>
+                        <label>Search User</label>
                         <div class="search-input-wrapper">
                             <i class="fas fa-search search-icon"></i>
                             <input type="text" name="search" value="{{ request('search') }}" class="form-control search-input" placeholder="Search by name, contact..." id="searchInput">
@@ -43,7 +43,7 @@
                         </select>
                     </div>
                     <div class="filter-field">
-                        <label>Account Status</label>
+                        <label>Status</label>
                         <select name="account_status" class="form-control" id="accountStatusFilter">
                             <option value="">All Status</option>
                             <option value="active" @if(request('account_status')==='active') selected @endif>Active</option>
@@ -128,17 +128,32 @@
                                 </span>
                             </td>
                             <td>
-                                @if($user->deleted_at)
+                                @php
+                                    // Determine account status with clear priority
+                                    if ($user->deleted_at || $user->account_status === 'deleted') {
+                                        $status = 'deleted';
+                                    } elseif ($user->account_status === 'suspended') {
+                                        $status = 'suspended';
+                                    } elseif ($user->account_status === 'inactive' || (!$user->is_active && $user->account_status !== 'active')) {
+                                        $status = 'inactive';
+                                    } elseif ($user->account_status === 'active' || $user->is_active) {
+                                        $status = 'active';
+                                    } else {
+                                        $status = 'inactive';
+                                    }
+                                @endphp
+
+                                @if($status === 'deleted')
                                     <span class="status-badge status-deleted" style="background-color: #6b7280; color: white;">
                                         <i class="fas fa-trash"></i>
                                         Deleted
                                     </span>
-                                @elseif($user->account_status === 'suspended')
+                                @elseif($status === 'suspended')
                                     <span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;">
                                         <i class="fas fa-ban"></i>
                                         Suspended
                                     </span>
-                                @elseif($user->is_active)
+                                @elseif($status === 'active')
                                     <span class="status-badge status-active">
                                         <i class="fas fa-check-circle"></i>
                                         Active
