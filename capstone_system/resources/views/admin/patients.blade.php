@@ -267,7 +267,11 @@
                                     </div>
                                     <div class="info-row">
                                         <span class="label">Parent:</span>
-                                        <span class="value">{{ $patient->parent ? $patient->parent->first_name . ' ' . $patient->parent->last_name : 'Not assigned' }}</span>
+                                        @if($patient->parent)
+                                            <span class="value parent-clickable parent-name">{{ $patient->parent->first_name }} {{ $patient->parent->last_name }}</span>
+                                        @else
+                                            <span class="value">Not assigned</span>
+                                        @endif
                                     </div>
                                     <div class="info-row">
                                         <span class="label">Nutritionist:</span>
