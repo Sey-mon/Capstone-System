@@ -845,6 +845,28 @@
     color: var(--white);
 }
 
+/* Mobile touch improvements */
+.action-btn {
+    -webkit-tap-highlight-color: rgba(16, 185, 129, 0.2);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.action-btn:active {
+    transform: scale(0.98);
+}
+
+.action-btn-danger {
+    -webkit-tap-highlight-color: rgba(239, 68, 68, 0.2);
+}
+
+.action-btn-danger:active {
+    transform: scale(0.98);
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
 /* Button Styles */
 .btn {
     display: inline-flex;
@@ -1109,6 +1131,80 @@
 .parent-swal-confirm:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+.parent-swal-cancel {
+    background: #e5e7eb !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 12px 30px !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    color: #374151 !important;
+    transition: all 0.3s ease !important;
+}
+
+.parent-swal-cancel:hover {
+    background: #d1d5db !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Mobile responsive for SweetAlert */
+@media (max-width: 768px) {
+    .parent-swal-popup {
+        width: 95% !important;
+        max-width: 95% !important;
+    }
+    
+    .parent-swal-popup .swal2-html-container {
+        padding: 0 15px 15px !important;
+    }
+    
+    .parent-swal-popup .swal2-actions {
+        padding: 15px !important;
+        gap: 10px !important;
+        flex-direction: column !important;
+    }
+    
+    .parent-swal-confirm,
+    .parent-swal-cancel {
+        width: 100% !important;
+        padding: 14px 20px !important;
+    }
+    
+    /* Ensure delete account modal is mobile friendly */
+    .swal2-popup {
+        font-size: 14px !important;
+    }
+    
+    .swal2-title div {
+        font-size: 14px !important;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Fix for mobile viewport */
+@media (max-width: 576px) {
+    .parent-swal-popup {
+        width: 98% !important;
+        margin: 10px !important;
+    }
+}
+
+/* Touch-friendly improvements for all interactive elements */
+@media (hover: none) and (pointer: coarse) {
+    .action-btn {
+        min-height: 60px;
+        padding: 1.75rem 1rem;
+    }
+    
+    .btn {
+        min-height: 48px;
+        padding: 1rem 2rem;
+    }
 }
 
 .parent-swal-cancel {
