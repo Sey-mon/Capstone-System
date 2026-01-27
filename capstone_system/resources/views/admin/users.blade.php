@@ -27,7 +27,7 @@
             <form method="GET" action="" id="userFilterForm">
                 <div class="filter-grid">
                     <div class="filter-field">
-                        <label>Search Patient</label>
+                        <label>Search User</label>
                         <div class="search-input-wrapper">
                             <i class="fas fa-search search-icon"></i>
                             <input type="text" name="search" value="{{ request('search') }}" class="form-control search-input" placeholder="Search by name, contact..." id="searchInput">
@@ -43,7 +43,7 @@
                         </select>
                     </div>
                     <div class="filter-field">
-                        <label>Account Status</label>
+                        <label>Status</label>
                         <select name="account_status" class="form-control" id="accountStatusFilter">
                             <option value="">All Status</option>
                             <option value="active" @if(request('account_status')==='active') selected @endif>Active</option>
@@ -53,12 +53,14 @@
                         </select>
                     </div>
                     <div class="filter-field">
-                        <label>Per Page</label>
-                        <select name="per_page" class="form-control" id="perPageFilter">
-                            <option value="10" @if(request('per_page')=='10') selected @endif>10</option>
-                            <option value="25" @if(request('per_page')=='25') selected @endif>25</option>
-                            <option value="50" @if(request('per_page')=='50') selected @endif>50</option>
-                            <option value="100" @if(request('per_page')=='100') selected @endif>100</option>
+                        <label>Sort By</label>
+                        <select name="sort_by" class="form-control" id="sortByFilter">
+                            <option value="newest" @if(request('sort_by')=='newest' || !request('sort_by')) selected @endif>Newest First</option>
+                            <option value="oldest" @if(request('sort_by')=='oldest') selected @endif>Oldest First</option>
+                            <option value="name_asc" @if(request('sort_by')=='name_asc') selected @endif>Name (A-Z)</option>
+                            <option value="name_desc" @if(request('sort_by')=='name_desc') selected @endif>Name (Z-A)</option>
+                            <option value="email_asc" @if(request('sort_by')=='email_asc') selected @endif>Email (A-Z)</option>
+                            <option value="email_desc" @if(request('sort_by')=='email_desc') selected @endif>Email (Z-A)</option>
                         </select>
                     </div>
                 </div>
@@ -128,17 +130,32 @@
                                 </span>
                             </td>
                             <td>
-                                @if($user->deleted_at)
+                                @php
+                                    // Determine account status with clear priority
+                                    if ($user->deleted_at || $user->account_status === 'deleted') {
+                                        $status = 'deleted';
+                                    } elseif ($user->account_status === 'suspended') {
+                                        $status = 'suspended';
+                                    } elseif ($user->account_status === 'inactive' || (!$user->is_active && $user->account_status !== 'active')) {
+                                        $status = 'inactive';
+                                    } elseif ($user->account_status === 'active' || $user->is_active) {
+                                        $status = 'active';
+                                    } else {
+                                        $status = 'inactive';
+                                    }
+                                @endphp
+
+                                @if($status === 'deleted')
                                     <span class="status-badge status-deleted" style="background-color: #6b7280; color: white;">
                                         <i class="fas fa-trash"></i>
                                         Deleted
                                     </span>
-                                @elseif($user->account_status === 'suspended')
+                                @elseif($status === 'suspended')
                                     <span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;">
                                         <i class="fas fa-ban"></i>
                                         Suspended
                                     </span>
-                                @elseif($user->is_active)
+                                @elseif($status === 'active')
                                     <span class="status-badge status-active">
                                         <i class="fas fa-check-circle"></i>
                                         Active

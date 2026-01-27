@@ -160,7 +160,7 @@
                             <div class="info-row">
                                 <div class="info-label">
                                     <i class="fas fa-venus-mars"></i>
-                                    Gender
+                                    Sex
                                 </div>
                                 <div class="info-value">{{ Auth::user()->sex ? ucfirst(Auth::user()->sex) : 'Not provided' }}</div>
                             </div>
@@ -363,10 +363,10 @@
         first_name: "{{ Auth::user()->first_name }}",
         middle_name: "{{ Auth::user()->middle_name }}",
         last_name: "{{ Auth::user()->last_name }}",
-        contact_number: "{{ Auth::user()->contact_number }}",
+        contact_number: "{{ Auth::user()->contact_number ?? '' }}",
         birth_date: "{{ Auth::user()->birth_date ? Auth::user()->birth_date->format('Y-m-d') : '' }}",
-        sex: "{{ Auth::user()->sex }}",
-        address: `{{ Auth::user()->address }}`
+        sex: "{{ Auth::user()->sex ?? '' }}",
+        address: `{{ Auth::user()->address ?? '' }}`
     });
 
     // Set update routes for the profile functions

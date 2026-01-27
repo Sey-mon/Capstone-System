@@ -150,7 +150,7 @@
                             <div class="info-row">
                                 <div class="info-label">
                                     <i class="fas fa-venus-mars"></i>
-                                    Gender
+                                    Sex
                                 </div>
                                 <div class="info-value">{{ $nutritionist->sex ? ucfirst($nutritionist->sex) : 'Not specified' }}</div>
                             </div>
@@ -352,15 +352,15 @@
     // Nutritionist data for forms
     const nutritionistData = {
         first_name: "{{ $nutritionist->first_name }}",
-        middle_name: "{{ $nutritionist->middle_name }}",
+        middle_name: "{{ $nutritionist->middle_name ?? '' }}",
         last_name: "{{ $nutritionist->last_name }}",
-        contact_number: "{{ $nutritionist->contact_number }}",
+        contact_number: "{{ $nutritionist->contact_number ?? '' }}",
         birth_date: "{{ $nutritionist->birth_date ? $nutritionist->birth_date->format('Y-m-d') : '' }}",
-        sex: "{{ $nutritionist->sex }}",
-        address: `{{ $nutritionist->address }}`,
-        years_experience: "{{ $nutritionist->years_experience }}",
-        qualifications: `{{ $nutritionist->qualifications }}`,
-        professional_experience: `{{ $nutritionist->professional_experience }}`
+        sex: "{{ $nutritionist->sex ?? '' }}",
+        address: `{{ $nutritionist->address ?? '' }}`,
+        years_experience: "{{ $nutritionist->years_experience ?? '' }}",
+        qualifications: `{{ $nutritionist->qualifications ?? '' }}`,
+        professional_experience: `{{ $nutritionist->professional_experience ?? '' }}`
     };
 
     // Edit Personal Information
@@ -406,13 +406,13 @@
                         </div>
                         <div>
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
-                                <i class="fas fa-venus-mars" style="color: #10b981; margin-right: 5px;"></i>Gender
+                                <i class="fas fa-venus-mars" style="color: #10b981; margin-right: 5px;"></i>Sex
                             </label>
                             <select id="swal-gender" class="swal2-select" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                                <option value="">Select Gender</option>
-                                <option value="male" ${nutritionistData.sex === 'male' ? 'selected' : ''}>Male</option>
-                                <option value="female" ${nutritionistData.sex === 'female' ? 'selected' : ''}>Female</option>
-                                <option value="other" ${nutritionistData.sex === 'other' ? 'selected' : ''}>Other</option>
+                                <option value="">Select Sex</option>
+                                <option value="male" ${(nutritionistData.sex || '') === 'male' ? 'selected' : ''}>Male</option>
+                                <option value="female" ${(nutritionistData.sex || '') === 'female' ? 'selected' : ''}>Female</option>
+                                <option value="other" ${(nutritionistData.sex || '') === 'other' ? 'selected' : ''}>Other</option>
                             </select>
                         </div>
                     </div>
@@ -430,6 +430,9 @@
                 cancelButton: 'nutritionist-swal-cancel'
             },
             didOpen: () => {
+                // Debug: Log the sex value
+                console.log('Nutritionist sex value:', nutritionistData.sex);
+                
                 // Focus styling
                 document.querySelectorAll('.swal2-input, .swal2-select, .swal2-textarea').forEach(input => {
                     input.addEventListener('focus', function() {
@@ -441,6 +444,13 @@
                         this.style.boxShadow = 'none';
                     });
                 });
+                
+                // Manually set the sex select value to ensure it's selected
+                const sexSelect = document.getElementById('swal-gender');
+                if (sexSelect && nutritionistData.sex) {
+                    sexSelect.value = nutritionistData.sex.toLowerCase();
+                    console.log('Set sex select to:', nutritionistData.sex.toLowerCase());
+                }
             },
             preConfirm: () => {
                 const firstName = document.getElementById('swal-first-name').value;

@@ -60,10 +60,6 @@
                         <i class="fas fa-edit"></i>
                         Edit Profile
                     </button>
-                    <button class="btn btn-outline" onclick="window.print()">
-                        <i class="fas fa-print"></i>
-                        Print
-                    </button>
                 </div>
             </div>
         </div>
@@ -147,6 +143,13 @@
                                     Contact Number
                                 </div>
                                 <div class="info-value">{{ Auth::user()->contact_number ?? 'Not provided' }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="fas fa-venus-mars"></i>
+                                    Sex
+                                </div>
+                                <div class="info-value">{{ Auth::user()->sex ? ucfirst(Auth::user()->sex) : 'Not provided' }}</div>
                             </div>
                             <div class="info-row">
                                 <div class="info-label">
@@ -295,45 +298,6 @@
                     </div>
                 </div>
 
-                <!-- Activity Timeline Card -->
-                <div class="content-card">
-                    <div class="card-header">
-                        <div class="card-title-group">
-                            <div class="card-icon activity">
-                                <i class="fas fa-history"></i>
-                            </div>
-                            <h3 class="card-title">Recent Activity</h3>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <div class="timeline">
-                            <div class="timeline-item">
-                                <div class="timeline-marker active"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Profile Viewed</div>
-                                    <div class="timeline-date">Just now</div>
-                                </div>
-                            </div>
-                            @if(Auth::user()->email_verified_at)
-                            <div class="timeline-item">
-                                <div class="timeline-marker success"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Email Verified</div>
-                                    <div class="timeline-date">{{ Auth::user()->email_verified_at->format('M d, Y') }}</div>
-                                </div>
-                            </div>
-                            @endif
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-title">Account Created</div>
-                                    <div class="timeline-date">{{ Auth::user()->created_at->format('M d, Y') }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Quick Actions Card -->
                 <div class="content-card actions-card">
                     <div class="card-header">
@@ -376,10 +340,11 @@
     // Expose server-side data and routes as globals for external JS
     window.adminData = {
         first_name: "{{ Auth::user()->first_name }}",
-        middle_name: "{{ Auth::user()->middle_name }}",
+        middle_name: "{{ Auth::user()->middle_name ?? '' }}",
         last_name: "{{ Auth::user()->last_name }}",
-        contact_number: "{{ Auth::user()->contact_number }}",
-        email: "{{ Auth::user()->email }}"
+        contact_number: "{{ Auth::user()->contact_number ?? '' }}",
+        email: "{{ Auth::user()->email }}",
+        sex: "{{ Auth::user()->sex ?? '' }}"
     };
     window.adminProfileUpdateUrl = "{{ route('admin.profile.update') }}";
     window.adminPasswordUpdateUrl = "{{ route('admin.password.update') }}";

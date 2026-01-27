@@ -38,30 +38,30 @@ function editPersonalInfo() {
                         <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                             <i class="fas fa-phone" style="color: #10b981; margin-right: 5px;"></i>Contact Number
                         </label>
-                        <input id="swal-contact" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.contact_number}">
+                        <input id="swal-contact" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.contact_number || ''}">
                     </div>
                     <div>
                         <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                             <i class="fas fa-calendar" style="color: #10b981; margin-right: 5px;"></i>Date of Birth
                         </label>
-                        <input id="swal-birth-date" type="date" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.birth_date}">
+                        <input id="swal-birth-date" type="date" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${parentData.birth_date || ''}">
                     </div>
                     <div>
                         <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
-                            <i class="fas fa-venus-mars" style="color: #10b981; margin-right: 5px;"></i>Gender
+                            <i class="fas fa-venus-mars" style="color: #10b981; margin-right: 5px;"></i>Sex
                         </label>
                         <select id="swal-gender" class="swal2-select" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                            <option value="">Select Gender</option>
-                            <option value="male" ${parentData.sex === 'male' ? 'selected' : ''}>Male</option>
-                            <option value="female" ${parentData.sex === 'female' ? 'selected' : ''}>Female</option>
-                            <option value="other" ${parentData.sex === 'other' ? 'selected' : ''}>Other</option>
+                            <option value="">Select Sex</option>
+                            <option value="male" ${(parentData.sex || '') === 'male' ? 'selected' : ''}>Male</option>
+                            <option value="female" ${(parentData.sex || '') === 'female' ? 'selected' : ''}>Female</option>
+                            <option value="other" ${(parentData.sex || '') === 'other' ? 'selected' : ''}>Other</option>
                         </select>
                     </div>
                     <div style="grid-column: 1 / -1;">
                         <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                             <i class="fas fa-map-marker-alt" style="color: #10b981; margin-right: 5px;"></i>Address
                         </label>
-                        <textarea id="swal-address" class="swal2-textarea" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; min-height: 80px;" rows="3">${parentData.address}</textarea>
+                        <textarea id="swal-address" class="swal2-textarea" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; min-height: 80px;" rows="3">${parentData.address || ''}</textarea>
                     </div>
                 </div>
             </div>
@@ -85,6 +85,9 @@ function editPersonalInfo() {
             cancelButton: 'parent-swal-cancel'
         },
         didOpen: () => {
+            // Debug: Log the sex value
+            console.log('Parent sex value:', parentData.sex);
+            
             // Focus styling
             document.querySelectorAll('.swal2-input, .swal2-select, .swal2-textarea').forEach(input => {
                 input.addEventListener('focus', function() {
@@ -96,6 +99,13 @@ function editPersonalInfo() {
                     this.style.boxShadow = 'none';
                 });
             });
+            
+            // Manually set the sex select value to ensure it's selected
+            const sexSelect = document.getElementById('swal-gender');
+            if (sexSelect && parentData.sex) {
+                sexSelect.value = parentData.sex.toLowerCase();
+                console.log('Set sex select to:', parentData.sex.toLowerCase());
+            }
         },
         preConfirm: () => {
             const firstName = document.getElementById('swal-first-name').value;
