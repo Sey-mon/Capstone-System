@@ -375,6 +375,41 @@
     text-align: right;
 }
 
+/* Make parent names in grid view clickable */
+.info-row .value.parent-clickable {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.info-row .value.parent-clickable:hover {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--primary-color);
+}
+
+.info-row .value.parent-clickable::after {
+    content: '\f0d7';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 8px;
+    opacity: 0.5;
+}
+
+.info-row .value.parent-clickable:hover::after {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .info-row .value.parent-clickable {
+        background-color: rgba(76, 175, 80, 0.05);
+        border: 1px solid rgba(76, 175, 80, 0.2);
+    }
+}
+
 .patient-card .card-footer {
     background: var(--bg-secondary);
     padding: 1rem 1.5rem;
@@ -457,6 +492,47 @@
     font-weight: 500;
     font-size: 14px;
     margin-bottom: 2px;
+}
+
+.parent-cell .parent-name {
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.parent-cell .parent-name:hover {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--primary-color);
+}
+
+.parent-cell .parent-name::after {
+    content: '\f0d7';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 10px;
+    opacity: 0.5;
+    margin-left: 4px;
+}
+
+.parent-cell .parent-name:hover::after {
+    opacity: 1;
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+    .parent-cell .parent-name {
+        background-color: rgba(76, 175, 80, 0.05);
+        border: 1px solid rgba(76, 175, 80, 0.2);
+    }
+    
+    .parent-cell .parent-name::after {
+        opacity: 0.7;
+    }
 }
 
 .action-buttons {
@@ -2788,5 +2864,109 @@
     
     .swal-header-title {
         font-size: 1.5rem;
+    }
+}
+
+/* ========== PARENT CONTEXT MENU ========== */
+.swal-parent-context-menu {
+    border-radius: 12px !important;
+}
+
+.swal-parent-context-menu .swal2-title {
+    font-size: 24px !important;
+    padding: 20px 20px 10px !important;
+}
+
+.swal-parent-context-menu .swal2-html-container {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.swal-parent-context-menu .swal2-actions {
+    gap: 10px !important;
+    padding: 20px !important;
+    flex-wrap: wrap !important;
+}
+
+.swal-parent-context-menu .btn {
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+}
+
+.swal-parent-context-menu .btn-success:hover {
+    background-color: #2e7d32 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
+}
+
+.swal-parent-context-menu .btn-danger:hover {
+    background-color: #c82333 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
+}
+
+.swal-parent-context-menu .btn-secondary:hover {
+    background-color: #5a6268 !important;
+}
+
+.swal-delete-parent-confirm {
+    border-radius: 12px !important;
+}
+
+.swal-delete-parent-confirm .swal2-title {
+    font-size: 22px !important;
+    padding: 20px 20px 10px !important;
+}
+
+.swal-delete-parent-confirm .swal2-html-container {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.swal-delete-parent-confirm .swal2-actions {
+    gap: 10px !important;
+    padding: 20px !important;
+}
+
+.swal-delete-parent-confirm .btn {
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+}
+
+.swal-delete-parent-confirm .btn-danger:hover {
+    background-color: #c82333 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
+}
+
+.swal-delete-parent-confirm .btn-secondary:hover {
+    background-color: #5a6268 !important;
+}
+
+/* Mobile responsive for parent context menu */
+@media (max-width: 768px) {
+    .swal-parent-context-menu,
+    .swal-delete-parent-confirm {
+        width: 95% !important;
+        max-width: 95% !important;
+    }
+    
+    .swal-parent-context-menu .swal2-actions,
+    .swal-delete-parent-confirm .swal2-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    
+    .swal-parent-context-menu .btn,
+    .swal-delete-parent-confirm .btn {
+        width: 100% !important;
     }
 }
