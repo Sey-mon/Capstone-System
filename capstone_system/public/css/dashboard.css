@@ -288,6 +288,8 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
+    /* Ensure content doesn't push footer off screen */
+    max-height: calc(100vh - 80px - 70px); /* 100vh - header height - footer height */
 }
 
 /* User Info */
@@ -1009,6 +1011,17 @@ body {
     .sidebar-content {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        /* Fix for mobile: ensure logout button is always visible */
+        max-height: calc(100vh - 80px - 80px); /* Account for header and footer */
+        padding-bottom: 0.5rem;
+    }
+    
+    /* Ensure sidebar footer stays at bottom on mobile */
+    .sidebar-footer {
+        position: relative;
+        bottom: 0;
+        width: 100%;
+        background-color: var(--bg-primary);
     }
     
     /* Better mobile navigation */
@@ -1070,6 +1083,11 @@ body {
     
     .sidebar-footer {
         padding: 1rem 0.75rem;
+    }
+    
+    /* Extra fix for very small screens */
+    .sidebar-content {
+        max-height: calc(100vh - 70px - 70px); /* Adjust for smaller header/footer */
     }
 }
 
