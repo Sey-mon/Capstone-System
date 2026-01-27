@@ -1126,6 +1126,28 @@ function displayScreeningHistoryModal(patient, assessments) {
     const patientId = patient.custom_patient_id;
     const totalScreenings = assessments.length;
     
+    // Check if there are no assessments
+    if (!assessments || assessments.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: 'No Assessment History',
+            html: `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-clipboard-list" style="font-size: 64px; color: #6c757d; margin-bottom: 20px;"></i>
+                    <p style="font-size: 16px; color: #6c757d;">
+                        No assessment records found for <strong>${patientName}</strong>.
+                    </p>
+                    <p style="font-size: 14px; color: #999;">
+                        Assessment history will appear here once evaluations are recorded.
+                    </p>
+                </div>
+            `,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3085d6'
+        });
+        return;
+    }
+    
     // Store globally for keyboard navigation
     window.currentAssessments = assessments;
     window.currentPatientId = patient.patient_id;
