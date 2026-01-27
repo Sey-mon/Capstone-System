@@ -458,6 +458,9 @@ body {
     border-top: 1px solid var(--border-light);
     flex-shrink: 0;
     background-color: var(--bg-primary);
+    /* Make it sticky at the bottom on mobile */
+    position: relative;
+    z-index: 10;
 }
 
 .logout-form {
@@ -1012,16 +1015,20 @@ body {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         /* Fix for mobile: ensure logout button is always visible */
-        max-height: calc(100vh - 80px - 80px); /* Account for header and footer */
+        max-height: calc(100vh - 150px); /* Account for header and footer with padding */
         padding-bottom: 0.5rem;
+        flex: 1 1 auto;
     }
     
-    /* Ensure sidebar footer stays at bottom on mobile */
+    /* Ensure sidebar footer stays at bottom on mobile - FIXED POSITION */
     .sidebar-footer {
-        position: relative;
+        position: sticky;
         bottom: 0;
+        left: 0;
         width: 100%;
         background-color: var(--bg-primary);
+        z-index: 100;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
     }
     
     /* Better mobile navigation */
@@ -1083,11 +1090,15 @@ body {
     
     .sidebar-footer {
         padding: 1rem 0.75rem;
+        position: sticky;
+        bottom: 0;
     }
     
     /* Extra fix for very small screens */
     .sidebar-content {
-        max-height: calc(100vh - 70px - 70px); /* Adjust for smaller header/footer */
+        max-height: calc(100vh - 140px); /* Adjust for smaller header/footer */
+        flex: 1 1 auto;
+        min-height: 0;
     }
 }
 
