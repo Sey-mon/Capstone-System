@@ -3130,30 +3130,58 @@ class AdminController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $admin = User::findOrFail(Auth::id());
+        try {
+            $admin = User::findOrFail(Auth::id());
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($admin->user_id, 'user_id')],
-            'contact_number' => 'nullable|string|max:20',
-        ]);
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($admin->user_id, 'user_id')],
+                'contact_number' => 'nullable|string|max:20',
+                'sex' => 'nullable|in:male,female,other',
+            ]);
 
-        $admin->update($validated);
+            $admin->update($validated);
 
-        // Log the profile update
-        AuditLog::create([
-            'user_id' => $admin->user_id,
-            'action' => 'update',
-            'table_name' => 'users',
-            'record_id' => $admin->user_id,
-            'description' => 'Admin updated their profile information',
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+            // Log the profile update
+            AuditLog::create([
+                'user_id' => $admin->user_id,
+                'action' => 'update',
+                'table_name' => 'users',
+                'record_id' => $admin->user_id,
+                'description' => 'Admin updated their profile information',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
 
-        return redirect()->route('admin.profile')->with('success', 'Profile updated successfully!');
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile updated successfully!'
+                ]);
+            }
+
+            return redirect()->route('admin.profile')->with('success', 'Profile updated successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred: ' . $e->getMessage()
+                ], 500);
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -3161,35 +3189,68 @@ class AdminController extends Controller
      */
     public function updatePassword(Request $request)
     {
-        $admin = User::findOrFail(Auth::id());
+        try {
+            $admin = User::findOrFail(Auth::id());
 
-        $validated = $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|string|min:8|confirmed',
-        ]);
+            $validated = $request->validate([
+                'current_password' => 'required',
+                'new_password' => 'required|string|min:8|confirmed',
+            ]);
 
-        // Verify current password
-        if (!Hash::check($validated['current_password'], $admin->password)) {
-            return back()->withErrors(['current_password' => 'Current password is incorrect.']);
+            // Verify current password
+            if (!Hash::check($validated['current_password'], $admin->password)) {
+                if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Current password is incorrect.'
+                    ], 422);
+                }
+                return back()->withErrors(['current_password' => 'Current password is incorrect.']);
+            }
+
+            // Update password
+            $admin->update([
+                'password' => Hash::make($validated['new_password']),
+            ]);
+
+            // Log the password change
+            AuditLog::create([
+                'user_id' => $admin->user_id,
+                'action' => 'update',
+                'table_name' => 'users',
+                'record_id' => $admin->user_id,
+                'description' => 'Admin changed their password',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Password updated successfully!'
+                ]);
+            }
+
+            return redirect()->route('admin.profile')->with('success', 'Password updated successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred: ' . $e->getMessage()
+                ], 500);
+            }
+            throw $e;
         }
-
-        // Update password
-        $admin->update([
-            'password' => Hash::make($validated['new_password']),
-        ]);
-
-        // Log the password change
-        AuditLog::create([
-            'user_id' => $admin->user_id,
-            'action' => 'update',
-            'table_name' => 'users',
-            'record_id' => $admin->user_id,
-            'description' => 'Admin changed their password',
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return redirect()->route('admin.profile')->with('success', 'Password updated successfully!');
     }
     
     /**
