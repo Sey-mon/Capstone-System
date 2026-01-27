@@ -53,12 +53,14 @@
                         </select>
                     </div>
                     <div class="filter-field">
-                        <label>Per Page</label>
-                        <select name="per_page" class="form-control" id="perPageFilter">
-                            <option value="10" @if(request('per_page')=='10') selected @endif>10</option>
-                            <option value="25" @if(request('per_page')=='25') selected @endif>25</option>
-                            <option value="50" @if(request('per_page')=='50') selected @endif>50</option>
-                            <option value="100" @if(request('per_page')=='100') selected @endif>100</option>
+                        <label>Sort By</label>
+                        <select name="sort_by" class="form-control" id="sortByFilter">
+                            <option value="newest" @if(request('sort_by')=='newest' || !request('sort_by')) selected @endif>Newest First</option>
+                            <option value="oldest" @if(request('sort_by')=='oldest') selected @endif>Oldest First</option>
+                            <option value="name_asc" @if(request('sort_by')=='name_asc') selected @endif>Name (A-Z)</option>
+                            <option value="name_desc" @if(request('sort_by')=='name_desc') selected @endif>Name (Z-A)</option>
+                            <option value="email_asc" @if(request('sort_by')=='email_asc') selected @endif>Email (A-Z)</option>
+                            <option value="email_desc" @if(request('sort_by')=='email_desc') selected @endif>Email (Z-A)</option>
                         </select>
                     </div>
                 </div>

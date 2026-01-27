@@ -665,7 +665,7 @@ function setupFilters() {
     const searchInput = document.getElementById('searchInput');
     const roleFilter = document.getElementById('roleFilter');
     const accountStatusFilter = document.getElementById('accountStatusFilter');
-    const perPageFilter = document.getElementById('perPageFilter');
+    const sortByFilter = document.getElementById('sortByFilter');
 
     let searchTimeout;
 
@@ -686,8 +686,8 @@ function setupFilters() {
     if (accountStatusFilter) {
         accountStatusFilter.addEventListener('change', loadUsers);
     }
-    if (perPageFilter) {
-        perPageFilter.addEventListener('change', loadUsers);
+    if (sortByFilter) {
+        sortByFilter.addEventListener('change', loadUsers);
     }
 }
 

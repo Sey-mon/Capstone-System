@@ -423,7 +423,7 @@ class AdminController extends Controller
      */
     public function users(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = 15; // Fixed to 15 users per page
         
         // Include soft-deleted users
         $query = User::with('role')->withTrashed();
@@ -450,15 +450,57 @@ class AdminController extends Controller
             } elseif ($accountStatus === 'deleted') {
                 $query->whereNotNull('deleted_at');
             } elseif ($accountStatus === 'active') {
-                $query->where('is_active', 1)->whereNull('deleted_at');
+                $query->where(function($q) {
+                    $q->where('account_status', 'active')
+                      ->orWhere(function($q2) {
+                          $q2->where('is_active', 1)
+                             ->where(function($q3) {
+                                 $q3->whereNull('account_status')
+                                    ->orWhere('account_status', '');
+                             });
+                      });
+                })->whereNull('deleted_at');
             } elseif ($accountStatus === 'inactive') {
-                $query->where('is_active', 0)->whereNull('deleted_at');
+                $query->where(function($q) {
+                    $q->where('account_status', 'inactive')
+                      ->orWhere(function($q2) {
+                          $q2->where('is_active', 0)
+                             ->where(function($q3) {
+                                 $q3->whereNull('account_status')
+                                    ->orWhere('account_status', '');
+                             });
+                      });
+                })->whereNull('deleted_at');
             }
         }
         
         // Legacy status filter support
         if ($request->input('status') !== null && $request->input('status') !== '' && !$request->input('account_status')) {
             $query->where('is_active', $request->input('status'));
+        }
+
+        // Handle sorting
+        $sortBy = $request->input('sort_by', 'newest');
+        switch ($sortBy) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'name_asc':
+                $query->orderBy('first_name', 'asc')->orderBy('last_name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('first_name', 'desc')->orderBy('last_name', 'desc');
+                break;
+            case 'email_asc':
+                $query->orderBy('email', 'asc');
+                break;
+            case 'email_desc':
+                $query->orderBy('email', 'desc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
         }
         
         $users = $query->paginate($perPage)->appends($request->query());
