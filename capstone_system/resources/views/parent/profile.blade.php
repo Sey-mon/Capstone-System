@@ -342,7 +342,7 @@
                                 <i class="fas fa-key"></i>
                                 <span>Change Password</span>
                             </button>
-                            <button class="action-btn action-btn-danger" onclick="deleteAccount()">
+                            <button class="action-btn action-btn-danger" id="deleteAccountBtn" type="button">
                                 <i class="fas fa-trash-alt"></i>
                                 <span>Delete Account</span>
                             </button>
@@ -373,6 +373,29 @@
     window.updateProfileRoute = '{{ route("parent.profile.update") }}';
     window.updatePasswordRoute = '{{ route("parent.password.update") }}';
     window.deleteAccountRoute = '{{ route("parent.account.delete") }}';
+
+    // Add event listener for delete account button - works on both mobile and desktop
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteBtn = document.getElementById('deleteAccountBtn');
+        if (deleteBtn) {
+            // Remove any existing onclick to avoid double firing
+            deleteBtn.onclick = null;
+            
+            // Add click event listener that works on both touch and mouse
+            deleteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteAccount();
+            }, { passive: false });
+            
+            // Also add touch event for better mobile support
+            deleteBtn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteAccount();
+            }, { passive: false });
+        }
+    });
 </script>
 @endpush
 
