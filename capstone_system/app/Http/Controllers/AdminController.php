@@ -2245,7 +2245,8 @@ class AdminController extends Controller
     public function activateUser($id)
     {
         try {
-            $user = User::with('role')->findOrFail($id);
+            // Use withTrashed to include soft-deleted users
+            $user = User::withTrashed()->with('role')->findOrFail($id);
 
             // Prevent activating/deactivating the current authenticated user
             if ($user->user_id === Auth::id()) {
@@ -2253,6 +2254,14 @@ class AdminController extends Controller
                     'success' => false,
                     'message' => 'You cannot modify your own account status.'
                 ], 403);
+            }
+
+            // Check if user is deleted
+            if ($user->trashed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot activate a deleted user. Please restore the user first.'
+                ], 400);
             }
 
             if ($user->is_active) {
@@ -2265,7 +2274,7 @@ class AdminController extends Controller
             DB::beginTransaction();
 
             // Activate account and verify email for staff members and parents
-            $updateData = ['is_active' => true];
+            $updateData = ['is_active' => true, 'account_status' => 'active'];
             
             // For staff roles (Nutritionist, Health Worker, BHW) and Parents, auto-verify email when activated
             $autoVerifyRoles = ['Nutritionist', 'Health Worker', 'BHW', 'Parent'];
@@ -2290,11 +2299,16 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'User activated successfully.',
-                'user' => $user->load('role')
+                'user' => $user->fresh('role')
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to activate user', [
+                'user_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to activate user: ' . $e->getMessage()
@@ -2308,7 +2322,8 @@ class AdminController extends Controller
     public function deactivateUser($id)
     {
         try {
-            $user = User::findOrFail($id);
+            // Use withTrashed to include soft-deleted users
+            $user = User::withTrashed()->findOrFail($id);
 
             // Prevent activating/deactivating the current authenticated user
             if ($user->user_id === Auth::id()) {
@@ -2316,6 +2331,14 @@ class AdminController extends Controller
                     'success' => false,
                     'message' => 'You cannot modify your own account status.'
                 ], 403);
+            }
+
+            // Check if user is deleted
+            if ($user->trashed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot deactivate a deleted user.'
+                ], 400);
             }
 
             if (!$user->is_active) {

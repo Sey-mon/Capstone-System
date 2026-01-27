@@ -134,8 +134,6 @@
                                            placeholder="Enter your first name" 
                                            value="{{ old('first_name') }}" 
                                            maxlength="255"
-                                           pattern="[a-zA-Z\s\-\.]+"
-                                           title="Only letters, spaces, hyphens, and periods are allowed"
                                            required autofocus>
                                     @error('first_name')
                                         <span class="error-text">{{ $message }}</span>
@@ -148,9 +146,7 @@
                                     <input type="text" class="form-control" name="middle_name" id="middle_name" 
                                            placeholder="Enter your middle name" 
                                            value="{{ old('middle_name') }}"
-                                           maxlength="255"
-                                           pattern="[a-zA-Z\s\-\.]+"
-                                           title="Only letters, spaces, hyphens, and periods are allowed">
+                                           maxlength="255">
                                     @error('middle_name')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -166,8 +162,6 @@
                                            placeholder="Enter your last name" 
                                            value="{{ old('last_name') }}" 
                                            maxlength="255"
-                                           pattern="[a-zA-Z\s\-\.]+"
-                                           title="Only letters, spaces, hyphens, and periods are allowed"
                                            required>
                                     @error('last_name')
                                         <span class="error-text">{{ $message }}</span>
@@ -302,7 +296,7 @@
                                     <label class="form-label" for="password">Password *</label>
                                     <div style="position: relative;">
                                         <input type="password" class="form-control" name="password" id="password" 
-                                               placeholder="Create a strong password" 
+                                               placeholder="Create a strong password (minimum 8 characters)" 
                                                minlength="8" 
                                                autocomplete="new-password"
                                                required
@@ -312,15 +306,29 @@
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
-                                    <div style="margin-top: 0.5rem;">
-                                        <div style="display: flex; gap: 0.25rem; height: 4px; margin-bottom: 0.25rem;">
-                                            <div id="strength-bar-1" style="flex: 1; background: #e0e0e0; border-radius: 2px; transition: background 0.3s;"></div>
-                                            <div id="strength-bar-2" style="flex: 1; background: #e0e0e0; border-radius: 2px; transition: background 0.3s;"></div>
-                                            <div id="strength-bar-3" style="flex: 1; background: #e0e0e0; border-radius: 2px; transition: background 0.3s;"></div>
-                                        </div>
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <small class="form-text">Minimum 8 characters</small>
-                                            <small id="password-strength-text" style="font-weight: 600; font-size: 0.75rem;"></small>
+                                    <div style="margin-top: 0.75rem; padding: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
+                                        <div style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Password must contain:</div>
+                                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                            <div id="req-length" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #dc3545;">
+                                                <i class="fas fa-times" style="width: 14px;"></i>
+                                                <span>At least 8 characters</span>
+                                            </div>
+                                            <div id="req-uppercase" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #dc3545;">
+                                                <i class="fas fa-times" style="width: 14px;"></i>
+                                                <span>One uppercase letter (A-Z)</span>
+                                            </div>
+                                            <div id="req-lowercase" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #dc3545;">
+                                                <i class="fas fa-times" style="width: 14px;"></i>
+                                                <span>One lowercase letter (a-z)</span>
+                                            </div>
+                                            <div id="req-number" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #dc3545;">
+                                                <i class="fas fa-times" style="width: 14px;"></i>
+                                                <span>One number (0-9)</span>
+                                            </div>
+                                            <div id="req-special" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #dc3545;">
+                                                <i class="fas fa-times" style="width: 14px;"></i>
+                                                <span>One special character (@$!%*?&#.-"'(){}[]:;<>,.~`/+=)</span>
+                                            </div>
                                         </div>
                                     </div>
                                     @error('password')
@@ -393,6 +401,61 @@
     <script>
     // Keep only qualifications show/hide logic (removed file upload + date JS)
     document.addEventListener('DOMContentLoaded', function() {
+        // Navigate to step with errors if validation failed
+        @if($errors->any())
+            navigateToErrorStep();
+        @endif
+
+        function navigateToErrorStep() {
+            // Define which fields belong to which step
+            const stepFields = {
+                1: ['first_name', 'middle_name', 'last_name', 'contact_number', 'sex', 'address'],
+                2: ['years_experience', 'qualifications', 'qualifications_other', 'professional_experience'],
+                3: ['email', 'password', 'password_confirmation']
+            };
+
+            // Get all error field names from Laravel errors
+            const errorFields = [
+                @foreach($errors->keys() as $field)
+                    '{{ $field }}',
+                @endforeach
+            ];
+
+            // Find which step has the first error
+            let targetStep = 1;
+            for (let step = 1; step <= 3; step++) {
+                for (let field of errorFields) {
+                    if (stepFields[step].includes(field)) {
+                        targetStep = step;
+                        break;
+                    }
+                }
+                if (targetStep === step) break;
+            }
+
+            // Navigate to the step with errors
+            if (targetStep > 1 && typeof window.showStep === 'function') {
+                setTimeout(() => {
+                    window.showStep(targetStep, false);
+                }, 100);
+            }
+        }
+
+        // Auto-capitalize name fields
+        const nameFields = ['first_name', 'middle_name', 'last_name'];
+        nameFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', function(e) {
+                    let value = e.target.value;
+                    // Capitalize first letter of each word
+                    e.target.value = value.replace(/\b\w/g, function(char) {
+                        return char.toUpperCase();
+                    });
+                });
+            }
+        });
+
         const qualSelect = document.getElementById('qualifications');
         const qualOther = document.getElementById('qualifications_other');
         if (qualSelect && qualOther) {
@@ -428,45 +491,38 @@
             });
         });
 
-        // Password strength checker
+        // Password validation checker
         const passwordInput = document.getElementById('password');
-        const strengthText = document.getElementById('password-strength-text');
-        const strengthBar1 = document.getElementById('strength-bar-1');
-        const strengthBar2 = document.getElementById('strength-bar-2');
-        const strengthBar3 = document.getElementById('strength-bar-3');
+        const reqLength = document.getElementById('req-length');
+        const reqUppercase = document.getElementById('req-uppercase');
+        const reqLowercase = document.getElementById('req-lowercase');
+        const reqNumber = document.getElementById('req-number');
+        const reqSpecial = document.getElementById('req-special');
 
         if (passwordInput) {
             passwordInput.addEventListener('input', function() {
                 const password = this.value;
-                const strength = calculatePasswordStrength(password);
                 
-                // Reset bars
-                strengthBar1.style.background = '#e0e0e0';
-                strengthBar2.style.background = '#e0e0e0';
-                strengthBar3.style.background = '#e0e0e0';
-                
-                if (password.length === 0) {
-                    strengthText.textContent = '';
-                    return;
-                }
-                
-                if (strength === 'weak') {
-                    strengthBar1.style.background = '#dc3545';
-                    strengthText.textContent = 'Weak';
-                    strengthText.style.color = '#dc3545';
-                } else if (strength === 'medium') {
-                    strengthBar1.style.background = '#ffc107';
-                    strengthBar2.style.background = '#ffc107';
-                    strengthText.textContent = 'Medium';
-                    strengthText.style.color = '#ffc107';
-                } else if (strength === 'strong') {
-                    strengthBar1.style.background = '#28a745';
-                    strengthBar2.style.background = '#28a745';
-                    strengthBar3.style.background = '#28a745';
-                    strengthText.textContent = 'Strong';
-                    strengthText.style.color = '#28a745';
-                }
+                // Check each requirement
+                updateRequirement(reqLength, password.length >= 8);
+                updateRequirement(reqUppercase, /[A-Z]/.test(password));
+                updateRequirement(reqLowercase, /[a-z]/.test(password));
+                updateRequirement(reqNumber, /[0-9]/.test(password));
+                updateRequirement(reqSpecial, /[@$!%*?&#.\-"'(){}\[\]:;<>,.~`\/+=]/.test(password));
             });
+        }
+
+        function updateRequirement(element, isMet) {
+            const icon = element.querySelector('i');
+            if (isMet) {
+                element.style.color = '#10b981';
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-check');
+            } else {
+                element.style.color = '#dc3545';
+                icon.classList.remove('fa-check');
+                icon.classList.add('fa-times');
+            }
         }
 
         // Auto-dismiss error alert after 8 seconds
@@ -477,28 +533,6 @@
             }, 8000);
         }
     });
-
-    // Calculate password strength
-    function calculatePasswordStrength(password) {
-        if (password.length < 8) return 'weak';
-        
-        let strength = 0;
-        
-        // Length check
-        if (password.length >= 8) strength++;
-        if (password.length >= 12) strength++;
-        
-        // Character variety checks
-        if (/[a-z]/.test(password)) strength++; // lowercase
-        if (/[A-Z]/.test(password)) strength++; // uppercase
-        if (/[0-9]/.test(password)) strength++; // numbers
-        if (/[^a-zA-Z0-9]/.test(password)) strength++; // special characters
-        
-        // Determine strength level
-        if (strength <= 2) return 'weak';
-        if (strength <= 4) return 'medium';
-        return 'strong';
-    }
 
     // Function to dismiss error alert
     function dismissError() {
