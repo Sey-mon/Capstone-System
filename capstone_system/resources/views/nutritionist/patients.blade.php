@@ -1,5 +1,6 @@
 @extends('layouts.dashboard')
 
+@section('title', 'My Patients')
 @section('page-title', 'My Patients')
 @section('page-subtitle', 'Manage and monitor your assigned patients')
 
@@ -10,6 +11,7 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/nutritionist/patients.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-swal.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-archive.css') }}">
 @endpush
 
 @section('content')
@@ -95,8 +97,18 @@
                     <i class="fas fa-users"></i>
                     Patients List
                 </h3>
-                <div class="results-info">
-                    <span class="badge results-badge" id="resultsCount">{{ $patients->total() }} patient(s)</span>
+                <div class="header-actions">
+                    <div class="archive-toggle">
+                        <button class="btn btn-sm archive-btn active" data-status="active">
+                            <i class="fas fa-user-check"></i> Active
+                        </button>
+                        <button class="btn btn-sm archive-btn" data-status="archived">
+                            <i class="fas fa-archive"></i> Archived
+                        </button>
+                    </div>
+                    <div class="results-info">
+                        <span class="badge results-badge" id="resultsCount">{{ $patients->total() }} patient(s)</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -334,4 +346,5 @@
 
 @section('scripts')
 <script src="{{ asset('js/nutritionist/patients.js') }}"></script>
+<script src="{{ asset('js/nutritionist/patients-archive.js') }}"></script>
 @endsection

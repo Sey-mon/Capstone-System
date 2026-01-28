@@ -7,6 +7,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/admin-patients.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/patients-archive.css') }}">
 @endpush
 
 @section('navigation')
@@ -90,6 +91,14 @@
                 <span class="filtered-count filtered-count-hidden" id="filteredCount">Showing: <strong id="visiblePatients">0</strong> patients</span>
             </div>
             <div class="view-options">
+                <div class="archive-toggle">
+                    <button class="btn btn-sm archive-btn active" data-status="active">
+                        <i class="fas fa-user-check"></i> Active Patients
+                    </button>
+                    <button class="btn btn-sm archive-btn" data-status="archived">
+                        <i class="fas fa-archive"></i> Archived Patients
+                    </button>
+                </div>
                 <div class="view-toggle">
                     <button class="btn btn-sm view-btn active" data-view="table">
                         <i class="fas fa-table"></i> Table
@@ -204,6 +213,9 @@
                                                 </button>
                                                 <button class="btn btn-sm btn-outline-warning" data-patient-id="{{ $patient->patient_id }}" title="Edit Patient">
                                                     <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success archive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Archive Patient">
+                                                    <i class="fas fa-archive"></i>
                                                 </button>
                                                 <button class="btn btn-sm btn-outline-danger" data-patient-id="{{ $patient->patient_id }}" title="Delete Patient">
                                                     <i class="fas fa-trash"></i>
@@ -364,4 +376,5 @@
 
 @push('scripts')
     <script src="{{ asset('js/admin/admin-patients-swal.js') }}"></script>
+    <script src="{{ asset('js/admin/patients-archive.js') }}"></script>
 @endpush

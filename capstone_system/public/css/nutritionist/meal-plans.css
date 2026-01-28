@@ -269,15 +269,20 @@ body {
     background: var(--primary-green);
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 8px 16px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     transition: all 0.3s;
+}
+
+.btn-primary i {
+    font-size: 13px;
 }
 
 .btn-primary:hover {
@@ -543,6 +548,18 @@ body {
     font-size: 16px;
     color: var(--text-light);
     margin: 0 0 30px 0;
+}
+
+.empty-state .btn-primary {
+    padding: 8px 16px;
+    font-size: 13px;
+    justify-content: center;
+}
+
+.empty-state .btn-primary i {
+    font-size: 13px;
+    color: white;
+    vertical-align: middle;
 }
 
 /* ===================================

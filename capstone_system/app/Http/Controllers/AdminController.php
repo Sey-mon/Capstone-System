@@ -42,13 +42,13 @@ class AdminController extends Controller
             
             // Current counts
             $currentUsers = User::count();
-            $currentPatients = Patient::count();
+            $currentPatients = Patient::active()->count();
             $currentScreenings = Assessment::count();
             $currentInventory = InventoryItem::count();
             
             // Previous month counts for percentage calculations
             $previousUsers = User::where('created_at', '<=', $previousMonthEnd)->count();
-            $previousPatients = Patient::where('created_at', '<=', $previousMonthEnd)->count();
+            $previousPatients = Patient::active()->where('created_at', '<=', $previousMonthEnd)->count();
             $previousScreenings = Assessment::where('created_at', '<=', $previousMonthEnd)->count();
             
             // Calculate percentage changes
@@ -529,7 +529,7 @@ class AdminController extends Controller
      */
     public function patients()
     {
-    $patients = Patient::with(['parent', 'nutritionist', 'barangay', 'latestAssessment'])->orderBy('created_at', 'desc')->paginate(10);
+    $patients = Patient::active()->with(['parent', 'nutritionist', 'barangay', 'latestAssessment'])->orderBy('created_at', 'desc')->paginate(10);
         $barangays = Barangay::all();
         $nutritionists = User::where('role_id', function($query) {
                 $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
@@ -682,6 +682,210 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error deleting patient: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Archive a patient (Admin)
+     */
+    public function archivePatient($id)
+    {
+        try {
+            $patient = Patient::findOrFail($id);
+
+            if ($patient->isArchived()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Patient is already archived.'
+                ], 400);
+            }
+
+            $patient->archive();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Patient archived successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error archiving patient: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Unarchive a patient (Admin)
+     */
+    public function unarchivePatient($id)
+    {
+        try {
+            $patient = Patient::findOrFail($id);
+
+            if (!$patient->isArchived()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Patient is not archived.'
+                ], 400);
+            }
+
+            $patient->unarchive();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Patient unarchived successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error unarchiving patient: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get archived patients (Admin)
+     */
+    public function archivedPatients()
+    {
+        $patients = Patient::archived()
+            ->with(['parent', 'nutritionist', 'barangay', 'latestAssessment'])
+            ->orderBy('archived_at', 'desc')
+            ->paginate(10);
+
+        return view('admin.archived-patients', compact('patients'));
+    }
+
+    /**
+     * Bulk archive eligible patients (Admin)
+     */
+    public function bulkArchiveEligiblePatients()
+    {
+        try {
+            $eligiblePatients = Patient::eligibleForArchiving()->get();
+            $count = $eligiblePatients->count();
+
+            if ($count === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No patients found that are eligible for archiving.'
+                ], 404);
+            }
+
+            $archived = 0;
+            $failed = 0;
+
+            foreach ($eligiblePatients as $patient) {
+                try {
+                    $patient->archive();
+                    $archived++;
+                } catch (\Exception $e) {
+                    Log::error("Failed to archive patient {$patient->patient_id}: {$e->getMessage()}");
+                    $failed++;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully archived {$archived} patient(s)." . ($failed > 0 ? " Failed: {$failed}" : ''),
+                'archived' => $archived,
+                'failed' => $failed
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error archiving patients: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get patients via AJAX with archive filtering (Admin)
+     */
+    public function getPatientsAjax(Request $request)
+    {
+        try {
+            $status = $request->get('status', 'active');
+            
+            // Build query based on status
+            $query = $status === 'archived' 
+                ? Patient::archived() 
+                : Patient::active();
+
+            $query->with(['parent', 'nutritionist', 'barangay', 'latestAssessment']);
+
+            // Apply filters
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere('custom_patient_id', 'like', "%{$search}%")
+                      ->orWhere('contact_number', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('barangay')) {
+                $query->whereHas('barangay', function($q) use ($request) {
+                    $q->where('barangay_name', $request->barangay);
+                });
+            }
+
+            if ($request->filled('gender')) {
+                $query->where('sex', $request->gender);
+            }
+
+            if ($request->filled('age_range')) {
+                $range = explode('-', $request->age_range);
+                if (count($range) === 2) {
+                    $query->whereBetween('age_months', [(int)$range[0], (int)$range[1]]);
+                } elseif ($request->age_range === '49+') {
+                    $query->where('age_months', '>=', 49);
+                }
+            }
+
+            if ($request->filled('nutritionist')) {
+                $query->whereHas('nutritionist', function($q) use ($request) {
+                    $q->whereRaw("CONCAT(first_name, ' ', last_name) = ?", [$request->nutritionist]);
+                });
+            }
+
+            // Paginate
+            $patients = $query->orderBy('created_at', 'desc')->paginate(10);
+
+            // Format data for JSON response
+            $patientsData = $patients->map(function($patient) {
+                return [
+                    'patient_id' => $patient->patient_id,
+                    'custom_patient_id' => $patient->custom_patient_id,
+                    'first_name' => $patient->first_name,
+                    'middle_name' => $patient->middle_name,
+                    'last_name' => $patient->last_name,
+                    'age_months' => $patient->age_months,
+                    'sex' => $patient->sex,
+                    'date_of_admission' => $patient->date_of_admission->format('M d, Y'),
+                    'barangay' => $patient->barangay ? $patient->barangay->barangay_name : null,
+                    'parent' => $patient->parent ? $patient->parent->first_name . ' ' . $patient->parent->last_name : null,
+                    'nutritionist' => $patient->nutritionist ? $patient->nutritionist->first_name . ' ' . $patient->nutritionist->last_name : null,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'patients' => $patientsData,
+                'pagination' => [
+                    'total' => $patients->total(),
+                    'current_page' => $patients->currentPage(),
+                    'last_page' => $patients->lastPage(),
+                    'per_page' => $patients->perPage(),
+                    'links' => $patients->links()->render()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading patients: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -207,8 +207,7 @@
                 <h3>No Meal Plans Yet</h3>
                 <p>Create your first feeding program meal plan to get started!</p>
                 <button type="button" class="btn-primary" id="open-feeding-program-btn-empty">
-                    <i class="fas fa-plus"></i>
-                    Create Program Plan
+                    <i class="fas fa-plus"></i>Create Program Plan
                 </button>
             </div>
         </div>

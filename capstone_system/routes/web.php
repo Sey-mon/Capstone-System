@@ -163,11 +163,18 @@ Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->
     Route::post('/nutritionist-applications/{id}/approve', [AdminController::class, 'approveNutritionist'])->name('nutritionist.approve');
     Route::post('/nutritionist-applications/{id}/reject', [AdminController::class, 'rejectNutritionist'])->name('nutritionist.reject');
     
+    // Patient Archive routes - AJAX route must come BEFORE {id} routes
+    Route::get('/patients/ajax', [AdminController::class, 'getPatientsAjax'])->name('patients.ajax');
+    Route::post('/patients/bulk-archive', [AdminController::class, 'bulkArchiveEligiblePatients'])->name('patients.bulk-archive');
+    Route::get('/archived-patients', [AdminController::class, 'archivedPatients'])->name('patients.archived');
+    
     // Patient CRUD routes
     Route::post('/patients', [AdminController::class, 'storePatient'])->name('patients.store');
     Route::get('/patients/{id}', [AdminController::class, 'getPatient'])->name('patients.get');
     Route::put('/patients/{id}', [AdminController::class, 'updatePatient'])->name('patients.update');
     Route::delete('/patients/{id}', [AdminController::class, 'deletePatient'])->name('patients.delete');
+    Route::post('/patients/{id}/archive', [AdminController::class, 'archivePatient'])->name('patients.archive');
+    Route::post('/patients/{id}/unarchive', [AdminController::class, 'unarchivePatient'])->name('patients.unarchive');
     Route::get('/patients/{id}/assessments', [AdminController::class, 'getPatientAssessments'])->name('patients.assessments');
     Route::get('/assessments/{id}', [AdminController::class, 'getAssessmentDetails'])->name('assessments.details');
     
@@ -304,11 +311,17 @@ Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nu
     Route::get('/dashboard', [NutritionistController::class, 'dashboard'])->name('dashboard');
     Route::get('/patients', [NutritionistController::class, 'patients'])->name('patients');
     
+    // Patient Archive routes - AJAX route must come BEFORE {id} routes
+    Route::get('/patients/ajax', [NutritionistController::class, 'getPatientsAjax'])->name('patients.ajax');
+    Route::get('/archived-patients', [NutritionistController::class, 'archivedPatients'])->name('patients.archived');
+    
     // Patient CRUD routes
     Route::post('/patients', [NutritionistController::class, 'storePatient'])->name('patients.store');
     Route::get('/patients/{id}', [NutritionistController::class, 'getPatient'])->name('patients.get');
     Route::put('/patients/{id}', [NutritionistController::class, 'updatePatient'])->name('patients.update');
     Route::delete('/patients/{id}', [NutritionistController::class, 'deletePatient'])->name('patients.delete');
+    Route::post('/patients/{id}/archive', [NutritionistController::class, 'archivePatient'])->name('patients.archive');
+    Route::post('/patients/{id}/unarchive', [NutritionistController::class, 'unarchivePatient'])->name('patients.unarchive');
 
     Route::get('/assessments', [NutritionistController::class, 'assessments'])->name('assessments');
     Route::get('/assessments/create', [NutritionistController::class, 'createAssessment'])->name('assessments.create');

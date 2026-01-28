@@ -27,7 +27,7 @@ class NutritionistController extends Controller
         
         // Basic stats
         $stats = [
-            'my_patients' => Patient::where('nutritionist_id', $nutritionistId)->count(),
+            'my_patients' => Patient::active()->where('nutritionist_id', $nutritionistId)->count(),
             'pending_assessments' => Assessment::where('nutritionist_id', $nutritionistId)
                 ->whereNull('completed_at')
                 ->count(),
@@ -116,7 +116,7 @@ class NutritionistController extends Controller
     {
         $nutritionist = Auth::user();
         $nutritionistId = $nutritionist->user_id;
-        $query = Patient::where('nutritionist_id', $nutritionistId)
+        $query = Patient::active()->where('nutritionist_id', $nutritionistId)
             ->with(['parent', 'barangay', 'assessments', 'latestAssessment']);
 
         // Search functionality
@@ -465,6 +465,169 @@ class NutritionistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error deleting patient: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Archive a patient (Nutritionist)
+     */
+    public function archivePatient($id)
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+        $patient = Patient::where('nutritionist_id', $nutritionistId)
+            ->where('patient_id', $id)
+            ->first();
+
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Patient not found or you do not have permission to access this patient.'
+            ], 404);
+        }
+
+        try {
+            if ($patient->isArchived()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Patient is already archived.'
+                ], 400);
+            }
+
+            $patient->archive();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Patient archived successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error archiving patient: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Unarchive a patient (Nutritionist)
+     */
+    public function unarchivePatient($id)
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+        $patient = Patient::where('nutritionist_id', $nutritionistId)
+            ->where('patient_id', $id)
+            ->first();
+
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Patient not found or you do not have permission to access this patient.'
+            ], 404);
+        }
+
+        try {
+            if (!$patient->isArchived()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Patient is not archived.'
+                ], 400);
+            }
+
+            $patient->unarchive();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Patient unarchived successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error unarchiving patient: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get archived patients (Nutritionist)
+     */
+    public function archivedPatients()
+    {
+        $nutritionist = Auth::user();
+        $nutritionistId = $nutritionist->user_id;
+        
+        $patients = Patient::archived()
+            ->where('nutritionist_id', $nutritionistId)
+            ->with(['parent', 'barangay', 'latestAssessment'])
+            ->orderBy('archived_at', 'desc')
+            ->paginate(10);
+
+        return view('nutritionist.archived-patients', compact('patients'));
+    }
+
+    /**
+     * Get patients via AJAX with archive filtering (Nutritionist)
+     */
+    public function getPatientsAjax(Request $request)
+    {
+        try {
+            $nutritionist = Auth::user();
+            $nutritionistId = $nutritionist->user_id;
+            $status = $request->get('status', 'active');
+            
+            // Build query based on status
+            $query = $status === 'archived' 
+                ? Patient::archived()->where('nutritionist_id', $nutritionistId)
+                : Patient::active()->where('nutritionist_id', $nutritionistId);
+
+            $query->with(['parent', 'barangay', 'assessments', 'latestAssessment']);
+
+            // Apply filters
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere('contact_number', 'like', "%{$search}%")
+                      ->orWhere('custom_patient_id', 'like', "%{$search}%")
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
+                });
+            }
+
+            if ($request->filled('barangay')) {
+                $query->where('barangay_id', $request->barangay);
+            }
+
+            if ($request->filled('sex')) {
+                $query->where('sex', $request->sex);
+            }
+
+            if ($request->filled('age_range')) {
+                $range = explode('-', $request->age_range);
+                if (count($range) === 2) {
+                    $query->whereBetween('age_months', [(int)$range[0], (int)$range[1]]);
+                }
+            }
+
+            // Get paginated patients
+            $patients = $query->orderBy('created_at', 'desc')->paginate(15);
+
+            // Render the table partial
+            $html = view('nutritionist.partials.patients-table-ajax', [
+                'patients' => $patients,
+                'status' => $status
+            ])->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'total' => $patients->total()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading patients: ' . $e->getMessage()
             ], 500);
         }
     }

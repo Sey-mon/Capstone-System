@@ -318,6 +318,11 @@ function loadPatientsFromUrl(url) {
         
         // Re-initialize pagination for new content
         initializePagination();
+        
+        // Re-initialize archive buttons after AJAX reload
+        if (typeof window.initializeArchiveButtons === 'function') {
+            window.initializeArchiveButtons();
+        }
     })
     .catch(error => {
         console.error('Error loading patients:', error);

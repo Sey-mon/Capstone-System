@@ -36,7 +36,7 @@
             </thead>
             <tbody>
                 @foreach($patients as $patient)
-                    <tr>
+                    <tr class="{{ $status === 'archived' ? 'archived' : '' }}">
                         <td>
                             <span class="badge bg-primary">{{ $patient->custom_patient_id }}</span>
                         </td>
@@ -65,15 +65,21 @@
                                 <button class="btn btn-sm btn-info" onclick="viewPatient({{ $patient->patient_id }})" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-warning" onclick="editPatient({{ $patient->patient_id }})" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-success archive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Archive Patient">
-                                    <i class="fas fa-archive"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deletePatient({{ $patient->patient_id }})" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                @if($status === 'active')
+                                    <button class="btn btn-sm btn-warning" onclick="editPatient({{ $patient->patient_id }})" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-success archive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Archive Patient">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deletePatient({{ $patient->patient_id }})" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                @else
+                                    <button class="btn btn-sm btn-info unarchive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Unarchive Patient">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -89,13 +95,15 @@
 @else
     <div class="empty-state" data-total-count="0">
         <div class="empty-icon">
-            <i class="fas fa-user-injured"></i>
+            <i class="fas fa-{{ $status === 'archived' ? 'archive' : 'user-injured' }}"></i>
         </div>
-        <h3>No Patients Found</h3>
+        <h3>No {{ ucfirst($status) }} Patients Found</h3>
         <p>No patients match your current filters or search criteria.</p>
-        <button class="btn btn-outline-secondary" onclick="clearFilters()">
-            <i class="fas fa-times"></i>
-            Clear Filters
-        </button>
+        @if($status === 'active')
+            <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                Clear Filters
+            </button>
+        @endif
     </div>
 @endif
