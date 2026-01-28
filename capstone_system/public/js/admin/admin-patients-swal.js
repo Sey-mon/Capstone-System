@@ -1847,9 +1847,6 @@ function setupButtonEventListeners() {
         });
     }
     
-    // Setup parent name click events for mobile/desktop
-    setupParentNameListeners();
-    
     const refreshBtn = document.querySelector('.filters-header .btn-secondary');
     if (refreshBtn && refreshBtn.textContent.includes('Refresh')) {
         refreshBtn.addEventListener('click', function(e) {
@@ -1889,10 +1886,15 @@ function setupButtonEventListeners() {
 }
 
 function setupActionButtons() {
+    // Remove duplicate event listeners by cloning and replacing buttons
     const viewBtns = document.querySelectorAll('.btn-outline-primary, .btn-primary');
     viewBtns.forEach(btn => {
         if (btn.title === 'View Details' && btn.hasAttribute('data-patient-id')) {
-            btn.addEventListener('click', function(e) {
+            // Clone to remove all existing event listeners
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            newBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const patientId = parseInt(this.getAttribute('data-patient-id'));
                 viewPatient(patientId);
@@ -1903,7 +1905,10 @@ function setupActionButtons() {
     const assessmentBtns = document.querySelectorAll('.btn-outline-info, .btn-info');
     assessmentBtns.forEach(btn => {
         if ((btn.title === 'Assessment History' || btn.title === 'Assessment History') && btn.hasAttribute('data-patient-id')) {
-            btn.addEventListener('click', function(e) {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            newBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const patientId = parseInt(this.getAttribute('data-patient-id'));
                 showAssessmentHistory(patientId);
@@ -1914,7 +1919,10 @@ function setupActionButtons() {
     const editBtns = document.querySelectorAll('.btn-outline-warning, .btn-warning');
     editBtns.forEach(btn => {
         if ((btn.title === 'Edit Patient' || btn.title === 'Edit') && btn.hasAttribute('data-patient-id')) {
-            btn.addEventListener('click', function(e) {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            newBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const patientId = parseInt(this.getAttribute('data-patient-id'));
                 editPatient(patientId);
@@ -1925,7 +1933,10 @@ function setupActionButtons() {
     const deleteBtns = document.querySelectorAll('.btn-outline-danger, .btn-danger');
     deleteBtns.forEach(btn => {
         if ((btn.title === 'Delete Patient' || btn.title === 'Delete') && btn.hasAttribute('data-patient-id')) {
-            btn.addEventListener('click', function(e) {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            newBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const patientId = parseInt(this.getAttribute('data-patient-id'));
                 deletePatient(patientId);
@@ -2271,183 +2282,8 @@ function setupPaginationControls() {
     }
 }
 
-// Setup parent name click listeners for context menu
-function setupParentNameListeners() {
-    const parentNames = document.querySelectorAll('.parent-cell .parent-name');
-    parentNames.forEach(parentName => {
-        parentName.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            showParentContextMenu(this);
-        });
-    });
-}
-
-// Show context menu for parent account actions
-function showParentContextMenu(parentElement) {
-    const parentText = parentElement.textContent.trim();
-    const patientRow = parentElement.closest('tr, .patient-card');
-    
-    if (!parentText || parentText === 'Not assigned') {
-        Swal.fire({
-            icon: 'info',
-            title: 'No Parent Assigned',
-            text: 'This patient doesn\'t have a parent account assigned.',
-            timer: 2000,
-            showConfirmButton: false
-        });
-        return;
-    }
-    
-    Swal.fire({
-        title: `<i class="fas fa-user-friends"></i> Parent Account`,
-        html: `
-            <div style="text-align: left; padding: 20px;">
-                <div style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #4CAF50 0%, #2e7d32 100%); color: white; border-radius: 8px;">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">
-                        <i class="fas fa-user"></i> Parent/Guardian
-                    </div>
-                    <div style="font-size: 18px; font-weight: 600;">
-                        ${parentText}
-                    </div>
-                </div>
-                <div style="color: #666; font-size: 14px; margin-bottom: 15px;">
-                    <i class="fas fa-info-circle"></i> What would you like to do?
-                </div>
-            </div>
-        `,
-        showCancelButton: true,
-        showDenyButton: true,
-        confirmButtonText: '<i class="fas fa-eye"></i> View Details',
-        denyButtonText: '<i class="fas fa-trash-alt"></i> Delete Account',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
-        confirmButtonColor: '#4CAF50',
-        denyButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        customClass: {
-            popup: 'swal-parent-context-menu',
-            confirmButton: 'btn btn-success',
-            denyButton: 'btn btn-danger',
-            cancelButton: 'btn btn-secondary'
-        },
-        buttonsStyling: false,
-        width: '450px'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // View parent details - you can implement this later
-            Swal.fire({
-                icon: 'info',
-                title: 'View Parent Details',
-                text: 'This feature will show parent account details.',
-                timer: 2000
-            });
-        } else if (result.isDenied) {
-            // Delete parent account
-            confirmDeleteParentAccount(parentText);
-        }
-    });
-}
-
-// Confirm and delete parent account
-function confirmDeleteParentAccount(parentName) {
-    Swal.fire({
-        title: '<i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Delete Parent Account?',
-        html: `
-            <div style="text-align: left; padding: 20px;">
-                <div style="margin-bottom: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-                    <div style="color: #856404; font-weight: 600; margin-bottom: 8px;">
-                        <i class="fas fa-exclamation-circle"></i> Warning
-                    </div>
-                    <div style="color: #856404; font-size: 14px;">
-                        You are about to delete the parent account for:
-                    </div>
-                </div>
-                <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 18px; font-weight: 600; color: #333;">
-                        <i class="fas fa-user"></i> ${parentName}
-                    </div>
-                </div>
-                <div style="color: #dc3545; font-size: 14px; margin-bottom: 10px;">
-                    <i class="fas fa-info-circle"></i> <strong>This action will:</strong>
-                </div>
-                <ul style="text-align: left; color: #666; font-size: 13px; margin-left: 20px;">
-                    <li>Delete the parent's login account</li>
-                    <li>Remove access to the parent portal</li>
-                    <li>Keep all patient records intact</li>
-                    <li>This action <strong style="color: #dc3545;">cannot be undone</strong></li>
-                </ul>
-            </div>
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-trash-alt"></i> Yes, Delete Account',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        customClass: {
-            popup: 'swal-delete-parent-confirm',
-            confirmButton: 'btn btn-danger',
-            cancelButton: 'btn btn-secondary'
-        },
-        buttonsStyling: false,
-        width: '500px'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            deleteParentAccountAction(parentName);
-        }
-    });
-}
-
-// Perform the actual parent account deletion
-function deleteParentAccountAction(parentName) {
-    // Show loading state
-    Swal.fire({
-        title: 'Deleting Parent Account...',
-        html: 'Please wait while we process your request.',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    // TODO: Replace this with your actual API endpoint
-    // For now, this is a placeholder that shows success after 2 seconds
-    setTimeout(() => {
-        Swal.fire({
-            icon: 'success',
-            title: 'Account Deleted!',
-            html: `
-                <div style="padding: 15px;">
-                    <div style="color: #28a745; margin-bottom: 10px;">
-                        <i class="fas fa-check-circle" style="font-size: 24px;"></i>
-                    </div>
-                    <div style="font-size: 16px; color: #333;">
-                        The parent account for <strong>${parentName}</strong> has been successfully deleted.
-                    </div>
-                </div>
-            `,
-            timer: 2500,
-            showConfirmButton: false
-        }).then(() => {
-            window.location.reload();
-        });
-    }, 2000);
-
-    /* 
-     * TODO: Implement actual deletion API call
-     * Example:
-     * 
-     * fetch('/admin/parents/delete', {
-     *     method: 'POST',
-     *     headers: {
-     *         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-     *         'Content-Type': 'application/json'
-     *     },
-     *     body: JSON.stringify({ parent_name: parentName })
-     * })
-     * .then(response => response.json())
-     * .then(data => {
-     *     if (data.success) {
+// Parent name click functionality removed - parent names are now display-only
+/*
      *         Swal.fire({
      *             icon: 'success',
      *             title: 'Deleted!',
@@ -2473,7 +2309,6 @@ function deleteParentAccountAction(parentName) {
      *     });
      * });
      */
-}
 
 // Make functions globally available
 window.showAddPatientModal = showAddPatientModal;
@@ -2733,3 +2568,10 @@ function backToScreeningHistory(patientId) {
     Swal.close();
     showAssessmentHistory(patientId);
 }
+
+// Export functions to global scope for use by other scripts (e.g., patients-archive.js)
+window.setupActionButtons = setupActionButtons;
+window.viewPatient = viewPatient;
+window.editPatient = editPatient;
+window.showAssessmentHistory = showAssessmentHistory;
+window.deletePatient = deletePatient;

@@ -89,7 +89,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('register.parent.post') }}" id="parentRegistrationForm">
+        <form method="POST" action="{{ route('register.parent.post') }}" id="parentRegistrationForm" novalidate>
             @csrf
             
             <!-- Hidden fields to store wizard data -->
@@ -121,7 +121,7 @@
                     <input type="text" name="first_name" id="first_name" 
                            placeholder="Enter your first name" 
                            value="{{ old('first_name') }}"
-                           pattern="[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+"
+                           pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+"
                            title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed"
                            required autofocus>
                     @error('first_name')
@@ -133,7 +133,7 @@
                     <label for="middle_name">Middle Name (Optional)</label>
                     <input type="text" name="middle_name" id="middle_name" 
                            placeholder="Enter your middle name" 
-                           pattern="[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+"
+                           pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+"
                            title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed"
                            value="{{ old('middle_name') }}">
                     @error('middle_name')
@@ -145,7 +145,7 @@
                     <label for="last_name">Last Name</label>
                     <input type="text" name="last_name" id="last_name" 
                            placeholder="Enter your last name" 
-                           pattern="[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+"
+                           pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+"
                            title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed"
                            value="{{ old('last_name') }}"
                            required>
@@ -300,6 +300,7 @@
                     <input type="email" name="email" id="email" 
                            placeholder="Enter your email address" 
                            value="{{ old('email') }}"
+                           autocomplete="email"
                            required>
                     @error('email')
                         <span class="error-text">{{ $message }}</span>
@@ -313,8 +314,8 @@
                                placeholder="Create a strong password (minimum 8 characters)" 
                                value="{{ old('password') }}"
                                autocomplete="new-password"
-                               pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_\-^(){}\[\]:;'&quot;<>,.~`|/+=]).{8,}"
-                               title="Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#_-^(){}[]:;'&quot;<>,.~`|/+=)"
+                               minlength="8"
+                               oninput="if(window.checkPasswordStrength) window.checkPasswordStrength(this.value)"
                                required>
                         <button type="button" class="password-visibility-toggle" data-target="password" aria-label="Toggle password visibility">
                             <i class="fas fa-eye show-icon"></i>
@@ -526,6 +527,21 @@
     <script>
         // New Password Field Functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Auto-capitalize name fields
+            const nameFields = ['first_name', 'middle_name', 'last_name'];
+            nameFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', function(e) {
+                        let value = e.target.value;
+                        // Capitalize first letter of each word
+                        e.target.value = value.replace(/\b\w/g, function(char) {
+                            return char.toUpperCase();
+                        });
+                    });
+                }
+            });
+
             // Add CSRF token refresh functionality
             window.refreshCSRFToken = function() {
                 fetch('/csrf-token', {
@@ -548,11 +564,10 @@
                         if (csrfMeta) {
                             csrfMeta.content = data.csrf_token;
                         }
-                        console.log('CSRF token refreshed');
                     }
                 })
                 .catch(error => {
-                    console.error('Failed to refresh CSRF token:', error);
+                    // Silent error handling
                 });
             };
 
@@ -560,32 +575,167 @@
             const form = document.getElementById('parentRegistrationForm');
             if (form) {
                 form.addEventListener('submit', function(e) {
-                    console.log('Form submission intercepted');
-                    console.log('Form action:', this.action);
-                    console.log('Form method:', this.method);
+                    // Custom validation with clear error messages
+                    const errors = [];
                     
-                    // Verify CSRF token is present
-                    const csrfToken = document.querySelector('input[name="_token"]');
-                    console.log('CSRF token validation:', csrfToken ? 'OK' : 'Missing');
-                    
-                    // Check required fields
-                    const requiredFields = ['first_name', 'last_name', 'email', 'password'];
-                    const missingFields = [];
-                    
-                    requiredFields.forEach(field => {
-                        const input = document.querySelector(`input[name="${field}"]`);
-                        if (!input || !input.value.trim()) {
-                            missingFields.push(field);
+                    // Validate Step 1 fields
+                    const firstName = document.getElementById('first_name');
+                    if (firstName && !firstName.value.trim()) {
+                        errors.push({ field: 'first_name', message: 'First name is required', step: 1 });
+                    } else if (firstName && firstName.pattern) {
+                        const pattern = new RegExp(firstName.pattern, 'u');
+                        if (!pattern.test(firstName.value)) {
+                            errors.push({ field: 'first_name', message: 'First name contains invalid characters', step: 1 });
                         }
-                    });
-                    
-                    if (missingFields.length > 0) {
-                        console.error('Missing required fields:', missingFields);
                     }
                     
-                    // Form submission validation passed
-                    console.log('Form validation completed successfully');
+                    const middleName = document.getElementById('middle_name');
+                    if (middleName && middleName.value && middleName.pattern) {
+                        const pattern = new RegExp(middleName.pattern, 'u');
+                        if (!pattern.test(middleName.value)) {
+                            errors.push({ field: 'middle_name', message: 'Middle name contains invalid characters', step: 1 });
+                        }
+                    }
+                    
+                    const lastName = document.getElementById('last_name');
+                    if (lastName && !lastName.value.trim()) {
+                        errors.push({ field: 'last_name', message: 'Last name is required', step: 1 });
+                    } else if (lastName && lastName.pattern) {
+                        const pattern = new RegExp(lastName.pattern, 'u');
+                        if (!pattern.test(lastName.value)) {
+                            errors.push({ field: 'last_name', message: 'Last name contains invalid characters', step: 1 });
+                        }
+                    }
+                    
+                    const birthDate = document.getElementById('birth_date');
+                    if (birthDate && !birthDate.value) {
+                        errors.push({ field: 'birth_date', message: 'Date of birth is required', step: 1 });
+                    }
+                    
+                    const sex = document.getElementById('sex');
+                    if (sex && !sex.value) {
+                        errors.push({ field: 'sex', message: 'Sex is required', step: 1 });
+                    }
+                    
+                    const contactNumber = document.getElementById('contact_number');
+                    if (contactNumber && !contactNumber.value.trim()) {
+                        errors.push({ field: 'contact_number', message: 'Contact number is required', step: 1 });
+                    } else if (contactNumber && contactNumber.pattern) {
+                        const pattern = new RegExp(contactNumber.pattern);
+                        if (!pattern.test(contactNumber.value)) {
+                            errors.push({ field: 'contact_number', message: 'Please enter a valid 11-digit Philippine mobile number (09XXXXXXXXX)', step: 1 });
+                        }
+                    }
+                    
+                    const houseStreet = document.getElementById('house_street');
+                    if (houseStreet && !houseStreet.value.trim()) {
+                        errors.push({ field: 'house_street', message: 'House/Street address is required', step: 1 });
+                    }
+                    
+                    const barangay = document.getElementById('barangay');
+                    if (barangay && !barangay.value) {
+                        errors.push({ field: 'barangay', message: 'Barangay is required', step: 1 });
+                    }
+                    
+                    // Validate Step 2 fields
+                    const email = document.getElementById('email');
+                    if (email && !email.value.trim()) {
+                        errors.push({ field: 'email', message: 'Email address is required', step: 2 });
+                    } else if (email && email.type === 'email' && !isValidEmail(email.value)) {
+                        errors.push({ field: 'email', message: 'Please enter a valid email address', step: 2 });
+                    }
+                    
+                    const password = document.getElementById('password');
+                    const passwordConfirm = document.getElementById('password_confirmation');
+                    if (password && !password.value) {
+                        errors.push({ field: 'password', message: 'Password is required', step: 2 });
+                    } else if (password && password.value.length < 8) {
+                        errors.push({ field: 'password', message: 'Password must be at least 8 characters', step: 2 });
+                    } else if (!validatePassword(password.value)) {
+                        errors.push({ field: 'password', message: 'Password must contain uppercase, lowercase, number, and special character', step: 2 });
+                    }
+                    
+                    if (passwordConfirm && password && password.value !== passwordConfirm.value) {
+                        errors.push({ field: 'password_confirmation', message: 'Passwords do not match', step: 2 });
+                    }
+                    
+                    // Validate Step 4 - Terms
+                    const terms = document.getElementById('terms');
+                    if (terms && !terms.checked) {
+                        errors.push({ field: 'terms', message: 'You must agree to the Terms and Conditions', step: 4 });
+                    }
+                    
+                    // If there are errors, show them and prevent submission
+                    if (errors.length > 0) {
+                        e.preventDefault();
+                        showValidationErrors(errors);
+                        return false;
+                    }
                 });
+            }
+            
+            function isValidEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+            
+            function validatePassword(password) {
+                return /[A-Z]/.test(password) && 
+                       /[a-z]/.test(password) && 
+                       /[0-9]/.test(password) && 
+                       /[@$!%*?&#_\-^(){}\[\]:;'"<>,.~`|/+=]/.test(password);
+            }
+            
+            function showValidationErrors(errors) {
+                // Find the first error's step
+                const firstError = errors[0];
+                
+                // Create error message
+                let errorMessage = '<div style="background: #fee; border-left: 4px solid #dc3545; padding: 1rem; margin-bottom: 1rem; border-radius: 8px;">';
+                errorMessage += '<div style="display: flex; gap: 1rem;">';
+                errorMessage += '<i class="fas fa-exclamation-circle" style="color: #dc3545; font-size: 1.5rem;"></i>';
+                errorMessage += '<div style="flex: 1;">';
+                errorMessage += '<strong style="color: #721c24; font-size: 1.05rem; display: block; margin-bottom: 0.5rem;">Please fix the following errors:</strong>';
+                errorMessage += '<ul style="margin: 0; padding-left: 1.2rem; color: #721c24;">';
+                errors.forEach(error => {
+                    errorMessage += `<li>${error.message}</li>`;
+                });
+                errorMessage += '</ul></div></div></div>';
+                
+                // Show error at top of form
+                const wizardContainer = document.querySelector('.wizard-container');
+                if (wizardContainer) {
+                    // Remove any existing error alerts
+                    const existingAlert = wizardContainer.querySelector('.validation-error-alert');
+                    if (existingAlert) {
+                        existingAlert.remove();
+                    }
+                    
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'validation-error-alert';
+                    errorDiv.innerHTML = errorMessage;
+                    
+                    const wizardHeader = wizardContainer.querySelector('.wizard-header');
+                    if (wizardHeader && wizardHeader.nextSibling) {
+                        wizardHeader.parentNode.insertBefore(errorDiv, wizardHeader.nextSibling);
+                    }
+                }
+                
+                // Navigate to the step with the first error using the wizard script's navigation
+                if (window.goToStep && typeof window.goToStep === 'function') {
+                    window.goToStep(firstError.step);
+                }
+                
+                // Highlight the first error field
+                const field = document.getElementById(firstError.field);
+                if (field) {
+                    field.style.borderColor = '#dc3545';
+                    field.focus();
+                    
+                    // Remove highlight on input
+                    field.addEventListener('input', function() {
+                        this.style.borderColor = '';
+                    }, { once: true });
+                }
             }
 
             // Password visibility toggle
@@ -614,36 +764,47 @@
                 });
             });
 
-            // Password strength checking
-            const passwordField = document.getElementById('password');
-            const confirmField = document.getElementById('password_confirmation');
-
-            if (passwordField) {
-                passwordField.addEventListener('input', function() {
-                    checkPasswordStrength(this.value);
-                });
-            }
-
-            function checkPasswordStrength(password) {
+            // Password strength checking - make it global
+            window.checkPasswordStrength = function(password) {
                 const requirements = {
                     length: password.length >= 8,
                     uppercase: /[A-Z]/.test(password),
                     lowercase: /[a-z]/.test(password),
                     number: /[0-9]/.test(password),
-                    special: /[@$!%*?&#_\-^(){}\[\]:;'"<>,.~`|/+=]/.test(password)
+                    special: /[@$!%*?&#_\-^(){}\[\]:;'\"<>,.~`|/+=]/.test(password)
                 };
 
                 // Update requirement indicators
-                Object.keys(requirements).forEach(req => {
-                    const element = document.querySelector(`[data-requirement="${req}"]`);
+                for (const [req, isMet] of Object.entries(requirements)) {
+                    const element = document.querySelector('[data-requirement="' + req + '"]');
                     if (element) {
-                        if (requirements[req]) {
+                        if (isMet) {
                             element.classList.add('met');
                         } else {
                             element.classList.remove('met');
                         }
                     }
+                }
+            };
+
+            // Also attach via event listeners
+            const passwordField = document.getElementById('password');
+            const confirmField = document.getElementById('password_confirmation');
+
+            if (passwordField) {
+                // Attach event listeners
+                passwordField.addEventListener('input', function() {
+                    window.checkPasswordStrength(this.value);
                 });
+                
+                passwordField.addEventListener('keyup', function() {
+                    window.checkPasswordStrength(this.value);
+                });
+                
+                // Check initial value on page load
+                if (passwordField.value) {
+                    window.checkPasswordStrength(passwordField.value);
+                }
             }
 
             // Enhanced date input styling

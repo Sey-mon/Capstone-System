@@ -37,6 +37,8 @@ class Patient extends Model
         'other_medical_problems',
         'edema',
         'custom_patient_id',
+        'archived_at',
+        'archive_reason',
     ];
 
     protected $casts = [
@@ -45,6 +47,7 @@ class Patient extends Model
         'is_4ps_beneficiary' => 'boolean',
         'weight_kg' => 'decimal:2',
         'height_cm' => 'decimal:2',
+        'archived_at' => 'datetime',
     ];
 
     /**
@@ -262,5 +265,88 @@ class Patient extends Model
         return $this->hasOne(Assessment::class, 'patient_id', 'patient_id')
             ->whereNotNull('completed_at')
             ->latest('assessment_date');
+    }
+
+    /**
+     * Scope a query to only include active (non-archived) patients.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    /**
+     * Scope a query to only include archived patients.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    /**
+     * Scope a query to only include patients eligible for archiving (5 years old and above).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeEligibleForArchiving($query)
+    {
+        // 5 years = 60 months
+        return $query->where(function ($q) {
+            $q->whereRaw('age_months >= 60')
+              ->orWhereRaw('TIMESTAMPDIFF(MONTH, birthdate, NOW()) >= 60');
+        })->whereNull('archived_at');
+    }
+
+    /**
+     * Check if the patient is eligible for archiving.
+     *
+     * @return bool
+     */
+    public function isEligibleForArchiving()
+    {
+        $ageInMonths = $this->getAgeMonthsAttribute($this->attributes['age_months'] ?? null);
+        return $ageInMonths >= 60 && !$this->archived_at;
+    }
+
+    /**
+     * Archive the patient.
+     *
+     * @param string|null $reason
+     * @return bool
+     */
+    public function archive($reason = null)
+    {
+        $this->archived_at = now();
+        $this->archive_reason = $reason ?? 'Patient aged 5 years or older';
+        return $this->save();
+    }
+
+    /**
+     * Unarchive the patient.
+     *
+     * @return bool
+     */
+    public function unarchive()
+    {
+        $this->archived_at = null;
+        $this->archive_reason = null;
+        return $this->save();
+    }
+
+    /**
+     * Check if the patient is archived.
+     *
+     * @return bool
+     */
+    public function isArchived()
+    {
+        return !is_null($this->archived_at);
     }
 }

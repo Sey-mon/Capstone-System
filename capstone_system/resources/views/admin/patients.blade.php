@@ -7,6 +7,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/admin-patients.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/patients-archive.css') }}">
 @endpush
 
 @section('navigation')
@@ -90,6 +91,14 @@
                 <span class="filtered-count filtered-count-hidden" id="filteredCount">Showing: <strong id="visiblePatients">0</strong> patients</span>
             </div>
             <div class="view-options">
+                <div class="archive-toggle">
+                    <button class="btn btn-sm archive-btn active" data-status="active">
+                        <i class="fas fa-user-check"></i> Active Patients
+                    </button>
+                    <button class="btn btn-sm archive-btn" data-status="archived">
+                        <i class="fas fa-archive"></i> Archived Patients
+                    </button>
+                </div>
                 <div class="view-toggle">
                     <button class="btn btn-sm view-btn active" data-view="table">
                         <i class="fas fa-table"></i> Table
@@ -119,6 +128,10 @@
                                         <span>Patient</span>
                                         <i class="fas fa-sort"></i>
                                     </th>
+                                    <th class="sortable" data-sort="admitted">
+                                        <span>Admitted</span>
+                                        <i class="fas fa-sort"></i>
+                                    </th>
                                     <th class="sortable" data-sort="age">
                                         <span>Age</span>
                                         <i class="fas fa-sort"></i>
@@ -146,6 +159,7 @@
                                 @foreach($patients as $patient)
                                     <tr class="patient-row" 
                                         data-name="{{ strtolower($patient->first_name . ' ' . $patient->last_name) }}"
+                                        data-admitted="{{ $patient->date_of_admission->format('Y-m-d') }}"
                                         data-age="{{ $patient->age_months }}"
                                         data-gender="{{ $patient->sex }}"
                                         data-barangay="{{ $patient->barangay ? $patient->barangay->barangay_name : '' }}"
@@ -158,11 +172,10 @@
                                         <td class="patient-info-cell">
                                             <div class="patient-details">
                                                 <div class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</div>
-                                                @if($patient->middle_name)
-                                                    <small class="text-muted">{{ $patient->middle_name }}</small>
-                                                @endif
-                                                <div class="patient-admission">Admitted: {{ $patient->date_of_admission->format('M d, Y') }}</div>
                                             </div>
+                                        </td>
+                                        <td class="admission-cell">
+                                            <span class="admission-date">{{ $patient->date_of_admission->format('M d, Y') }}</span>
                                         </td>
                                         <td class="age-cell">
                                             <span class="age-months">{{ $patient->age_months }} months</span>
@@ -180,9 +193,9 @@
                                                 <span class="text-muted">Not assigned</span>
                                             @endif
                                         </td>
-                                        <td class="parent-cell">
+                                        <td>
                                             @if($patient->parent)
-                                                <div class="parent-name">{{ $patient->parent->first_name }} {{ $patient->parent->last_name }}</div>
+                                                <span>{{ $patient->parent->first_name }} {{ $patient->parent->last_name }}</span>
                                             @else
                                                 <span class="text-muted">Not assigned</span>
                                             @endif
@@ -204,6 +217,9 @@
                                                 </button>
                                                 <button class="btn btn-sm btn-outline-warning" data-patient-id="{{ $patient->patient_id }}" title="Edit Patient">
                                                     <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success archive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Archive Patient">
+                                                    <i class="fas fa-archive"></i>
                                                 </button>
                                                 <button class="btn btn-sm btn-outline-danger" data-patient-id="{{ $patient->patient_id }}" title="Delete Patient">
                                                     <i class="fas fa-trash"></i>
@@ -239,6 +255,7 @@
                         @foreach($patients as $patient)
                             <div class="patient-card" 
                                 data-name="{{ strtolower($patient->first_name . ' ' . $patient->last_name) }}"
+                                data-admitted="{{ $patient->date_of_admission->format('Y-m-d') }}"
                                 data-age="{{ $patient->age_months }}"
                                 data-gender="{{ $patient->sex }}"
                                 data-barangay="{{ $patient->barangay ? $patient->barangay->barangay_name : '' }}"
@@ -248,9 +265,6 @@
                                 <div class="card-header">
                                     <div class="patient-info">
                                         <h4 class="patient-name">{{ $patient->first_name }} {{ $patient->last_name }}</h4>
-                                        @if($patient->middle_name)
-                                            <p class="middle-name">{{ $patient->middle_name }}</p>
-                                        @endif
                                         <div class="patient-meta">
                                             <span class="age">{{ $patient->age_months }} months</span>
                                             <span class="gender badge badge-{{ $patient->sex === 'Male' ? 'primary' : 'secondary' }}">
@@ -268,7 +282,7 @@
                                     <div class="info-row">
                                         <span class="label">Parent:</span>
                                         @if($patient->parent)
-                                            <span class="value parent-clickable parent-name">{{ $patient->parent->first_name }} {{ $patient->parent->last_name }}</span>
+                                            <span class="value">{{ $patient->parent->first_name }} {{ $patient->parent->last_name }}</span>
                                         @else
                                             <span class="value">Not assigned</span>
                                         @endif
@@ -364,4 +378,5 @@
 
 @push('scripts')
     <script src="{{ asset('js/admin/admin-patients-swal.js') }}"></script>
+    <script src="{{ asset('js/admin/patients-archive.js') }}"></script>
 @endpush

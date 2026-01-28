@@ -725,19 +725,19 @@ class AuthController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u' // Letters including ñ, á, é, í, ó, ú, spaces, hyphens, periods
+                'regex:/^[a-zA-Z\x{00E0}\x{00E8}\x{00EC}\x{00F2}\x{00F9}\x{00C0}\x{00C8}\x{00CC}\x{00D2}\x{00D9}\x{00E1}\x{00E9}\x{00ED}\x{00F3}\x{00FA}\x{00C1}\x{00C9}\x{00CD}\x{00D3}\x{00DA}\x{00E2}\x{00EA}\x{00EE}\x{00F4}\x{00FB}\x{00C2}\x{00CA}\x{00CE}\x{00D4}\x{00DB}\x{00E3}\x{00F1}\x{00F5}\x{00C3}\x{00D1}\x{00D5}\x{00E4}\x{00EB}\x{00EF}\x{00F6}\x{00FC}\x{00C4}\x{00CB}\x{00CF}\x{00D6}\x{00DC}\x{0101}\x{0113}\x{012B}\x{014D}\x{016B}\x{0100}\x{0112}\x{012A}\x{014C}\x{016A}\x{010D}\x{010F}\x{011B}\x{0148}\x{0159}\x{0161}\x{0165}\x{017E}\x{010C}\x{010E}\x{011A}\x{0147}\x{0158}\x{0160}\x{0164}\x{017D}\x{0107}\x{0142}\x{0144}\x{015B}\x{017A}\x{017C}\x{0106}\x{0141}\x{0143}\x{015A}\x{0179}\x{017B}\s\-\.]+$/u'
             ],
             'middle_name' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u'
+                'regex:/^[a-zA-Z\x{00E0}\x{00E8}\x{00EC}\x{00F2}\x{00F9}\x{00C0}\x{00C8}\x{00CC}\x{00D2}\x{00D9}\x{00E1}\x{00E9}\x{00ED}\x{00F3}\x{00FA}\x{00C1}\x{00C9}\x{00CD}\x{00D3}\x{00DA}\x{00E2}\x{00EA}\x{00EE}\x{00F4}\x{00FB}\x{00C2}\x{00CA}\x{00CE}\x{00D4}\x{00DB}\x{00E3}\x{00F1}\x{00F5}\x{00C3}\x{00D1}\x{00D5}\x{00E4}\x{00EB}\x{00EF}\x{00F6}\x{00FC}\x{00C4}\x{00CB}\x{00CF}\x{00D6}\x{00DC}\x{0101}\x{0113}\x{012B}\x{014D}\x{016B}\x{0100}\x{0112}\x{012A}\x{014C}\x{016A}\x{010D}\x{010F}\x{011B}\x{0148}\x{0159}\x{0161}\x{0165}\x{017E}\x{010C}\x{010E}\x{011A}\x{0147}\x{0158}\x{0160}\x{0164}\x{017D}\x{0107}\x{0142}\x{0144}\x{015B}\x{017A}\x{017C}\x{0106}\x{0141}\x{0143}\x{015A}\x{0179}\x{017B}\s\-\.]+$/u'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s\-\.]+$/u'
+                'regex:/^[a-zA-Z\x{00E0}\x{00E8}\x{00EC}\x{00F2}\x{00F9}\x{00C0}\x{00C8}\x{00CC}\x{00D2}\x{00D9}\x{00E1}\x{00E9}\x{00ED}\x{00F3}\x{00FA}\x{00C1}\x{00C9}\x{00CD}\x{00D3}\x{00DA}\x{00E2}\x{00EA}\x{00EE}\x{00F4}\x{00FB}\x{00C2}\x{00CA}\x{00CE}\x{00D4}\x{00DB}\x{00E3}\x{00F1}\x{00F5}\x{00C3}\x{00D1}\x{00D5}\x{00E4}\x{00EB}\x{00EF}\x{00F6}\x{00FC}\x{00C4}\x{00CB}\x{00CF}\x{00D6}\x{00DC}\x{0101}\x{0113}\x{012B}\x{014D}\x{016B}\x{0100}\x{0112}\x{012A}\x{014C}\x{016A}\x{010D}\x{010F}\x{011B}\x{0148}\x{0159}\x{0161}\x{0165}\x{017E}\x{010C}\x{010E}\x{011A}\x{0147}\x{0158}\x{0160}\x{0164}\x{017D}\x{0107}\x{0142}\x{0144}\x{015B}\x{017A}\x{017C}\x{0106}\x{0141}\x{0143}\x{015A}\x{0179}\x{017B}\s\-\.]+$/u'
             ],
             'suffix' => [
                 'nullable',
@@ -997,12 +997,20 @@ class AuthController extends Controller
             'years_experience' => 'nullable|integer|min:0|max:50',
             // Educational qualifications: allow short entries for real-world cases
             'qualifications' => 'required|string|min:2|max:1000',
+            'qualifications_other' => 'required_if:qualifications,Other|nullable|string|min:2|max:1000',
             // Professional experience: at least 10 characters, but allow short entries for real-world cases
             'professional_experience' => 'required|string|min:10|max:1000',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.\-"\'(){}\[\]:;<>,.~`\/+=]).+$/'
+            ],
         ], [
             'qualifications.min' => 'Please provide at least your school, degree, or certification.',
             'professional_experience.min' => 'Please briefly describe your work experience or position.',
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
         ]);
 
         if ($validator->fails()) {
@@ -1022,6 +1030,11 @@ class AuthController extends Controller
         }
 
         try {
+            // If "Other" is selected, use the qualifications_other field value
+            $qualifications = $request->qualifications === 'Other' && $request->qualifications_other 
+                ? $request->qualifications_other 
+                : $request->qualifications;
+
             $user = User::create([
                 'role_id' => $nutritionistRole->role_id,
                 'first_name' => $request->first_name,
@@ -1033,7 +1046,7 @@ class AuthController extends Controller
                 'contact_number' => $request->contact_number,
                 'address' => $request->address,
                 'years_experience' => $request->years_experience,
-                'qualifications' => $request->qualifications,
+                'qualifications' => $qualifications,
                 'professional_experience' => $request->professional_experience,
                 'is_active' => false,
             ]);
@@ -1044,7 +1057,7 @@ class AuthController extends Controller
             AuditLog::create([
                 'user_id' => $user->user_id,
                 'action' => 'application_submitted',
-                'description' => "Nutritionist application submitted. Qualifications: {$request->qualifications}, Experience: {$request->professional_experience}",
+                'description' => "Nutritionist application submitted. Qualifications: {$qualifications}, Experience: {$request->professional_experience}",
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);

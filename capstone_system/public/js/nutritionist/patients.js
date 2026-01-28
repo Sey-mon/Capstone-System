@@ -318,6 +318,11 @@ function loadPatientsFromUrl(url) {
         
         // Re-initialize pagination for new content
         initializePagination();
+        
+        // Re-initialize archive buttons after AJAX reload
+        if (typeof window.initializeArchiveButtons === 'function') {
+            window.initializeArchiveButtons();
+        }
     })
     .catch(error => {
         console.error('Error loading patients:', error);
@@ -895,54 +900,16 @@ function viewPatient(patientId) {
         });
 }
 
+// Delete function removed - only admins can permanently delete patients
+// Nutritionists should use the archive functionality to maintain medical record integrity
 function deletePatient(patientId) {
     Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this! All patient data will be permanently deleted.",
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        reverseButtons: false,
-        customClass: {
-            popup: 'delete-modal-custom'
-        },
-        showLoaderOnConfirm: true,
-        preConfirm: () => {
-            // Get CSRF token
-            const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
-
-            return fetch(`/nutritionist/patients/${patientId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to delete patient');
-                }
-                return data;
-            })
-            .catch(error => {
-                Swal.showValidationMessage(
-                    `Request failed: ${error.message || error}`
-                );
-            });
-        },
-        allowOutsideClick: () => !Swal.isLoading()
-    }).then((result) => {
-        if (result.isConfirmed && result.value) {
-            Swal.fire({
-                title: 'Deleted!',
-                text: 'Patient has been deleted successfully.',
-                icon: 'success',
+        icon: 'info',
+        title: 'Delete Not Available',
+        text: 'Only administrators can permanently delete patient records. Please use the Archive function to remove patients from the active list while preserving medical records.',
+        confirmButtonColor: '#2e7d32'
+    });
+    return;
                 confirmButtonColor: '#2e7d32',
                 timer: 1500,
                 showConfirmButton: false

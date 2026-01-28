@@ -176,6 +176,9 @@ document.addEventListener("DOMContentLoaded", function () {
         
         isTransitioning = true;
         
+        // Update current step
+        currentStep = stepNumber;
+        
         const allSteps = document.querySelectorAll('.wizard-step');
         const targetStep = document.querySelector(`.wizard-step[data-step="${stepNumber}"]`);
         
@@ -238,4 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+    
+    // Expose showStep function globally for error navigation
+    window.showStep = showStep;
 });

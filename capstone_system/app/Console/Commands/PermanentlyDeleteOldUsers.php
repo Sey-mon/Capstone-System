@@ -22,18 +22,18 @@ class PermanentlyDeleteOldUsers extends Command
      *
      * @var string
      */
-    protected $description = 'Permanently delete users that have been soft-deleted for more than 7 days';
+    protected $description = 'Permanently delete users that have been soft-deleted for more than 30 days';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $sevenDaysAgo = Carbon::now()->subDays(7);
+        $thirtyDaysAgo = Carbon::now()->subDays(30);
         
-        // Get users that were soft-deleted more than 7 days ago
+        // Get users that were soft-deleted more than 30 days ago
         $oldDeletedUsers = User::onlyTrashed()
-            ->where('deleted_at', '<=', $sevenDaysAgo)
+            ->where('deleted_at', '<=', $thirtyDaysAgo)
             ->get();
 
         if ($oldDeletedUsers->isEmpty()) {
