@@ -71,9 +71,6 @@
                                 <button class="btn btn-sm btn-success archive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Archive Patient">
                                     <i class="fas fa-archive"></i>
                                 </button>
-                                <button class="btn btn-sm btn-danger" onclick="deletePatient({{ $patient->patient_id }})" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
                             </div>
                         </td>
                     </tr>

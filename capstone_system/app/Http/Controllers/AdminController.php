@@ -529,7 +529,12 @@ class AdminController extends Controller
      */
     public function patients()
     {
-    $patients = Patient::active()->with(['parent', 'nutritionist', 'barangay', 'latestAssessment'])->orderBy('created_at', 'desc')->paginate(10);
+        // Only show active (non-archived) patients
+        $patients = Patient::active()
+            ->with(['parent', 'nutritionist', 'barangay', 'latestAssessment'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+            
         $barangays = Barangay::all();
         $nutritionists = User::where('role_id', function($query) {
                 $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
@@ -808,10 +813,14 @@ class AdminController extends Controller
         try {
             $status = $request->get('status', 'active');
             
-            // Build query based on status
-            $query = $status === 'archived' 
-                ? Patient::archived() 
-                : Patient::active();
+            // Build query based on status - only show patients matching the exact status
+            if ($status === 'archived') {
+                // Only archived patients (archived_at is NOT NULL)
+                $query = Patient::archived();
+            } else {
+                // Only active patients (archived_at is NULL)
+                $query = Patient::active();
+            }
 
             $query->with(['parent', 'nutritionist', 'barangay', 'latestAssessment']);
 

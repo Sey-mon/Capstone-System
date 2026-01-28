@@ -444,9 +444,7 @@
 
 /* ========== EXISTING COMPONENTS ========== */
 .patient-info-cell {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    vertical-align: middle;
 }
 
 .patient-avatar {
@@ -732,6 +730,24 @@
     .enhanced-patients-table th,
     .enhanced-patients-table td {
         padding: 0.75rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Fix patient name column wrapping on mobile */
+    .patient-info-cell {
+        max-width: 140px;
+    }
+    
+    .patient-details .patient-name {
+        white-space: normal !important;
+        word-break: break-word;
+        line-height: 1.2;
+        font-size: 0.75rem;
+    }
+    
+    .patient-details .patient-admission {
+        font-size: 0.65rem;
+        white-space: nowrap;
     }
     
     .patients-grid {
@@ -776,6 +792,19 @@
     .enhanced-patients-table th,
     .enhanced-patients-table td {
         padding: 0.5rem 0.25rem;
+        font-size: 0.7rem;
+    }
+    
+    .patient-info-cell {
+        max-width: 110px;
+    }
+    
+    .patient-details .patient-name {
+        font-size: 0.7rem;
+    }
+    
+    .patient-details .patient-admission {
+        font-size: 0.6rem;
     }
     
     .patient-card {

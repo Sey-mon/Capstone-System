@@ -13,6 +13,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         initializeArchiveToggles();
         initializeArchiveButtons();
+        initializePageJumpButtons();
     });
 
     /**
@@ -53,6 +54,9 @@
      * Load patients via AJAX
      */
     function loadPatients(status, page = 1) {
+        // Update current page tracker
+        currentPage = page;
+        
         const tableBody = document.getElementById('patientsTableBody');
         const paginationWrapper = document.querySelector('.pagination-wrapper');
         
@@ -131,13 +135,39 @@
         }
 
         tableBody.innerHTML = patients.map(patient => {
-            const actionButton = status === 'archived' 
-                ? `<button class="btn btn-sm btn-outline-info unarchive-patient-btn" data-patient-id="${patient.patient_id}" title="Unarchive Patient">
-                       <i class="fas fa-undo"></i>
-                   </button>`
-                : `<button class="btn btn-sm btn-outline-success archive-patient-btn" data-patient-id="${patient.patient_id}" title="Archive Patient">
-                       <i class="fas fa-archive"></i>
-                   </button>`;
+            // Define action buttons based on status
+            let actionButtons = '';
+            
+            if (status === 'archived') {
+                // Archived patients: only View and Restore buttons
+                actionButtons = `
+                    <button class="btn btn-sm btn-outline-primary" data-patient-id="${patient.patient_id}" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info unarchive-patient-btn" data-patient-id="${patient.patient_id}" title="Restore Patient">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                `;
+            } else {
+                // Active patients: all action buttons
+                actionButtons = `
+                    <button class="btn btn-sm btn-outline-primary" data-patient-id="${patient.patient_id}" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" data-patient-id="${patient.patient_id}" title="Assessment History">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" data-patient-id="${patient.patient_id}" title="Edit Patient">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-success archive-patient-btn" data-patient-id="${patient.patient_id}" title="Archive Patient">
+                        <i class="fas fa-archive"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" data-patient-id="${patient.patient_id}" title="Delete Patient">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            }
 
             return `
                 <tr class="patient-row ${status === 'archived' ? 'archived' : ''}">
@@ -145,7 +175,6 @@
                     <td class="patient-info-cell">
                         <div class="patient-details">
                             <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
-                            ${patient.middle_name ? `<small class="text-muted">${patient.middle_name}</small>` : ''}
                             <div class="patient-admission">Admitted: ${patient.date_of_admission}</div>
                         </div>
                     </td>
@@ -158,27 +187,16 @@
                     <td class="nutritionist-cell">${patient.nutritionist || 'Not assigned'}</td>
                     <td class="actions-cell">
                         <div class="action-buttons">
-                            <button class="btn btn-sm btn-outline-primary" data-patient-id="${patient.patient_id}" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-info" data-patient-id="${patient.patient_id}" title="Assessment History">
-                                <i class="fas fa-chart-line"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning" data-patient-id="${patient.patient_id}" title="Edit Patient">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            ${actionButton}
-                            <button class="btn btn-sm btn-outline-danger" data-patient-id="${patient.patient_id}" title="Delete Patient">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            ${actionButtons}
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
 
-        // Reinitialize archive buttons
+        // Reinitialize all action buttons including archive, view, edit, delete
         initializeArchiveButtons();
+        initializeViewButtons();
     }
 
     /**
@@ -272,6 +290,17 @@
         const paginationWrapper = document.querySelector('.pagination-wrapper');
         if (paginationWrapper && pagination.links) {
             paginationWrapper.innerHTML = pagination.links;
+            
+            // Attach click handlers to pagination links to maintain status
+            const paginationLinks = paginationWrapper.querySelectorAll('a[href*="page="]');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = new URL(this.href);
+                    const page = url.searchParams.get('page') || 1;
+                    loadPatients(currentStatus, page);
+                });
+            });
         }
     }
 
@@ -315,6 +344,121 @@
         } else {
             alert(message);
         }
+    }
+
+    /**
+     * Initialize page jump buttons
+     */
+    function initializePageJumpButtons() {
+        const jumpButton = document.getElementById('jumpToPage');
+        const gridJumpButton = document.getElementById('gridJumpToPage');
+        
+        if (jumpButton) {
+            jumpButton.addEventListener('click', function() {
+                const pageInput = document.getElementById('pageJump');
+                const page = parseInt(pageInput.value);
+                if (page && page > 0) {
+                    loadPatients(currentStatus, page);
+                }
+            });
+        }
+        
+        if (gridJumpButton) {
+            gridJumpButton.addEventListener('click', function() {
+                const pageInput = document.getElementById('gridPageJump');
+                const page = parseInt(pageInput.value);
+                if (page && page > 0) {
+                    loadPatients(currentStatus, page);
+                }
+            });
+        }
+    }
+
+    /**
+     * Initialize view buttons for dynamically loaded patients
+     * Call the setupActionButtons function from admin-patients-swal.js if available
+     */
+    function initializeViewButtons() {
+        // Try to call the global setupActionButtons function if it exists
+        if (typeof window.setupActionButtons === 'function') {
+            window.setupActionButtons();
+        } else {
+            // Fallback: manually setup action buttons
+            setupActionButtonsFallback();
+        }
+    }
+
+    /**
+     * Fallback function to setup action buttons
+     */
+    function setupActionButtonsFallback() {
+        // View buttons
+        const viewBtns = document.querySelectorAll('.btn-outline-primary, .btn-primary');
+        viewBtns.forEach(btn => {
+            if (btn.title === 'View Details' && btn.hasAttribute('data-patient-id')) {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const patientId = parseInt(this.getAttribute('data-patient-id'));
+                    if (typeof window.viewPatient === 'function') {
+                        window.viewPatient(patientId);
+                    }
+                });
+            }
+        });
+        
+        // Edit buttons
+        const editBtns = document.querySelectorAll('.btn-outline-warning, .btn-warning');
+        editBtns.forEach(btn => {
+            if ((btn.title === 'Edit Patient' || btn.title === 'Edit') && btn.hasAttribute('data-patient-id')) {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const patientId = parseInt(this.getAttribute('data-patient-id'));
+                    if (typeof window.editPatient === 'function') {
+                        window.editPatient(patientId);
+                    }
+                });
+            }
+        });
+        
+        // Assessment History buttons
+        const assessmentBtns = document.querySelectorAll('.btn-outline-info, .btn-info');
+        assessmentBtns.forEach(btn => {
+            if (btn.title === 'Assessment History' && btn.hasAttribute('data-patient-id')) {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const patientId = parseInt(this.getAttribute('data-patient-id'));
+                    if (typeof window.showAssessmentHistory === 'function') {
+                        window.showAssessmentHistory(patientId);
+                    }
+                });
+            }
+        });
+        
+        // Delete buttons
+        const deleteBtns = document.querySelectorAll('.btn-outline-danger, .btn-danger');
+        deleteBtns.forEach(btn => {
+            if ((btn.title === 'Delete Patient' || btn.title === 'Delete') && btn.hasAttribute('data-patient-id')) {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const patientId = parseInt(this.getAttribute('data-patient-id'));
+                    if (typeof window.deletePatient === 'function') {
+                        window.deletePatient(patientId);
+                    }
+                });
+            }
+        });
     }
 
 })();

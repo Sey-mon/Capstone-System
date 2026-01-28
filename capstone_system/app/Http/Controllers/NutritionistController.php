@@ -428,45 +428,16 @@ class NutritionistController extends Controller
     }
 
     /**
-     * Delete patient
+     * Delete patient - REMOVED
+     * Only admins can permanently delete patients.
+     * Nutritionists should use the archive functionality instead.
      */
     public function deletePatient($id)
     {
-        $nutritionist = Auth::user();
-        $nutritionistId = $nutritionist->user_id;
-        $patient = Patient::where('nutritionist_id', $nutritionistId)
-            ->where('patient_id', $id)
-            ->first();
-
-        if (!$patient) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Patient not found or you do not have permission to access this patient.'
-            ], 404);
-        }
-
-        try {
-            // Check if patient has any assessments
-            $assessmentCount = $patient->assessments()->count();
-            if ($assessmentCount > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete patient. This patient has ' . $assessmentCount . ' assessment(s) associated with them.'
-                ], 400);
-            }
-
-            $patient->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Patient deleted successfully!'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error deleting patient: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'success' => false,
+            'message' => 'Delete function is not available for nutritionists. Only administrators can permanently delete patient records. Please use the Archive function to maintain medical record integrity.'
+        ], 403);
     }
 
     /**

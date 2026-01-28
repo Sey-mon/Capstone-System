@@ -319,7 +319,7 @@ Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nu
     Route::post('/patients', [NutritionistController::class, 'storePatient'])->name('patients.store');
     Route::get('/patients/{id}', [NutritionistController::class, 'getPatient'])->name('patients.get');
     Route::put('/patients/{id}', [NutritionistController::class, 'updatePatient'])->name('patients.update');
-    Route::delete('/patients/{id}', [NutritionistController::class, 'deletePatient'])->name('patients.delete');
+    // Delete route removed - only admins can delete patients
     Route::post('/patients/{id}/archive', [NutritionistController::class, 'archivePatient'])->name('patients.archive');
     Route::post('/patients/{id}/unarchive', [NutritionistController::class, 'unarchivePatient'])->name('patients.unarchive');
 

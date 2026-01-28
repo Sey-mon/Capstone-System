@@ -126,34 +126,12 @@ async function viewPatient(patientId) {
     }
 }
 
-// Delete Patient
-async function deletePatient(patientId) {
-    if (!confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/nutritionist/patients/${patientId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showAlert(data.message, 'success');
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-        } else {
-            showAlert(data.message, 'error');
-        }
-    } catch (error) {
-        showAlert('Error deleting patient', 'error');
-    }
+// Delete Patient - REMOVED
+// Only administrators can permanently delete patient records
+// Nutritionists should use the archive functionality instead
+function deletePatient(patientId) {
+    alert('Only administrators can permanently delete patient records. Please use the Archive function to maintain medical record integrity.');
+    return;
 }
 
 // Show alert function
