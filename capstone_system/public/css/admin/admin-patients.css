@@ -1145,9 +1145,7 @@
     }
     
     .patient-info-cell {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        /* Removed display: flex to maintain table cell alignment */
     }
     
     .patient-avatar {
