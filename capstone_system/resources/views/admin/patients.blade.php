@@ -6,8 +6,8 @@
 @section('page-subtitle', 'Manage and monitor all patients in the system.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-patients.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/patients-archive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-patients.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/patients-archive.css') }}?v={{ time() }}">
 @endpush
 
 @section('navigation')
