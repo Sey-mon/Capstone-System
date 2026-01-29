@@ -46,10 +46,10 @@ return [
         'timeout' => env('LLM_API_TIMEOUT', 30),
     ],
 
-    // Google reCAPTCHA v3 - Invisible bot protection
-    'recaptcha' => [
-        'site_key' => env('RECAPTCHA_SITE_KEY'),
-        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+    // Cloudflare Turnstile - Invisible bot protection (reCAPTCHA replacement)
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
     ],
 
 ];

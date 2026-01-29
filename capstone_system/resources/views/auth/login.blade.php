@@ -22,8 +22,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Google reCAPTCHA v3 -->
-    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
+    <!-- Cloudflare Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>  
     <!-- Navigation Header -->
@@ -130,9 +130,9 @@
                         <a href="{{ route('password.request') }}" class="forgot-password">Forgot Password?</a>
                     </div>
 
-                    <!-- Google reCAPTCHA v3 (invisible) -->
-                    <input type="hidden" name="recaptcha_token" id="recaptchaToken">
-                    @error('recaptcha_token')
+                    <!-- Cloudflare Turnstile Widget -->
+                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
+                    @error('cf-turnstile-response')
                         <span class="error-text"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
                     @enderror
 
@@ -376,30 +376,8 @@
     </footer>
 
     <script>
-        // reCAPTCHA v3 - Generate token on form submit
+        // Auto-hide alerts after 10 seconds
         document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                // Remove existing submit handlers from login.js to add reCAPTCHA
-                loginForm.addEventListener('submit', function(e) {
-                    const recaptchaToken = document.getElementById('recaptchaToken');
-                    
-                    // Only intercept if reCAPTCHA token is empty
-                    if (recaptchaToken && !recaptchaToken.value) {
-                        e.preventDefault();
-                        
-                        grecaptcha.ready(function() {
-                            grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'login'})
-                                .then(function(token) {
-                                    recaptchaToken.value = token;
-                                    loginForm.submit();
-                                });
-                        });
-                    }
-                });
-            }
-
-            // Auto-hide alerts after 10 seconds
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {

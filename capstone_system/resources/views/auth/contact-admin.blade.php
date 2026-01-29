@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Google reCAPTCHA v3 -->
-    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
+    <!-- Cloudflare Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     
     <style>
         /* Modern Button Styles */
@@ -204,10 +204,10 @@
                         @enderror
                     </div>
 
-                    <!-- Google reCAPTCHA v3 (invisible) -->
-                    <input type="hidden" name="recaptcha_token" id="recaptchaToken">
+                    <!-- Cloudflare Turnstile Widget -->
+                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
                     <div class="form-group" style="margin-bottom: 1.5rem;">
-                        @error('recaptcha_token')
+                        @error('cf-turnstile-response')
                             <div style="color: #ef4444; font-size: 0.875rem; margin-top: 10px; text-align: center;">
                                 <i class="fas fa-exclamation-circle"></i> {{ $message }}
                             </div>
@@ -273,14 +273,8 @@
                     contactBtn.classList.add('loading');
                     contactBtn.disabled = true;
                     
-                    // Generate reCAPTCHA v3 token
-                    grecaptcha.ready(function() {
-                        grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'contact_admin'})
-                            .then(function(token) {
-                                document.getElementById('recaptchaToken').value = token;
-                                form.submit();
-                            });
-                    });
+                    // Submit form
+                    form.submit();
                 });
             }
 
