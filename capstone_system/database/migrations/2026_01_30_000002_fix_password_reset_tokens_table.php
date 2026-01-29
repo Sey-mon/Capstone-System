@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop the existing table
+        Schema::dropIfExists('password_reset_tokens');
+        
+        // Recreate it with the correct structure
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->id();
             $table->string('email', 255)->index();
@@ -25,6 +29,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Drop the new table
         Schema::dropIfExists('password_reset_tokens');
+        
+        // Recreate the old structure (if you need to rollback)
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
     }
 };
