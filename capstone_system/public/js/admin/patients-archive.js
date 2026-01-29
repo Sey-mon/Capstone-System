@@ -65,7 +65,7 @@
         // Show loading state
         tableBody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-5">
+                <td colspan="9" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
@@ -125,7 +125,7 @@
         if (patients.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center py-5">
+                    <td colspan="9" class="text-center py-5">
                         <i class="fas fa-users fa-3x text-muted mb-3"></i>
                         <p>No ${status} patients found.</p>
                     </td>
@@ -170,21 +170,37 @@
             }
 
             return `
-                <tr class="patient-row ${status === 'archived' ? 'archived' : ''}">
+                <tr class="patient-row ${status === 'archived' ? 'archived' : ''}"
+                    data-name="${(patient.first_name + ' ' + patient.last_name).toLowerCase()}"
+                    data-admitted="${patient.date_of_admission_raw || patient.date_of_admission}"
+                    data-age="${patient.age_months}"
+                    data-gender="${patient.sex}"
+                    data-barangay="${patient.barangay || ''}"
+                    data-parent="${patient.parent || ''}"
+                    data-nutritionist="${patient.nutritionist || ''}"
+                    data-contact="${patient.contact_number || ''}">
                     <td><span class="badge bg-primary">${patient.custom_patient_id}</span></td>
                     <td class="patient-info-cell">
                         <div class="patient-details">
                             <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
-                            <div class="patient-admission">Admitted: ${patient.date_of_admission}</div>
                         </div>
+                    </td>
+                    <td class="admission-cell">
+                        <span class="admission-date">${patient.date_of_admission}</span>
                     </td>
                     <td class="age-cell"><span class="age-months">${patient.age_months} months</span></td>
                     <td><span class="badge badge-${patient.sex === 'Male' ? 'primary' : 'secondary'}">
                         <i class="fas fa-${patient.sex === 'Male' ? 'mars' : 'venus'}"></i> ${patient.sex}
                     </span></td>
-                    <td class="barangay-cell">${patient.barangay || 'Not assigned'}</td>
-                    <td class="parent-cell">${patient.parent || 'Not assigned'}</td>
-                    <td class="nutritionist-cell">${patient.nutritionist || 'Not assigned'}</td>
+                    <td class="barangay-cell">
+                        ${patient.barangay ? `<div class="barangay-name">${patient.barangay}</div>` : '<span class="text-muted">Not assigned</span>'}
+                    </td>
+                    <td>
+                        ${patient.parent ? `<span>${patient.parent}</span>` : '<span class="text-muted">Not assigned</span>'}
+                    </td>
+                    <td class="nutritionist-cell">
+                        ${patient.nutritionist ? `<div class="nutritionist-name">${patient.nutritionist}</div>` : '<span class="text-muted">Not assigned</span>'}
+                    </td>
                     <td class="actions-cell">
                         <div class="action-buttons">
                             ${actionButtons}
@@ -197,6 +213,11 @@
         // Reinitialize all action buttons including archive, view, edit, delete
         initializeArchiveButtons();
         initializeViewButtons();
+        
+        // Re-cache patient data for sorting/filtering to work properly
+        if (typeof window.cachePatientData === 'function') {
+            window.cachePatientData();
+        }
     }
 
     /**

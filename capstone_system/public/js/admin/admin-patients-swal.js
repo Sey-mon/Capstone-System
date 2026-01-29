@@ -1808,6 +1808,7 @@ function cachePatientData() {
                 gridElement: gridCard,
                 data: {
                     name: row.dataset.name || '',
+                    admitted: row.dataset.admitted || '',
                     age: parseInt(row.dataset.age) || 0,
                     gender: row.dataset.gender || '',
                     barangay: row.dataset.barangay || '',
@@ -2041,6 +2042,7 @@ function sortPatients() {
 
         switch(sortColumn) {
             case 'name': aValue = a.data.name; bValue = b.data.name; break;
+            case 'admitted': aValue = a.data.admitted; bValue = b.data.admitted; break;
             case 'age': aValue = a.data.age; bValue = b.data.age; break;
             case 'gender': aValue = a.data.gender; bValue = b.data.gender; break;
             case 'barangay': aValue = a.data.barangay; bValue = b.data.barangay; break;
