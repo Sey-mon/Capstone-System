@@ -377,6 +377,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/admin/admin-patients-swal.js') }}"></script>
-    <script src="{{ asset('js/admin/patients-archive.js') }}"></script>
+    <script src="{{ asset('js/admin/admin-patients-swal.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/patients-archive.js') }}?v={{ time() }}"></script>
 @endpush
