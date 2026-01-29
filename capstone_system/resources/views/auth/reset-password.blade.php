@@ -9,8 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Google reCAPTCHA v3 -->
-    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
+    <!-- Cloudflare Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
     <!-- Navigation Header -->
@@ -136,10 +136,10 @@
                         @enderror
                     </div>
 
-                    <!-- Google reCAPTCHA v3 (invisible) -->
-                    <input type="hidden" name="recaptcha_token" id="recaptchaToken">
+                    <!-- Cloudflare Turnstile Widget -->
+                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
                     
-                    @error('recaptcha_token')
+                    @error('cf-turnstile-response')
                         <div style="color: #ef4444; font-size: 0.875rem; margin-top: -10px; margin-bottom: 15px; text-align: center;">
                             {{ $message }}
                         </div>
@@ -275,22 +275,6 @@
                 } else {
                     this.setCustomValidity('');
                 }
-            });
-        }
-
-        // reCAPTCHA v3 - Generate token on form submit
-        const resetPasswordForm = document.getElementById('resetPasswordForm');
-        if (resetPasswordForm) {
-            resetPasswordForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                grecaptcha.ready(function() {
-                    grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'password_reset'})
-                        .then(function(token) {
-                            document.getElementById('recaptchaToken').value = token;
-                            resetPasswordForm.submit();
-                        });
-                });
             });
         }
 

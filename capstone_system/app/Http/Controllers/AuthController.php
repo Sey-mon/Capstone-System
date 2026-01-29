@@ -32,12 +32,12 @@ class AuthController extends Controller
             ])->withInput($request->except('email'));
         }
 
-        // LAYER 2: Google reCAPTCHA v3 Validation
+        // LAYER 2: Cloudflare Turnstile Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'recaptcha_token' => 'required',
+            'cf-turnstile-response' => 'required',
         ], [
-            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
+            'cf-turnstile-response.required' => 'Turnstile verification failed. Please refresh and try again.',
         ]);
 
         if ($validator->fails()) {
@@ -46,37 +46,36 @@ class AuthController extends Controller
                 ->withInput($request->except('email'));
         }
 
-        // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
-        $recaptchaSecret = config('services.recaptcha.secret_key');
-        if ($recaptchaSecret) {
+        // LAYER 3: Verify Turnstile with Cloudflare API
+        $turnstileSecret = config('services.turnstile.secret_key');
+        if ($turnstileSecret) {
             try {
-                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
-                    'secret' => $recaptchaSecret,
-                    'response' => $request->input('recaptcha_token'),
+                $turnstileResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $turnstileSecret,
+                    'response' => $request->input('cf-turnstile-response'),
                     'remoteip' => $request->ip()
                 ]);
                 
-                $recaptchaData = $recaptchaResponse->json();
+                $turnstileData = $turnstileResponse->json();
                 
-                // Log reCAPTCHA response for debugging
-                Log::info('reCAPTCHA Response', [
-                    'success' => $recaptchaData['success'] ?? false,
-                    'score' => $recaptchaData['score'] ?? 'N/A',
-                    'action' => $recaptchaData['action'] ?? 'N/A',
-                    'hostname' => $recaptchaData['hostname'] ?? 'N/A',
-                    'error-codes' => $recaptchaData['error-codes'] ?? []
+                // Log Turnstile response for debugging
+                Log::info('Turnstile Response', [
+                    'success' => $turnstileData['success'] ?? false,
+                    'challenge_ts' => $turnstileData['challenge_ts'] ?? 'N/A',
+                    'hostname' => $turnstileData['hostname'] ?? 'N/A',
+                    'error-codes' => $turnstileData['error-codes'] ?? []
                 ]);
                 
-                // Check if verification was successful and score is above threshold (0.3 - more lenient)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
-                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
+                // Check if verification was successful
+                if (!isset($turnstileData['success']) || !$turnstileData['success']) {
+                    Log::warning('Turnstile verification rejected', ['data' => $turnstileData]);
                     return back()->withErrors([
-                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                        'cf-turnstile-response' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('email'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
-                // Continue without reCAPTCHA on live server if API fails
+                Log::error('Turnstile verification exception: ' . $e->getMessage());
+                // Continue without Turnstile on live server if API fails
             }
         }
 
@@ -142,14 +141,14 @@ class AuthController extends Controller
             ])->withInput($request->except('password', 'password_confirmation'));
         }
 
-        // LAYER 2: Google reCAPTCHA v3 Validation
+        // LAYER 2: Cloudflare Turnstile Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'code' => 'required|digits:6',
             'password' => 'required|min:8|confirmed',
-            'recaptcha_token' => 'required',
+            'cf-turnstile-response' => 'required',
         ], [
-            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
+            'cf-turnstile-response.required' => 'Turnstile verification failed. Please refresh and try again.',
             'code.required' => 'Verification code is required.',
             'code.digits' => 'Verification code must be 6 digits.',
             'password.confirmed' => 'The password confirmation does not match.',
@@ -162,31 +161,31 @@ class AuthController extends Controller
                 ->withInput($request->except('password', 'password_confirmation', 'code'));
         }
 
-        // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
-        $recaptchaSecret = config('services.recaptcha.secret_key');
-        if ($recaptchaSecret) {
+        // LAYER 3: Verify Turnstile with Cloudflare API
+        $turnstileSecret = config('services.turnstile.secret_key');
+        if ($turnstileSecret) {
             try {
-                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
-                    'secret' => $recaptchaSecret,
-                    'response' => $request->input('recaptcha_token'),
+                $turnstileResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $turnstileSecret,
+                    'response' => $request->input('cf-turnstile-response'),
                     'remoteip' => $request->ip()
                 ]);
                 
-                $recaptchaData = $recaptchaResponse->json();
+                $turnstileData = $turnstileResponse->json();
                 
-                // Log reCAPTCHA response for debugging
-                Log::info('reCAPTCHA Response', $recaptchaData);
+                // Log Turnstile response for debugging
+                Log::info('Turnstile Response', $turnstileData);
                 
-                // Check if verification was successful and score is above threshold (0.3 - more lenient)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
-                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
+                // Check if verification was successful
+                if (!isset($turnstileData['success']) || !$turnstileData['success']) {
+                    Log::warning('Turnstile verification rejected', ['data' => $turnstileData]);
                     return back()->withErrors([
-                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                        'cf-turnstile-response' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('password', 'password_confirmation', 'code'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
-                // Continue without reCAPTCHA on live server if API fails
+                Log::error('Turnstile verification exception: ' . $e->getMessage());
+                // Continue without Turnstile on live server if API fails
             }
         }
 
@@ -259,9 +258,9 @@ class AuthController extends Controller
             'subject' => 'required|string|max:255',
             'description' => 'required|string|max:2000',
             'other_specify' => 'required_if:category,other|nullable|string|max:255',
-            'recaptcha_token' => 'required',
+            'cf-turnstile-response' => 'required',
         ], [
-            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
+            'cf-turnstile-response.required' => 'Turnstile verification failed. Please refresh and try again.',
             'other_specify.required_if' => 'Please specify your issue type when selecting "Other".',
         ]);
 
@@ -271,31 +270,31 @@ class AuthController extends Controller
                 ->withInput($request->except('description'));
         }
 
-        // LAYER 3: Verify reCAPTCHA v3 with Google API and check score
-        $recaptchaSecret = config('services.recaptcha.secret_key');
-        if ($recaptchaSecret) {
+        // LAYER 3: Verify Turnstile with Cloudflare API
+        $turnstileSecret = config('services.turnstile.secret_key');
+        if ($turnstileSecret) {
             try {
-                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
-                    'secret' => $recaptchaSecret,
-                    'response' => $request->input('recaptcha_token'),
+                $turnstileResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $turnstileSecret,
+                    'response' => $request->input('cf-turnstile-response'),
                     'remoteip' => $request->ip()
                 ]);
                 
-                $recaptchaData = $recaptchaResponse->json();
+                $turnstileData = $turnstileResponse->json();
                 
-                // Log reCAPTCHA response for debugging
-                Log::info('reCAPTCHA Response', $recaptchaData);
+                // Log Turnstile response for debugging
+                Log::info('Turnstile Response', $turnstileData);
                 
-                // Check if verification was successful and score is above threshold (0.3 - more lenient)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
-                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
+                // Check if verification was successful
+                if (!isset($turnstileData['success']) || !$turnstileData['success']) {
+                    Log::warning('Turnstile verification rejected', ['data' => $turnstileData]);
                     return back()->withErrors([
-                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                        'cf-turnstile-response' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('description'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
-                // Continue without reCAPTCHA on live server if API fails
+                Log::error('Turnstile verification exception: ' . $e->getMessage());
+                // Continue without Turnstile on live server if API fails
             }
         }
 
@@ -362,44 +361,44 @@ class AuthController extends Controller
             ])->withInput($request->except('password'));
         }
 
-        // LAYER 2: Google reCAPTCHA v3 Validation
+        // LAYER 2: Cloudflare Turnstile Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'recaptcha_token' => 'required',
+            'cf-turnstile-response' => 'required',
         ], [
-            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
+            'cf-turnstile-response.required' => 'Turnstile verification failed. Please refresh and try again.',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput($request->except('password'));
         }
 
-        // Verify reCAPTCHA v3 with Google and check score
-        $recaptchaSecret = config('services.recaptcha.secret_key');
-        if ($recaptchaSecret) {
+        // Verify Turnstile with Cloudflare and check score
+        $turnstileSecret = config('services.turnstile.secret_key');
+        if ($turnstileSecret) {
             try {
-                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
-                    'secret' => $recaptchaSecret,
-                    'response' => $request->input('recaptcha_token'),
+                $turnstileResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $turnstileSecret,
+                    'response' => $request->input('cf-turnstile-response'),
                     'remoteip' => $request->ip()
                 ]);
                 
-                $recaptchaData = $recaptchaResponse->json();
+                $turnstileData = $turnstileResponse->json();
                 
-                // Log reCAPTCHA response for debugging
-                Log::info('reCAPTCHA Response (Staff Login)', $recaptchaData);
+                // Log Turnstile response for debugging
+                Log::info('Turnstile Response (Staff Login)', $turnstileData);
                 
-                // Check if verification was successful and score is above threshold (0.3 - more lenient)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
-                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
+                // Check if verification was successful
+                if (!isset($turnstileData['success']) || !$turnstileData['success']) {
+                    Log::warning('Turnstile verification rejected', ['data' => $turnstileData]);
                     return back()->withErrors([
-                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                        'cf-turnstile-response' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('password'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
-                // Continue without reCAPTCHA on live server if API fails
+                Log::error('Turnstile verification exception: ' . $e->getMessage());
+                // Continue without Turnstile on live server if API fails
             }
         }
 
@@ -470,44 +469,44 @@ class AuthController extends Controller
             ])->withInput($request->except('password'));
         }
 
-        // LAYER 2: Google reCAPTCHA v3 Validation
+        // LAYER 2: Cloudflare Turnstile Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'recaptcha_token' => 'required',
+            'cf-turnstile-response' => 'required',
         ], [
-            'recaptcha_token.required' => 'reCAPTCHA verification failed. Please refresh and try again.',
+            'cf-turnstile-response.required' => 'Turnstile verification failed. Please refresh and try again.',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput($request->except('password'));
         }
 
-        // Verify reCAPTCHA v3 with Google and check score
-        $recaptchaSecret = config('services.recaptcha.secret_key');
-        if ($recaptchaSecret) {
+        // Verify Turnstile with Cloudflare
+        $turnstileSecret = config('services.turnstile.secret_key');
+        if ($turnstileSecret) {
             try {
-                $recaptchaResponse = Http::get('https://www.google.com/recaptcha/api/siteverify', [
-                    'secret' => $recaptchaSecret,
-                    'response' => $request->input('recaptcha_token'),
+                $turnstileResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $turnstileSecret,
+                    'response' => $request->input('cf-turnstile-response'),
                     'remoteip' => $request->ip()
                 ]);
                 
-                $recaptchaData = $recaptchaResponse->json();
+                $turnstileData = $turnstileResponse->json();
                 
-                // Log reCAPTCHA response for debugging
-                Log::info('reCAPTCHA Response (Public Login)', $recaptchaData);
+                // Log Turnstile response for debugging
+                Log::info('Turnstile Response (Public Login)', $turnstileData);
                 
-                // Check if verification was successful and score is above threshold (0.3 - more lenient)
-                if (!isset($recaptchaData['success']) || !$recaptchaData['success'] || ($recaptchaData['score'] ?? 0) < 0.3) {
-                    Log::warning('reCAPTCHA verification rejected', ['data' => $recaptchaData]);
+                // Check if verification was successful
+                if (!isset($turnstileData['success']) || !$turnstileData['success']) {
+                    Log::warning('Turnstile verification rejected', ['data' => $turnstileData]);
                     return back()->withErrors([
-                        'recaptcha_token' => 'Security verification failed. Please try again.',
+                        'cf-turnstile-response' => 'Security verification failed. Please try again.',
                     ])->withInput($request->except('password'));
                 }
             } catch (\Exception $e) {
-                Log::error('reCAPTCHA verification exception: ' . $e->getMessage());
-                // Continue without reCAPTCHA on live server if API fails
+                Log::error('Turnstile verification exception: ' . $e->getMessage());
+                // Continue without Turnstile on live server if API fails
             }
         }
 
