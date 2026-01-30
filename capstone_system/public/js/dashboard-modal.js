@@ -53,12 +53,8 @@ window.modalFallbacks = {
 };
 
 // Global fallback functions for specific modals
-if (typeof window.openAddPatientModal === 'undefined') {
-    window.openAddPatientModal = function() {
-        console.log('Using fallback for Add Patient Modal');
-        window.modalFallbacks.openModal('patientModal');
-    };
-}
+// Note: openAddPatientModal is handled by page-specific scripts (e.g., patients.js uses SweetAlert2)
+// Do not create fallback here as it will override page-specific implementations
 
 // Global function to close any modal and cleanup backdrops
 window.closeAnyModal = function() {
