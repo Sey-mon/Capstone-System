@@ -909,16 +909,6 @@ function deletePatient(patientId) {
         text: 'Only administrators can permanently delete patient records. Please use the Archive function to remove patients from the active list while preserving medical records.',
         confirmButtonColor: '#2e7d32'
     });
-    return;
-                confirmButtonColor: '#2e7d32',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                // Refresh the patient list and update count
-                applyFilters();
-            });
-        }
-    });
 }
 
 // Auto-calculate nutritional indicators
