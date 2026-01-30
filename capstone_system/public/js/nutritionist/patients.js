@@ -405,13 +405,29 @@ function initializeModals() {
 
 function getFormHTML() {
     const template = document.getElementById('patientFormTemplate');
-    if (!template) return '';
+    if (!template) {
+        console.error('❌ Patient form template not found!');
+        return '';
+    }
+    console.log('✅ Patient form template found');
     return template.innerHTML;
 }
 
 function openAddPatientModal() {
+    console.log('🔵 openAddPatientModal called');
     isEditing = false;
     currentPatientId = null;
+    
+    const formHTML = getFormHTML();
+    if (!formHTML) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Patient form template not found. Please refresh the page.',
+            confirmButtonColor: '#2e7d32'
+        });
+        return;
+    }
     
     Swal.fire({
         title: 'Add Patient',
@@ -1019,6 +1035,9 @@ window.deletePatient = deletePatient;
 window.clearFilters = clearFilters;
 window.handleAllergiesChange = handleAllergiesChange;
 window.handleReligionChange = handleReligionChange;
+
+console.log('✅ Patient management functions loaded');
+console.log('✅ openAddPatientModal function:', typeof window.openAddPatientModal);
 
 // Handle allergies dropdown change
 function handleAllergiesChange(select) {

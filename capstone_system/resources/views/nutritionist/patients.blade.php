@@ -345,6 +345,6 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('js/nutritionist/patients.js') }}"></script>
-<script src="{{ asset('js/nutritionist/patients-archive.js') }}"></script>
+<script src="{{ asset('js/nutritionist/patients.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/nutritionist/patients-archive.js') }}?v={{ time() }}"></script>
 @endsection
