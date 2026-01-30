@@ -910,15 +910,6 @@ function deletePatient(patientId) {
         confirmButtonColor: '#2e7d32'
     });
     return;
-                confirmButtonColor: '#2e7d32',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                // Refresh the patient list and update count
-                applyFilters();
-            });
-        }
-    });
 }
 
 // Auto-calculate nutritional indicators
