@@ -19,13 +19,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 300);
             });
         } else if (element.type === 'text') {
-            // For search input, add debounce
+            // For search input, add debounce with longer delay
             let timeout;
             element.addEventListener('input', function() {
                 clearTimeout(timeout);
+                // Show visual feedback that search will trigger
+                const searchIcon = element.parentElement.querySelector('.search-icon');
+                if (searchIcon) {
+                    searchIcon.style.opacity = '0.5';
+                }
+                
                 timeout = setTimeout(() => {
+                    // Reset icon opacity before submit
+                    if (searchIcon) {
+                        searchIcon.style.opacity = '1';
+                    }
                     submitForm();
-                }, 500); // 500ms debounce
+                }, 1200); // 1200ms (1.2 seconds) debounce - gives more time to finish typing
             });
         }
     });
