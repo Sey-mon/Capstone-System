@@ -325,7 +325,6 @@ function loadPatientsFromUrl(url) {
         }
     })
     .catch(error => {
-        console.error('Error loading patients:', error);
         showError('Failed to load patients. Please try again.');
     })
     .finally(() => {
@@ -375,7 +374,7 @@ function initializeViewToggle() {
             
             // TODO: Implement grid view when needed
             if (view === 'grid') {
-                console.log('Grid view not yet implemented');
+                // Grid view not yet implemented
             }
         });
     });
@@ -400,21 +399,17 @@ function showError(message) {
 
 function initializeModals() {
     // SweetAlert2 doesn't need initialization
-    console.log('SweetAlert2 modals ready');
 }
 
 function getFormHTML() {
     const template = document.getElementById('patientFormTemplate');
     if (!template) {
-        console.error('❌ Patient form template not found!');
         return '';
     }
-    console.log('✅ Patient form template found');
     return template.innerHTML;
 }
 
 function openAddPatientModal() {
-    console.log('🔵 openAddPatientModal called');
     isEditing = false;
     currentPatientId = null;
     
@@ -643,7 +638,6 @@ function editPatient(patientId) {
                 text: 'Failed to load patient data for editing.',
                 confirmButtonColor: '#2e7d32'
             });
-            console.error('Error fetching patient data:', error);
         });
 }
 
@@ -912,7 +906,6 @@ function viewPatient(patientId) {
                 text: 'Failed to load patient details. Please try again.',
                 confirmButtonColor: '#2e7d32'
             });
-            console.error('Error fetching patient details:', error);
         });
 }
 
@@ -942,7 +935,6 @@ function attachNutritionalCalculators(form) {
     const bmiForAgeInput = form.querySelector('#bmi_for_age');
 
     if (!weightInput || !heightInput || !ageInput || !sexInput) {
-        console.warn('Required inputs not found for nutritional calculation');
         return;
     }
 
@@ -1036,9 +1028,6 @@ window.clearFilters = clearFilters;
 window.handleAllergiesChange = handleAllergiesChange;
 window.handleReligionChange = handleReligionChange;
 
-console.log('✅ Patient management functions loaded');
-console.log('✅ openAddPatientModal function:', typeof window.openAddPatientModal);
-
 // Handle allergies dropdown change
 function handleAllergiesChange(select) {
     const otherInput = document.getElementById('allergies_other');
@@ -1064,5 +1053,3 @@ function handleReligionChange(select) {
         otherInput.value = '';
     }
 }
-
-console.log('Enhanced patient page functions loaded with filtering and pagination');

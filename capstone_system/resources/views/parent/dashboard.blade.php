@@ -351,7 +351,11 @@
                             <div class="activity-meta">
                                 <span class="meta-item">
                                     <i class="fas fa-user-md"></i>
-                                    {{ $assessment->nutritionist->first_name }} {{ $assessment->nutritionist->last_name }}
+                                    @if($assessment->nutritionist)
+                                        {{ $assessment->nutritionist->first_name }} {{ $assessment->nutritionist->last_name }}
+                                    @else
+                                        <em>Unassigned</em>
+                                    @endif
                                 </span>
                                 <span class="meta-divider">•</span>
                                 <span class="meta-item">
