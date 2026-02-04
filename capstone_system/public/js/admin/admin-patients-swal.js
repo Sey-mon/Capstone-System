@@ -851,219 +851,158 @@ function showViewPatientModal(patient) {
     Swal.fire({
         title: '<i class="fas fa-user-circle"></i> Patient Details',
         html: `
-            <div class="patient-details-grid">
-                <div class="detail-section patient-id-section">
-                    <h6><i class="fas fa-id-badge"></i> Patient ID</h6>
-                    <div class="detail-value highlight">
+            <div class="swal-form-container">
+                <!-- Patient ID Display -->
+                <div style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); padding: 15px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,123,255,0.2);">
+                    <div style="color: white; font-size: 14px; opacity: 0.9; margin-bottom: 5px;">
+                        <i class="fas fa-id-card"></i> Patient ID
+                    </div>
+                    <div style="color: white; font-size: 24px; font-weight: bold; letter-spacing: 1px;">
                         ${patient.custom_patient_id || 'N/A'}
                     </div>
                 </div>
                 
-                <div class="detail-section">
-                    <h6><i class="fas fa-id-card"></i> Basic Information</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-user"></i>
-                            Full Name
-                        </div>
-                        <div class="detail-value">${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-calendar-alt"></i>
-                            Age
-                        </div>
-                        <div class="detail-value">${patient.age_months} months</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-venus-mars"></i>
-                            Sex
-                        </div>
-                        <div class="detail-value">${patient.sex || 'N/A'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-birthday-cake"></i>
-                            Birthdate
-                        </div>
-                        <div class="detail-value">${patient.birthdate ? new Date(patient.birthdate).toLocaleDateString() : 'N/A'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-phone"></i>
-                            Contact
-                        </div>
-                        <div class="detail-value">${patient.contact_number || 'N/A'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-calendar-check"></i>
-                            Admitted
-                        </div>
-                        <div class="detail-value">${new Date(patient.date_of_admission).toLocaleDateString()}</div>
-                    </div>
-                </div>
-                
-                <div class="detail-section">
-                    <h6><i class="fas fa-user-friends"></i> Assignment Information</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-user-tie"></i>
-                            Parent/Guardian
-                        </div>
-                        <div class="detail-value">${parentName}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-user-md"></i>
-                            Nutritionist
-                        </div>
-                        <div class="detail-value">${nutritionistName}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Barangay
-                        </div>
-                        <div class="detail-value">${barangayName}</div>
-                    </div>
-                </div>
-                
-                <div class="detail-section">
-                    <h6><i class="fas fa-heartbeat"></i> Health Metrics</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-weight"></i>
-                            Weight
-                        </div>
-                        <div class="detail-value">${patient.weight_kg} kg</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-ruler-vertical"></i>
-                            Height
-                        </div>
-                        <div class="detail-value">${patient.height_cm} cm</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-chart-line"></i>
-                            Weight for Age
-                        </div>
-                        <div class="detail-value">
-                            ${patient.latest_assessment?.weight_for_age ? 
-                                `<span class="detail-badge badge-info">${patient.latest_assessment.weight_for_age}</span>` : 
-                                '<span class="text-muted">Not assessed</span>'}
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-user-circle" style="color: #007bff;"></i> Basic Information
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Full Name</label>
+                            <div class="detail-value-display">${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}</div>
                         </div>
                     </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-chart-line"></i>
-                            Height for Age
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-birthday-cake"></i> Birthdate</label>
+                            <div class="detail-value-display">${patient.birthdate ? new Date(patient.birthdate).toLocaleDateString() : 'N/A'}</div>
                         </div>
-                        <div class="detail-value">
-                            ${patient.latest_assessment?.height_for_age ? 
-                                `<span class="detail-badge badge-info">${patient.latest_assessment.height_for_age}</span>` : 
-                                '<span class="text-muted">Not assessed</span>'}
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Age</label>
+                            <div class="detail-value-display">${patient.age_months} months</div>
                         </div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-chart-line"></i>
-                            BMI for Age
-                        </div>
-                        <div class="detail-value">
-                            ${patient.latest_assessment?.bmi_for_age ? 
-                                `<span class="detail-badge badge-info">${patient.latest_assessment.bmi_for_age}</span>` : 
-                                '<span class="text-muted">Not assessed</span>'}
+                        <div class="form-group">
+                            <label><i class="fas fa-venus-mars"></i> Sex</label>
+                            <div class="detail-value-display">${patient.sex || 'N/A'}</div>
                         </div>
                     </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-baby"></i>
-                            Breastfeeding
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-phone"></i> Contact Number</label>
+                            <div class="detail-value-display">${patient.contact_number || 'N/A'}</div>
                         </div>
-                        <div class="detail-value">${patient.breastfeeding || 'Not specified'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-stethoscope"></i>
-                            Edema
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> Date of Admission</label>
+                            <div class="detail-value-display">${new Date(patient.date_of_admission).toLocaleDateString()}</div>
                         </div>
-                        <div class="detail-value">${patient.edema || 'Not specified'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-allergies"></i>
-                            Allergies
-                        </div>
-                        <div class="detail-value">${patient.allergies || 'None reported'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-pray"></i>
-                            Religion
-                        </div>
-                        <div class="detail-value">${patient.religion || 'Not specified'}</div>
                     </div>
                 </div>
 
-                <div class="detail-section">
-                    <h6><i class="fas fa-home"></i> Household Information</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-users"></i>
-                            Total Adults
+                <!-- Assignment & Location -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-user-tag" style="color: #28a745;"></i> Assignment & Location
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user-friends"></i> Parent / Guardian</label>
+                            <div class="detail-value-display">${parentName}</div>
                         </div>
-                        <div class="detail-value">${patient.total_household_adults || 0}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-child"></i>
-                            Total Children
+                        <div class="form-group">
+                            <label><i class="fas fa-user-md"></i> Assigned Nutritionist</label>
+                            <div class="detail-value-display">${nutritionistName}</div>
                         </div>
-                        <div class="detail-value">${patient.total_household_children || 0}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-user-friends"></i>
-                            Total Twins
-                        </div>
-                        <div class="detail-value">${patient.total_household_twins || 0}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-hands-helping"></i>
-                            4Ps Beneficiary
-                        </div>
-                        <div class="detail-value">
-                            ${patient.is_4ps_beneficiary ? 
-                                '<span class="detail-badge badge-success"><i class="fas fa-check"></i> Yes</span>' : 
-                                '<span class="detail-badge badge-warning"><i class="fas fa-times"></i> No</span>'}
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt"></i> Barangay</label>
+                            <div class="detail-value-display">${barangayName}</div>
                         </div>
                     </div>
                 </div>
-                
-                ${patient.other_medical_problems ? `
-                <div class="detail-section">
-                    <h6><i class="fas fa-notes-medical"></i> Medical Notes</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-clipboard-list"></i>
-                            Other Medical Problems
+
+                <!-- Health Metrics -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-heartbeat" style="color: #dc3545;"></i> Health Metrics & Status
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-weight"></i> Weight</label>
+                            <div class="detail-value-display">${patient.weight_kg} kg</div>
                         </div>
-                        <div class="detail-value">${patient.other_medical_problems}</div>
+                        <div class="form-group">
+                            <label><i class="fas fa-ruler-vertical"></i> Height</label>
+                            <div class="detail-value-display">${patient.height_cm} cm</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-baby"></i> Breastfeeding Status</label>
+                            <div class="detail-value-display">${patient.breastfeeding || 'Not specified'}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-disease"></i> Edema Present</label>
+                            <div class="detail-value-display">${patient.edema || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-allergies"></i> Allergies</label>
+                            <div class="detail-value-display">${patient.allergies || 'None reported'}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-pray"></i> Religion</label>
+                            <div class="detail-value-display">${patient.religion || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    ${patient.other_medical_problems ? `
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-notes-medical"></i> Other Medical Problems</label>
+                            <div class="detail-value-display">${patient.other_medical_problems}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- Household Information -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-home" style="color: #ffc107;"></i> Household Information
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-users"></i> Total Adults</label>
+                            <div class="detail-value-display">${patient.total_household_adults || 0}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-child"></i> Total Children</label>
+                            <div class="detail-value-display">${patient.total_household_children || 0}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-children"></i> Total Twins</label>
+                            <div class="detail-value-display">${patient.total_household_twins || 0}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-hands-helping"></i> 4Ps Beneficiary</label>
+                            <div class="detail-value-display">
+                                ${patient.is_4ps_beneficiary ? 
+                                    '<span class="detail-badge badge-success"><i class="fas fa-check"></i> Yes</span>' : 
+                                    '<span class="detail-badge badge-warning"><i class="fas fa-times"></i> No</span>'}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                ` : ''}
             </div>
         `,
         showConfirmButton: true,
         confirmButtonText: '<i class="fas fa-times-circle"></i> Close',
         customClass: {
             container: 'swal-patient-modal',
-            popup: 'swal-patient-popup',
+            popup: 'swal-patient-popup swal-view-patient-popup',
+            htmlContainer: 'swal-view-patient-content',
             confirmButton: 'btn btn-secondary'
         },
         width: '950px'

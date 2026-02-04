@@ -1059,6 +1059,23 @@
     color: #2e7d32;
 }
 
+/* View Patient Modal Scrollable Content */
+.swal-view-patient-popup {
+    max-height: none !important;
+}
+
+.swal-view-patient-content {
+    max-height: 65vh !important;
+    overflow-y: auto !important;
+    padding: 0 !important;
+    background: #f8f9fa !important;
+}
+
+.swal-view-patient-popup .swal-form-container {
+    max-height: none !important;
+    overflow-y: visible !important;
+}
+
 /* Patient Details View */
 .patient-details-grid {
     display: grid;
@@ -1435,6 +1452,19 @@
     max-height: 65vh;
     overflow-y: auto;
     background: #f8f9fa;
+}
+
+/* Display value styling for view modal */
+.detail-value-display {
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #495057;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
 }
 
 .form-section {
