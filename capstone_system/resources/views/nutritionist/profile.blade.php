@@ -283,38 +283,6 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions Card -->
-                <div class="content-card actions-card">
-                    <div class="card-header">
-                        <div class="card-title-group">
-                            <div class="card-icon actions">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <h3 class="card-title">Quick Actions</h3>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <div class="action-buttons">
-                            <button class="action-btn">
-                                <i class="fas fa-user-plus"></i>
-                                <span>Add Patient</span>
-                            </button>
-                            <button class="action-btn">
-                                <i class="fas fa-clipboard-list"></i>
-                                <span>New Assessment</span>
-                            </button>
-                            <button class="action-btn">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Schedule</span>
-                            </button>
-                            <button class="action-btn">
-                                <i class="fas fa-file-medical"></i>
-                                <span>View Reports</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Danger Zone Card -->
                 <div class="content-card danger-card">
                     <div class="card-header">
