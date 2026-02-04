@@ -1403,6 +1403,7 @@
     border-radius: 16px;
     padding: 0;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    background: #f8f9fa;
 }
 
 .swal-patient-popup {
@@ -1414,7 +1415,7 @@
     font-size: 1.75rem;
     font-weight: 700;
     color: var(--primary-color);
-    padding: 2rem 2rem 1rem;
+    padding: 2rem 2rem 1rem 2rem;
     margin: 0;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-bottom: 3px solid var(--primary-color);
@@ -1430,7 +1431,7 @@
 
 .swal-form-container {
     text-align: left;
-    padding: 1.5rem 2rem 0.5rem;
+    padding: 1.5rem 2rem 0.5rem 2rem;
     max-height: 65vh;
     overflow-y: auto;
     background: #f8f9fa;
@@ -1735,29 +1736,35 @@
 /* SweetAlert2 Button Customization */
 .swal2-actions {
     gap: 1rem;
-    margin: 1rem 0 0 !important;
-    padding: 1rem 2rem 1rem;
+    margin: 0 !important;
+    padding: 1rem 2rem 2rem 2rem;
     background: #f8f9fa;
 }
 
+.swal2-confirm.btn-success,
 .swal2-confirm.btn-primary {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
-    border: none;
-    padding: 0.875rem 2.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    background: #28a745 !important;
+    border: 2px solid #28a745 !important;
+    color: white !important;
+    padding: 0.875rem 2.5rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: none !important;
 }
 
+.swal2-confirm.btn-success:hover,
 .swal2-confirm.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    background: #218838 !important;
+    border-color: #218838 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
 }
 
+.swal2-confirm.btn-success:active,
 .swal2-confirm.btn-primary:active {
-    transform: translateY(0);
+    transform: translateY(0) !important;
 }
 
 .swal2-cancel.btn-secondary {
@@ -2995,4 +3002,75 @@
     .swal-delete-parent-confirm .btn {
         width: 100% !important;
     }
+}
+
+/* Simplified Delete Confirmation Modal */
+.swal-delete-simple {
+    padding: 0 !important;
+    border-radius: 8px !important;
+    background-color: #f8f9fa !important;
+}
+
+.swal-delete-simple .swal2-html-container {
+    margin: 0 !important;
+}
+
+.swal-delete-title {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    color: #2c3e50 !important;
+    padding: 2rem 2rem 1.5rem 2rem !important;
+    margin: 0 !important;
+    background-color: transparent !important;
+}
+
+.swal-delete-text {
+    font-size: 1rem !important;
+    color: #6c757d !important;
+    padding: 0 2rem 2rem 2rem !important;
+    margin: 0 !important;
+    text-align: center !important;
+}
+
+.swal-delete-actions {
+    margin: 0 !important;
+    padding: 0 2rem 2rem 2rem !important;
+    display: flex !important;
+    gap: 1rem !important;
+    justify-content: center !important;
+}
+
+.swal-delete-confirm-btn,
+.swal-delete-cancel-btn {
+    margin: 0 !important;
+    padding: 0.75rem 2rem !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    min-width: 120px !important;
+}
+
+.swal-delete-confirm-btn {
+    background-color: #d33 !important;
+    color: white !important;
+}
+
+.swal-delete-confirm-btn:hover {
+    background-color: #b52b2b !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(221, 51, 51, 0.3) !important;
+}
+
+.swal-delete-cancel-btn {
+    background-color: #3085d6 !important;
+    color: white !important;
+}
+
+.swal-delete-cancel-btn:hover {
+    background-color: #2773bd !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(48, 133, 214, 0.3) !important;
 }
