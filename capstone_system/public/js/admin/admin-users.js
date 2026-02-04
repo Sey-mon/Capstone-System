@@ -45,19 +45,19 @@ function openAddUserModal() {
                 <div class="form-row">
                     <div class="form-group">
                         <label for="add_first_name">First Name *</label>
-                        <input type="text" id="add_first_name" name="first_name" class="swal2-input" required pattern="[A-Za-z\s]+" title="Only letters and spaces allowed">
-                        <small class="field-hint">Letters only</small>
+                        <input type="text" id="add_first_name" name="first_name" class="swal2-input" required pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
+                        <small class="field-hint">Letters, spaces, hyphens, and periods allowed</small>
                     </div>
                     <div class="form-group">
                         <label for="add_middle_name">Middle Name</label>
-                        <input type="text" id="add_middle_name" name="middle_name" class="swal2-input" pattern="[A-Za-z\s]*" title="Only letters and spaces allowed">
+                        <input type="text" id="add_middle_name" name="middle_name" class="swal2-input" pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]*" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="add_last_name">Last Name *</label>
-                        <input type="text" id="add_last_name" name="last_name" class="swal2-input" required pattern="[A-Za-z\s]+" title="Only letters and spaces allowed">
-                        <small class="field-hint">Letters only</small>
+                        <input type="text" id="add_last_name" name="last_name" class="swal2-input" required pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
+                        <small class="field-hint">Letters, spaces, hyphens, and periods allowed</small>
                     </div>
                     <div class="form-group">
                         <label for="add_role_id">Role *</label>
@@ -147,18 +147,18 @@ function openAddUserModal() {
                 return false;
             }
             
-            // Name validation (letters and spaces only)
-            const namePattern = /^[A-Za-z\s]+$/;
+            // Name validation (letters, spaces, hyphens, periods, and accents)
+            const namePattern = /^[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+$/;
             if (!namePattern.test(firstName)) {
-                Swal.showValidationMessage('First name should contain only letters');
+                Swal.showValidationMessage('First name contains invalid characters');
                 return false;
             }
             if (!namePattern.test(lastName)) {
-                Swal.showValidationMessage('Last name should contain only letters');
+                Swal.showValidationMessage('Last name contains invalid characters');
                 return false;
             }
             if (middleName && !namePattern.test(middleName)) {
-                Swal.showValidationMessage('Middle name should contain only letters');
+                Swal.showValidationMessage('Middle name contains invalid characters');
                 return false;
             }
             
@@ -260,19 +260,19 @@ function editUser(userId) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="edit_first_name">First Name *</label>
-                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${user.first_name}" required pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed">
-                                <small class="field-hint">Letters only</small>
+                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${user.first_name}" required pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\\s\\-\\.]+" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
+                                <small class="field-hint">Letters, spaces, hyphens, and periods allowed</small>
                             </div>
                             <div class="form-group">
                                 <label for="edit_middle_name">Middle Name</label>
-                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${user.middle_name || ''}" pattern="[A-Za-z\\s]*" title="Only letters and spaces allowed">
+                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${user.middle_name || ''}" pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\\s\\-\\.]*" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="edit_last_name">Last Name *</label>
-                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${user.last_name}" required pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed">
-                                <small class="field-hint">Letters only</small>
+                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${user.last_name}" required pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\\s\\-\\.]+" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
+                                <small class="field-hint">Letters, spaces, hyphens, and periods allowed</small>
                             </div>
                             <div class="form-group">
                                 <label for="edit_role_id">Role *</label>
@@ -379,18 +379,18 @@ function editUser(userId) {
                         return false;
                     }
                     
-                    // Name validation (letters and spaces only)
-                    const namePattern = /^[A-Za-z\s]+$/;
+                    // Name validation (letters, spaces, hyphens, periods, and accents)
+                    const namePattern = /^[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+$/;
                     if (!namePattern.test(firstName)) {
-                        Swal.showValidationMessage('First name should contain only letters and spaces');
+                        Swal.showValidationMessage('First name contains invalid characters');
                         return false;
                     }
                     if (!namePattern.test(lastName)) {
-                        Swal.showValidationMessage('Last name should contain only letters and spaces');
+                        Swal.showValidationMessage('Last name contains invalid characters');
                         return false;
                     }
                     if (middleName && !namePattern.test(middleName)) {
-                        Swal.showValidationMessage('Middle name should contain only letters and spaces');
+                        Swal.showValidationMessage('Middle name contains invalid characters');
                         return false;
                     }
                     

@@ -2,7 +2,7 @@
 
 /* ========== PAGE LAYOUT ========== */
 .patients-management {
-    padding: 1.5rem;
+    padding: 0;
     background: var(--bg-light);
     min-height: 100vh;
 }
@@ -68,7 +68,7 @@
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
     gap: 1.5rem;
-    align-items: end;
+    align-items: start;
     width: 100%;
 }
 
