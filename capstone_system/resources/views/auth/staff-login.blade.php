@@ -223,58 +223,58 @@
         <div class="hero-content">
             <div class="hero-text">
                 <div class="slideshow-container">
-                    <!-- Slide 1: Getting Started -->
+                    <!-- Slide 1: Dashboard Overview -->
                     <div class="slide active">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-user-circle"></i>
+                                <i class="fas fa-chart-pie"></i>
                             </div>
-                            <h3>Step 1: View Your Patients</h3>
-                            <p>After logging in, you'll see your dashboard showing all children assigned to you. Click on "Patients" in the menu to view their complete information including name, age, weight, height, and parent contact details. You can search for specific children using the search box.</p>
+                            <h3>Step 1: Dashboard Overview</h3>
+                            <p>After logging in, you'll see your Dashboard with real-time statistics of children in your barangay. The dashboard displays total patients, recent screenings, nutrition status breakdown with colorful charts, and quick access to urgent cases. You can view trends and monitor which children need immediate attention at a glance.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 2: Conducting Assessments -->
+                    <!-- Slide 2: Patient Management -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-clipboard-check"></i>
+                                <i class="fas fa-user-injured"></i>
                             </div>
-                            <h3>Step 2: Conduct Health Assessments</h3>
-                            <p>Click "Assessments" then "Create New Assessment" to evaluate a child's nutrition status. Simply enter the child's current weight, height, and arm measurement (MUAC). The system automatically calculates if the child is malnourished, normal, or overweight. Results are saved instantly.</p>
+                            <h3>Step 2: Manage Patients</h3>
+                            <p>Click "Patients" to view all children assigned to your barangay. You can add new patients, update their information (name, birthdate, gender, parent contact), search and filter by status or age, and archive inactive cases. Each patient record includes their complete profile, screening history, and generated meal plans all in one place.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 3: Creating Meal Plans -->
+                    <!-- Slide 3: Nutrition Screening -->
+                    <div class="slide">
+                        <div class="slide-content">
+                            <div class="slide-icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <h3>Step 3: Conduct Nutrition Screenings</h3>
+                            <p>Click "Screenings" to perform nutrition assessments. Select a child from the Patients list, then enter their current weight, height, and MUAC (Mid-Upper Arm Circumference). The AI-powered system instantly calculates BMI, weight-for-age, height-for-age, and diagnoses their nutrition status (Normal, Underweight, Wasted, Stunted, Overweight). Results are automatically saved with timestamps.</p>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4: Meal Plan Generation -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
                                 <i class="fas fa-utensils"></i>
                             </div>
-                            <h3>Step 3: Generate Meal Plans</h3>
-                            <p>Go to "Meal Plans" menu, select a child, and click "Generate Meal Plan". You can list available foods in your area, and the system creates a personalized weekly meal schedule with breakfast, lunch, snacks, and dinner recommendations suitable for the child's needs.</p>
+                            <h3>Step 4: Generate AI Meal Plans</h3>
+                            <p>Visit "Meal Plans" to create personalized nutrition programs. Select a child, specify available local foods, dietary restrictions, and budget. The AI generates a complete weekly meal plan with breakfast, lunch, dinner, and snacks tailored to the child's age, weight, and nutritional needs. You can also create feeding programs for groups and download meal plans as PDF.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 4: Reports and Monitoring -->
+                    <!-- Slide 5: Reports & Food Database -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
                                 <i class="fas fa-chart-bar"></i>
                             </div>
-                            <h3>Step 4: Track Progress & Reports</h3>
-                            <p>Use "Reports" to download PDF summaries of children's health progress, assessment history, and meal plans. Share these with parents or health coordinators. The dashboard shows colorful charts to help you see trends and which children need more attention.</p>
-                        </div>
-                    </div>
-
-                    <!-- Slide 5: Food Database -->
-                    <div class="slide">
-                        <div class="slide-content">
-                            <div class="slide-icon">
-                                <i class="fas fa-apple-alt"></i>
-                            </div>
-                            <h3>Additional Tool: Food Database</h3>
-                            <p>Access "Food Database" to browse nutritional information for hundreds of local foods. Search by food name or type. If you can't find a food item, you can request to add it using the "Food Requests" menu, and the administrator will review and add it.</p>
+                            <h3>Step 5: Reports & Food Database</h3>
+                            <p>Access "Reports" to generate and download PDF summaries including Children Monitoring Reports, Assessment Summaries, and Monthly Progress Reports for your barangay. The "Food Database" lets you browse nutritional information for hundreds of Filipino foods—search by name or category to view calories, protein, vitamins, and minerals to help recommend the best foods for children's meal plans.</p>
                         </div>
                     </div>
 
@@ -421,11 +421,13 @@
                     <p class="footer-about">
                         Smart Health and Recommender System for San Pedro City's Nutrition Program - Building a healthier, food-secure future for all San Pedrenses.
                     </p>
-                    <div class="footer-social">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+
+                </div>
+
+                <div class="footer-section">
+                    <h4>Connect With Us</h4>
+                    <div class="footer-social" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start;">
+                        <a href="https://www.facebook.com/profile.php?id=61555362010142" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
                     </div>
                 </div>
 
@@ -434,24 +436,7 @@
                     <h4>Quick Links</h4>
                     <ul class="footer-list">
                         <li><a href="#home">Home</a></li>
-                        <li><a href="#about">About Us</a></li>
-                        <li><a href="#mission">Mission</a></li>
-                        <li><a href="#vision">Vision</a></li>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="{{ route('register') }}">Register</a></li>
-                    </ul>
-                </div>
-
-                <!-- Services -->
-                <div class="footer-section">
-                    <h4>Services</h4>
-                    <ul class="footer-list">
-                        <li><a href="#">Nutrition Monitoring</a></li>
-                        <li><a href="#">Patient Assessment</a></li>
-                        <li><a href="#">Meal Planning</a></li>
-                        <li><a href="#">Food Inventory</a></li>
-                        <li><a href="#">Health Analytics</a></li>
-                        <li><a href="{{ route('staff.login') }}">Staff Portal</a></li>
+                        <li><a href="{{ route('apply.nutritionist') }}">Register</a></li>
                     </ul>
                 </div>
 
@@ -461,15 +446,15 @@
                     <ul class="footer-contact">
                         <li>
                             <i class="fas fa-map-marker-alt"></i>
-                            <span>San Pedro City Health Office<br>Laguna, Philippines</span>
+                            <span>3rd Floor New City Hall Building<br>Brgy. Poblacion, City of San Pedro, Laguna</span>
                         </li>
                         <li>
                             <i class="fas fa-phone"></i>
-                            <span>(049) 123-4567</span>
+                            <span>(02) 8808 - 2020 Loc 302 </span>
                         </li>
                         <li>
                             <i class="fas fa-envelope"></i>
-                            <span>nutrition@sanpedro.gov.ph</span>
+                            <span>chonutrition.spl@gmail.com </span>
                         </li>
                         <li>
                             <i class="fas fa-clock"></i>
@@ -483,9 +468,9 @@
             <div class="footer-bottom">
                 <p class="footer-copyright">© 2025 San Pedro City Health Office - Nutrition Program. All rights reserved.</p>
                 <div class="footer-bottom-links">
-                    <a href="#">Privacy Policy</a>
+                    <a href="{{ route('privacy') }}">Privacy Policy</a>
                     <span>|</span>
-                    <a href="#">Terms of Service</a>
+                    <a href="{{ route('terms') }}">Terms of Service</a>
                     <span>|</span>
                     <a href="{{ route('support.report') }}">Report a Problem</a>
                 </div>
