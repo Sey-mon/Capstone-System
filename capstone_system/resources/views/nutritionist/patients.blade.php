@@ -11,7 +11,7 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/nutritionist/patients.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-swal.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-archive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-archive.css') }}?v={{ time() }}">
 @endpush
 
 @section('content')
