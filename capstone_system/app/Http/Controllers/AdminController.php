@@ -442,35 +442,14 @@ class AdminController extends Controller
             $query->where('role_id', $request->input('role'));
         }
         
-        // Filter by account status (active, inactive, suspended, deleted)
+        // Filter by account status (pending, active, suspended, rejected, deleted)
         if ($request->input('account_status')) {
             $accountStatus = $request->input('account_status');
-            if ($accountStatus === 'suspended') {
-                $query->where('account_status', 'suspended');
-            } elseif ($accountStatus === 'deleted') {
+            if ($accountStatus === 'deleted') {
                 $query->whereNotNull('deleted_at');
-            } elseif ($accountStatus === 'active') {
-                $query->where(function($q) {
-                    $q->where('account_status', 'active')
-                      ->orWhere(function($q2) {
-                          $q2->where('is_active', 1)
-                             ->where(function($q3) {
-                                 $q3->whereNull('account_status')
-                                    ->orWhere('account_status', '');
-                             });
-                      });
-                })->whereNull('deleted_at');
-            } elseif ($accountStatus === 'inactive') {
-                $query->where(function($q) {
-                    $q->where('account_status', 'inactive')
-                      ->orWhere(function($q2) {
-                          $q2->where('is_active', 0)
-                             ->where(function($q3) {
-                                 $q3->whereNull('account_status')
-                                    ->orWhere('account_status', '');
-                             });
-                      });
-                })->whereNull('deleted_at');
+            } elseif (in_array($accountStatus, ['pending', 'active', 'suspended', 'rejected'])) {
+                // Filter by specific ENUM status and exclude deleted users
+                $query->where('account_status', $accountStatus)->whereNull('deleted_at');
             }
         }
         
@@ -2560,16 +2539,19 @@ class AdminController extends Controller
                 ], 400);
             }
 
-            if (!$user->is_active) {
+            if (!$user->is_active || $user->account_status === 'suspended') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User is already inactive.'
+                    'message' => 'User is already inactive or suspended.'
                 ], 400);
             }
 
             DB::beginTransaction();
 
-            $user->update(['is_active' => false]);
+            $user->update([
+                'is_active' => false,
+                'account_status' => 'suspended'
+            ]);
 
             // Log the action
             AuditLog::create([

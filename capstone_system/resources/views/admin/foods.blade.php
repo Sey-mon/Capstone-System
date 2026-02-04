@@ -58,22 +58,46 @@
         </div>
     @endif
 
-    <!-- Action Bar -->
-    <div class="action-bar" style="contain: layout;">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search foods by name, description..." value="{{ $search ?? '' }}" autocomplete="off">
+    <!-- Filter Section -->
+    <div class="filter-container">
+        <div class="filter-header-bar">
+            <h3><i class="fas fa-filter"></i> Filters & Search</h3>
+            <button class="btn-clear-all" onclick="clearFilters()">
+                <i class="fas fa-times"></i> Clear All
+            </button>
         </div>
-        
-        <select id="tagFilter">
-            <option value="">🏷️ All Tags</option>
-            @if(isset($allTags) && count($allTags) > 0)
-                @foreach($allTags as $tagOption)
-                    <option value="{{ $tagOption }}" {{ ($tag ?? '') == $tagOption ? 'selected' : '' }}>{{ $tagOption }}</option>
-                @endforeach
-            @endif
-        </select>
+        <div class="filter-content">
+            <div class="filter-grid" style="grid-template-columns: 2fr 1fr;">
+                <div class="filter-field">
+                    <label>Search Food</label>
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" 
+                               id="searchInput" 
+                               class="form-control search-input" 
+                               placeholder="Search by name, description..." 
+                               value="{{ $search ?? '' }}" 
+                               autocomplete="off">
+                    </div>
+                </div>
+                
+                <div class="filter-field">
+                    <label>Tags</label>
+                    <select id="tagFilter" class="form-control">
+                        <option value="" disabled selected hidden>All Tags</option>
+                        @if(isset($allTags) && count($allTags) > 0)
+                            @foreach($allTags as $tagOption)
+                                <option value="{{ $tagOption }}" {{ ($tag ?? '') == $tagOption ? 'selected' : '' }}>{{ $tagOption }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Action Buttons Bar -->
+    <div class="action-buttons-bar">
         <button class="btn btn-secondary" onclick="document.getElementById('importForm').style.display='block'">
             <i class="fas fa-file-import"></i> Import CSV
         </button>
@@ -193,5 +217,12 @@
 @endsection
 
 @push('scripts')
+    <script>
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('tagFilter').selectedIndex = 0;
+            window.location.href = '{{ route('admin.foods.index') }}';
+        }
+    </script>
     <script defer src="{{ asset('js/admin/foods.js') }}"></script>
 @endpush

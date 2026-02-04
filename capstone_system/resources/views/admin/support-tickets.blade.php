@@ -16,95 +16,93 @@
 @endsection
 
 @section('content')
-    <!-- Filters and Search Bar -->
-    <div class="filters-container">
-        <div class="filters-header">
-            <h4 class="filters-title">
-                <i class="fas fa-filter"></i> Filters & Search
-            </h4>
-            @if(request('search') || request('priority') || request('status') || request('category') || request('date_from') || request('date_to'))
-            <button type="button" class="btn-clear-filters" onclick="window.location.href='{{ route('admin.support-tickets') }}?filter={{ request('filter', 'all') }}'">
+    <!-- Filter Section -->
+    <div class="filter-container">
+        <div class="filter-header-bar">
+            <h3><i class="fas fa-filter"></i> Filters & Search</h3>
+            <button type="button" class="btn-clear-all" onclick="window.location.href='{{ route('admin.support-tickets') }}?filter={{ request('filter', 'all') }}'">
                 <i class="fas fa-times"></i> Clear All
             </button>
-            @endif
         </div>
         
-        <form method="GET" action="{{ route('admin.support-tickets') }}" class="filters-form" onsubmit="event.preventDefault();">
-            <input type="hidden" name="filter" value="{{ request('filter', 'all') }}">
-            
-            <div class="filters-grid">
-                <!-- Search Input -->
-                <div class="filter-group">
-                    <label>Search Ticket</label>
-                    <div class="filter-search-wrapper">
-                        <i class="fas fa-search filter-search-icon"></i>
-                        <input 
-                            type="text" 
-                            name="search" 
-                            value="{{ request('search') }}" 
-                            placeholder="Search by ticket #, email, subject..." 
-                            class="filter-search-input"
-                        >
+        <div class="filter-content">
+            <form method="GET" action="{{ route('admin.support-tickets') }}" onsubmit="event.preventDefault();">
+                <input type="hidden" name="filter" value="{{ request('filter', 'all') }}">
+                
+                <div class="filter-grid" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr;">
+                    <!-- Search Input -->
+                    <div class="filter-field">
+                        <label>Search Ticket</label>
+                        <div class="search-input-wrapper">
+                            <i class="fas fa-search search-icon"></i>
+                            <input 
+                                type="text" 
+                                name="search" 
+                                value="{{ request('search') }}" 
+                                placeholder="Search by ticket #, email, subject..." 
+                                class="form-control search-input"
+                            >
+                        </div>
+                    </div>
+                    
+                    <!-- Priority Filter -->
+                    <div class="filter-field">
+                        <label>Priority</label>
+                        <select name="priority" class="form-control">
+                            <option value="" disabled selected hidden>All Priorities</option>
+                            <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>🔥 Urgent</option>
+                            <option value="normal" {{ request('priority') == 'normal' ? 'selected' : '' }}>ℹ️ Normal</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div class="filter-field">
+                        <label>Status</label>
+                        <select name="status" class="form-control">
+                            <option value="" disabled selected hidden>All Statuses</option>
+                            <option value="unread" {{ request('status') == 'unread' ? 'selected' : '' }}>📨 Unread</option>
+                            <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>📖 Read</option>
+                            <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>✅ Resolved</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Category Filter -->
+                    <div class="filter-field">
+                        <label>Category</label>
+                        <select name="category" class="form-control">
+                            <option value="" disabled selected hidden>All Categories</option>
+                            @foreach($categories as $cat)
+                            <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>
+                                {{ ucwords(str_replace('_', ' ', $cat)) }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <!-- Date Range -->
+                    <div class="filter-field">
+                        <label>Date Range</label>
+                        <div class="filter-date-range">
+                            <input 
+                                type="date" 
+                                name="date_from" 
+                                value="{{ request('date_from') }}"
+                                placeholder="From"
+                                class="filter-date-input"
+                            >
+                            <span class="filter-date-separator">-</span>
+                            <input 
+                                type="date" 
+                                name="date_to" 
+                                value="{{ request('date_to') }}"
+                                placeholder="To"
+                                class="filter-date-input"
+                            >
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Priority Filter -->
-                <div class="filter-group">
-                    <label>Priority</label>
-                    <select name="priority" class="filter-select">
-                        <option value="">All Priorities</option>
-                        <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>🔥 Urgent</option>
-                        <option value="normal" {{ request('priority') == 'normal' ? 'selected' : '' }}>ℹ️ Normal</option>
-                    </select>
-                </div>
-                
-                <!-- Status Filter -->
-                <div class="filter-group">
-                    <label>Status</label>
-                    <select name="status" class="filter-select">
-                        <option value="">All Statuses</option>
-                        <option value="unread" {{ request('status') == 'unread' ? 'selected' : '' }}>📨 Unread</option>
-                        <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>📖 Read</option>
-                        <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>✅ Resolved</option>
-                    </select>
-                </div>
-                
-                <!-- Category Filter -->
-                <div class="filter-group">
-                    <label>Category</label>
-                    <select name="category" class="filter-select">
-                        <option value="">All Categories</option>
-                        @foreach($categories as $cat)
-                        <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>
-                            {{ ucwords(str_replace('_', ' ', $cat)) }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <!-- Date Range -->
-                <div class="filter-group">
-                    <label>Date Range</label>
-                    <div class="filter-date-range">
-                        <input 
-                            type="date" 
-                            name="date_from" 
-                            value="{{ request('date_from') }}"
-                            placeholder="From"
-                            class="filter-date-input"
-                        >
-                        <span class="filter-date-separator">-</span>
-                        <input 
-                            type="date" 
-                            name="date_to" 
-                            value="{{ request('date_to') }}"
-                            placeholder="To"
-                            class="filter-date-input"
-                        >
-                    </div>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 
     <!-- Filter Tabs -->

@@ -6,7 +6,7 @@
 @section('page-subtitle', 'Manage all system users and their roles.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-users.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-users.css?v=' . filemtime(public_path('css/admin/admin-users.css'))) }}">
     <meta name="user-id" content="{{ Auth::id() }}">
 @endpush
 
@@ -30,13 +30,13 @@
                         <label>Search User</label>
                         <div class="search-input-wrapper">
                             <i class="fas fa-search search-icon"></i>
-                            <input type="text" name="search" value="{{ request('search') }}" class="form-control search-input" placeholder="Search by name, contact..." id="searchInput">
+                            <input type="text" name="search" value="{{ request('search') }}" class="form-control search-input" placeholder="Search by name" id="searchInput">
                         </div>
                     </div>
                     <div class="filter-field">
                         <label>Role</label>
                         <select name="role" class="form-control" id="roleFilter">
-                            <option value="">All Roles</option>
+                            <option value="" disabled selected hidden>All Roles</option>
                             @foreach($roles as $role)
                                 <option value="{{ $role->role_id }}" @if(request('role') == $role->role_id) selected @endif>{{ $role->role_name }}</option>
                             @endforeach
@@ -45,16 +45,18 @@
                     <div class="filter-field">
                         <label>Status</label>
                         <select name="account_status" class="form-control" id="accountStatusFilter">
-                            <option value="">All Status</option>
+                            <option value="" disabled selected hidden>All Status</option>
+                            <option value="pending" @if(request('account_status')==='pending') selected @endif>Pending</option>
                             <option value="active" @if(request('account_status')==='active') selected @endif>Active</option>
-                            <option value="inactive" @if(request('account_status')==='inactive') selected @endif>Inactive</option>
                             <option value="suspended" @if(request('account_status')==='suspended') selected @endif>Suspended</option>
+                            <option value="rejected" @if(request('account_status')==='rejected') selected @endif>Rejected</option>
                             <option value="deleted" @if(request('account_status')==='deleted') selected @endif>Deleted</option>
                         </select>
                     </div>
                     <div class="filter-field">
                         <label>Sort By</label>
                         <select name="sort_by" class="form-control" id="sortByFilter">
+                            <option value="" disabled selected hidden>Sort By</option>
                             <option value="newest" @if(request('sort_by')=='newest' || !request('sort_by')) selected @endif>Newest First</option>
                             <option value="oldest" @if(request('sort_by')=='oldest') selected @endif>Oldest First</option>
                             <option value="name_asc" @if(request('sort_by')=='name_asc') selected @endif>Name (A-Z)</option>
@@ -131,16 +133,22 @@
                             </td>
                             <td>
                                 @php
-                                    // Determine account status with clear priority
-                                    if ($user->deleted_at || $user->account_status === 'deleted') {
+                                    // Determine account status - prioritize deleted_at, then account_status field
+                                    if ($user->deleted_at) {
                                         $status = 'deleted';
+                                    } elseif ($user->account_status === 'pending') {
+                                        $status = 'pending';
                                     } elseif ($user->account_status === 'suspended') {
                                         $status = 'suspended';
-                                    } elseif ($user->account_status === 'inactive' || (!$user->is_active && $user->account_status !== 'active')) {
-                                        $status = 'inactive';
-                                    } elseif ($user->account_status === 'active' || $user->is_active) {
+                                    } elseif ($user->account_status === 'rejected') {
+                                        $status = 'rejected';
+                                    } elseif ($user->account_status === 'active') {
+                                        $status = 'active';
+                                    } elseif ($user->is_active) {
+                                        // Legacy: no account_status set, use is_active flag
                                         $status = 'active';
                                     } else {
+                                        // Legacy: is_active is false
                                         $status = 'inactive';
                                     }
                                 @endphp
@@ -150,10 +158,20 @@
                                         <i class="fas fa-trash"></i>
                                         Deleted
                                     </span>
+                                @elseif($status === 'pending')
+                                    <span class="status-badge status-pending" style="background-color: #3b82f6; color: white;">
+                                        <i class="fas fa-clock"></i>
+                                        Pending
+                                    </span>
                                 @elseif($status === 'suspended')
                                     <span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;">
                                         <i class="fas fa-ban"></i>
                                         Suspended
+                                    </span>
+                                @elseif($status === 'rejected')
+                                    <span class="status-badge status-rejected" style="background-color: #ef4444; color: white;">
+                                        <i class="fas fa-times-circle"></i>
+                                        Rejected
                                     </span>
                                 @elseif($status === 'active')
                                     <span class="status-badge status-active">
@@ -175,7 +193,7 @@
                                             <i class="fas fa-edit"></i>
                                         </button>
                                     @endif
-                                    @if($user->user_id !== Auth::id())
+                                    @if($user->user_id !== Auth::id() && ($user->role->role_name ?? '') !== 'Admin')
                                         @if($user->deleted_at)
                                             <button class="action-btn activate" onclick="restoreUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')" title="Restore User">
                                                 <i class="fas fa-undo"></i>
@@ -194,7 +212,7 @@
                                             </button>
                                         @endif
                                     @endif
-                                    @if($roleName !== 'Admin' && !$user->deleted_at)
+                                    @if(($user->role->role_name ?? '') !== 'Admin' && !$user->deleted_at)
                                         <button class="action-btn delete" onclick="deleteUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -239,5 +257,5 @@
         // Pass roles data to JavaScript
         window.rolesData = @json($roles);
     </script>
-    <script src="{{ asset('js/admin/admin-users.js') }}"></script>
+    <script src="{{ asset('js/admin/admin-users.js?v=' . filemtime(public_path('js/admin/admin-users.js'))) }}"></script>
 @endpush

@@ -1,5 +1,42 @@
 // Admin Users Management JavaScript
 
+// Helper function to get status badge HTML
+function getStatusBadge(user) {
+    // Determine account status - prioritize deleted_at, then account_status field
+    let status;
+    if (user.deleted_at) {
+        status = 'deleted';
+    } else if (user.account_status === 'pending') {
+        status = 'pending';
+    } else if (user.account_status === 'suspended') {
+        status = 'suspended';
+    } else if (user.account_status === 'rejected') {
+        status = 'rejected';
+    } else if (user.account_status === 'active') {
+        status = 'active';
+    } else if (user.is_active) {
+        status = 'active';
+    } else {
+        status = 'inactive';
+    }
+
+    // Return appropriate badge HTML
+    switch(status) {
+        case 'deleted':
+            return '<span class="status-badge status-deleted" style="background-color: #6b7280; color: white;"><i class="fas fa-trash"></i> Deleted</span>';
+        case 'pending':
+            return '<span class="status-badge status-pending" style="background-color: #3b82f6; color: white;"><i class="fas fa-clock"></i> Pending</span>';
+        case 'suspended':
+            return '<span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;"><i class="fas fa-ban"></i> Suspended</span>';
+        case 'rejected':
+            return '<span class="status-badge status-rejected" style="background-color: #ef4444; color: white;"><i class="fas fa-times-circle"></i> Rejected</span>';
+        case 'active':
+            return '<span class="status-badge status-active"><i class="fas fa-check-circle"></i> Active</span>';
+        default:
+            return '<span class="status-badge status-inactive"><i class="fas fa-times-circle"></i> Inactive</span>';
+    }
+}
+
 function openAddUserModal() {
     Swal.fire({
         title: '<div class="modal-header-title"><i class="fas fa-user-plus"></i> Add New User</div>',
@@ -768,28 +805,36 @@ function renderUsersTable(users) {
                     </span>
                 </td>
                 <td>
-                    ${user.is_active 
-                        ? '<span class="status-badge status-active"><i class="fas fa-check-circle"></i> Active</span>'
-                        : '<span class="status-badge status-inactive"><i class="fas fa-times-circle"></i> Inactive</span>'
-                    }
+                    ${getStatusBadge(user)}
                 </td>
                 <td class="user-created">${formatDate(user.created_at)}</td>
                 <td>
                     <div class="action-buttons">
-                        <button class="action-btn edit" onclick="editUser(${user.user_id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        ${user.user_id !== window.currentUserId ? `
-                            ${user.is_active 
-                                ? `<button class="action-btn deactivate" onclick="toggleUserStatus(${user.user_id}, false, '${user.first_name} ${user.last_name}')">
-                                    <i class="fas fa-user-slash"></i>
-                                   </button>`
-                                : `<button class="action-btn activate" onclick="toggleUserStatus(${user.user_id}, true, '${user.first_name} ${user.last_name}')">
-                                    <i class="fas fa-user-check"></i>
-                                   </button>`
-                            }
+                        ${!user.deleted_at ? `
+                            <button class="action-btn edit" onclick="editUser(${user.user_id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
                         ` : ''}
-                        ${roleName !== 'Admin' ? `
+                        ${user.user_id !== window.currentUserId && roleName !== 'Admin' ? `
+                            ${user.deleted_at ? `
+                                <button class="action-btn activate" onclick="restoreUser(${user.user_id}, '${user.first_name} ${user.last_name}')" title="Restore User">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            ` : user.account_status === 'suspended' ? `
+                                <button class="action-btn activate" onclick="reactivateSuspendedUser(${user.user_id}, '${user.first_name} ${user.last_name}')" title="Reactivate User">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            ` : user.is_active ? `
+                                <button class="action-btn deactivate" onclick="toggleUserStatus(${user.user_id}, false, '${user.first_name} ${user.last_name}')">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            ` : `
+                                <button class="action-btn activate" onclick="toggleUserStatus(${user.user_id}, true, '${user.first_name} ${user.last_name}')">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            `}
+                        ` : ''}
+                        ${roleName !== 'Admin' && !user.deleted_at ? `
                             <button class="action-btn delete" onclick="deleteUser(${user.user_id}, '${user.first_name} ${user.last_name}')">
                                 <i class="fas fa-trash"></i>
                             </button>

@@ -15,51 +15,48 @@
 @endsection
 
 @section('content')
-    <!-- Modern Filter Section -->
-    <div class="filter-card">
-        <div class="filter-header">
-            <div class="filter-title-section">
-                <i class="fas fa-filter"></i>
-                <h3>Filters & Search</h3>
-            </div>
+    <!-- Filter Section -->
+    <div class="filter-container">
+        <div class="filter-header-bar">
+            <h3><i class="fas fa-filter"></i> Filters & Search</h3>
             <button class="btn-clear-all" id="clearAllBtn">
-                <i class="fas fa-times"></i>
-                <span>Clear All</span>
+                <i class="fas fa-times"></i> Clear All
             </button>
         </div>
-        
-        <div class="filter-grid-modern">
-            <div class="filter-input-wrapper">
-                <label for="searchFilter" class="filter-label">Search Patient</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-search"></i>
-                    <input type="text" 
-                           id="searchFilter" 
-                           placeholder="Search by name, contact..." 
-                           class="filter-input">
+        <div class="filter-content">
+            <div class="filter-grid">
+                <div class="filter-field">
+                    <label>Search Item</label>
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" 
+                               id="searchFilter" 
+                               class="form-control search-input" 
+                               placeholder="Search by item name...">
+                    </div>
                 </div>
-            </div>
-            
-            <div class="filter-input-wrapper">
-                <label for="categoryFilter" class="filter-label">Role</label>
-                <select id="categoryFilter" class="filter-input">
-                    <option value="">All Categories</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->category_name }}">{{ $category->category_name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            
-            <div class="filter-input-wrapper">
-                <label for="statusFilter" class="filter-label">Status</label>
-                <select id="statusFilter" class="filter-input">
-                    <option value="">All Status</option>
-                    <option value="in-stock">In Stock</option>
-                    <option value="low-stock">Low Stock</option>
-                    <option value="critical">Critical</option>
-                    <option value="out-of-stock">Out of Stock</option>
-                    <option value="expired">Expired</option>
-                </select>
+                
+                <div class="filter-field">
+                    <label>Category</label>
+                    <select id="categoryFilter" class="form-control">
+                        <option value="" disabled selected hidden>All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->category_name }}">{{ $category->category_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="filter-field">
+                    <label>Status</label>
+                    <select id="statusFilter" class="form-control">
+                        <option value="" disabled selected hidden>All Status</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="critical">Critical</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
