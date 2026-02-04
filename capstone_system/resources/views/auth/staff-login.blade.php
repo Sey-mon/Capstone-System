@@ -573,6 +573,26 @@
                 nav.classList.remove('scrolled');
             }
         });
+
+        // Prevent back button caching - reload page once if loaded from cache
+        (function() {
+            // Use sessionStorage to prevent infinite reload loop
+            const navigationEntry = performance.getEntriesByType('navigation')[0];
+            
+            if (navigationEntry && navigationEntry.type === 'back_forward') {
+                // Check if we haven't already reloaded
+                if (!sessionStorage.getItem('pageReloaded')) {
+                    sessionStorage.setItem('pageReloaded', 'true');
+                    window.location.reload();
+                } else {
+                    // Clear the flag so next back button press works
+                    sessionStorage.removeItem('pageReloaded');
+                }
+            } else {
+                // Normal navigation, clear the flag
+                sessionStorage.removeItem('pageReloaded');
+            }
+        })();
     </script>
 </body>
 </html>

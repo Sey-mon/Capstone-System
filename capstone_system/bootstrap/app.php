@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'account.verified' => \App\Http\Middleware\EnsureAccountIsVerified::class,
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'prevent.back' => \App\Http\Middleware\PreventBackHistory::class,
         ]);
         
         // Add auto logout middleware to web group
@@ -29,6 +31,15 @@ return Application::configure(basePath: dirname(__DIR__))
                     'error' => 'CSRF token mismatch. Please refresh the page and try again.',
                     'code' => 'CSRF_TOKEN_MISMATCH'
                 ], 419);
+            }
+            
+            // For login pages, redirect to login with clear message
+            if ($request->is('login') || $request->is('/') || $request->is('staff/login')) {
+                return redirect()->route('login')
+                    ->withErrors([
+                        'csrf_error' => 'Your session has expired. Please login again.'
+                    ])
+                    ->with('warning', 'For security, please refresh the page if you used the back button.');
             }
             
             // For form submissions, redirect back with error

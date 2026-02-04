@@ -111,7 +111,9 @@ class DataEncryptionService
             return $decrypted;
 
         } catch (Exception $e) {
-            Log::error('Decryption failed: ' . $e->getMessage(), [
+            // Only log as debug since this is expected for plaintext or corrupted data
+            // during findByEmail Strategy 3 full scan
+            Log::debug('Decryption failed: ' . $e->getMessage(), [
                 'data_length' => strlen($encryptedData),
                 'key_type' => $keyType
             ]);
