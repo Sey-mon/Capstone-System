@@ -146,13 +146,6 @@
                             </div>
                             <div class="info-row">
                                 <div class="info-label">
-                                    <i class="fas fa-venus-mars"></i>
-                                    Sex
-                                </div>
-                                <div class="info-value">{{ Auth::user()->sex ? ucfirst(Auth::user()->sex) : 'Not provided' }}</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">
                                     <i class="fas fa-crown"></i>
                                     Role
                                 </div>
@@ -343,8 +336,7 @@
         middle_name: "{{ Auth::user()->middle_name ?? '' }}",
         last_name: "{{ Auth::user()->last_name }}",
         contact_number: "{{ Auth::user()->contact_number ?? '' }}",
-        email: "{{ Auth::user()->email }}",
-        sex: "{{ Auth::user()->sex ?? '' }}"
+        email: "{{ Auth::user()->email }}"
     };
     window.adminProfileUpdateUrl = "{{ route('admin.profile.update') }}";
     window.adminPasswordUpdateUrl = "{{ route('admin.password.update') }}";

@@ -219,17 +219,6 @@ console.log('%c Powered by Modern UI Framework ', 'background: #f3f4f6; color: #
                             </label>
                             <input id="swal-contact" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${adminData.contact_number || ''}">
                         </div>
-                        <div>
-                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
-                                <i class="fas fa-venus-mars" style="color: #10b981; margin-right: 5px;"></i>Sex
-                            </label>
-                            <select id="swal-gender" class="swal2-select" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                                <option value="">Select Sex</option>
-                                <option value="male" ${(adminData.sex || '') === 'male' ? 'selected' : ''}>Male</option>
-                                <option value="female" ${(adminData.sex || '') === 'female' ? 'selected' : ''}>Female</option>
-                                <option value="other" ${(adminData.sex || '') === 'other' ? 'selected' : ''}>Other</option>
-                            </select>
-                        </div>
                         <div style="grid-column: 1 / -1;">
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-envelope" style="color: #10b981; margin-right: 5px;"></i>Email Address *
@@ -251,9 +240,6 @@ console.log('%c Powered by Modern UI Framework ', 'background: #f3f4f6; color: #
                 cancelButton: 'admin-swal-cancel'
             },
             didOpen: () => {
-                // Debug: Log the sex value
-                console.log('Admin sex value:', adminData.sex);
-                
                 // Focus styling
                 document.querySelectorAll('.swal2-input, .swal2-select').forEach(input => {
                     input.addEventListener('focus', function() {
@@ -265,13 +251,6 @@ console.log('%c Powered by Modern UI Framework ', 'background: #f3f4f6; color: #
                         this.style.boxShadow = 'none';
                     });
                 });
-                
-                // Manually set the sex select value to ensure it's selected
-                const sexSelect = document.getElementById('swal-gender');
-                if (sexSelect && adminData.sex) {
-                    sexSelect.value = adminData.sex.toLowerCase();
-                    console.log('Set sex select to:', adminData.sex.toLowerCase());
-                }
             },
             preConfirm: () => {
                 const firstName = document.getElementById('swal-first-name').value;
@@ -288,8 +267,7 @@ console.log('%c Powered by Modern UI Framework ', 'background: #f3f4f6; color: #
                     middle_name: document.getElementById('swal-middle-name').value,
                     last_name: lastName,
                     email: email,
-                    contact_number: document.getElementById('swal-contact').value,
-                    sex: document.getElementById('swal-gender').value
+                    contact_number: document.getElementById('swal-contact').value
                 };
             }
         }).then((result) => {
