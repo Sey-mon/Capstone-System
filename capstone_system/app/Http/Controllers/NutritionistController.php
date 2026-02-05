@@ -644,8 +644,9 @@ class NutritionistController extends Controller
         $nutritionist = Auth::user();
         $nutritionistId = $nutritionist->user_id;
         
-        // Get all patients assigned to this nutritionist with their latest assessment
+        // Get all active (non-archived) patients assigned to this nutritionist with their latest assessment
         $query = Patient::where('nutritionist_id', $nutritionistId)
+            ->whereNull('archived_at')
             ->with(['barangay', 'parent'])
             ->with(['assessments' => function($q) {
                 $q->latest('assessment_date')->limit(1);

@@ -871,7 +871,9 @@
                             <i class="fas fa-sticky-note" style="color: #10b981;"></i>
                             Additional Notes
                         </h4>
-                        <p style="margin: 0; color: #374151; line-height: 1.6; white-space: pre-wrap;">${assessment.notes}</p>
+                        <div style="background: #f8f9fa; padding: 1.25rem; border-radius: 8px; border-left: 4px solid #10b981;">
+                            <p style="margin: 0; color: #374151; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;">${assessment.notes}</p>
+                        </div>
                     </div>
                 ` : ''}
 

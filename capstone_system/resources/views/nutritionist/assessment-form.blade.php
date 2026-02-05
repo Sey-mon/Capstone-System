@@ -144,9 +144,10 @@
                             <div class="form-group">
                                 <label for="appetite">Appetite</label>
                                 <select class="form-control" id="appetite" name="appetite">
-                                    <option value="good" {{ old('appetite') == 'good' ? 'selected' : '' }}>Good</option>
-                                    <option value="poor" {{ old('appetite') == 'poor' ? 'selected' : '' }}>Poor</option>
-                                    <option value="none" {{ old('appetite') == 'none' ? 'selected' : '' }}>None</option>
+                                    <option value="">Select appetite level</option>
+                                    <option value="good" {{ old('appetite') == 'good' ? 'selected' : '' }}>Good - Eats well, finishes meals</option>
+                                    <option value="poor" {{ old('appetite') == 'poor' ? 'selected' : '' }}>Poor - Refuses food often</option>
+                                    <option value="very_poor" {{ old('appetite') == 'very_poor' ? 'selected' : '' }}>Very Poor - Minimal intake</option>
                                 </select>
                             </div>
                             
