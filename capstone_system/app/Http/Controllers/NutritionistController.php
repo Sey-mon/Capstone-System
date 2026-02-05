@@ -208,10 +208,12 @@ class NutritionistController extends Controller
                 return response()->json(['patients' => $patientsWithBarangay]);
             }
             
-            return view('nutritionist.partials.patients-table', compact('patients'));
+            $status = 'active';
+            return view('nutritionist.partials.patients-table', compact('patients', 'status'));
         }
         
-        return view('nutritionist.patients', compact('patients', 'barangays', 'parents', 'nutritionists'));
+        $status = 'active';
+        return view('nutritionist.patients', compact('patients', 'barangays', 'parents', 'nutritionists', 'status'));
     }    /**
      * Calculate nutritional indicators (Weight for Age, Height for Age, BMI for Age)
      */
@@ -388,17 +390,24 @@ class NutritionistController extends Controller
         }
 
         $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'sex' => 'required|in:Male,Female',
             'parent_id' => 'nullable|exists:users,user_id',
             'barangay_id' => 'required|exists:barangays,barangay_id',
             'contact_number' => 'required|string|max:20',
             'date_of_admission' => 'required|date',
-            // Note: first_name, middle_name, last_name, birthdate, sex are locked for editing
             // Note: weight_kg, height_cm, and nutritional indicators are managed via assessments
         ]);
 
         try {
-            // Only update non-locked fields (household and contact info)
+            // Update patient fields including name fields
             $patient->update([
+                'first_name' => $request->first_name,
+                'middle_name' => $request->middle_name,
+                'last_name' => $request->last_name,
+                'sex' => $request->sex,
                 'parent_id' => $request->parent_id ?: null,
                 'barangay_id' => $request->barangay_id,
                 'contact_number' => $request->contact_number,
@@ -581,8 +590,32 @@ class NutritionistController extends Controller
                 }
             }
 
+            // Apply sorting
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortOrder = $request->get('sort_order', 'desc');
+            
+            switch ($sortBy) {
+                case 'name':
+                    $query->orderBy('first_name', $sortOrder)
+                          ->orderBy('last_name', $sortOrder);
+                    break;
+                case 'age':
+                    $query->orderBy('age_months', $sortOrder);
+                    break;
+                case 'barangay':
+                    $query->join('barangays', 'patients.barangay_id', '=', 'barangays.barangay_id')
+                          ->orderBy('barangays.barangay_name', $sortOrder)
+                          ->select('patients.*');
+                    break;
+                case 'date_admitted':
+                    $query->orderBy('date_of_admission', $sortOrder);
+                    break;
+                default:
+                    $query->orderBy('created_at', $sortOrder);
+            }
+
             // Get paginated patients
-            $patients = $query->orderBy('created_at', 'desc')->paginate(15);
+            $patients = $query->paginate(15);
 
             // Render the table partial
             $html = view('nutritionist.partials.patients-table-ajax', [

@@ -71,14 +71,6 @@
                     <option value="49-60" {{ request('age_range') == '49-60' ? 'selected' : '' }}>49-60 months</option>
                 </select>
             </div>
-
-            <div class="filter-item">
-                <label class="filter-label">&nbsp;</label>
-                <button class="btn-add-patient" onclick="openAddPatientModal()" style="width: 100%; height: 38px;">
-                    <i class="fas fa-plus"></i>
-                    <span>Add Patient</span>
-                </button>
-            </div>
         </div>
     </div>
 
@@ -97,19 +89,23 @@
                     <i class="fas fa-users"></i>
                     Patients List
                 </h3>
-                <div class="header-actions">
-                    <div class="archive-toggle">
-                        <button class="btn btn-sm archive-btn active" data-status="active">
-                            <i class="fas fa-user-check"></i> Active
-                        </button>
-                        <button class="btn btn-sm archive-btn" data-status="archived">
-                            <i class="fas fa-archive"></i> Archived
-                        </button>
-                    </div>
-                    <div class="results-info">
-                        <span class="badge results-badge" id="resultsCount">{{ $patients->total() }} patient(s)</span>
-                    </div>
+            </div>
+            <div class="header-actions">
+                <div class="archive-toggle">
+                    <button class="btn btn-sm archive-btn active" data-status="active">
+                        <i class="fas fa-user-check"></i> Active
+                    </button>
+                    <button class="btn btn-sm archive-btn" data-status="archived">
+                        <i class="fas fa-archive"></i> Archived
+                    </button>
                 </div>
+                <div class="results-info">
+                    <span class="badge results-badge" id="resultsCount">{{ $patients->total() }} patient(s)</span>
+                </div>
+                <button class="btn-add-patient" onclick="openAddPatientModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Patient</span>
+                </button>
             </div>
         </div>
         <div class="card-body">
@@ -134,22 +130,19 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="first_name" class="form-label">First Name <span class="required">*</span></label>
-                            <input type="text" id="first_name" name="first_name" class="form-control" data-lock-on-edit="true" required placeholder="Enter first name">
-                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-lock"></i> Cannot be edited to preserve data integrity</small>
+                            <input type="text" id="first_name" name="first_name" class="form-control" required placeholder="Enter first name">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="middle_name" class="form-label">Middle Name</label>
-                            <input type="text" id="middle_name" name="middle_name" class="form-control" data-lock-on-edit="true" placeholder="Enter middle name">
-                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-lock"></i> Cannot be edited</small>
+                            <input type="text" id="middle_name" name="middle_name" class="form-control" placeholder="Enter middle name">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="last_name" class="form-label">Last Name <span class="required">*</span></label>
-                            <input type="text" id="last_name" name="last_name" class="form-control" data-lock-on-edit="true" required placeholder="Enter last name">
-                            <small class="form-text text-muted edit-only-message" style="display: none;"><i class="fas fa-lock"></i> Cannot be edited to preserve data integrity</small>
+                            <input type="text" id="last_name" name="last_name" class="form-control" required placeholder="Enter last name">
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -173,7 +166,8 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="age_months" class="form-label">Age (months) <span class="required">*</span></label>
-                            <input type="number" id="age_months" name="age_months" class="form-control" min="0" required readonly>
+                            <input type="number" id="age_months" name="age_months" class="form-control" min="0" required readonly style="background-color: #f8f9fa;">
+                            <small class="form-text text-muted"><i class="fas fa-magic"></i> Auto-calculated from birthdate</small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -296,7 +290,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="allergies" class="form-label">Allergies</label>
-                            <select id="allergies" name="allergies" class="form-select" onchange="handleAllergiesChange(this)">
+                            <select id="allergies" name="allergies" class="form-select">
                                 <option value="">Select allergy</option>
                                 <option value="None">None</option>
                                 <option value="Milk/Dairy">Milk/Dairy</option>
@@ -316,7 +310,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="religion" class="form-label">Religion</label>
-                            <select id="religion" name="religion" class="form-select" onchange="handleReligionChange(this)">
+                            <select id="religion" name="religion" class="form-select">
                                 <option value="">Select religion</option>
                                 <option value="Roman Catholic">Roman Catholic</option>
                                 <option value="Islam">Islam</option>
@@ -342,6 +336,14 @@
             </div>
         </form>
     </template>
+
+    <!-- Form Data Storage (Hidden) -->
+    <script id="parentsData" type="application/json">
+        {!! json_encode($parents ?? []) !!}
+    </script>
+    <script id="barangaysData" type="application/json">
+        {!! json_encode($barangays ?? []) !!}
+    </script>
 @endsection
 
 @section('scripts')
