@@ -290,7 +290,7 @@
                             <div class="card-icon danger">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
-                            <h3 class="card-title" style="color: #dc2626;">Danger Zone</h3>
+                            <h3 class="card-title" style="color: #dc2626;">Deactivate Account</h3>
                         </div>
                     </div>
                     <div class="card-content">

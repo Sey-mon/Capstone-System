@@ -318,34 +318,33 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions Card -->
+                <!-- Account Deletion Card -->
                 <div class="content-card actions-card">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <div class="card-icon actions">
-                                <i class="fas fa-bolt"></i>
+                            <div class="card-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                                <i class="fas fa-user-times"></i>
                             </div>
-                            <h3 class="card-title">Quick Actions</h3>
+                            <h3 class="card-title">Account Deletion</h3>
                         </div>
                     </div>
                     <div class="card-content">
-                        <div class="action-buttons">
-                            <button class="action-btn" onclick="window.location.href='{{ route('parent.dashboard') }}'">
-                                <i class="fas fa-child"></i>
-                                <span>View Children</span>
-                            </button>
-                            <button class="action-btn" onclick="editPersonalInfo()">
-                                <i class="fas fa-user-edit"></i>
-                                <span>Edit Profile</span>
-                            </button>
-                            <button class="action-btn" onclick="changePassword()">
-                                <i class="fas fa-key"></i>
-                                <span>Change Password</span>
-                            </button>
-                            <button class="action-btn action-btn-danger" id="deleteAccountBtn" type="button">
-                                <i class="fas fa-trash-alt"></i>
-                                <span>Delete Account</span>
-                            </button>
+                        <div class="info-list">
+                            <div class="info-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+                                <div class="info-label" style="width: 100%;">
+                                    <i class="fas fa-info-circle"></i>
+                                    Permanent Account Removal
+                                </div>
+                                <div class="info-value" style="width: 100%;">
+                                    <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px 0; line-height: 1.5;">
+                                        If you no longer wish to use this account, you can request deletion. This includes a 30-day grace period before permanent removal.
+                                    </p>
+                                    <button class="action-btn action-btn-danger" id="deleteAccountBtn" type="button" style="width: 100%;">
+                                        <i class="fas fa-trash-alt"></i>
+                                        <span>Request Account Deletion</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

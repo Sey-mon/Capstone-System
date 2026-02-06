@@ -501,6 +501,127 @@
     font-size: 0.9375rem;
 }
 
+/* Structured Clinical Data Layout */
+.remarks-section.structured {
+    background: #f9fafb;
+    border-left: 4px solid var(--primary-green);
+    padding: 0;
+    overflow: hidden;
+    margin-top: 1.5rem;
+}
+
+.remarks-section.structured .remarks-header {
+    background: white;
+    color: var(--primary-green);
+    padding: 1rem 1.5rem;
+    margin-bottom: 0;
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.remarks-section.structured .remarks-header i {
+    color: var(--primary-green);
+}
+
+.clinical-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f9fafb;
+}
+
+.clinical-item {
+    padding: 1rem 1.25rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid var(--primary-green);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.clinical-item:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.clinical-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.clinical-label {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.clinical-value {
+    font-size: 0.9375rem;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.additional-notes-section {
+    margin-top: 1.5rem;
+    background: white;
+    border-left: 4px solid var(--primary-green);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.additional-notes-section .remarks-header {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.additional-notes-content {
+    padding: 1.5rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+}
+
+.additional-notes-content p {
+    margin: 0;
+    color: #374151;
+    line-height: 1.6;
+    font-size: 0.9375rem;
+    text-align: center;
+}
+
+/* Responsive Grid for Clinical Items */
+@media (max-width: 992px) {
+    .clinical-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .clinical-item:nth-child(3n) {
+        border-right: 1px solid #e5e7eb;
+    }
+    
+    .clinical-item:nth-child(2n) {
+        border-right: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .clinical-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .clinical-item {
+        border-right: none;
+    }
+}
+
 /* No Assessment State */
 .no-assessment {
     text-align: center;
@@ -893,6 +1014,11 @@
     .diagnosis-section-inline {
         width: 100%;
     }
+    
+    /* Clinical grid responsive in modal - tablet */
+    .swal-assessment-detail .clinical-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -991,7 +1117,7 @@ body.swal2-shown {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 0 !important;
+    padding: clamp(10px, 2vw, 20px) !important;
     margin: 0 !important;
     z-index: 9999 !important;
     overflow-y: auto !important;
@@ -1004,7 +1130,7 @@ body.swal2-shown {
     border-radius: 20px !important;
     border: 1px solid #000 !important;
     overflow: hidden !important;
-    margin: 0 !important;
+    margin: auto !important;
     position: relative !important;
 }
 
@@ -1513,10 +1639,108 @@ body.swal2-shown {
     margin: 0;
 }
 
+/* Structured Clinical Data in Modal */
+.swal-assessment-detail .remarks-section.structured {
+    background: #f9fafb;
+    border-left: 4px solid var(--primary-green);
+    padding: 0;
+    overflow: hidden;
+    margin-top: 1.5rem;
+    border-radius: 8px;
+}
+
+.swal-assessment-detail .remarks-section.structured .remarks-header {
+    background: white;
+    color: var(--primary-green);
+    padding: 1rem 1.5rem;
+    margin-bottom: 0;
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.swal-assessment-detail .remarks-section.structured .remarks-header i {
+    color: var(--primary-green);
+}
+
+.swal-assessment-detail .clinical-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f9fafb;
+}
+
+.swal-assessment-detail .clinical-item {
+    padding: 1rem 1.25rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid var(--primary-green);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.swal-assessment-detail .clinical-item:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.swal-assessment-detail .clinical-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.swal-assessment-detail .clinical-label {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.swal-assessment-detail .clinical-value {
+    font-size: 0.9375rem;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.swal-assessment-detail .additional-notes-section {
+    margin-top: 1.5rem;
+    background: white;
+    border-left: 4px solid var(--primary-green);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.swal-assessment-detail .additional-notes-section .remarks-header {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.swal-assessment-detail .additional-notes-content {
+    padding: 1.5rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+}
+
+.swal-assessment-detail .additional-notes-content p {
+    margin: 0;
+    color: #374151;
+    line-height: 1.6;
+    font-size: 0.9375rem;
+    text-align: center;
+}
+
 /* Nutritional Indicators Section */
 .swal-indicators-section {
     margin-top: 20px;
     padding: 0;
+    text-align: center;
 }
 
 .swal-section-title {
@@ -1526,6 +1750,7 @@ body.swal2-shown {
     margin-bottom: 12px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
 }
 
@@ -1537,6 +1762,7 @@ body.swal2-shown {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 12px;
+    justify-items: center;
 }
 
 .swal-indicator-item {
@@ -1548,6 +1774,10 @@ body.swal2-shown {
     flex-direction: column;
     gap: 6px;
     transition: all 0.2s ease;
+    text-align: center;
+    align-items: center;
+    width: 100%;
+    max-width: 250px;
 }
 
 .swal-indicator-item:hover {
@@ -1677,6 +1907,17 @@ body.swal2-shown {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
+    }
+    
+    /* Clinical grid responsive in modal */
+    .swal-assessment-detail .clinical-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    
+    .swal-assessment-detail .clinical-item {
+        border-right: none;
     }
 }
 
@@ -2027,4 +2268,175 @@ body.swal2-shown {
 
 .swal-metrics-grid .metric-card {
     padding: 10px;
+}
+/* ===== TREATMENT PLAN VIEW STYLES ===== */
+
+.swal-header-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.swal-treatment-button,
+.swal-pdf-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.swal-treatment-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+}
+
+.swal-treatment-button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.swal-pdf-button {
+    background: #22c55e;
+    color: white;
+    border: none;
+}
+
+.swal-pdf-button:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
+}
+
+.swal-treatment-container {
+    display: flex;
+    flex-direction: column;
+    height: 75vh;
+    background: #f8f9fa;
+}
+
+.swal-treatment-header {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.swal-back-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    background: #6c757d;
+    color: white;
+    border: none;
+}
+
+.swal-back-button:hover {
+    background: #5a6268;
+    transform: translateX(-3px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.swal-treatment-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2rem;
+}
+
+.swal-diagnosis-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.swal-confidence-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 24px;
+    font-weight: 600;
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.swal-treatment-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.swal-treatment-section.swal-emergency {
+    background: #fff3cd;
+    border-left: 4px solid #ff9800;
+}
+
+.swal-treatment-section.swal-emergency .swal-section-title {
+    color: #ff6f00;
+}
+
+.swal-treatment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.swal-treatment-list li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    border-bottom: 1px solid #f0f0f0;
+    line-height: 1.6;
+}
+
+.swal-treatment-list li:last-child {
+    border-bottom: none;
+}
+
+.swal-treatment-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1rem;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-green);
+    border-radius: 50%;
+}
+
+.swal-emergency .swal-treatment-list li::before {
+    background: #ff9800;
+}
+
+.treatment-popup .swal-treatment-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.treatment-popup .swal-treatment-content::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+.treatment-popup .swal-treatment-content::-webkit-scrollbar-thumb {
+    background: var(--primary-green);
+    border-radius: 3px;
+}
+
+.treatment-popup .swal-treatment-content::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-green);
 }

@@ -221,16 +221,6 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    @if($latestAssessment->remarks)
-                                        <div class="remarks-section">
-                                            <div class="remarks-header">
-                                                <i class="fas fa-comment-medical"></i>
-                                                <span>Professional Remarks</span>
-                                            </div>
-                                            <p class="remarks-content">{{ $latestAssessment->remarks }}</p>
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         @else

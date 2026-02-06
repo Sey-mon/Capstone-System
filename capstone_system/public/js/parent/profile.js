@@ -627,7 +627,7 @@ function deleteAccount() {
             <div style="text-align: left; padding: 20px 10px;">
                 <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                     <p style="margin: 0; color: #92400e; font-weight: 600; font-size: 14px;">
-                        <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                        <i class="fas fa-clock" style="margin-right: 8px;"></i>
                         30-Day Grace Period
                     </p>
                     <p style="margin: 8px 0 0 0; color: #78350f; font-size: 13px; line-height: 1.5;">
@@ -639,11 +639,11 @@ function deleteAccount() {
                         <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
                         What happens when you schedule deletion:
                     </p>
-                    <ul style="margin: 8px 0 0 0; color: #7f1d1d; font-size: 13px; padding-left: 24px;">
-                        <li>Your account will be deactivated immediately</li>
-                        <li>All children will be unlinked (but not deleted)</li>
-                        <li>After 30 days, your account and data will be permanently deleted</li>
-                        <li><strong>You can cancel anytime by logging in again</strong></li>
+                    <ul style="margin: 8px 0 0 0; color: #7f1d1d; font-size: 13px; padding-left: 24px; line-height: 1.8;">
+                        <li style="margin-bottom: 6px;"><strong>Your account becomes inactive</strong> - You won't be able to access the system</li>
+                        <li style="margin-bottom: 6px;"><strong>Your children's records are preserved</strong> - They will be unlinked from your account but remain in the system</li>
+                        <li style="margin-bottom: 6px;"><strong>You have 30 days to change your mind</strong> - Simply log in again to cancel the deletion</li>
+                        <li><strong>After 30 days, deletion is final</strong> - Your account and personal data will be permanently removed</li>
                     </ul>
                 </div>
                 <p style="color: #374151; margin: 0; font-size: 14px;">

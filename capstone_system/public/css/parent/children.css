@@ -18,63 +18,160 @@
     padding: 0;
 }
 
-/* Desktop Header Section */
+/* Desktop Header Section - Enhanced */
 .desktop-header-section {
-    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
-    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.desktop-header-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.03)"/></svg>');
+    opacity: 0.5;
+}
+
+.desktop-header-section::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.header-container {
+    position: relative;
+    z-index: 1;
+    padding: 2rem 2.5rem;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    gap: 2rem;
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex: 1 1 300px;
+    gap: 1.5rem;
+    flex: 1 1 400px;
     min-width: 0;
 }
 
+/* Page Icon */
+.page-icon-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
 .page-icon {
-    width: 48px;
-    height: 48px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    font-size: 2rem;
+    color: var(--primary-green);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border: 3px solid rgba(255, 255, 255, 0.5);
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.icon-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .page-info {
     flex: 1;
+    min-width: 0;
 }
 
-.page-main-title {
-    font-size: clamp(1.125rem, 2vw, 1.5rem);
-    font-weight: 700;
+/* Breadcrumb */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.breadcrumb i {
+    font-size: 0.75rem;
+}
+
+.breadcrumb .active {
     color: white;
-    margin: 0 0 0.25rem 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* Page Title with Decoration */
+.page-main-title {
+    position: relative;
+    margin: 0 0 0.5rem 0;
+    padding-bottom: 0.25rem;
+}
+
+.title-text {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     line-height: 1.2;
-    word-break: break-word;
+    display: inline-block;
+    background: linear-gradient(to right, white, rgba(255,255,255,0.9));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.title-decoration {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(to right, white, transparent);
+    border-radius: 2px;
 }
 
 .page-description {
-    font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(0.875rem, 1.5vw, 1rem);
+    color: rgba(255, 255, 255, 0.95);
     margin: 0;
     font-weight: 400;
-    line-height: 1.5;
-    word-break: break-word;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 600px;
+}
+
+.page-description i {
+    font-size: 0.875rem;
+    opacity: 0.8;
 }
 
 .header-right {
@@ -82,66 +179,116 @@
     min-width: 0;
 }
 
+/* Enhanced Stat Cards */
 .header-stats-cards {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 1rem;
     justify-content: flex-end;
 }
 
 .header-stat-item {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 10px;
-    padding: 0.75rem 0.875rem;
+    position: relative;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    min-width: 120px;
+    gap: 0.875rem;
+    min-width: 160px;
     flex: 0 1 auto;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.stat-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.1;
+    transition: opacity 0.4s ease;
+}
+
+.header-stat-item.stat-primary .stat-background {
+    background: linear-gradient(135deg, #059669, #047857);
+}
+
+.header-stat-item.stat-success .stat-background {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.header-stat-item.stat-info .stat-background {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
 }
 
 .header-stat-item:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+    border-color: white;
+}
+
+.header-stat-item:hover .stat-background {
+    opacity: 0.15;
 }
 
 .header-stat-icon {
-    width: 36px;
-    height: 36px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 1rem;
+    font-size: 1.25rem;
     flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.header-stat-item.stat-primary .header-stat-icon {
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.header-stat-item.stat-success .header-stat-icon {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.header-stat-item.stat-info .header-stat-icon {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
 .header-stat-content {
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 1;
 }
 
 .header-stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
+    font-size: 2rem;
+    font-weight: 800;
     line-height: 1;
     margin-bottom: 0.25rem;
+    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .header-stat-label {
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
+    color: var(--gray-text);
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.5px;
 }
 
 /* Desktop Content Area */
@@ -1137,6 +1284,333 @@ h2#swal2-title {
     transform: rotate(90deg) !important;
 }
 
+/* ===== VIEW PATIENT/CHILD MODAL STYLES ===== */
+
+/* SweetAlert2 popup customization for patient/child modal */
+.swal-patient-modal.swal-patient-popup {
+    padding: 0 !important;
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+.swal-patient-modal .swal2-html-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+
+/* Hide or minimize SweetAlert2 default title when using custom header */
+.swal-patient-modal .swal2-title {
+    display: none !important;
+}
+
+/* Form container for view modal */
+.swal-form-container {
+    text-align: left;
+    padding: 1.5rem 2rem 0.5rem 2rem;
+    max-height: 65vh;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.swal-view-patient-popup .swal-form-container {
+    padding: 1.5rem 2rem 1rem 2rem;
+}
+
+/* Display value styling for view modal */
+.detail-value-display {
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #495057;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+/* Form Section Styling */
+.swal-patient-modal .form-section {
+    margin-bottom: 1.5rem;
+    background: transparent;
+    border-radius: 0;
+    padding: 1.5rem;
+    box-shadow: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.swal-patient-modal .form-section:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.swal-patient-modal .form-section:last-child {
+    margin-bottom: 0;
+}
+
+.swal-patient-modal .section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #059669;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.swal-patient-modal .section-title i {
+    font-size: 1.25rem;
+    color: #059669;
+    opacity: 0.8;
+}
+
+/* Form Row and Group Styling */
+.swal-patient-modal .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 0;
+}
+
+.swal-patient-modal .form-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.swal-patient-modal .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.swal-patient-modal .form-group label {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.swal-patient-modal .form-group label i.fas {
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+/* Badge styling for 4Ps beneficiary and other statuses */
+.detail-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.detail-badge.badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.detail-badge.badge-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.detail-badge.badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.detail-badge i {
+    font-size: 0.75rem;
+}
+
+/* SweetAlert2 Button Customization for View Modal */
+.swal-patient-modal .swal2-actions {
+    gap: 1rem;
+    margin: 0 !important;
+    padding: 1rem 2rem 2rem 2rem;
+    background: #f8f9fa;
+}
+
+.swal-patient-modal .btn-secondary {
+    background: #059669 !important;
+    border: 2px solid #059669 !important;
+    color: white !important;
+    padding: 0.875rem 2.5rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: none !important;
+}
+
+.swal-patient-modal .btn-secondary:hover {
+    background: #047857 !important;
+    border-color: #047857 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+}
+
+/* Scrollbar Styling for Modal Content */
+.swal-form-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.swal-form-container::-webkit-scrollbar-track {
+    background: #f1f3f5;
+    border-radius: 10px;
+}
+
+.swal-form-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #cbd5e0 0%, #a0aec0 100%);
+    border-radius: 10px;
+}
+
+.swal-form-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #a0aec0 0%, #718096 100%);
+}
+
+/* Responsive Design for View Modal */
+@media (max-width: 768px) {
+    .swal-patient-modal .swal2-popup {
+        width: 95% !important;
+        padding: 0;
+        margin: 1rem;
+    }
+
+    .swal-patient-modal .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .swal-form-container {
+        padding: 1rem 1.25rem 1.5rem;
+    }
+
+    .swal-patient-modal .form-section {
+        padding: 1.25rem;
+    }
+}
+
+/* ===== CHILD PROFILE MODAL CUSTOM HEADER STYLES ===== */
+
+/* Custom header for child profile modal */
+.child-profile-modal-header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    padding: 20px 25px;
+    margin: -24px -32px 25px -32px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.child-profile-header-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.child-profile-header-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.child-profile-header-info {
+    flex: 1;
+    text-align: left;
+}
+
+.child-profile-header-title {
+    margin: 0 0 5px 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.child-profile-header-subtitle {
+    margin: 0;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.child-profile-header-subtitle i {
+    font-size: 0.85rem;
+}
+
+/* Responsive adjustments for custom header */
+@media (max-width: 768px) {
+    .child-profile-modal-header {
+        padding: 15px 20px;
+        margin: -20px -24px 20px -24px;
+    }
+
+    .child-profile-header-content {
+        gap: 12px;
+    }
+
+    .child-profile-header-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 1.25rem;
+    }
+
+    .child-profile-header-title {
+        font-size: 1.25rem;
+    }
+
+    .child-profile-header-subtitle {
+        font-size: 0.8rem;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .child-profile-modal-header {
+        padding: 12px 15px;
+        margin: -16px -20px 15px -20px;
+    }
+
+    .child-profile-header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .child-profile-header-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+    }
+
+    .child-profile-header-info {
+        text-align: center;
+    }
+
+    .child-profile-header-title {
+        font-size: 1.125rem;
+    }
+
+    .child-profile-header-subtitle {
+        font-size: 0.75rem;
+        justify-content: center;
+    }
+}
+
 /* Print Styles */
 @media print {
     .page-container {
@@ -1183,35 +1657,117 @@ h2#swal2-title {
 
 /* Tablet adjustments */
 @media (max-width: 1024px) {
+    .header-container {
+        padding: 1.5rem 2rem;
+    }
+
     .header-stats-cards {
         width: 100%;
         flex-wrap: wrap;
+        justify-content: center;
     }
     
     .header-stat-item {
         flex: 1;
-        min-width: 140px;
+        min-width: 150px;
     }
     
     .desktop-content-area {
         padding: 2rem;
     }
+
+    .page-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 1.75rem;
+    }
+
+    .icon-pulse {
+        width: 56px;
+        height: 56px;
+    }
 }
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
+    .header-container {
+        padding: 1rem 1.5rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .header-left {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .page-icon-wrapper {
+        margin: 0 auto;
+    }
+
     .page-icon {
         width: 48px;
         height: 48px;
         font-size: 1.5rem;
     }
+
+    .icon-pulse {
+        width: 48px;
+        height: 48px;
+    }
+
+    .page-info {
+        width: 100%;
+    }
+
+    .breadcrumb {
+        justify-content: center;
+        font-size: 0.7rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .page-main-title {
+        margin: 0 0 0.25rem 0;
+        padding-bottom: 0;
+    }
+
+    .title-text {
+        font-size: 1.25rem;
+        line-height: 1.1;
+    }
+
+    .title-decoration {
+        display: none;
+    }
+
+    .page-description {
+        justify-content: center;
+        text-align: center;
+        font-size: 0.75rem;
+        line-height: 1.3;
+        gap: 0.375rem;
+    }
+
+    .page-description i {
+        font-size: 0.7rem;
+    }
+
+    .header-right {
+        width: 100%;
+        margin-top: 0;
+    }
     
     .header-stats-cards {
         flex-direction: column;
+        gap: 0.75rem;
     }
     
     .header-stat-item {
         width: 100%;
+        min-width: unset;
     }
     
     .desktop-content-area {
@@ -1230,6 +1786,71 @@ h2#swal2-title {
     .btn-modern {
         width: 100%;
         justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-container {
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+    }
+
+    .header-left {
+        gap: 0.375rem;
+    }
+
+    .page-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 1.25rem;
+    }
+
+    .icon-pulse {
+        width: 44px;
+        height: 44px;
+    }
+
+    .breadcrumb {
+        font-size: 0.65rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .page-main-title {
+        margin: 0 0 0.25rem 0;
+        padding-bottom: 0;
+    }
+
+    .title-text {
+        font-size: 1.125rem;
+        line-height: 1.1;
+    }
+
+    .page-description {
+        font-size: 0.7rem;
+        line-height: 1.2;
+        gap: 0.25rem;
+    }
+
+    .page-description i {
+        font-size: 0.65rem;
+    }
+
+    .header-right {
+        margin-top: 0;
+    }
+
+    .header-stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .header-stat-value {
+        font-size: 1.5rem;
+    }
+
+    .header-stat-item {
+        padding: 0.875rem 1rem;
     }
 }
 

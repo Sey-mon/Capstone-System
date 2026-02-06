@@ -90,15 +90,106 @@ function showAssessmentHistory(childId, childName) {
             </div>
         `;
 
-        const remarksSection = assessment.remarks ? `
-            <div class="swal-remarks-section">
-                <div class="swal-remarks-header">
-                    <i class="fas fa-comment-medical"></i>
-                    Professional Remarks
-                </div>
-                <p class="swal-remarks-content">${assessment.remarks}</p>
-            </div>
-        ` : '';
+        let remarksSection = '';
+        if (assessment.remarks) {
+            try {
+                const clinicalData = JSON.parse(assessment.remarks);
+                
+                if (clinicalData && clinicalData.clinical_symptoms) {
+                    // Structured clinical data
+                    const symptoms = clinicalData.clinical_symptoms;
+                    const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : 'N/A';
+                    
+                    let visibleSignsHtml = '';
+                    if (symptoms.visible_signs && Array.isArray(symptoms.visible_signs) && symptoms.visible_signs.length > 0) {
+                        visibleSignsHtml = `
+                            <div class="clinical-item full-width">
+                                <span class="clinical-label">Visible Signs:</span>
+                                <span class="clinical-value">${symptoms.visible_signs.join(', ')}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    let additionalNotesHtml = '';
+                    if (clinicalData.additional_notes) {
+                        additionalNotesHtml = `
+                            <div class="additional-notes-section">
+                                <div class="remarks-header">
+                                    <i class="fas fa-clipboard"></i>
+                                    <span>Additional Notes</span>
+                                </div>
+                                <div class="additional-notes-content">
+                                    <p>${clinicalData.additional_notes}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    remarksSection = `
+                        <div class="remarks-section structured">
+                            <div class="remarks-header">
+                                <i class="fas fa-stethoscope"></i>
+                                <span>Clinical Symptoms & Physical Signs</span>
+                            </div>
+                            <div class="clinical-grid">
+                                <div class="clinical-item">
+                                    <span class="clinical-label">Appetite:</span>
+                                    <span class="clinical-value">${capitalize(symptoms.appetite)}</span>
+                                </div>
+                                <div class="clinical-item">
+                                    <span class="clinical-label">Edema:</span>
+                                    <span class="clinical-value">${capitalize(symptoms.edema)}</span>
+                                </div>
+                                <div class="clinical-item">
+                                    <span class="clinical-label">MUAC:</span>
+                                    <span class="clinical-value">${symptoms.muac || 'N/A'} cm</span>
+                                </div>
+                                <div class="clinical-item">
+                                    <span class="clinical-label">Diarrhea:</span>
+                                    <span class="clinical-value">${symptoms.diarrhea || 'N/A'} day(s)</span>
+                                </div>
+                                <div class="clinical-item">
+                                    <span class="clinical-label">Vomiting:</span>
+                                    <span class="clinical-value">${symptoms.vomiting || 'N/A'} times/day</span>
+                                </div>
+                                <div class="clinical-item">
+                                    <span class="clinical-label">Fever:</span>
+                                    <span class="clinical-value">${symptoms.fever || 'N/A'} day(s)</span>
+                                </div>
+                                <div class="clinical-item full-width">
+                                    <span class="clinical-label">Breastfeeding Status:</span>
+                                    <span class="clinical-value">${capitalize(clinicalData.breastfeeding_status)}</span>
+                                </div>
+                                ${visibleSignsHtml}
+                            </div>
+                            ${additionalNotesHtml}
+                        </div>
+                    `;
+                } else {
+                    // Plain text fallback
+                    remarksSection = `
+                        <div class="swal-remarks-section">
+                            <div class="swal-remarks-header">
+                                <i class="fas fa-comment-medical"></i>
+                                Professional Remarks
+                            </div>
+                            <p class="swal-remarks-content">${assessment.remarks}</p>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                // If JSON parsing fails, display as plain text
+                remarksSection = `
+                    <div class="swal-remarks-section">
+                        <div class="swal-remarks-header">
+                            <i class="fas fa-comment-medical"></i>
+                            Professional Remarks
+                        </div>
+                        <p class="swal-remarks-content">${assessment.remarks}</p>
+                    </div>
+                `;
+            }
+        }
 
         const sidebar = assessments.map((item, idx) => `
             <div class="swal-assessment-item ${idx === index ? 'active' : ''}" onclick="selectAssessment(${idx})">
@@ -153,6 +244,16 @@ function showAssessmentHistory(childId, childName) {
                             ${childName}
                         </h3>
                         <p class="swal-header-subtitle">Complete screening timeline and progress tracking</p>
+                        <div class="swal-header-buttons">
+                            <button class="btn btn-primary btn-sm swal-treatment-button" onclick="showTreatmentPlan(${assessment.id}, '${childName.replace(/'/g, "\\'")}', ${index})">
+                                <i class="fas fa-prescription me-1"></i>
+                                View Treatment Plan
+                            </button>
+                            <button class="btn btn-success btn-sm swal-pdf-button" onclick="downloadAssessmentPDF(${assessment.id})">
+                                <i class="fas fa-file-pdf me-1"></i>
+                                Download PDF
+                            </button>
+                        </div>
                     </div>
                     <div class="swal-assessment-detail">
                         <div class="swal-detail-header">
@@ -501,4 +602,255 @@ function toggleOldAssessments(childId) {
     if (el) {
         el.classList.toggle('d-none');
     }
+}
+
+// Show treatment plan view
+function showTreatmentPlan(assessmentId, childName, currentIndex) {
+    // Find the assessment data from the embedded JSON
+    let assessment = null;
+    let childId = null;
+    
+    // Search through all children's assessments to find the matching one
+    for (const [patientId, childData] of Object.entries(assessmentsData)) {
+        const foundAssessment = childData.assessments.find(a => a.id == assessmentId);
+        if (foundAssessment) {
+            assessment = foundAssessment;
+            childId = patientId;
+            break;
+        }
+    }
+    
+    if (!assessment) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Assessment data not found. Please refresh the page and try again.'
+        });
+        return;
+    }
+    
+    renderTreatmentPlanView(assessment, childName, childId, currentIndex);
+}
+
+function renderTreatmentPlanView(assessment, childName, childId, currentIndex) {
+    // Parse treatment plan from the diagnosis field or other available data
+    // The diagnosis field contains the AI-generated diagnosis
+    // We'll need to check if there's a treatment field in the assessment data
+    
+    const diagnosis = assessment.diagnosis || 'Status Unknown';
+    
+    // Determine diagnosis styling
+    let diagnosisClass = 'unknown';
+    let diagnosisIcon = 'fa-question-circle';
+    if (diagnosis.includes('Severe')) {
+        diagnosisClass = 'critical';
+        diagnosisIcon = 'fa-exclamation-triangle';
+    } else if (diagnosis.includes('Moderate')) {
+        diagnosisClass = 'warning';
+        diagnosisIcon = 'fa-exclamation-circle';
+    } else if (diagnosis.includes('Normal')) {
+        diagnosisClass = 'normal';
+        diagnosisIcon = 'fa-check-circle';
+    }
+
+    // For parents, we'll show general treatment guidelines based on diagnosis
+    let treatmentContent = '';
+    
+    if (diagnosis.includes('Severe Acute Malnutrition')) {
+        treatmentContent = `
+            <div class="swal-treatment-section">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-bolt"></i>
+                    Immediate Actions Required
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Immediate medical consultation with nutritionist</li>
+                    <li>Follow prescribed therapeutic feeding program</li>
+                    <li>Monitor child's appetite and food intake daily</li>
+                    <li>Ensure all scheduled check-ups are attended</li>
+                </ul>
+            </div>
+            <div class="swal-treatment-section">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-heartbeat"></i>
+                    Monitoring & Follow-up
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Weekly weight monitoring</li>
+                    <li>Watch for signs of improvement or deterioration</li>
+                    <li>Keep a daily food diary</li>
+                    <li>Regular follow-up appointments as scheduled</li>
+                </ul>
+            </div>
+            <div class="swal-treatment-section swal-emergency">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Emergency Warning Signs
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Refusal to eat or drink for 24 hours</li>
+                    <li>Severe diarrhea or vomiting</li>
+                    <li>High fever or difficulty breathing</li>
+                    <li>Extreme lethargy or unresponsiveness</li>
+                    <li>Seek immediate medical attention if any of these occur</li>
+                </ul>
+            </div>
+        `;
+    } else if (diagnosis.includes('Moderate Acute Malnutrition')) {
+        treatmentContent = `
+            <div class="swal-treatment-section">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-bolt"></i>
+                    Recommended Actions
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Increase energy-dense, nutritious foods</li>
+                    <li>Provide frequent, small meals (5-6 times daily)</li>
+                    <li>Follow nutritionist's meal plan recommendations</li>
+                    <li>Ensure adequate hydration</li>
+                </ul>
+            </div>
+            <div class="swal-treatment-section">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-heartbeat"></i>
+                    Monitoring & Follow-up
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Bi-weekly weight monitoring</li>
+                    <li>Track food intake and appetite</li>
+                    <li>Regular nutritionist consultations</li>
+                    <li>Monitor for any signs of worsening condition</li>
+                </ul>
+            </div>
+            <div class="swal-treatment-section">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-users"></i>
+                    Family Support
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Attend nutrition education sessions</li>
+                    <li>Learn about locally available nutritious foods</li>
+                    <li>Create a positive mealtime environment</li>
+                    <li>Involve family in meal planning and preparation</li>
+                </ul>
+            </div>
+        `;
+    } else if (diagnosis.includes('Normal')) {
+        treatmentContent = `
+            <div class="swal-treatment-section">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-check-circle"></i>
+                    Maintain Healthy Status
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Continue with balanced, nutritious diet</li>
+                    <li>Maintain regular meal times</li>
+                    <li>Encourage physical activity appropriate for age</li>
+                    <li>Ensure adequate sleep and rest</li>
+                </ul>
+            </div>
+            <div class="swal-treatment-section">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-heartbeat"></i>
+                    Monitoring & Follow-up
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Regular growth monitoring as scheduled</li>
+                    <li>Attend routine check-ups</li>
+                    <li>Stay updated with vaccination schedule</li>
+                    <li>Monitor for any changes in appetite or behavior</li>
+                </ul>
+            </div>
+        `;
+    } else {
+        treatmentContent = `
+            <div class="swal-treatment-section">
+                <h4 class="swal-section-title">
+                    <i class="fas fa-info-circle"></i>
+                    General Guidance
+                </h4>
+                <ul class="swal-treatment-list">
+                    <li>Consult with your nutritionist for specific recommendations</li>
+                    <li>Follow the personalized meal plan provided</li>
+                    <li>Attend all scheduled appointments</li>
+                    <li>Keep track of your child's progress</li>
+                </ul>
+            </div>
+        `;
+    }
+
+    const htmlContent = `
+        <div class="swal-treatment-container">
+            <div class="swal-treatment-header">
+                <button class="btn btn-secondary btn-sm swal-back-button" onclick="backToScreeningDetails(${childId}, ${assessment.id})">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Screening
+                </button>
+                <h3 class="swal-header-title">
+                    <i class="fas fa-prescription"></i>
+                    Treatment & Care Guidelines
+                </h3>
+                <p class="swal-header-subtitle">${childName} - ${assessment.date}</p>
+            </div>
+            
+            <div class="swal-treatment-content">
+                <div class="swal-diagnosis-header">
+                    <div class="swal-diagnosis-badge ${diagnosisClass}">
+                        <i class="fas ${diagnosisIcon}"></i>
+                        <span>${diagnosis}</span>
+                    </div>
+                </div>
+
+                ${treatmentContent}
+                
+                <div class="swal-treatment-section" style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1rem; margin-top: 1.5rem;">
+                    <h4 class="swal-section-title" style="color: #1e40af;">
+                        <i class="fas fa-info-circle"></i>
+                        Important Note
+                    </h4>
+                    <p style="margin: 0; color: #1e3a8a;">
+                        These are general guidelines based on the nutritional status assessment. 
+                        For personalized treatment plans and specific medical advice, please consult 
+                        with your assigned nutritionist during scheduled appointments.
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    Swal.fire({
+        html: htmlContent,
+        width: '90%',
+        showCancelButton: false,
+        showConfirmButton: false,
+        showCloseButton: true,
+        scrollbarPadding: false,
+        heightAuto: false,
+        customClass: {
+            container: 'parent-assessment-modal-container',
+            popup: 'parent-assessment-modal-popup treatment-popup',
+            htmlContainer: 'p-0',
+            closeButton: 'swal-close-button'
+        },
+        buttonsStyling: false
+    });
+}
+
+function backToScreeningDetails(childId, selectedAssessmentId) {
+    Swal.close();
+    const childData = assessmentsData[childId];
+    if (childData) {
+        const assessmentIndex = childData.assessments.findIndex(a => a.id == selectedAssessmentId);
+        if (assessmentIndex !== -1) {
+            showAssessmentHistory(childId, childData.name);
+        }
+    }
+}
+
+// Download assessment PDF
+function downloadAssessmentPDF(assessmentId) {
+    // Open PDF download in new window
+    // The route should be accessible to parents to download their children's assessment PDFs
+    const pdfUrl = `/nutritionist/assessment/${assessmentId}/pdf`;
+    window.open(pdfUrl, '_blank');
 }

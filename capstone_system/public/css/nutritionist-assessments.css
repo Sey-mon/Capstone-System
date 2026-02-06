@@ -1123,7 +1123,7 @@ html, body {
 .patient-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-green-lg);
-    border-color: var(--primary-color);
+    border-color: #000000;
 }
 
 .patient-card-header {

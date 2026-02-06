@@ -15,42 +15,62 @@
 <div class="desktop-page-wrapper">
     <!-- Desktop Header Section -->
     <div class="desktop-header-section">
-        <div class="header-left">
-            <div class="page-icon">
-                <i class="fas fa-child"></i>
-            </div>
-            <div class="page-info">
-                <h1 class="page-main-title">My Children's Health Records</h1>
-                <p class="page-description">Comprehensive monitoring and tracking of your children's nutrition and health journey</p>
-            </div>
-        </div>
-        <div class="header-right">
-            <div class="header-stats-cards">
-                <div class="header-stat-item">
-                    <div class="header-stat-icon">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="page-icon-wrapper">
+                    <div class="page-icon">
                         <i class="fas fa-child"></i>
                     </div>
-                    <div class="header-stat-content">
-                        <div class="header-stat-value">{{ count($children ?? []) }}</div>
-                        <div class="header-stat-label">Registered Children</div>
-                    </div>
+                    <div class="icon-pulse"></div>
                 </div>
-                <div class="header-stat-item">
-                    <div class="header-stat-icon">
-                        <i class="fas fa-heartbeat"></i>
+                <div class="page-info">
+                    <div class="breadcrumb">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <span class="active">My Children</span>
                     </div>
-                    <div class="header-stat-content">
-                        <div class="header-stat-value">{{ $children ? $children->filter(function($child) { return $child->nutritionist !== null; })->count() : 0 }}</div>
-                        <div class="header-stat-label">Under Care</div>
-                    </div>
+                    <h1 class="page-main-title">
+                        <span class="title-text">My Children's Health Records</span>
+                        <span class="title-decoration"></span>
+                    </h1>
+                    <p class="page-description">
+                        <i class="fas fa-info-circle"></i>
+                        Comprehensive monitoring and tracking of your children's nutrition and health journey
+                    </p>
                 </div>
-                <div class="header-stat-item">
-                    <div class="header-stat-icon">
-                        <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="header-right">
+                <div class="header-stats-cards">
+                    <div class="header-stat-item stat-primary">
+                        <div class="stat-background"></div>
+                        <div class="header-stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="header-stat-content">
+                            <div class="header-stat-value" data-count="{{ count($children ?? []) }}">{{ count($children ?? []) }}</div>
+                            <div class="header-stat-label">Registered Children</div>
+                        </div>
                     </div>
-                    <div class="header-stat-content">
-                        <div class="header-stat-value">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
-                        <div class="header-stat-label">Total Assessments</div>
+                    <div class="header-stat-item stat-success">
+                        <div class="stat-background"></div>
+                        <div class="header-stat-icon">
+                            <i class="fas fa-user-nurse"></i>
+                        </div>
+                        <div class="header-stat-content">
+                            <div class="header-stat-value" data-count="{{ $children ? $children->filter(function($child) { return $child->nutritionist !== null; })->count() : 0 }}">{{ $children ? $children->filter(function($child) { return $child->nutritionist !== null; })->count() : 0 }}</div>
+                            <div class="header-stat-label">Under Care</div>
+                        </div>
+                    </div>
+                    <div class="header-stat-item stat-info">
+                        <div class="stat-background"></div>
+                        <div class="header-stat-icon">
+                            <i class="fas fa-file-medical-alt"></i>
+                        </div>
+                        <div class="header-stat-content">
+                            <div class="header-stat-value" data-count="{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
+                            <div class="header-stat-label">Total Assessments</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -115,9 +135,9 @@
                                 @endif
                                 <button type="button" 
                                     class="btn-modern btn-danger" 
-                                    onclick="confirmUnlinkChild({{ $child->patient_id }}, '{{ $child->first_name }} {{ $child->last_name }}')">
-                                    <i class="fas fa-unlink"></i>
-                                    Unlink Child
+                                    onclick="confirmRemoveChild({{ $child->patient_id }}, '{{ $child->first_name }} {{ $child->last_name }}')">
+                                    <i class="fas fa-user-minus"></i>
+                                    Remove from Account
                                 </button>
                             </div>
                         </div>
@@ -161,8 +181,8 @@
                                         <i class="fas fa-user-md"></i>
                                     </div>
                                     <div class="metric-content">
-                                        <span class="metric-label">Care Status</span>
-                                        <span class="metric-value-small">{{ $child->nutritionist ? 'Under Care' : 'Unassigned' }}</span>
+                                        <span class="metric-label">BNS</span>
+                                        <span class="metric-value-small">{{ $child->nutritionist ? $child->nutritionist->first_name . ' ' . $child->nutritionist->last_name : 'Not Assigned' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -191,137 +211,169 @@
                     <script>
                     function showChildProfile{{ $child->id }}() {
                         Swal.fire({
-                            title: `<div class="swal-modal-header"><div class="swal-header-icon"><i class="fas fa-child"></i></div><div class="swal-header-content"><h3 class="swal-header-title"><i class="fas fa-user-circle"></i> {{ $child->first_name }} {{ $child->last_name }}</h3><p class="swal-header-subtitle"><i class="fas fa-id-card"></i> Patient ID: {{ $child->custom_patient_id }} • Complete Health and Nutrition Profile</p></div></div>`,
+                            title: ' ',
                             html: `
-                                <style>
-                                    .swal-modal-content { padding: 12px; }
-                                    .profile-section { margin-bottom: 12px; }
-                                    .profile-section-title { font-size: 13px; margin-bottom: 8px; padding: 6px 10px; }
-                                    .profile-grid-4, .profile-grid-2 { gap: 8px; }
-                                    .profile-item { padding: 8px 10px; }
-                                    .profile-label { font-size: 10px; margin-bottom: 3px; }
-                                    .profile-value { font-size: 13px; }
-                                    .profile-value-large { font-size: 14px !important; }
-                                    .profile-value-xlarge { font-size: 15px !important; }
-                                    .profile-value-number { font-size: 16px !important; }
-                                </style>
-                                <div class="swal-modal-content">
-                                    <!-- Personal Information -->
-                                    <div class="profile-section">
-                                        <h4 class="profile-section-title">
-                                            <i class="fas fa-user"></i> Personal Information
-                                        </h4>
-                                        <div class="profile-grid-4">
-                                            <div class="profile-item profile-item-gray">
-                                                <div class="profile-label profile-label-gray">Full Name</div>
-                                                <div class="profile-value profile-value-dark">{{ $child->first_name }} {{ $child->middle_name ?? '' }} {{ $child->last_name }}</div>
+                                <div class="swal-form-container">
+                                    <!-- Custom Header -->
+                                    <div class="child-profile-modal-header">
+                                        <div class="child-profile-header-content">
+                                            <div class="child-profile-header-icon">
+                                                <i class="fas fa-child"></i>
                                             </div>
-                                            <div class="profile-item profile-item-green">
-                                                <div class="profile-label profile-label-green">Age</div>
-                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->age_months ?? $child->age }} {{ $child->age_months ? 'months' : 'years' }}</div>
+                                            <div class="child-profile-header-info">
+                                                <h3 class="child-profile-header-title">
+                                                    {{ $child->first_name }} {{ $child->last_name }}
+                                                </h3>
+                                                <p class="child-profile-header-subtitle">
+                                                    <i class="fas fa-id-card"></i> Patient ID: {{ $child->custom_patient_id ?? 'N/A' }} • Complete Health and Nutrition Profile
+                                                </p>
                                             </div>
-                                            <div class="profile-item profile-item-gray">
-                                                <div class="profile-label profile-label-gray">Gender</div>
-                                                <div class="profile-value profile-value-dark">{{ $child->gender ?? $child->sex ?? 'N/A' }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Basic Information -->
+                                    <div class="form-section">
+                                        <h6 class="section-title">
+                                            <i class="fas fa-user-circle" style="color: #059669;"></i> Basic Information
+                                        </h6>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-user"></i> Full Name</label>
+                                                <div class="detail-value-display">{{ $child->first_name }} {{ $child->middle_name ?? '' }} {{ $child->last_name }}</div>
                                             </div>
-                                            <div class="profile-item profile-item-gray">
-                                                <div class="profile-label profile-label-gray">Birthdate</div>
-                                                <div class="profile-value profile-value-dark">{{ $child->birthdate ? \Carbon\Carbon::parse($child->birthdate)->format('F j, Y') : 'N/A' }}</div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-birthday-cake"></i> Birthdate</label>
+                                                <div class="detail-value-display">{{ $child->birthdate ? \Carbon\Carbon::parse($child->birthdate)->format('F d, Y') : 'N/A' }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-calendar-alt"></i> Age</label>
+                                                <div class="detail-value-display">{{ $child->age_months ?? 'N/A' }} months</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-venus-mars"></i> Sex</label>
+                                                <div class="detail-value-display">{{ $child->sex ?? 'N/A' }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-phone"></i> Contact Number</label>
+                                                <div class="detail-value-display">{{ $child->contact_number ?? 'N/A' }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-calendar-check"></i> Date of Admission</label>
+                                                <div class="detail-value-display">{{ $child->date_of_admission ? \Carbon\Carbon::parse($child->date_of_admission)->format('F d, Y') : 'N/A' }}</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Contact & Location -->
-                                    <div class="profile-section">
-                                        <h4 class="profile-section-title">
-                                            <i class="fas fa-map-marker-alt"></i> Contact & Location
-                                        </h4>
-                                        <div class="profile-grid-2">
-                                            <div class="profile-item profile-item-green">
-                                                <div class="profile-label profile-label-green">Barangay</div>
-                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->barangay->barangay_name ?? 'N/A' }}</div>
+                                    <!-- Assignment & Location -->
+                                    <div class="form-section">
+                                        <h6 class="section-title">
+                                            <i class="fas fa-user-tag" style="color: #059669;"></i> Assignment & Location
+                                        </h6>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-map-marker-alt"></i> Barangay</label>
+                                                <div class="detail-value-display">{{ $child->barangay ? $child->barangay->barangay_name : 'Not assigned' }}</div>
                                             </div>
-                                            <div class="profile-item profile-item-gray">
-                                                <div class="profile-label profile-label-gray">Contact Number</div>
-                                                <div class="profile-value profile-value-dark">{{ $child->contact_number ?? 'Not provided' }}</div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-user-md"></i> Nutritionist</label>
+                                                <div class="detail-value-display">{{ $child->nutritionist ? $child->nutritionist->first_name . ' ' . $child->nutritionist->last_name : 'Not assigned' }}</div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Health Metrics -->
-                                    <div class="profile-section">
-                                        <h4 class="profile-section-title">
-                                            <i class="fas fa-heartbeat"></i> Health Metrics
-                                        </h4>
-                                        <div class="profile-grid-4">
-                                            <div class="profile-item profile-item-gray">
-                                                <div class="profile-label profile-label-gray">Weight</div>
-                                                <div class="profile-value profile-value-xlarge">{{ $child->weight_kg ?? 'N/A' }}{{ $child->weight_kg ? ' kg' : '' }}</div>
+                                    <div class="form-section">
+                                        <h6 class="section-title">
+                                            <i class="fas fa-heartbeat" style="color: #dc3545;"></i> Health Metrics & Status
+                                        </h6>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-weight"></i> Weight</label>
+                                                <div class="detail-value-display">{{ $child->weight_kg ?? 'N/A' }} {{ $child->weight_kg ? 'kg' : '' }}</div>
                                             </div>
-                                            <div class="profile-item profile-item-gray">
-                                                <div class="profile-label profile-label-gray">Height</div>
-                                                <div class="profile-value profile-value-xlarge">{{ $child->height_cm ?? 'N/A' }}{{ $child->height_cm ? ' cm' : '' }}</div>
-                                            </div>
-                                            <div class="profile-item profile-item-green">
-                                                <div class="profile-label profile-label-green">BMI for Age</div>
-                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->getLatestBmiForAge() ?? 'Not assessed' }}</div>
-                                            </div>
-                                            <div class="profile-item profile-item-green">
-                                                <div class="profile-label profile-label-green">Weight for Age</div>
-                                                <div class="profile-value profile-value-green profile-value-large">{{ $child->getLatestWeightForAge() ?? 'Not assessed' }}</div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-ruler-vertical"></i> Height</label>
+                                                <div class="detail-value-display">{{ $child->height_cm ?? 'N/A' }} {{ $child->height_cm ? 'cm' : '' }}</div>
                                             </div>
                                         </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-baby"></i> Breastfeeding Status</label>
+                                                <div class="detail-value-display">{{ $child->breastfeeding ?? 'Not specified' }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-disease"></i> Edema Present</label>
+                                                <div class="detail-value-display">{{ $child->edema ?? 'Not specified' }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-allergies"></i> Allergies</label>
+                                                <div class="detail-value-display">{{ $child->allergies ?? 'None reported' }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-pray"></i> Religion</label>
+                                                <div class="detail-value-display">{{ $child->religion ?? 'Not specified' }}</div>
+                                            </div>
+                                        </div>
+                                        @if($child->other_medical_problems)
+                                        <div class="form-row">
+                                            <div class="form-group full-width">
+                                                <label><i class="fas fa-notes-medical"></i> Other Medical Problems</label>
+                                                <div class="detail-value-display">{{ $child->other_medical_problems }}</div>
+                                            </div>
+                                        </div>
+                                        @endif
                                     </div>
 
-                                    <!-- Care Information -->
-                                    <div class="profile-section">
-                                        <h4 class="profile-section-title">
-                                            <i class="fas fa-user-nurse"></i> Care Information
-                                        </h4>
-                                        <div class="profile-grid-4">
-                                            <div class="profile-item profile-item-green">
-                                                <div class="profile-label profile-label-green">Nutritionist</div>
-                                                <div class="profile-value profile-value-green">{{ $child->nutritionist ? ($child->nutritionist->first_name . ' ' . $child->nutritionist->last_name) : 'Not assigned' }}</div>
+                                    <!-- Household Information -->
+                                    <div class="form-section">
+                                        <h6 class="section-title">
+                                            <i class="fas fa-home" style="color: #ffc107;"></i> Household Information
+                                        </h6>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-users"></i> Total Adults</label>
+                                                <div class="detail-value-display">{{ $child->total_household_adults ?? 0 }}</div>
                                             </div>
-                                            <div class="profile-item profile-item-gray">
-                                                <div class="profile-label profile-label-gray">Admission Date</div>
-                                                <div class="profile-value profile-value-dark">{{ $child->date_of_admission ? \Carbon\Carbon::parse($child->date_of_admission)->format('F j, Y') : 'Not recorded' }}</div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-child"></i> Total Children</label>
+                                                <div class="detail-value-display">{{ $child->total_household_children ?? 0 }}</div>
                                             </div>
-                                            <div class="profile-item profile-item-green">
-                                                <div class="profile-label profile-label-green">Assessments</div>
-                                                <div class="profile-value profile-value-number">{{ $child->assessments->count() }}</div>
+                                            <div class="form-group">
+                                                <label><i class="fas fa-children"></i> Total Twins</label>
+                                                <div class="detail-value-display">{{ $child->total_household_twins ?? 0 }}</div>
                                             </div>
-                                            <div class="profile-item {{ isset($child->is_4ps_beneficiary) && $child->is_4ps_beneficiary ? 'profile-item-green' : 'profile-item-gray' }}">
-                                                <div class="profile-label {{ isset($child->is_4ps_beneficiary) && $child->is_4ps_beneficiary ? 'profile-label-green' : 'profile-label-gray' }}">4Ps Beneficiary</div>
-                                                <div class="profile-value {{ isset($child->is_4ps_beneficiary) && $child->is_4ps_beneficiary ? 'profile-value-green profile-value-large' : 'profile-value-dark profile-value-large' }}">{{ isset($child->is_4ps_beneficiary) ? ($child->is_4ps_beneficiary ? 'Yes' : 'No') : 'Not specified' }}</div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group full-width">
+                                                <label><i class="fas fa-hands-helping"></i> 4Ps Beneficiary</label>
+                                                <div class="detail-value-display">
+                                                    @if($child->is_4ps_beneficiary)
+                                                        <span class="detail-badge badge-success"><i class="fas fa-check"></i> Yes</span>
+                                                    @else
+                                                        <span class="detail-badge badge-warning"><i class="fas fa-times"></i> No</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             `,
-                            width: '70%',
-                            showCloseButton: true,
-                            showConfirmButton: false,
-                            padding: '0',
-                            background: '#f8fafc',
+                            showConfirmButton: true,
+                            confirmButtonText: '<i class="fas fa-times-circle"></i> Close',
+                            confirmButtonColor: '#059669',
                             customClass: {
-                                container: 'swal-wide',
-                                popup: 'swal-popup-custom',
-                                closeButton: 'swal-close-custom'
+                                container: 'swal-patient-modal',
+                                popup: 'swal-patient-popup swal-view-patient-popup',
+                                htmlContainer: 'swal-view-patient-content',
+                                confirmButton: 'btn btn-secondary'
                             },
-                            didOpen: () => {
-                                const closeBtn = document.querySelector('.swal-close-custom');
-                                if (closeBtn) {
-                                    closeBtn.onmouseover = () => {
-                                        closeBtn.style.background = 'rgba(255,255,255,0.3) !important';
-                                        closeBtn.style.transform = 'rotate(90deg)';
-                                    };
-                                    closeBtn.onmouseout = () => {
-                                        closeBtn.style.background = 'rgba(255,255,255,0.2) !important';
-                                        closeBtn.style.transform = 'rotate(0deg)';
-                                    };
-                                }
-                            }
+                            width: '950px'
                         });
                     }
                     </script>
@@ -353,7 +405,15 @@
     </div>
 </div>
 
+<!-- Hidden data attributes for routes -->
+<div style="display: none;" 
+     data-preview-url="{{ route('parent.preview-child') }}"
+     data-link-url="{{ route('parent.link-child') }}"
+     data-unlink-url="{{ route('parent.unlink-child') }}">
+</div>
+
 @push('scripts')
+    <script src="{{ asset('js/parent/children.js') }}?v={{ now()->timestamp }}"></script>
     <script src="{{ asset('js/parent/children.js') }}?v={{ time() }}"></script>
     <script>
         function showAddChildModal() {
@@ -675,3 +735,4 @@
 @endpush
 
 @endsection
+
