@@ -10,7 +10,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/parent/profile.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/parent/profile.css') }}?v={{ time() }}">
 @endpush
 
 @section('content')
@@ -356,7 +356,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/parent/profile.js') }}"></script>
+<script src="{{ asset('js/parent/profile.js') }}?v={{ time() }}"></script>
 <script>
     // Initialize parent data and routes for profile.js
     initializeParentData({

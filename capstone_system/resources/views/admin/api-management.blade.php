@@ -221,9 +221,9 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/api-management.css') }}">
+<link rel="stylesheet" href="{{ asset('css/api-management.css') }}?v={{ time() }}">
 @endpush
 
 @push('scripts')
-<script src="{{ asset('js/api-management.js') }}"></script>
+<script src="{{ asset('js/api-management.js') }}?v={{ time() }}"></script>
 @endpush

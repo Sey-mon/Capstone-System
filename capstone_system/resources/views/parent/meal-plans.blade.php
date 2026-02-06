@@ -10,11 +10,11 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/parent/meal-plans.css') }}?v={{ time() }}{{ rand(1000, 9999) }}">
+<link rel="stylesheet" href="{{ asset('css/parent/meal-plans.css') }}?v={{ time() }}">
 @endpush
 
 @push('scripts')
-<script src="{{ asset('js/parent/meal-plans.js') }}?v={{ time() }}{{ rand(1000, 9999) }}"></script>
+<script src="{{ asset('js/parent/meal-plans.js') }}?v={{ time() }}"></script>
 @endpush
 
 @section('content')

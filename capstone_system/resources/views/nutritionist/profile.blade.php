@@ -10,7 +10,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/profile.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/nutritionist/profile.css') }}?v={{ time() }}">
 @endpush
 
 @section('content')
@@ -1001,5 +1001,5 @@
         });
     }
 </script>
-<script src="{{ asset('js/nutritionist/profile.js') }}"></script>
+<script src="{{ asset('js/nutritionist/profile.js') }}?v={{ time() }}"></script>
 @endpush

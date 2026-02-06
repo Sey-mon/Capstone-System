@@ -6,7 +6,7 @@
 @section('page-subtitle', 'Manage food items and nutritional information')
 
 @push('preload-styles')
-    <link rel="preload" href="{{ asset('css/admin/foods.css') }}" as="style" fetchpriority="high">
+    <link rel="preload" href="{{ asset('css/admin/foods.css') }}?v={{ time() }}" as="style" fetchpriority="high">
 @endpush
 
 @push('styles')
@@ -21,7 +21,7 @@
         /* Hide SweetAlert2 validation message by default */
         #swal2-validation-message:empty,#swal2-validation-message:not(.swal2-show){display:none!important}
     </style>
-    <link rel="stylesheet" href="{{ asset('css/admin/foods.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/foods.css') }}?v={{ time() }}">
 @endpush
 
 @section('navigation')
@@ -224,5 +224,5 @@
             window.location.href = '{{ route('admin.foods.index') }}';
         }
     </script>
-    <script defer src="{{ asset('js/admin/foods.js') }}"></script>
+    <script defer src="{{ asset('js/admin/foods.js') }}?v={{ time() }}"></script>
 @endpush

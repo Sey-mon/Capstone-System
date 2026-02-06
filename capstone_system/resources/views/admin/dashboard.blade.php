@@ -11,7 +11,7 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
         crossorigin=""/>
     <!-- Admin Dashboard CSS -->
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-dashboard.css') }}?v={{ time() }}">
 @endpush
 
 @section('navigation')
@@ -461,10 +461,10 @@
     </script>
 
     <!-- Admin Dashboard Charts JS -->
-    <script src="{{ asset('js/admin/admin-dashboard-charts.js') }}"></script>
+    <script src="{{ asset('js/admin/admin-dashboard-charts.js') }}?v={{ time() }}"></script>
     
     <!-- Admin Dashboard JS -->
-    <script src="{{ asset('js/admin/admin-dashboard.js') }}"></script>
+    <script src="{{ asset('js/admin/admin-dashboard.js') }}?v={{ time() }}"></script>
     
     <!-- Modal backdrop cleanup for admin dashboard -->
     <script>

@@ -6,7 +6,7 @@
 @section('page-subtitle', 'Upload and manage nutrition guideline PDFs for AI-powered recommendations')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/knowledge-base.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/knowledge-base.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         /* Custom SweetAlert2 Styles for Knowledge Base - Green & White Theme */
@@ -331,5 +331,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/admin/knowledge-base.js') }}"></script>
+    <script src="{{ asset('js/admin/knowledge-base.js') }}?v={{ time() }}"></script>
 @endpush
