@@ -11,10 +11,11 @@ class PreventBackHistory
     /**
      * Handle an incoming request.
      *
-     * This middleware prevents browsers from caching pages by setting
-     * appropriate cache control headers. This ensures that when users
-     * click the back button, the page is reloaded with fresh authentication
-     * checks rather than showing a cached version.
+     * Prevents browsers from caching authenticated pages by setting
+     * no-cache headers. This ensures auth middleware runs on back navigation.
+     *
+     * Note: The actual security comes from Laravel's auth middleware.
+     * This middleware just prevents the browser from showing stale cached pages.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
@@ -22,11 +23,12 @@ class PreventBackHistory
     {
         $response = $next($request);
 
-        // Prevent browser from caching pages
-        $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-        $response->headers->set('Pragma', 'no-cache');
-        $response->headers->set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
-
+        // Simple, standard cache prevention headers
+        // These are sufficient - no JavaScript manipulation needed
+        $response->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        $response->header('Pragma', 'no-cache');
+        $response->header('Expires', '0');
+        
         return $response;
     }
 }
