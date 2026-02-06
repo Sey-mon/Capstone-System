@@ -56,7 +56,6 @@
                 <a href="#about" class="learn-more-btn">
                     Learn More
                     <i class="fas fa-arrow-down"></i>
-                    <h2>it works</h2>
                 </a>
             </div>
 
