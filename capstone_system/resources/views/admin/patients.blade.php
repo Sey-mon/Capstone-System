@@ -15,73 +15,67 @@
 @endsection
 
 @section('content')
-    <div class="patients-management">
-        <!-- Advanced Filters Panel -->
-        <div class="filters-panel">
-            <div class="filters-header">
-                <h4><i class="fas fa-filter"></i> Filters & Search</h4>
-                <div class="header-actions">
-                    <button class="btn btn-sm btn-outline">
-                        <i class="fas fa-times"></i>
-                        Clear All
-                    </button>
-                    <button class="btn btn-sm btn-secondary">
-                        <i class="fas fa-sync"></i>
-                        Refresh
-                    </button>
+    <!-- Filter Section -->
+    <div class="filter-container">
+        <div class="filter-header-bar">
+            <h3><i class="fas fa-filter"></i> Filters & Search</h3>
+            <button class="btn-clear-all" onclick="clearAllFilters()">
+                <i class="fas fa-times"></i> Clear All
+            </button>
+        </div>
+        <div class="filter-content">
+            <div class="filter-grid">
+                <div class="filter-field">
+                    <label>Search Patient</label>
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchPatient" class="form-control search-input" placeholder="Search by name, contact...">
+                    </div>
                 </div>
-            </div>
-            <div class="filters-content">
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label for="searchPatient">Search Patient</label>
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="searchPatient" placeholder="Search by name, contact...">
-                        </div>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterBarangay">Barangay</label>
-                                                <select id="filterBarangay">
-                            <option value="">All Barangays</option>
-                            @foreach($barangays ?? [] as $barangay)
-                                <option value="{{ $barangay->barangay_name }}">{{ $barangay->barangay_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterGender">Gender</label>
-                        <select id="filterGender">
-                            <option value="">All Genders</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterAgeRange">Age Range</label>
-                        <select id="filterAgeRange">
-                            <option value="">All Ages</option>
-                            <option value="0-12">0-12 months</option>
-                            <option value="13-24">13-24 months</option>
-                            <option value="25-36">25-36 months</option>
-                            <option value="37-48">37-48 months</option>
-                            <option value="49+">49+ months</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterNutritionist">Nutritionist</label>
-                                                <select id="filterNutritionist">
-                            <option value="">All Nutritionists</option>
-                            @foreach($nutritionists ?? [] as $nutritionist)
-                                <option value="{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}">
-                                    {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="filter-field">
+                    <label>Barangay</label>
+                    <select id="filterBarangay" class="form-control">
+                        <option value="" disabled selected hidden>All Barangays</option>
+                        @foreach($barangays ?? [] as $barangay)
+                            <option value="{{ $barangay->barangay_name }}">{{ $barangay->barangay_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label>Gender</label>
+                    <select id="filterGender" class="form-control">
+                        <option value="" disabled selected hidden>All Genders</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label>Age Range</label>
+                    <select id="filterAgeRange" class="form-control">
+                        <option value="" disabled selected hidden>All Ages</option>
+                        <option value="0-12">0-12 months</option>
+                        <option value="13-24">13-24 months</option>
+                        <option value="25-36">25-36 months</option>
+                        <option value="37-48">37-48 months</option>
+                        <option value="49+">49+ months</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label>Nutritionist</label>
+                    <select id="filterNutritionist" class="form-control">
+                        <option value="" disabled selected hidden>All Nutritionists</option>
+                        @foreach($nutritionists ?? [] as $nutritionist)
+                            <option value="{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}">
+                                {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="patients-management">
 
         <!-- Results Summary -->
         <div class="results-summary">

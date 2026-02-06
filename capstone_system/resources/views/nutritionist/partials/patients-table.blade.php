@@ -65,12 +65,18 @@
                                 <button class="btn btn-sm btn-info" onclick="viewPatient({{ $patient->patient_id }})" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-warning" onclick="editPatient({{ $patient->patient_id }})" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-success archive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Archive Patient">
-                                    <i class="fas fa-archive"></i>
-                                </button>
+                                @if(!isset($status) || $status === 'active')
+                                    <button class="btn btn-sm btn-warning" onclick="editPatient({{ $patient->patient_id }})" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-success archive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Archive Patient">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                @else
+                                    <button class="btn btn-sm btn-info unarchive-patient-btn" data-patient-id="{{ $patient->patient_id }}" title="Unarchive Patient">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                @endif
                             </div>
                         </td>
                     </tr>

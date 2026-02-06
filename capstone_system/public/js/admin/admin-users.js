@@ -1,5 +1,42 @@
 // Admin Users Management JavaScript
 
+// Helper function to get status badge HTML
+function getStatusBadge(user) {
+    // Determine account status - prioritize deleted_at, then account_status field
+    let status;
+    if (user.deleted_at) {
+        status = 'deleted';
+    } else if (user.account_status === 'pending') {
+        status = 'pending';
+    } else if (user.account_status === 'suspended') {
+        status = 'suspended';
+    } else if (user.account_status === 'rejected') {
+        status = 'rejected';
+    } else if (user.account_status === 'active') {
+        status = 'active';
+    } else if (user.is_active) {
+        status = 'active';
+    } else {
+        status = 'inactive';
+    }
+
+    // Return appropriate badge HTML
+    switch(status) {
+        case 'deleted':
+            return '<span class="status-badge status-deleted" style="background-color: #6b7280; color: white;"><i class="fas fa-trash"></i> Deleted</span>';
+        case 'pending':
+            return '<span class="status-badge status-pending" style="background-color: #3b82f6; color: white;"><i class="fas fa-clock"></i> Pending</span>';
+        case 'suspended':
+            return '<span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;"><i class="fas fa-ban"></i> Suspended</span>';
+        case 'rejected':
+            return '<span class="status-badge status-rejected" style="background-color: #ef4444; color: white;"><i class="fas fa-times-circle"></i> Rejected</span>';
+        case 'active':
+            return '<span class="status-badge status-active"><i class="fas fa-check-circle"></i> Active</span>';
+        default:
+            return '<span class="status-badge status-inactive"><i class="fas fa-times-circle"></i> Inactive</span>';
+    }
+}
+
 function openAddUserModal() {
     Swal.fire({
         title: '<div class="modal-header-title"><i class="fas fa-user-plus"></i> Add New User</div>',
@@ -8,19 +45,19 @@ function openAddUserModal() {
                 <div class="form-row">
                     <div class="form-group">
                         <label for="add_first_name">First Name *</label>
-                        <input type="text" id="add_first_name" name="first_name" class="swal2-input" required pattern="[A-Za-z\s]+" title="Only letters and spaces allowed">
-                        <small class="field-hint">Letters only</small>
+                        <input type="text" id="add_first_name" name="first_name" class="swal2-input" required pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
+                        <small class="field-hint">Letters, spaces, hyphens, and periods allowed</small>
                     </div>
                     <div class="form-group">
                         <label for="add_middle_name">Middle Name</label>
-                        <input type="text" id="add_middle_name" name="middle_name" class="swal2-input" pattern="[A-Za-z\s]*" title="Only letters and spaces allowed">
+                        <input type="text" id="add_middle_name" name="middle_name" class="swal2-input" pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]*" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="add_last_name">Last Name *</label>
-                        <input type="text" id="add_last_name" name="last_name" class="swal2-input" required pattern="[A-Za-z\s]+" title="Only letters and spaces allowed">
-                        <small class="field-hint">Letters only</small>
+                        <input type="text" id="add_last_name" name="last_name" class="swal2-input" required pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
+                        <small class="field-hint">Letters, spaces, hyphens, and periods allowed</small>
                     </div>
                     <div class="form-group">
                         <label for="add_role_id">Role *</label>
@@ -110,18 +147,18 @@ function openAddUserModal() {
                 return false;
             }
             
-            // Name validation (letters and spaces only)
-            const namePattern = /^[A-Za-z\s]+$/;
+            // Name validation (letters, spaces, hyphens, periods, and accents)
+            const namePattern = /^[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+$/;
             if (!namePattern.test(firstName)) {
-                Swal.showValidationMessage('First name should contain only letters');
+                Swal.showValidationMessage('First name contains invalid characters');
                 return false;
             }
             if (!namePattern.test(lastName)) {
-                Swal.showValidationMessage('Last name should contain only letters');
+                Swal.showValidationMessage('Last name contains invalid characters');
                 return false;
             }
             if (middleName && !namePattern.test(middleName)) {
-                Swal.showValidationMessage('Middle name should contain only letters');
+                Swal.showValidationMessage('Middle name contains invalid characters');
                 return false;
             }
             
@@ -223,19 +260,19 @@ function editUser(userId) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="edit_first_name">First Name *</label>
-                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${user.first_name}" required pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed">
-                                <small class="field-hint">Letters only</small>
+                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${user.first_name}" required pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\\s\\-\\.]+" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
+                                <small class="field-hint">Letters, spaces, hyphens, and periods allowed</small>
                             </div>
                             <div class="form-group">
                                 <label for="edit_middle_name">Middle Name</label>
-                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${user.middle_name || ''}" pattern="[A-Za-z\\s]*" title="Only letters and spaces allowed">
+                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${user.middle_name || ''}" pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\\s\\-\\.]*" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="edit_last_name">Last Name *</label>
-                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${user.last_name}" required pattern="[A-Za-z\\s]+" title="Only letters and spaces allowed">
-                                <small class="field-hint">Letters only</small>
+                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${user.last_name}" required pattern="[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\\s\\-\\.]+" title="Only letters (including ñ, á, é, í, ó, ú), spaces, hyphens, and periods allowed">
+                                <small class="field-hint">Letters, spaces, hyphens, and periods allowed</small>
                             </div>
                             <div class="form-group">
                                 <label for="edit_role_id">Role *</label>
@@ -342,18 +379,18 @@ function editUser(userId) {
                         return false;
                     }
                     
-                    // Name validation (letters and spaces only)
-                    const namePattern = /^[A-Za-z\s]+$/;
+                    // Name validation (letters, spaces, hyphens, periods, and accents)
+                    const namePattern = /^[a-zA-ZàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÄËÏÖÜāēīōūĀĒĪŌŪčďěňřšťžČĎĚŇŘŠŤŽćłńśźżĆŁŃŚŹŻ\s\-\.]+$/;
                     if (!namePattern.test(firstName)) {
-                        Swal.showValidationMessage('First name should contain only letters and spaces');
+                        Swal.showValidationMessage('First name contains invalid characters');
                         return false;
                     }
                     if (!namePattern.test(lastName)) {
-                        Swal.showValidationMessage('Last name should contain only letters and spaces');
+                        Swal.showValidationMessage('Last name contains invalid characters');
                         return false;
                     }
                     if (middleName && !namePattern.test(middleName)) {
-                        Swal.showValidationMessage('Middle name should contain only letters and spaces');
+                        Swal.showValidationMessage('Middle name contains invalid characters');
                         return false;
                     }
                     
@@ -768,28 +805,36 @@ function renderUsersTable(users) {
                     </span>
                 </td>
                 <td>
-                    ${user.is_active 
-                        ? '<span class="status-badge status-active"><i class="fas fa-check-circle"></i> Active</span>'
-                        : '<span class="status-badge status-inactive"><i class="fas fa-times-circle"></i> Inactive</span>'
-                    }
+                    ${getStatusBadge(user)}
                 </td>
                 <td class="user-created">${formatDate(user.created_at)}</td>
                 <td>
                     <div class="action-buttons">
-                        <button class="action-btn edit" onclick="editUser(${user.user_id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        ${user.user_id !== window.currentUserId ? `
-                            ${user.is_active 
-                                ? `<button class="action-btn deactivate" onclick="toggleUserStatus(${user.user_id}, false, '${user.first_name} ${user.last_name}')">
-                                    <i class="fas fa-user-slash"></i>
-                                   </button>`
-                                : `<button class="action-btn activate" onclick="toggleUserStatus(${user.user_id}, true, '${user.first_name} ${user.last_name}')">
-                                    <i class="fas fa-user-check"></i>
-                                   </button>`
-                            }
+                        ${!user.deleted_at ? `
+                            <button class="action-btn edit" onclick="editUser(${user.user_id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
                         ` : ''}
-                        ${roleName !== 'Admin' ? `
+                        ${user.user_id !== window.currentUserId && roleName !== 'Admin' ? `
+                            ${user.deleted_at ? `
+                                <button class="action-btn activate" onclick="restoreUser(${user.user_id}, '${user.first_name} ${user.last_name}')" title="Restore User">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            ` : user.account_status === 'suspended' ? `
+                                <button class="action-btn activate" onclick="reactivateSuspendedUser(${user.user_id}, '${user.first_name} ${user.last_name}')" title="Reactivate User">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            ` : user.is_active ? `
+                                <button class="action-btn deactivate" onclick="toggleUserStatus(${user.user_id}, false, '${user.first_name} ${user.last_name}')">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            ` : `
+                                <button class="action-btn activate" onclick="toggleUserStatus(${user.user_id}, true, '${user.first_name} ${user.last_name}')">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            `}
+                        ` : ''}
+                        ${roleName !== 'Admin' && !user.deleted_at ? `
                             <button class="action-btn delete" onclick="deleteUser(${user.user_id}, '${user.first_name} ${user.last_name}')">
                                 <i class="fas fa-trash"></i>
                             </button>

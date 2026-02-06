@@ -139,7 +139,6 @@ function submitPatientForm(form) {
         // Close current modal and show error
         Swal.close();
         Swal.fire({
-            icon: 'error',
             title: 'Error',
             text: error.message || 'Failed to save patient.',
             confirmButtonColor: '#2e7d32'
@@ -151,7 +150,6 @@ function submitPatientForm(form) {
 // Show success message
 function showSuccess(message) {
     Swal.fire({
-        icon: 'success',
         title: 'Success!',
         text: message,
         confirmButtonColor: '#2e7d32'
@@ -238,62 +236,95 @@ function initializePagination() {
 }
 
 function applyFilters() {
-    const params = new URLSearchParams();
-    
-    // Get filter values
-    const search = document.getElementById('searchInput').value.trim();
-    const barangay = document.getElementById('barangayFilter').value;
-    const sex = document.getElementById('sexFilter').value;
-    const ageRange = document.getElementById('ageRangeFilter').value;
-    const nutritionistFilter = document.getElementById('nutritionistFilter');
-    const nutritionist = nutritionistFilter ? nutritionistFilter.value : null;
-    
-    // Add non-empty filters to params
-    if (search) params.append('search', search);
-    if (barangay) params.append('barangay', barangay);
-    if (sex) params.append('sex', sex);
-    if (ageRange) {
-        const [min, max] = ageRange.split('-');
-        params.append('age_min', min);
-        params.append('age_max', max);
+    // Check if we're using the archive system
+    if (typeof window.getCurrentStatus === 'function' && typeof window.loadPatientsWithStatus === 'function') {
+        const currentStatus = window.getCurrentStatus();
+        const urlParams = new URLSearchParams(window.location.search);
+        const sortBy = urlParams.get('sort_by');
+        const sortOrder = urlParams.get('sort_order');
+        
+        // Load patients with current status and sort
+        window.loadPatientsWithStatus(currentStatus, 1, sortBy, sortOrder);
+    } else {
+        // Fallback to old method
+        const params = new URLSearchParams();
+        
+        // Get filter values
+        const search = document.getElementById('searchInput').value.trim();
+        const barangay = document.getElementById('barangayFilter').value;
+        const sex = document.getElementById('sexFilter').value;
+        const ageRange = document.getElementById('ageRangeFilter').value;
+        const nutritionistFilter = document.getElementById('nutritionistFilter');
+        const nutritionist = nutritionistFilter ? nutritionistFilter.value : null;
+        
+        // Add non-empty filters to params
+        if (search) params.append('search', search);
+        if (barangay) params.append('barangay', barangay);
+        if (sex) params.append('sex', sex);
+        if (ageRange) {
+            const [min, max] = ageRange.split('-');
+            params.append('age_min', min);
+            params.append('age_max', max);
+        }
+        if (nutritionist) params.append('nutritionist', nutritionist);
+        
+        // Get current sort parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sortBy = urlParams.get('sort_by');
+        const sortOrder = urlParams.get('sort_order');
+        if (sortBy) params.append('sort_by', sortBy);
+        if (sortOrder) params.append('sort_order', sortOrder);
+        
+        // Build URL and fetch results
+        const baseUrl = window.location.pathname;
+        const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+        
+        loadPatientsFromUrl(url);
     }
-    if (nutritionist) params.append('nutritionist', nutritionist);
-    
-    // Get current sort parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const sortBy = urlParams.get('sort_by');
-    const sortOrder = urlParams.get('sort_order');
-    if (sortBy) params.append('sort_by', sortBy);
-    if (sortOrder) params.append('sort_order', sortOrder);
-    
-    // Build URL and fetch results
-    const baseUrl = window.location.pathname;
-    const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
-    
-    loadPatientsFromUrl(url);
 }
 
 function handleSort(sortBy) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentSortBy = urlParams.get('sort_by');
-    const currentSortOrder = urlParams.get('sort_order') || 'asc';
-    
-    // Toggle sort order if same column, otherwise default to asc
-    let newSortOrder = 'asc';
-    if (currentSortBy === sortBy && currentSortOrder === 'asc') {
-        newSortOrder = 'desc';
+    // Check if we're using the archive system
+    if (typeof window.getCurrentStatus === 'function' && typeof window.loadPatientsWithStatus === 'function') {
+        const currentStatus = window.getCurrentStatus();
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSortBy = urlParams.get('sort_by');
+        const currentSortOrder = urlParams.get('sort_order') || 'asc';
+        
+        // Toggle sort order if same column, otherwise default to asc
+        let newSortOrder = 'asc';
+        if (currentSortBy === sortBy && currentSortOrder === 'asc') {
+            newSortOrder = 'desc';
+        }
+        
+        // Update URL params
+        urlParams.set('sort_by', sortBy);
+        urlParams.set('sort_order', newSortOrder);
+        window.history.pushState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+        
+        // Load patients with status and sort
+        window.loadPatientsWithStatus(currentStatus, 1, sortBy, newSortOrder);
+    } else {
+        // Fallback to old method
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSortBy = urlParams.get('sort_by');
+        const currentSortOrder = urlParams.get('sort_order') || 'asc';
+        
+        // Toggle sort order if same column, otherwise default to asc
+        let newSortOrder = 'asc';
+        if (currentSortBy === sortBy && currentSortOrder === 'asc') {
+            newSortOrder = 'desc';
+        }
+        
+        urlParams.set('sort_by', sortBy);
+        urlParams.set('sort_order', newSortOrder);
+        
+        const url = `${window.location.pathname}?${urlParams.toString()}`;
+        loadPatientsFromUrl(url);
     }
-    
-    urlParams.set('sort_by', sortBy);
-    urlParams.set('sort_order', newSortOrder);
-    
-    const url = `${window.location.pathname}?${urlParams.toString()}`;
-    loadPatientsFromUrl(url);
 }
 
 function loadPatientsFromUrl(url) {
-    showLoading();
-    
     fetch(url, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
@@ -326,9 +357,6 @@ function loadPatientsFromUrl(url) {
     })
     .catch(error => {
         showError('Failed to load patients. Please try again.');
-    })
-    .finally(() => {
-        hideLoading();
     });
 }
 
@@ -390,7 +418,6 @@ function hideLoading() {
 
 function showError(message) {
     Swal.fire({
-        icon: 'error',
         title: 'Error',
         text: message,
         confirmButtonColor: '#2e7d32'
@@ -416,7 +443,6 @@ function openAddPatientModal() {
     const formHTML = getFormHTML();
     if (!formHTML) {
         Swal.fire({
-            icon: 'error',
             title: 'Error',
             text: 'Patient form template not found. Please refresh the page.',
             confirmButtonColor: '#2e7d32'
@@ -425,42 +451,164 @@ function openAddPatientModal() {
     }
     
     Swal.fire({
-        title: 'Add Patient',
-        html: getFormHTML(),
+        title: '<i class="fas fa-user-plus" style="color: #2e7d32;"></i> Add New Patient',
+        html: `
+            <div class="swal-form-container">
+                <!-- New Patient Banner -->
+                <div style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); padding: 15px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(46,125,50,0.2);">
+                    <div style="color: white; font-size: 14px; opacity: 0.9; margin-bottom: 5px;">
+                        <i class="fas fa-plus-circle"></i> Creating New Patient Record
+                    </div>
+                    <div style="color: white; font-size: 18px; font-weight: 600;">
+                        All fields marked with * are required
+                    </div>
+                </div>
+                ${formHTML}
+            </div>
+        `,
         showCancelButton: true,
-        confirmButtonText: 'Save Patient',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: '<i class="fas fa-save"></i> Save Patient',
+        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
         customClass: {
-            popup: 'swal2-patient-modal',
-            confirmButton: 'swal2-confirm',
-            cancelButton: 'swal2-cancel'
+            container: 'swal-patient-modal',
+            popup: 'swal-patient-popup',
+            confirmButton: 'btn btn-success',
+            cancelButton: 'btn btn-secondary'
         },
-        confirmButtonColor: '#2e7d32',
-        cancelButtonColor: '#6c757d',
-        width: '90vw',
+        width: '950px',
         didOpen: () => {
-            // Attach form submit handler after modal opens
-            const form = Swal.getPopup().querySelector('#patientForm');
+            // Setup birthdate to age calculation
+            const birthdateInput = document.getElementById('birthdate');
+            const ageMonthsInput = document.getElementById('age_months');
+            
+            if (birthdateInput && ageMonthsInput) {
+                birthdateInput.addEventListener('change', function() {
+                    const birthdate = new Date(this.value);
+                    const today = new Date();
+                    
+                    if (birthdate && !isNaN(birthdate.getTime())) {
+                        let months = (today.getFullYear() - birthdate.getFullYear()) * 12;
+                        months -= birthdate.getMonth();
+                        months += today.getMonth();
+                        
+                        if (today.getDate() < birthdate.getDate()) {
+                            months--;
+                        }
+                        
+                        ageMonthsInput.value = Math.max(0, months);
+                        
+                        // Visual feedback
+                        this.style.borderColor = '#2e7d32';
+                        setTimeout(() => {
+                            this.style.borderColor = '';
+                        }, 1000);
+                    }
+                });
+            }
+            
+            // Phone number formatting and validation
+            const contactInput = document.getElementById('contact_number');
+            if (contactInput) {
+                contactInput.addEventListener('input', function(e) {
+                    let value = this.value.replace(/\D/g, '');
+                    if (value.length > 11) value = value.substring(0, 11);
+                    this.value = value;
+                    
+                    // Real-time validation feedback
+                    if (value.length === 11 && value.startsWith('09')) {
+                        this.style.borderColor = '#2e7d32';
+                    } else if (value.length > 0) {
+                        this.style.borderColor = '#ffc107';
+                    } else {
+                        this.style.borderColor = '';
+                    }
+                });
+            }
+            
+            // Real-time validation for required fields
+            const requiredFields = ['first_name', 'last_name', 'sex', 'weight_kg', 'height_cm', 'barangay_id', 'date_of_admission'];
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('blur', function() {
+                        if (this.value.trim() === '') {
+                            this.style.borderColor = '#dc3545';
+                        } else {
+                            this.style.borderColor = '#2e7d32';
+                            setTimeout(() => {
+                                this.style.borderColor = '';
+                            }, 1000);
+                        }
+                    });
+                    
+                    field.addEventListener('input', function() {
+                        if (this.value.trim() !== '' && this.style.borderColor === 'rgb(220, 53, 69)') {
+                            this.style.borderColor = '';
+                        }
+                    });
+                }
+            });
+            
+            // Weight and height validation
+            ['weight_kg', 'height_cm'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', function() {
+                        const value = parseFloat(this.value);
+                        if (value > 0) {
+                            this.style.borderColor = '#2e7d32';
+                            setTimeout(() => {
+                                this.style.borderColor = '';
+                            }, 1000);
+                        }
+                    });
+                }
+            });
+            
+            // Handle Allergies "Other" option
+            const allergiesSelect = document.getElementById('allergies');
+            const allergiesOtherInput = document.getElementById('allergies_other');
+            if (allergiesSelect && allergiesOtherInput) {
+                allergiesSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        allergiesOtherInput.style.display = 'block';
+                        allergiesOtherInput.required = true;
+                    } else {
+                        allergiesOtherInput.style.display = 'none';
+                        allergiesOtherInput.required = false;
+                        allergiesOtherInput.value = '';
+                    }
+                });
+            }
+            
+            // Handle Religion "Other" option
+            const religionSelect = document.getElementById('religion');
+            const religionOtherInput = document.getElementById('religion_other');
+            if (religionSelect && religionOtherInput) {
+                religionSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        religionOtherInput.style.display = 'block';
+                        religionOtherInput.required = true;
+                    } else {
+                        religionOtherInput.style.display = 'none';
+                        religionOtherInput.required = false;
+                        religionOtherInput.value = '';
+                    }
+                });
+            }
+            
+            // Attach form submit handler
+            const form = document.getElementById('patientForm');
             if (form) {
                 form.addEventListener('submit', handlePatientFormSubmit);
                 attachNutritionalCalculators(form);
-                
-                // Add birthdate auto-calculation
-                const birthdateInput = form.querySelector('#birthdate');
-                const ageMonthsInput = form.querySelector('#age_months');
-                if (birthdateInput && ageMonthsInput) {
-                    birthdateInput.addEventListener('change', function() {
-                        calculateAgeFromBirthdate(birthdateInput, ageMonthsInput);
-                    });
-                }
             }
         },
         preConfirm: () => {
-            const form = Swal.getPopup().querySelector('#patientForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
+            if (!validatePatientForm('patientForm')) {
                 return false;
             }
+            const form = document.getElementById('patientForm');
             return submitPatientForm(form);
         },
         showLoaderOnConfirm: true,
@@ -476,444 +624,775 @@ function closeViewPatientModal() {
     Swal.close();
 }
 
+function showEditPatientModal(patient) {
+    const parentsData = JSON.parse(document.getElementById('parentsData')?.textContent || '[]');
+    const barangaysData = JSON.parse(document.getElementById('barangaysData')?.textContent || '[]');
+    
+    const parentsOptions = generateSelectOptions(parentsData, 'user_id', ['first_name', 'last_name'], 'Select Parent');
+    const barangaysOptions = generateSelectOptions(barangaysData, 'barangay_id', ['barangay_name'], 'Select Barangay');
+
+    let birthdate = '';
+    if (patient.birthdate) {
+        birthdate = typeof patient.birthdate === 'string' ? patient.birthdate.substring(0, 10) : patient.birthdate.toISOString().substring(0, 10);
+    }
+
+    let admissionDate = '';
+    if (patient.date_of_admission) {
+        admissionDate = typeof patient.date_of_admission === 'string' ? patient.date_of_admission.substring(0, 10) : patient.date_of_admission.toISOString().substring(0, 10);
+    }
+
+    Swal.fire({
+        title: `<i class="fas fa-user-edit" style="color: #2e7d32;"></i> Edit Patient`,
+        html: `
+            <div class="swal-form-container">
+                <!-- Patient ID Display -->
+                <div style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); padding: 15px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(46,125,50,0.2);">
+                    <div style="color: white; font-size: 14px; opacity: 0.9; margin-bottom: 5px;">
+                        <i class="fas fa-id-card"></i> Patient ID
+                    </div>
+                    <div style="color: white; font-size: 24px; font-weight: bold; letter-spacing: 1px;">
+                        ${patient.custom_patient_id || 'N/A'}
+                    </div>
+                </div>
+
+                <form id="editPatientForm">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h6 class="section-title">
+                            <i class="fas fa-user-circle" style="color: #2e7d32;"></i> Basic Information
+                        </h6>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_first_name">
+                                    <i class="fas fa-user"></i> First Name *
+                                </label>
+                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${patient.first_name || ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_middle_name">
+                                    <i class="fas fa-user"></i> Middle Name
+                                </label>
+                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${patient.middle_name || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_last_name">
+                                    <i class="fas fa-user"></i> Last Name *
+                                </label>
+                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${patient.last_name || ''}" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_birthdate">
+                                    <i class="fas fa-birthday-cake"></i> Birthdate *
+                                    <i class="fas fa-lock" style="font-size: 11px; color: #6c757d; margin-left: 5px;"></i>
+                                </label>
+                                <input type="date" id="edit_birthdate" name="birthdate" class="swal2-input" value="${birthdate}" disabled style="background-color: #f8f9fa; cursor: not-allowed;">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_sex">
+                                    <i class="fas fa-venus-mars"></i> Sex *
+                                    <i class="fas fa-lock" style="font-size: 11px; color: #6c757d; margin-left: 5px;"></i>
+                                </label>
+                                <select id="edit_sex" name="sex" class="swal2-select" disabled style="background-color: #f8f9fa; cursor: not-allowed;">
+                                    <option value="">Select Sex</option>
+                                    <option value="Male" ${patient.sex === 'Male' ? 'selected' : ''}>Male</option>
+                                    <option value="Female" ${patient.sex === 'Female' ? 'selected' : ''}>Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_contact_number">
+                                    <i class="fas fa-phone"></i> Contact Number *
+                                </label>
+                                <input type="text" id="edit_contact_number" name="contact_number" class="swal2-input" value="${patient.contact_number || ''}" placeholder="09XX XXX XXXX" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment Section -->
+                    <div class="form-section">
+                        <h6 class="section-title">
+                            <i class="fas fa-user-tag" style="color: #2e7d32;"></i> Assignment & Location
+                        </h6>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_parent_id">
+                                    <i class="fas fa-user-friends"></i> Parent / Guardian
+                                </label>
+                                <select id="edit_parent_id" name="parent_id" class="swal2-select">
+                                    ${parentsOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_barangay_id">
+                                    <i class="fas fa-map-marker-alt"></i> Barangay *
+                                </label>
+                                <select id="edit_barangay_id" name="barangay_id" class="swal2-select" required>
+                                    ${barangaysOptions}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_date_of_admission">
+                                    <i class="fas fa-calendar-check"></i> Date of Admission *
+                                </label>
+                                <input type="date" id="edit_date_of_admission" name="date_of_admission" class="swal2-input" value="${admissionDate}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Health Metrics -->
+                    <div class="form-section">
+                        <h6 class="section-title">
+                            <i class="fas fa-heartbeat" style="color: #dc3545;"></i> Health Metrics & Status
+                        </h6>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_weight_kg">
+                                    <i class="fas fa-weight"></i> Weight (kg)
+                                    <i class="fas fa-lock" style="font-size: 11px; color: #6c757d; margin-left: 5px;"></i>
+                                </label>
+                                <input type="number" id="edit_weight_kg" name="weight_kg" class="swal2-input" step="0.01" min="0" value="${patient.weight_kg || ''}" disabled style="background-color: #f8f9fa; cursor: not-allowed;">
+                                <small class="form-text" style="color: #6c757d; font-size: 11px; display: block; margin-top: 5px;">
+                                    <i class="fas fa-info-circle"></i> Updated through assessments only
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_height_cm">
+                                    <i class="fas fa-ruler-vertical"></i> Height (cm)
+                                    <i class="fas fa-lock" style="font-size: 11px; color: #6c757d; margin-left: 5px;"></i>
+                                </label>
+                                <input type="number" id="edit_height_cm" name="height_cm" class="swal2-input" step="0.01" min="0" value="${patient.height_cm || ''}" disabled style="background-color: #f8f9fa; cursor: not-allowed;">
+                                <small class="form-text" style="color: #6c757d; font-size: 11px; display: block; margin-top: 5px;">
+                                    <i class="fas fa-info-circle"></i> Updated through assessments only
+                                </small>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_breastfeeding">
+                                    <i class="fas fa-baby"></i> Breastfeeding Status
+                                </label>
+                                <select id="edit_breastfeeding" name="breastfeeding" class="swal2-select">
+                                    <option value="">Select Status</option>
+                                    <option value="Yes" ${patient.breastfeeding === 'Yes' ? 'selected' : ''}>Yes</option>
+                                    <option value="No" ${patient.breastfeeding === 'No' ? 'selected' : ''}>No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_edema">
+                                    <i class="fas fa-disease"></i> Edema Present
+                                </label>
+                                <select id="edit_edema" name="edema" class="swal2-select">
+                                    <option value="">Select Status</option>
+                                    <option value="Yes" ${patient.edema === 'Yes' ? 'selected' : ''}>Yes</option>
+                                    <option value="No" ${patient.edema === 'No' ? 'selected' : ''}>No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_allergies">
+                                    <i class="fas fa-allergies"></i> Allergies
+                                </label>
+                                <select id="edit_allergies" name="allergies" class="swal2-select">
+                                    <option value="">Select Allergies</option>
+                                    <option value="None">None</option>
+                                    <option value="Milk/Dairy">Milk/Dairy</option>
+                                    <option value="Eggs">Eggs</option>
+                                    <option value="Peanuts">Peanuts</option>
+                                    <option value="Tree Nuts">Tree Nuts</option>
+                                    <option value="Shellfish/Seafood">Shellfish/Seafood</option>
+                                    <option value="Fish">Fish</option>
+                                    <option value="Soy">Soy</option>
+                                    <option value="Wheat/Gluten">Wheat/Gluten</option>
+                                    <option value="Other">Other (Specify)</option>
+                                </select>
+                                <input type="text" id="edit_allergies_other" name="allergies_other" class="swal2-input" placeholder="Please specify allergies" style="display: none; margin-top: 10px;">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_religion">
+                                    <i class="fas fa-pray"></i> Religion
+                                </label>
+                                <select id="edit_religion" name="religion" class="swal2-select">
+                                    <option value="">Select Religion</option>
+                                    <option value="Roman Catholic">Roman Catholic</option>
+                                    <option value="Islam">Islam</option>
+                                    <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+                                    <option value="Seventh-day Adventist">Seventh-day Adventist</option>
+                                    <option value="Aglipayan">Aglipayan</option>
+                                    <option value="Born Again Christian">Born Again Christian</option>
+                                    <option value="Other">Other (Specify)</option>
+                                    <option value="Prefer not to say">Prefer not to say</option>
+                                </select>
+                                <input type="text" id="edit_religion_other" name="religion_other" class="swal2-input" placeholder="Please specify religion" style="display: none; margin-top: 10px;">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="edit_other_medical_problems">
+                                    <i class="fas fa-notes-medical"></i> Other Medical Problems
+                                </label>
+                                <textarea id="edit_other_medical_problems" name="other_medical_problems" class="swal2-textarea" rows="3" placeholder="Enter any other medical conditions or concerns...">${patient.other_medical_problems || ''}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Household Information -->
+                    <div class="form-section">
+                        <h6 class="section-title">
+                            <i class="fas fa-home" style="color: #ffc107;"></i> Household Information
+                        </h6>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_total_household_adults">
+                                    <i class="fas fa-users"></i> Total Adults
+                                </label>
+                                <input type="number" id="edit_total_household_adults" name="total_household_adults" class="swal2-input" min="0" value="${patient.total_household_adults || 0}" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_total_household_children">
+                                    <i class="fas fa-child"></i> Total Children
+                                </label>
+                                <input type="number" id="edit_total_household_children" name="total_household_children" class="swal2-input" min="0" value="${patient.total_household_children || 0}" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_total_household_twins">
+                                    <i class="fas fa-children"></i> Total Twins
+                                </label>
+                                <input type="number" id="edit_total_household_twins" name="total_household_twins" class="swal2-input" min="0" value="${patient.total_household_twins || 0}" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <div class="form-check" style="display: flex; align-items: center; padding: 12px; background-color: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                                    <input type="checkbox" id="edit_is_4ps_beneficiary" name="is_4ps_beneficiary" class="form-check-input" ${patient.is_4ps_beneficiary ? 'checked' : ''} style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+                                    <label for="edit_is_4ps_beneficiary" class="form-check-label" style="margin: 0; cursor: pointer; font-weight: 500;">
+                                        <i class="fas fa-hands-helping" style="color: #2e7d32; margin-right: 5px;"></i> 4Ps Beneficiary
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-save"></i> Update Patient',
+        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+        customClass: {
+            container: 'swal-patient-modal',
+            popup: 'swal-patient-popup',
+            confirmButton: 'btn btn-success',
+            cancelButton: 'btn btn-secondary'
+        },
+        width: '900px',
+        didOpen: () => {
+            // Set selected values for dropdowns
+            if (patient.parent_id) document.getElementById('edit_parent_id').value = patient.parent_id;
+            if (patient.barangay_id) document.getElementById('edit_barangay_id').value = patient.barangay_id;
+            
+            // Set allergies value and handle Other option
+            const editAllergiesSelect = document.getElementById('edit_allergies');
+            const editAllergiesOtherInput = document.getElementById('edit_allergies_other');
+            const commonAllergies = ['None', 'Milk/Dairy', 'Eggs', 'Peanuts', 'Tree Nuts', 'Shellfish/Seafood', 'Fish', 'Soy', 'Wheat/Gluten'];
+            if (patient.allergies) {
+                if (commonAllergies.includes(patient.allergies)) {
+                    editAllergiesSelect.value = patient.allergies;
+                } else {
+                    editAllergiesSelect.value = 'Other';
+                    editAllergiesOtherInput.value = patient.allergies;
+                    editAllergiesOtherInput.style.display = 'block';
+                }
+            }
+            
+            // Set religion value and handle Other option
+            const editReligionSelect = document.getElementById('edit_religion');
+            const editReligionOtherInput = document.getElementById('edit_religion_other');
+            const commonReligions = ['Roman Catholic', 'Islam', 'Iglesia ni Cristo', 'Seventh-day Adventist', 'Aglipayan', 'Born Again Christian', 'Prefer not to say'];
+            if (patient.religion) {
+                if (commonReligions.includes(patient.religion)) {
+                    editReligionSelect.value = patient.religion;
+                } else {
+                    editReligionSelect.value = 'Other';
+                    editReligionOtherInput.value = patient.religion;
+                    editReligionOtherInput.style.display = 'block';
+                }
+            }
+            
+            // Handle Edit Allergies "Other" option
+            if (editAllergiesSelect && editAllergiesOtherInput) {
+                editAllergiesSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        editAllergiesOtherInput.style.display = 'block';
+                        editAllergiesOtherInput.required = true;
+                    } else {
+                        editAllergiesOtherInput.style.display = 'none';
+                        editAllergiesOtherInput.required = false;
+                        editAllergiesOtherInput.value = '';
+                    }
+                });
+            }
+            
+            // Handle Edit Religion "Other" option
+            if (editReligionSelect && editReligionOtherInput) {
+                editReligionSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        editReligionOtherInput.style.display = 'block';
+                        editReligionOtherInput.required = true;
+                    } else {
+                        editReligionOtherInput.style.display = 'none';
+                        editReligionOtherInput.required = false;
+                        editReligionOtherInput.value = '';
+                    }
+                });
+            }
+            
+            // Phone number formatting and validation
+            const contactInput = document.getElementById('edit_contact_number');
+            if (contactInput) {
+                contactInput.addEventListener('input', function(e) {
+                    let value = this.value.replace(/\D/g, '');
+                    if (value.length > 11) value = value.substring(0, 11);
+                    this.value = value;
+                    
+                    // Real-time validation feedback
+                    if (value.length === 11 && value.startsWith('09')) {
+                        this.style.borderColor = '#28a745';
+                    } else if (value.length > 0) {
+                        this.style.borderColor = '#ffc107';
+                    } else {
+                        this.style.borderColor = '';
+                    }
+                });
+            }
+            
+            // Real-time validation for editable required fields
+            const requiredFields = ['edit_contact_number', 'edit_barangay_id', 'edit_date_of_admission'];
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && !field.disabled) {
+                    field.addEventListener('blur', function() {
+                        if (this.value.trim() === '') {
+                            this.style.borderColor = '#dc3545';
+                        } else {
+                            this.style.borderColor = '#28a745';
+                            setTimeout(() => {
+                                this.style.borderColor = '';
+                            }, 1000);
+                        }
+                    });
+                    
+                    field.addEventListener('input', function() {
+                        if (this.value.trim() !== '' && this.style.borderColor === 'rgb(220, 53, 69)') {
+                            this.style.borderColor = '';
+                        }
+                    });
+                }
+            });
+            
+            // Dropdown change feedback
+            ['edit_parent_id', 'edit_barangay_id'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('change', function() {
+                        if (this.value) {
+                            this.style.borderColor = '#28a745';
+                            setTimeout(() => {
+                                this.style.borderColor = '';
+                            }, 1000);
+                        }
+                    });
+                }
+            });
+        },
+        preConfirm: () => {
+            const form = document.getElementById('editPatientForm');
+            const formData = new FormData();
+            
+            formData.append('_method', 'PUT');
+
+            // Get all form fields (including disabled ones for required fields)
+            const fields = ['first_name', 'middle_name', 'last_name', 'sex', 
+                            'parent_id', 'barangay_id', 'contact_number', 'date_of_admission', 
+                            'total_household_adults', 'total_household_children', 'total_household_twins', 
+                            'is_4ps_beneficiary', 'breastfeeding', 'edema', 'other_medical_problems'];
+
+            fields.forEach(field => {
+                const element = form.querySelector(`[name="${field}"]`);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        formData.append(field, element.checked ? '1' : '0');
+                    } else {
+                        formData.append(field, element.value || '');
+                    }
+                }
+            });
+            
+            // Handle allergies with Other option
+            const allergiesSelect = form.querySelector('[name="allergies"]');
+            const allergiesOther = form.querySelector('[name="allergies_other"]');
+            if (allergiesSelect) {
+                if (allergiesSelect.value === 'Other' && allergiesOther && allergiesOther.value) {
+                    formData.append('allergies', allergiesOther.value);
+                } else {
+                    formData.append('allergies', allergiesSelect.value || '');
+                }
+            }
+            
+            // Handle religion with Other option
+            const religionSelect = form.querySelector('[name="religion"]');
+            const religionOther = form.querySelector('[name="religion_other"]');
+            if (religionSelect) {
+                if (religionSelect.value === 'Other' && religionOther && religionOther.value) {
+                    formData.append('religion', religionOther.value);
+                } else {
+                    formData.append('religion', religionSelect.value || '');
+                }
+            }
+
+            // Show loading
+            Swal.showLoading();
+
+            return fetch(`/nutritionist/patients/${patient.patient_id}`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(async response => {
+                let data;
+                try {
+                    const text = await response.text();
+                    console.log('Update URL:', `/nutritionist/patients/${patient.patient_id}`);
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers.get('content-type'));
+                    console.log('Update response:', text.substring(0, 500));
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Parse error:', e);
+                    Swal.fire({
+                        title: 'Error',
+                        text: `Server error (${response.status}). The page returned HTML instead of JSON. Please check if you're still logged in.`,
+                        confirmButtonColor: '#2e7d32'
+                    });
+                    return null;
+                }
+                if (!response.ok || !data.success) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data && data.message ? data.message : 'Error updating patient',
+                        confirmButtonColor: '#2e7d32'
+                    });
+                    return null;
+                }
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Patient updated successfully!',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    confirmButtonColor: '#2e7d32'
+                }).then(() => {
+                    window.location.reload();
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error updating patient',
+                    confirmButtonColor: '#2e7d32'
+                });
+            });
+        }
+    });
+}
+
 function editPatient(patientId) {
     isEditing = true;
     currentPatientId = patientId;
     
-    // Show loading with green theme
     Swal.fire({
-        title: 'Loading Patient Data...',
-        html: '<div style="color: #2e7d32;"><i class="fas fa-spinner fa-spin"></i> Please wait</div>',
+        title: 'Loading...',
+        html: 'Please wait while we load the patient data.',
         allowOutsideClick: false,
-        showConfirmButton: false,
         didOpen: () => {
             Swal.showLoading();
         }
     });
-
-    // Fetch patient data
+    
     fetch(`/nutritionist/patients/${patientId}`)
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            if (!data.success || !data.patient) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'Failed to load patient data for editing.',
-                    confirmButtonColor: '#2e7d32'
-                });
-                return;
-            }
-            
-            const patient = data.patient;
-            
-            // Show the form with data
+    .then(async response => {
+        let data;
+        try {
+            const text = await response.text();
+            console.log('Raw response:', text);
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('Parse error:', e);
             Swal.fire({
-                title: 'Edit Patient - ID: ' + (patient.custom_patient_id || 'N/A'),
-                html: getFormHTML(),
-                showCancelButton: true,
-                confirmButtonText: 'Update Patient',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    popup: 'swal2-patient-modal',
-                    confirmButton: 'swal2-confirm-update',
-                    cancelButton: 'swal2-cancel'
-                },
-                confirmButtonColor: '#2e7d32',
-                cancelButtonColor: '#6c757d',
-                width: '90vw',
-                didOpen: () => {
-                    // Fill form fields
-                    const popup = Swal.getPopup();
-                    popup.querySelector('#patient_id').value = patient.patient_id ?? '';
-                    popup.querySelector('#first_name').value = patient.first_name ?? '';
-                    popup.querySelector('#middle_name').value = patient.middle_name ?? '';
-                    popup.querySelector('#last_name').value = patient.last_name ?? '';
-                    popup.querySelector('#contact_number').value = patient.contact_number ?? '';
-                    popup.querySelector('#age_months').value = patient.age_months ?? '';
-                    popup.querySelector('#sex').value = patient.sex ?? '';
-                    popup.querySelector('#date_of_admission').value = patient.date_of_admission ? patient.date_of_admission.substring(0, 10) : '';
-                    popup.querySelector('#barangay_id').value = patient.barangay_id ?? '';
-                    popup.querySelector('#parent_id').value = patient.parent_id ?? '';
-                    popup.querySelector('#total_household_adults').value = patient.total_household_adults ?? 0;
-                    popup.querySelector('#total_household_children').value = patient.total_household_children ?? 0;
-                    popup.querySelector('#total_household_twins').value = patient.total_household_twins ?? 0;
-                    popup.querySelector('#is_4ps_beneficiary').checked = !!patient.is_4ps_beneficiary;
-                    popup.querySelector('#weight_kg').value = patient.weight_kg ?? '';
-                    popup.querySelector('#height_cm').value = patient.height_cm ?? '';
-                    popup.querySelector('#breastfeeding').value = patient.breastfeeding ?? '';
-                    popup.querySelector('#edema').value = patient.edema ?? '';
-                    popup.querySelector('#other_medical_problems').value = patient.other_medical_problems ?? '';
-                    
-                    // Handle allergies field
-                    const allergiesSelect = popup.querySelector('#allergies');
-                    const allergiesOther = popup.querySelector('#allergies_other');
-                    const allergiesValue = patient.allergies ?? '';
-                    const commonAllergies = ['None', 'Milk/Dairy', 'Eggs', 'Peanuts', 'Tree Nuts', 'Shellfish/Seafood', 'Fish', 'Soy', 'Wheat/Gluten'];
-                    if (commonAllergies.includes(allergiesValue)) {
-                        allergiesSelect.value = allergiesValue;
-                    } else if (allergiesValue) {
-                        allergiesSelect.value = 'Other';
-                        allergiesOther.value = allergiesValue;
-                        allergiesOther.style.display = 'block';
-                    }
-                    
-                    // Handle religion field
-                    const religionSelect = popup.querySelector('#religion');
-                    const religionOther = popup.querySelector('#religion_other');
-                    const religionValue = patient.religion ?? '';
-                    const commonReligions = ['Roman Catholic', 'Islam', 'Iglesia ni Cristo', 'Protestant', 'Seventh-day Adventist', 'Aglipayan', 'Born Again Christian', 'Prefer not to say'];
-                    if (commonReligions.includes(religionValue)) {
-                        religionSelect.value = religionValue;
-                    } else if (religionValue) {
-                        religionSelect.value = 'Other';
-                        religionOther.value = religionValue;
-                        religionOther.style.display = 'block';
-                    }
-                    
-                    // Handle birthdate field
-                    const birthdateField = popup.querySelector('#birthdate');
-                    if (birthdateField && patient.birthdate) {
-                        birthdateField.value = patient.birthdate.substring(0, 10);
-                    }
-                    
-                    // Lock demographic fields (name, birthdate) - cannot be edited
-                    const demographicFields = popup.querySelectorAll('[data-lock-on-edit="true"]');
-                    demographicFields.forEach(field => {
-                        field.disabled = true;
-                        field.style.backgroundColor = '#f5f5f5';
-                        field.style.cursor = 'not-allowed';
-                    });
-                    
-                    // Lock health fields (weight, height, indicators) - cannot be edited
-                    const healthFields = popup.querySelectorAll('[data-health-field="true"]');
-                    healthFields.forEach(field => {
-                        field.disabled = true;
-                        field.style.backgroundColor = '#fff9e6';
-                        field.style.cursor = 'not-allowed';
-                        field.removeAttribute('required'); // Remove required validation
-                    });
-                    
-                    // Show edit-only messages, hide add-only messages
-                    popup.querySelectorAll('.edit-only-message').forEach(msg => {
-                        msg.style.display = 'block';
-                        msg.style.color = '#856404';
-                        msg.style.fontWeight = '500';
-                    });
-                    popup.querySelectorAll('.add-only-message').forEach(msg => {
-                        msg.style.display = 'none';
-                    });
-                    
-                    // Hide required asterisks for locked fields
-                    popup.querySelectorAll('.add-only-required').forEach(req => {
-                        req.style.display = 'none';
-                    });
-                    
-                    // Attach form submit handler
-                    const form = popup.querySelector('#patientForm');
-                    if (form) {
-                        form.addEventListener('submit', handlePatientFormSubmit);
-                        attachNutritionalCalculators(form);
-                    }
-                },
-                preConfirm: () => {
-                    const form = Swal.getPopup().querySelector('#patientForm');
-                    if (!form.checkValidity()) {
-                        form.reportValidity();
-                        return false;
-                    }
-                    return submitPatientForm(form);
-                },
-                showLoaderOnConfirm: true,
-                allowOutsideClick: () => !Swal.isLoading()
-            });
-        })
-        .catch(error => {
-            Swal.fire({
-                icon: 'error',
                 title: 'Error',
-                text: 'Failed to load patient data for editing.',
+                text: 'Invalid server response. Please contact support.',
                 confirmButtonColor: '#2e7d32'
             });
+            return null;
+        }
+        if (!response.ok || !data.success) {
+            Swal.fire({
+                title: 'Error',
+                text: data && data.message ? data.message : 'Error loading patient data',
+                confirmButtonColor: '#2e7d32'
+            });
+            return null;
+        }
+        showEditPatientModal(data.patient);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'Error loading patient data',
+            confirmButtonColor: '#2e7d32'
         });
+    });
+}
+
+// Helper function to generate select options
+function generateSelectOptions(data, valueKey, textKeys, emptyText = 'Select') {
+    let options = `<option value="">${emptyText}</option>`;
+    data.forEach(item => {
+        const text = textKeys.map(key => item[key]).filter(Boolean).join(' ');
+        options += `<option value="${item[valueKey]}">${text}</option>`;
+    });
+    return options;
 }
 
 function viewPatient(patientId) {
-    // Show loading with green theme
+    currentPatientId = patientId;
+    
     Swal.fire({
-        title: 'Loading Patient Details...',
-        html: '<div style="color: #2e7d32;"><i class="fas fa-spinner fa-spin"></i> Please wait</div>',
+        title: 'Loading...',
+        html: 'Please wait while we load the patient details.',
         allowOutsideClick: false,
-        showConfirmButton: false,
         didOpen: () => {
             Swal.showLoading();
         }
     });
-
-    // Fetch patient details via AJAX
+    
     fetch(`/nutritionist/patients/${patientId}`)
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            if (!data.success || !data.patient) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'Failed to load patient details.',
-                    confirmButtonColor: '#2e7d32'
-                });
-                return;
-            }
-            
-            const patient = data.patient;
-            
-            // Build details HTML with dynamic data
-            function show(val) {
-                return (val !== undefined && val !== null && val !== '') ? val : 'N/A';
-            }
-            
-            // Helper function to get status badge with green theme
-            function getStatusBadge(value, type = 'default') {
-                if (value === 'N/A' || !value) return '<span class="badge-status badge-na"><i class="fas fa-minus-circle"></i> N/A</span>';
-                
-                if (type === 'boolean') {
-                    return value ? '<span class="badge-status badge-yes"><i class="fas fa-check-circle"></i> Yes</span>' : '<span class="badge-status badge-no"><i class="fas fa-times-circle"></i> No</span>';
-                }
-                
-                if (type === 'sex') {
-                    return value === 'Male' ? '<span class="badge-status badge-male"><i class="fas fa-mars"></i> Male</span>' : '<span class="badge-status badge-female"><i class="fas fa-venus"></i> Female</span>';
-                }
-                
-                return `<span class="badge-status badge-default">${value}</span>`;
-            }
-            
-            // Helper to calculate BMI
-            function calculateBMI(weight, height) {
-                if (weight && height && weight !== 'N/A' && height !== 'N/A') {
-                    const heightInMeters = parseFloat(height) / 100;
-                    const bmi = (parseFloat(weight) / (heightInMeters * heightInMeters)).toFixed(1);
-                    return bmi;
-                }
-                return null;
-            }
-            
-            // Helper to get age display
-            function getAgeDisplay(months) {
-                const m = parseInt(months);
-                if (isNaN(m)) return 'N/A';
-                const years = Math.floor(m / 12);
-                const remainingMonths = m % 12;
-                if (years > 0) {
-                    return remainingMonths > 0 ? `${years}y ${remainingMonths}m` : `${years}y`;
-                }
-                return `${m}m`;
-            }
-            
-            // Format date helper
-            function formatDate(dateStr) {
-                if (!dateStr || dateStr === 'N/A') return 'N/A';
-                const date = new Date(dateStr);
-                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-            }
-            
-            const calculatedBMI = calculateBMI(patient.weight_kg, patient.height_cm);
-            const ageDisplay = getAgeDisplay(patient.age_months);
-            
-            let html = '<div class="patient-details-modern">';
-            
-            // Compact Patient Header with dynamic data
-            html += '<div class="patient-header-compact">';
-            html += '<div class="header-left">';
-            html += '<div class="header-info">';
-            html += `<h3 class="patient-name-sm">${show(patient.first_name)} ${patient.middle_name ? patient.middle_name.charAt(0) + '. ' : ''}${show(patient.last_name)}</h3>`;
-            html += '<div class="patient-quick-info">';
-            html += '<span class="info-chip"><i class="fas fa-id-card"></i> ID: <strong>' + show(patient.custom_patient_id) + '</strong></span>';
-            html += `<span class="info-chip"><i class="fas fa-birthday-cake"></i> ${ageDisplay}</span>`;
-            html += `${getStatusBadge(patient.sex, 'sex')}`;
-            html += `<span class="info-chip"><i class="fas fa-map-marker-alt"></i> ${show(patient.barangay?.barangay_name)}</span>`;
-            html += '</div></div></div>';
-            html += '<div class="header-right">';
-            html += `<div class="admission-date"><i class="fas fa-calendar-check"></i> <span>Admitted</span><strong>${formatDate(patient.date_of_admission)}</strong></div>`;
-            html += '</div>';
-            html += '</div>';
-            
-            // Two Column Layout
-            html += '<div class="details-container">';
-            
-            // First Row: Health Metrics (full width)
-            html += '<div class="details-row">';
-            
-            // Health Metrics Card - Compact with visual indicators and dynamic data
-            html += '<div class="info-card metrics-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-heartbeat"></i> Health Metrics</div>';
-            html += '<div class="card-content">';
-            html += '<div class="metrics-row">';
-            html += `<div class="metric-box">`;
-            html += `<i class="fas fa-weight"></i>`;
-            html += `<div class="metric-data">`;
-            html += `<span class="metric-value">${show(patient.weight_kg)}</span>`;
-            html += `<span class="metric-unit">kg</span>`;
-            html += `</div>`;
-            html += `<span class="metric-label">Weight</span>`;
-            html += `</div>`;
-            html += `<div class="metric-box">`;
-            html += `<i class="fas fa-ruler-vertical"></i>`;
-            html += `<div class="metric-data">`;
-            html += `<span class="metric-value">${show(patient.height_cm)}</span>`;
-            html += `<span class="metric-unit">cm</span>`;
-            html += `</div>`;
-            html += `<span class="metric-label">Height</span>`;
-            html += `</div>`;
-            if (calculatedBMI) {
-                html += `<div class="metric-box">`;
-                html += `<i class="fas fa-calculator"></i>`;
-                html += `<div class="metric-data">`;
-                html += `<span class="metric-value">${calculatedBMI}</span>`;
-                html += `<span class="metric-unit">BMI</span>`;
-                html += `</div>`;
-                html += `<span class="metric-label">Body Mass Index</span>`;
-                html += `</div>`;
-            }
-            html += '</div>';
-            html += '<div class="indicators-row">';
-            html += `<div class="indicator-item"><label>Weight for Age:</label><span class="indicator-badge">${show(patient.latest_assessment?.weight_for_age) || 'Not assessed'}</span></div>`;
-            html += `<div class="indicator-item"><label>Height for Age:</label><span class="indicator-badge">${show(patient.latest_assessment?.height_for_age) || 'Not assessed'}</span></div>`;
-            html += `<div class="indicator-item"><label>BMI for Age:</label><span class="indicator-badge">${show(patient.latest_assessment?.bmi_for_age) || 'Not assessed'}</span></div>`;
-            html += '</div>';
-            html += '</div></div>';
-            
-            html += '</div>'; // End health metrics row
-            
-            // Dietary & Religious Information Row
-            html += '<div class="details-row">';
-            html += '<div class="info-card metrics-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-info-circle"></i> Dietary & Religious Information</div>';
-            html += '<div class="card-content">';
-            html += '<div class="metrics-row">';
-            html += `<div class="metric-box" style="padding: 10px; min-height: auto;">`;
-            html += `<div class="metric-data">`;
-            html += `<span class="metric-value" style="font-size: 1rem; font-weight: 600;">${show(patient.allergies)}</span>`;
-            html += `</div>`;
-            html += `<span class="metric-label" style="margin-top: 4px;">Allergies</span>`;
-            html += `</div>`;
-            html += `<div class="metric-box" style="padding: 10px; min-height: auto;">`;
-            html += `<div class="metric-data">`;
-            html += `<span class="metric-value" style="font-size: 1rem; font-weight: 600;">${show(patient.religion)}</span>`;
-            html += `</div>`;
-            html += `<span class="metric-label" style="margin-top: 4px;">Religion</span>`;
-            html += `</div>`;
-            html += '</div>';
-            html += '</div></div>';
-            html += '</div>'; // End dietary/religious row
-            
-            // Household Row (full width)
-            html += '<div class="details-row">';
-            
-            // Household Information Card - Compact with dynamic data
-            html += '<div class="info-card household-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-home"></i> Household</div>';
-            html += '<div class="card-content">';
-            html += '<div class="stat-row">';
-            html += `<div class="stat-item"><i class="fas fa-users"></i><span class="stat-num">${show(patient.total_household_adults)}</span><span class="stat-text">Adults</span></div>`;
-            html += `<div class="stat-item"><i class="fas fa-child"></i><span class="stat-num">${show(patient.total_household_children)}</span><span class="stat-text">Children</span></div>`;
-            html += `<div class="stat-item"><i class="fas fa-user-friends"></i><span class="stat-num">${show(patient.total_household_twins)}</span><span class="stat-text">Twins</span></div>`;
-            html += '</div>';
-            html += '<div class="benefit-status">';
-            html += `<i class="fas fa-hand-holding-heart"></i> <span>4Ps Beneficiary:</span> ${getStatusBadge(patient.is_4ps_beneficiary, 'boolean')}`;
-            html += '</div>';
-            html += '</div></div>';
-            
-            html += '</div>'; // End household row
-            
-            // Medical Notes if exists with dynamic data
-            if (patient.other_medical_problems && patient.other_medical_problems !== 'N/A' && patient.other_medical_problems.trim() !== '') {
-                html += '<div class="details-row">';
-                html += '<div class="info-card notes-card">';
-                html += '<div class="card-header-sm"><i class="fas fa-clipboard-list"></i> Medical Notes</div>';
-                html += '<div class="card-content">';
-                html += `<div class="notes-text">${show(patient.other_medical_problems)}</div>`;
-                html += '</div></div>';
-                html += '</div>'; // End notes row
-            }
-            
-            // Parent Contact Information (left) + Medical Status (right) - moved to bottom
-            html += '<div class="details-row">';
-            
-            // Contact Information Card - Compact with dynamic data
-            html += '<div class="info-card contact-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-address-card"></i> Parent Contact Information</div>';
-            html += '<div class="card-content">';
-            html += '<div class="status-list">';
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-phone"></i>`;
-            html += `<span class="status-label">Phone</span>`;
-            html += `<span class="status-value">${show(patient.contact_number)}</span>`;
-            html += `</div>`;
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-user-friends"></i>`;
-            html += `<span class="status-label">Parent/Guardian</span>`;
-            html += `<span class="status-value">${patient.parent ? show(patient.parent?.first_name) + ' ' + show(patient.parent?.last_name) : 'N/A'}</span>`;
-            html += `</div>`;
-            html += '</div></div></div>';
-            
-            // Medical Status Card with dynamic data
-            html += '<div class="info-card status-card">';
-            html += '<div class="card-header-sm"><i class="fas fa-stethoscope"></i> Medical Status</div>';
-            html += '<div class="card-content">';
-            html += '<div class="status-list">';
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-baby"></i>`;
-            html += `<span class="status-label">Breastfeeding</span>`;
-            html += `${getStatusBadge(patient.breastfeeding, patient.breastfeeding === 'Yes' ? 'boolean' : 'default')}`;
-            html += `</div>`;
-            html += `<div class="status-row">`;
-            html += `<i class="fas fa-hand-holding-medical"></i>`;
-            html += `<span class="status-label">Edema</span>`;
-            html += `${getStatusBadge(patient.edema, patient.edema === 'Yes' ? 'boolean' : 'default')}`;
-            html += `</div>`;
-            html += '</div>';
-            html += '</div></div>';
-            
-            html += '</div>'; // End parent contact/medical status row
-            
-            html += '</div>'; // End details-container
-            html += '</div>'; // End patient-details-modern
-            
-            // Display the modal with green theme
+    .then(async response => {
+        let data;
+        try {
+            const text = await response.text();
+            console.log('Raw response:', text.substring(0, 200));
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('Parse error:', e);
             Swal.fire({
-                title: 'Patient Details',
-                html: html,
-                width: '90vw',
-                customClass: {
-                    popup: 'swal2-patient-modal',
-                    confirmButton: 'swal2-confirm'
-                },
-                confirmButtonText: 'Close',
-                confirmButtonColor: '#2e7d32',
-                showCloseButton: true,
-                focusConfirm: false
-            });
-        })
-        .catch(error => {
-            Swal.fire({
-                icon: 'error',
                 title: 'Error',
-                text: 'Failed to load patient details. Please try again.',
+                text: 'Invalid server response. Please contact support.',
                 confirmButtonColor: '#2e7d32'
             });
+            return null;
+        }
+        if (!response.ok || !data.success) {
+            Swal.fire({
+                title: 'Error',
+                text: data && data.message ? data.message : 'Error loading patient details',
+                confirmButtonColor: '#2e7d32'
+            });
+            return null;
+        }
+        showViewPatientModal(data.patient);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'Error loading patient details',
+            confirmButtonColor: '#2e7d32'
         });
+    });
+}
+
+// Helper function to generate select options
+function generateSelectOptions(data, valueKey, textKeys, emptyText = 'Select') {
+    let options = `<option value="">${emptyText}</option>`;
+    data.forEach(item => {
+        const text = textKeys.map(key => item[key]).filter(Boolean).join(' ');
+        options += `<option value="${item[valueKey]}">${text}</option>`;
+    });
+    return options;
+}
+
+function showViewPatientModal(patient) {
+    const parentName = patient.parent ? `${patient.parent.first_name} ${patient.parent.last_name}` : 'Not assigned';
+    const barangayName = patient.barangay ? patient.barangay.barangay_name : 'Not assigned';
+
+    Swal.fire({
+        title: '<i class="fas fa-user-circle"></i> Patient Details',
+        html: `
+            <div class="swal-form-container">
+                <!-- Patient ID Display -->
+                <div style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); padding: 15px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(46,125,50,0.2);">
+                    <div style="color: white; font-size: 14px; opacity: 0.9; margin-bottom: 5px;">
+                        <i class="fas fa-id-card"></i> Patient ID
+                    </div>
+                    <div style="color: white; font-size: 24px; font-weight: bold; letter-spacing: 1px;">
+                        ${patient.custom_patient_id || 'N/A'}
+                    </div>
+                </div>
+                
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-user-circle" style="color: #2e7d32;"></i> Basic Information
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Full Name</label>
+                            <div class="detail-value-display">${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-birthday-cake"></i> Birthdate</label>
+                            <div class="detail-value-display">${patient.birthdate ? new Date(patient.birthdate).toLocaleDateString() : 'N/A'}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Age</label>
+                            <div class="detail-value-display">${patient.age_months} months</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-venus-mars"></i> Sex</label>
+                            <div class="detail-value-display">${patient.sex || 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-phone"></i> Contact Number</label>
+                            <div class="detail-value-display">${patient.contact_number || 'N/A'}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> Date of Admission</label>
+                            <div class="detail-value-display">${new Date(patient.date_of_admission).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignment & Location -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-user-tag" style="color: #2e7d32;"></i> Assignment & Location
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user-friends"></i> Parent / Guardian</label>
+                            <div class="detail-value-display">${parentName}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt"></i> Barangay</label>
+                            <div class="detail-value-display">${barangayName}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Metrics -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-heartbeat" style="color: #dc3545;"></i> Health Metrics & Status
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-weight"></i> Weight</label>
+                            <div class="detail-value-display">${patient.weight_kg} kg</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-ruler-vertical"></i> Height</label>
+                            <div class="detail-value-display">${patient.height_cm} cm</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-baby"></i> Breastfeeding Status</label>
+                            <div class="detail-value-display">${patient.breastfeeding || 'Not specified'}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-disease"></i> Edema Present</label>
+                            <div class="detail-value-display">${patient.edema || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-allergies"></i> Allergies</label>
+                            <div class="detail-value-display">${patient.allergies || 'None reported'}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-pray"></i> Religion</label>
+                            <div class="detail-value-display">${patient.religion || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    ${patient.other_medical_problems ? `
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-notes-medical"></i> Other Medical Problems</label>
+                            <div class="detail-value-display">${patient.other_medical_problems}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- Household Information -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-home" style="color: #ffc107;"></i> Household Information
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-users"></i> Total Adults</label>
+                            <div class="detail-value-display">${patient.total_household_adults || 0}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-child"></i> Total Children</label>
+                            <div class="detail-value-display">${patient.total_household_children || 0}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-children"></i> Total Twins</label>
+                            <div class="detail-value-display">${patient.total_household_twins || 0}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-hands-helping"></i> 4Ps Beneficiary</label>
+                            <div class="detail-value-display">
+                                ${patient.is_4ps_beneficiary ? 
+                                    '<span class="detail-badge badge-success"><i class="fas fa-check"></i> Yes</span>' : 
+                                    '<span class="detail-badge badge-warning"><i class="fas fa-times"></i> No</span>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: '<i class="fas fa-times-circle"></i> Close',
+        confirmButtonColor: '#2e7d32',
+        customClass: {
+            container: 'swal-patient-modal',
+            popup: 'swal-patient-popup swal-view-patient-popup',
+            htmlContainer: 'swal-view-patient-content',
+            confirmButton: 'btn btn-secondary'
+        },
+        width: '950px'
+    });
 }
 
 // Delete function removed - only admins can permanently delete patients
 // Nutritionists should use the archive functionality to maintain medical record integrity
 function deletePatient(patientId) {
     Swal.fire({
-        icon: 'info',
         title: 'Delete Not Available',
         text: 'Only administrators can permanently delete patient records. Please use the Archive function to remove patients from the active list while preserving medical records.',
         confirmButtonColor: '#2e7d32'
@@ -1052,4 +1531,69 @@ function handleReligionChange(select) {
         otherInput.required = false;
         otherInput.value = '';
     }
+}
+
+// Validate patient form
+function validatePatientForm(formId) {
+    const form = document.getElementById(formId);
+    const requiredFields = form.querySelectorAll('[required]:not([disabled])');
+    let isValid = true;
+    let errorMessages = [];
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            field.style.borderColor = '#dc3545';
+            isValid = false;
+            
+            // Get field label
+            const label = form.querySelector(`label[for="${field.id}"]`);
+            const fieldName = label ? label.textContent.replace('*', '').trim() : field.name;
+            errorMessages.push(fieldName);
+        } else {
+            field.style.borderColor = '';
+        }
+    });
+    
+    // Validate contact number
+    const contactInput = document.getElementById('contact_number');
+    if (contactInput && contactInput.value) {
+        const contactValue = contactInput.value.replace(/\D/g, '');
+        if (contactValue.length !== 11 || !contactValue.startsWith('09')) {
+            contactInput.style.borderColor = '#dc3545';
+            isValid = false;
+            if (!errorMessages.includes('Contact Number')) {
+                errorMessages.push('Contact Number (must be 11 digits starting with 09)');
+            }
+        }
+    }
+    
+    // Validate weight and height
+    const weightInput = document.getElementById('weight_kg');
+    const heightInput = document.getElementById('height_cm');
+    
+    if (weightInput && !weightInput.disabled && parseFloat(weightInput.value) <= 0) {
+        weightInput.style.borderColor = '#dc3545';
+        isValid = false;
+        if (!errorMessages.includes('Weight')) {
+            errorMessages.push('Weight (must be greater than 0)');
+        }
+    }
+    
+    if (heightInput && !heightInput.disabled && parseFloat(heightInput.value) <= 0) {
+        heightInput.style.borderColor = '#dc3545';
+        isValid = false;
+        if (!errorMessages.includes('Height')) {
+            errorMessages.push('Height (must be greater than 0)');
+        }
+    }
+    
+    if (!isValid) {
+        let message = 'Please fill in all required fields correctly:';
+        if (errorMessages.length > 0) {
+            message += '\n\n• ' + errorMessages.join('\n• ');
+        }
+        Swal.showValidationMessage(message);
+    }
+    
+    return isValid;
 }

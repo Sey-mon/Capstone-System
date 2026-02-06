@@ -341,7 +341,6 @@
     function showSuccess(message) {
         if (typeof Swal !== 'undefined') {
             Swal.fire({
-                icon: 'success',
                 title: 'Success',
                 text: message,
                 timer: 2000,

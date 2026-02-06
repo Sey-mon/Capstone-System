@@ -139,7 +139,6 @@
                     <select class="form-control" id="appetite" name="appetite">
                         <option value="">Select appetite level</option>
                         <option value="good" {{ old('appetite') == 'good' ? 'selected' : '' }}>Good - Eats well, finishes meals</option>
-                        <option value="fair" {{ old('appetite') == 'fair' ? 'selected' : '' }}>Fair - Eats moderately</option>
                         <option value="poor" {{ old('appetite') == 'poor' ? 'selected' : '' }}>Poor - Refuses food often</option>
                         <option value="very_poor" {{ old('appetite') == 'very_poor' ? 'selected' : '' }}>Very Poor - Minimal intake</option>
                     </select>

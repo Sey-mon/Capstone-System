@@ -19,41 +19,41 @@ use Illuminate\Http\Request;
 // Forgot Password - Request verification code
 Route::get('/forgot-password', function() {
     return view('auth.forgot-password');
-})->name('password.request');
+})->middleware(['guest', 'prevent.back'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
-    ->middleware('throttle:password.reset.email') // Email-based rate limiting
+    ->middleware(['guest', 'throttle:password.reset.email']) // Email-based rate limiting
     ->name('password.email');
 
 // Reset Password - Verify code and set new password
 Route::get('/reset-password', [AuthController::class, 'showResetForm'])
-    ->middleware('throttle:6,1') // 6 attempts per minute
+    ->middleware(['guest', 'prevent.back', 'throttle:6,1']) // 6 attempts per minute
     ->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])
-    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->middleware(['guest', 'throttle:5,1']) // 5 attempts per minute
     ->name('password.update');
 
 // Support Ticket - Report a Problem
 Route::get('/report-problem', function() {
     return view('auth.report-problem');
-})->name('support.report');
+})->middleware('prevent.back')->name('support.report');
 Route::post('/report-problem', [AuthController::class, 'submitSupportTicket'])
     ->middleware('throttle:5,1') // 5 attempts per minute
     ->name('support.report.submit');
 
 // Public Login (Default)
-Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login.get');
+Route::get('/', [AuthController::class, 'showLoginForm'])->middleware(['guest', 'prevent.back'])->name('login');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->middleware(['guest', 'prevent.back'])->name('login.get');
 Route::post('/', [AuthController::class, 'login'])
-    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->middleware(['guest', 'throttle:5,1']) // 5 attempts per minute
     ->name('login.root.post');
 Route::post('/login', [AuthController::class, 'login'])
-    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->middleware(['guest', 'throttle:5,1']) // 5 attempts per minute
     ->name('login.post');
 
 // Staff Portal Login (Admin, Nutritionist, Health Workers, BHW)
-Route::get('/staff/login', [AuthController::class, 'showStaffLogin'])->name('staff.login');
+Route::get('/staff/login', [AuthController::class, 'showStaffLogin'])->middleware(['guest', 'prevent.back'])->name('staff.login');
 Route::post('/staff/login', [AuthController::class, 'staffLogin'])
-    ->middleware('throttle:5,1') // 5 attempts per minute
+    ->middleware(['guest', 'throttle:5,1']) // 5 attempts per minute
     ->name('staff.login.post');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -117,16 +117,16 @@ Route::post('/test-registration', function (Request $request) {
 })->name('test.registration');
 
 // Registration Routes
-Route::get('/register', [AuthController::class, 'showParentRegistration'])->name('register'); // Direct to parent registration
-Route::get('/register/parent', [AuthController::class, 'showParentRegistration'])->name('register.parent');
-Route::post('/register/parent', [AuthController::class, 'registerParent'])->name('register.parent.post');
+Route::get('/register', [AuthController::class, 'showParentRegistration'])->middleware(['guest', 'prevent.back'])->name('register'); // Direct to parent registration
+Route::get('/register/parent', [AuthController::class, 'showParentRegistration'])->middleware(['guest', 'prevent.back'])->name('register.parent');
+Route::post('/register/parent', [AuthController::class, 'registerParent'])->middleware('guest')->name('register.parent.post');
 Route::get('/register/success', function () {
     return view('auth.registration-success');
-})->name('registration.success');
+})->middleware('prevent.back')->name('registration.success');
 
 // Staff/Nutritionist Application
-Route::get('/apply/nutritionist', [AuthController::class, 'showNutritionistApplication'])->name('apply.nutritionist');
-Route::post('/apply/nutritionist', [AuthController::class, 'applyNutritionist'])->name('apply.nutritionist.post');
+Route::get('/apply/nutritionist', [AuthController::class, 'showNutritionistApplication'])->middleware(['guest', 'prevent.back'])->name('apply.nutritionist');
+Route::post('/apply/nutritionist', [AuthController::class, 'applyNutritionist'])->middleware('guest')->name('apply.nutritionist.post');
 
 // Legal Pages
 Route::get('/terms', function () {
@@ -137,7 +137,7 @@ Route::get('/privacy', function () {
 })->name('privacy');
 
 // Admin Routes (Protected by auth, verified email, and role middleware)
-Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'account.verified', 'role:Admin', 'prevent.back'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard/map-data', [AdminController::class, 'getMapData'])->name('dashboard.map-data');
     Route::get('/dashboard/chart-data/{type}', [AdminController::class, 'getChartData'])->name('dashboard.chart-data');
@@ -307,7 +307,7 @@ Route::middleware(['auth', 'account.verified', 'role:Admin'])->prefix('admin')->
 });
 
 // Nutritionist Routes (Protected by auth, verified email, and role middleware)
-Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
+Route::middleware(['auth', 'account.verified', 'role:Nutritionist', 'prevent.back'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
     Route::get('/dashboard', [NutritionistController::class, 'dashboard'])->name('dashboard');
     Route::get('/patients', [NutritionistController::class, 'patients'])->name('patients');
     
@@ -380,7 +380,7 @@ Route::middleware(['auth', 'account.verified', 'role:Nutritionist'])->prefix('nu
 Route::get('/api/foods/check-duplicate', [FoodController::class, 'checkDuplicate'])->middleware('auth');
 
 // Parent Routes (Protected by auth, verified email, and role middleware)
-Route::middleware(['auth', 'account.verified', 'role:Parent'])->prefix('parent')->name('parent.')->group(function () {
+Route::middleware(['auth', 'account.verified', 'role:Parent', 'prevent.back'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('dashboard');
     Route::get('/children', [ParentController::class, 'children'])->name('children');
     Route::get('/assessments', [ParentController::class, 'assessments'])->name('assessments');

@@ -202,11 +202,54 @@ function showAddPatientModal() {
                             </div>
                         </div>
                         <div class="form-row">
+                            <div class="form-group">
+                                <label for="allergies">
+                                    <i class="fas fa-allergies"></i> Allergies
+                                </label>
+                                <select id="allergies" name="allergies" class="swal2-select">
+                                    <option value="">Select Allergies</option>
+                                    <option value="None">None</option>
+                                    <option value="Seafood">Seafood</option>
+                                    <option value="Peanuts">Peanuts</option>
+                                    <option value="Dairy">Dairy</option>
+                                    <option value="Eggs">Eggs</option>
+                                    <option value="Soy">Soy</option>
+                                    <option value="Penicillin">Penicillin</option>
+                                    <option value="Aspirin">Aspirin</option>
+                                    <option value="Dust">Dust</option>
+                                    <option value="Pollen">Pollen</option>
+                                    <option value="Other">Other (Specify)</option>
+                                </select>
+                                <input type="text" id="allergies_other" name="allergies_other" class="swal2-input" placeholder="Please specify allergies" style="display: none; margin-top: 10px;">
+                            </div>
+                            <div class="form-group">
+                                <label for="religion">
+                                    <i class="fas fa-pray"></i> Religion
+                                </label>
+                                <select id="religion" name="religion" class="swal2-select">
+                                    <option value="">Select Religion</option>
+                                    <option value="Roman Catholic">Roman Catholic</option>
+                                    <option value="Islam">Islam</option>
+                                    <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+                                    <option value="Philippine Independent Church">Philippine Independent Church (Aglipayan)</option>
+                                    <option value="Seventh-day Adventist">Seventh-day Adventist</option>
+                                    <option value="Bible Baptist Church">Bible Baptist Church</option>
+                                    <option value="United Church of Christ">United Church of Christ in the Philippines</option>
+                                    <option value="Jehovah's Witnesses">Jehovah's Witnesses</option>
+                                    <option value="Protestant">Protestant</option>
+                                    <option value="Buddhism">Buddhism</option>
+                                    <option value="Born Again Christian">Born Again Christian</option>
+                                    <option value="Other">Other (Specify)</option>
+                                </select>
+                                <input type="text" id="religion_other" name="religion_other" class="swal2-input" placeholder="Please specify religion" style="display: none; margin-top: 10px;">
+                            </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group full-width">
                                 <label for="other_medical_problems">
                                     <i class="fas fa-notes-medical"></i> Other Medical Problems
                                 </label>
-                                <textarea id="other_medical_problems" name="other_medical_problems" class="swal2-textarea" rows="3" placeholder="Enter any medical conditions, allergies, or concerns..."></textarea>
+                                <textarea id="other_medical_problems" name="other_medical_problems" class="swal2-textarea" rows="3" placeholder="Enter any other medical conditions or concerns..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -348,6 +391,38 @@ function showAddPatientModal() {
                     });
                 }
             });
+            
+            // Handle Allergies "Other" option
+            const allergiesSelect = document.getElementById('allergies');
+            const allergiesOtherInput = document.getElementById('allergies_other');
+            if (allergiesSelect && allergiesOtherInput) {
+                allergiesSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        allergiesOtherInput.style.display = 'block';
+                        allergiesOtherInput.required = true;
+                    } else {
+                        allergiesOtherInput.style.display = 'none';
+                        allergiesOtherInput.required = false;
+                        allergiesOtherInput.value = '';
+                    }
+                });
+            }
+            
+            // Handle Religion "Other" option
+            const religionSelect = document.getElementById('religion');
+            const religionOtherInput = document.getElementById('religion_other');
+            if (religionSelect && religionOtherInput) {
+                religionSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        religionOtherInput.style.display = 'block';
+                        religionOtherInput.required = true;
+                    } else {
+                        religionOtherInput.style.display = 'none';
+                        religionOtherInput.required = false;
+                        religionOtherInput.value = '';
+                    }
+                });
+            }
         },
         preConfirm: () => {
             if (!validatePatientForm('addPatientForm')) {
@@ -538,6 +613,49 @@ function showEditPatientModal(patient) {
                             </div>
                         </div>
                         <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit_allergies">
+                                    <i class="fas fa-allergies"></i> Allergies
+                                </label>
+                                <select id="edit_allergies" name="allergies" class="swal2-select">
+                                    <option value="">Select Allergies</option>
+                                    <option value="None">None</option>
+                                    <option value="Seafood">Seafood</option>
+                                    <option value="Peanuts">Peanuts</option>
+                                    <option value="Dairy">Dairy</option>
+                                    <option value="Eggs">Eggs</option>
+                                    <option value="Soy">Soy</option>
+                                    <option value="Penicillin">Penicillin</option>
+                                    <option value="Aspirin">Aspirin</option>
+                                    <option value="Dust">Dust</option>
+                                    <option value="Pollen">Pollen</option>
+                                    <option value="Other">Other (Specify)</option>
+                                </select>
+                                <input type="text" id="edit_allergies_other" name="allergies_other" class="swal2-input" placeholder="Please specify allergies" style="display: none; margin-top: 10px;">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_religion">
+                                    <i class="fas fa-pray"></i> Religion
+                                </label>
+                                <select id="edit_religion" name="religion" class="swal2-select">
+                                    <option value="">Select Religion</option>
+                                    <option value="Roman Catholic">Roman Catholic</option>
+                                    <option value="Islam">Islam</option>
+                                    <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+                                    <option value="Philippine Independent Church">Philippine Independent Church (Aglipayan)</option>
+                                    <option value="Seventh-day Adventist">Seventh-day Adventist</option>
+                                    <option value="Bible Baptist Church">Bible Baptist Church</option>
+                                    <option value="United Church of Christ">United Church of Christ in the Philippines</option>
+                                    <option value="Jehovah's Witnesses">Jehovah's Witnesses</option>
+                                    <option value="Protestant">Protestant</option>
+                                    <option value="Buddhism">Buddhism</option>
+                                    <option value="Born Again Christian">Born Again Christian</option>
+                                    <option value="Other">Other (Specify)</option>
+                                </select>
+                                <input type="text" id="edit_religion_other" name="religion_other" class="swal2-input" placeholder="Please specify religion" style="display: none; margin-top: 10px;">
+                            </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group full-width">
                                 <label for="edit_other_medical_problems">
                                     <i class="fas fa-notes-medical"></i> Other Medical Problems
@@ -601,6 +719,62 @@ function showEditPatientModal(patient) {
             if (patient.parent_id) document.getElementById('edit_parent_id').value = patient.parent_id;
             if (patient.nutritionist_id) document.getElementById('edit_nutritionist_id').value = patient.nutritionist_id;
             if (patient.barangay_id) document.getElementById('edit_barangay_id').value = patient.barangay_id;
+            
+            // Set allergies value and handle Other option
+            const editAllergiesSelect = document.getElementById('edit_allergies');
+            const editAllergiesOtherInput = document.getElementById('edit_allergies_other');
+            const commonAllergies = ['None', 'Seafood', 'Peanuts', 'Dairy', 'Eggs', 'Soy', 'Penicillin', 'Aspirin', 'Dust', 'Pollen'];
+            if (patient.allergies) {
+                if (commonAllergies.includes(patient.allergies)) {
+                    editAllergiesSelect.value = patient.allergies;
+                } else {
+                    editAllergiesSelect.value = 'Other';
+                    editAllergiesOtherInput.value = patient.allergies;
+                    editAllergiesOtherInput.style.display = 'block';
+                }
+            }
+            
+            // Set religion value and handle Other option
+            const editReligionSelect = document.getElementById('edit_religion');
+            const editReligionOtherInput = document.getElementById('edit_religion_other');
+            const commonReligions = ['Roman Catholic', 'Islam', 'Iglesia ni Cristo', 'Philippine Independent Church', 'Seventh-day Adventist', 'Bible Baptist Church', 'United Church of Christ', "Jehovah's Witnesses", 'Protestant', 'Buddhism', 'Born Again Christian'];
+            if (patient.religion) {
+                if (commonReligions.includes(patient.religion)) {
+                    editReligionSelect.value = patient.religion;
+                } else {
+                    editReligionSelect.value = 'Other';
+                    editReligionOtherInput.value = patient.religion;
+                    editReligionOtherInput.style.display = 'block';
+                }
+            }
+            
+            // Handle Edit Allergies "Other" option
+            if (editAllergiesSelect && editAllergiesOtherInput) {
+                editAllergiesSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        editAllergiesOtherInput.style.display = 'block';
+                        editAllergiesOtherInput.required = true;
+                    } else {
+                        editAllergiesOtherInput.style.display = 'none';
+                        editAllergiesOtherInput.required = false;
+                        editAllergiesOtherInput.value = '';
+                    }
+                });
+            }
+            
+            // Handle Edit Religion "Other" option
+            if (editReligionSelect && editReligionOtherInput) {
+                editReligionSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        editReligionOtherInput.style.display = 'block';
+                        editReligionOtherInput.required = true;
+                    } else {
+                        editReligionOtherInput.style.display = 'none';
+                        editReligionOtherInput.required = false;
+                        editReligionOtherInput.value = '';
+                    }
+                });
+            }
             
             // Phone number formatting and validation
             const contactInput = document.getElementById('edit_contact_number');
@@ -677,205 +851,158 @@ function showViewPatientModal(patient) {
     Swal.fire({
         title: '<i class="fas fa-user-circle"></i> Patient Details',
         html: `
-            <div class="patient-details-grid">
-                <div class="detail-section patient-id-section">
-                    <h6><i class="fas fa-id-badge"></i> Patient ID</h6>
-                    <div class="detail-value highlight">
+            <div class="swal-form-container">
+                <!-- Patient ID Display -->
+                <div style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); padding: 15px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,123,255,0.2);">
+                    <div style="color: white; font-size: 14px; opacity: 0.9; margin-bottom: 5px;">
+                        <i class="fas fa-id-card"></i> Patient ID
+                    </div>
+                    <div style="color: white; font-size: 24px; font-weight: bold; letter-spacing: 1px;">
                         ${patient.custom_patient_id || 'N/A'}
                     </div>
                 </div>
                 
-                <div class="detail-section">
-                    <h6><i class="fas fa-id-card"></i> Basic Information</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-user"></i>
-                            Full Name
-                        </div>
-                        <div class="detail-value">${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-calendar-alt"></i>
-                            Age
-                        </div>
-                        <div class="detail-value">${patient.age_months} months</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-venus-mars"></i>
-                            Sex
-                        </div>
-                        <div class="detail-value">${patient.sex || 'N/A'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-birthday-cake"></i>
-                            Birthdate
-                        </div>
-                        <div class="detail-value">${patient.birthdate ? new Date(patient.birthdate).toLocaleDateString() : 'N/A'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-phone"></i>
-                            Contact
-                        </div>
-                        <div class="detail-value">${patient.contact_number || 'N/A'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-calendar-check"></i>
-                            Admitted
-                        </div>
-                        <div class="detail-value">${new Date(patient.date_of_admission).toLocaleDateString()}</div>
-                    </div>
-                </div>
-                
-                <div class="detail-section">
-                    <h6><i class="fas fa-user-friends"></i> Assignment Information</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-user-tie"></i>
-                            Parent/Guardian
-                        </div>
-                        <div class="detail-value">${parentName}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-user-md"></i>
-                            Nutritionist
-                        </div>
-                        <div class="detail-value">${nutritionistName}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Barangay
-                        </div>
-                        <div class="detail-value">${barangayName}</div>
-                    </div>
-                </div>
-                
-                <div class="detail-section">
-                    <h6><i class="fas fa-heartbeat"></i> Health Metrics</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-weight"></i>
-                            Weight
-                        </div>
-                        <div class="detail-value">${patient.weight_kg} kg</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-ruler-vertical"></i>
-                            Height
-                        </div>
-                        <div class="detail-value">${patient.height_cm} cm</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-chart-line"></i>
-                            Weight for Age
-                        </div>
-                        <div class="detail-value">
-                            ${patient.latest_assessment?.weight_for_age ? 
-                                `<span class="detail-badge badge-info">${patient.latest_assessment.weight_for_age}</span>` : 
-                                '<span class="text-muted">Not assessed</span>'}
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-user-circle" style="color: #007bff;"></i> Basic Information
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Full Name</label>
+                            <div class="detail-value-display">${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}</div>
                         </div>
                     </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-chart-line"></i>
-                            Height for Age
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-birthday-cake"></i> Birthdate</label>
+                            <div class="detail-value-display">${patient.birthdate ? new Date(patient.birthdate).toLocaleDateString() : 'N/A'}</div>
                         </div>
-                        <div class="detail-value">
-                            ${patient.latest_assessment?.height_for_age ? 
-                                `<span class="detail-badge badge-info">${patient.latest_assessment.height_for_age}</span>` : 
-                                '<span class="text-muted">Not assessed</span>'}
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Age</label>
+                            <div class="detail-value-display">${patient.age_months} months</div>
                         </div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-chart-line"></i>
-                            BMI for Age
-                        </div>
-                        <div class="detail-value">
-                            ${patient.latest_assessment?.bmi_for_age ? 
-                                `<span class="detail-badge badge-info">${patient.latest_assessment.bmi_for_age}</span>` : 
-                                '<span class="text-muted">Not assessed</span>'}
+                        <div class="form-group">
+                            <label><i class="fas fa-venus-mars"></i> Sex</label>
+                            <div class="detail-value-display">${patient.sex || 'N/A'}</div>
                         </div>
                     </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-baby"></i>
-                            Breastfeeding
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-phone"></i> Contact Number</label>
+                            <div class="detail-value-display">${patient.contact_number || 'N/A'}</div>
                         </div>
-                        <div class="detail-value">${patient.breastfeeding || 'Not specified'}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-stethoscope"></i>
-                            Edema
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> Date of Admission</label>
+                            <div class="detail-value-display">${new Date(patient.date_of_admission).toLocaleDateString()}</div>
                         </div>
-                        <div class="detail-value">${patient.edema || 'Not specified'}</div>
                     </div>
                 </div>
 
-                <div class="detail-section">
-                    <h6><i class="fas fa-home"></i> Household Information</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-users"></i>
-                            Total Adults
+                <!-- Assignment & Location -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-user-tag" style="color: #28a745;"></i> Assignment & Location
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user-friends"></i> Parent / Guardian</label>
+                            <div class="detail-value-display">${parentName}</div>
                         </div>
-                        <div class="detail-value">${patient.total_household_adults || 0}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-child"></i>
-                            Total Children
+                        <div class="form-group">
+                            <label><i class="fas fa-user-md"></i> Assigned Nutritionist</label>
+                            <div class="detail-value-display">${nutritionistName}</div>
                         </div>
-                        <div class="detail-value">${patient.total_household_children || 0}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-user-friends"></i>
-                            Total Twins
-                        </div>
-                        <div class="detail-value">${patient.total_household_twins || 0}</div>
-                    </div>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-hands-helping"></i>
-                            4Ps Beneficiary
-                        </div>
-                        <div class="detail-value">
-                            ${patient.is_4ps_beneficiary ? 
-                                '<span class="detail-badge badge-success"><i class="fas fa-check"></i> Yes</span>' : 
-                                '<span class="detail-badge badge-warning"><i class="fas fa-times"></i> No</span>'}
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt"></i> Barangay</label>
+                            <div class="detail-value-display">${barangayName}</div>
                         </div>
                     </div>
                 </div>
-                
-                ${patient.other_medical_problems ? `
-                <div class="detail-section">
-                    <h6><i class="fas fa-notes-medical"></i> Medical Notes</h6>
-                    <div class="detail-group">
-                        <div class="detail-label">
-                            <i class="fas fa-clipboard-list"></i>
-                            Other Medical Problems
+
+                <!-- Health Metrics -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-heartbeat" style="color: #dc3545;"></i> Health Metrics & Status
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-weight"></i> Weight</label>
+                            <div class="detail-value-display">${patient.weight_kg} kg</div>
                         </div>
-                        <div class="detail-value">${patient.other_medical_problems}</div>
+                        <div class="form-group">
+                            <label><i class="fas fa-ruler-vertical"></i> Height</label>
+                            <div class="detail-value-display">${patient.height_cm} cm</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-baby"></i> Breastfeeding Status</label>
+                            <div class="detail-value-display">${patient.breastfeeding || 'Not specified'}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-disease"></i> Edema Present</label>
+                            <div class="detail-value-display">${patient.edema || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-allergies"></i> Allergies</label>
+                            <div class="detail-value-display">${patient.allergies || 'None reported'}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-pray"></i> Religion</label>
+                            <div class="detail-value-display">${patient.religion || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    ${patient.other_medical_problems ? `
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-notes-medical"></i> Other Medical Problems</label>
+                            <div class="detail-value-display">${patient.other_medical_problems}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- Household Information -->
+                <div class="form-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-home" style="color: #ffc107;"></i> Household Information
+                    </h6>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-users"></i> Total Adults</label>
+                            <div class="detail-value-display">${patient.total_household_adults || 0}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-child"></i> Total Children</label>
+                            <div class="detail-value-display">${patient.total_household_children || 0}</div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-children"></i> Total Twins</label>
+                            <div class="detail-value-display">${patient.total_household_twins || 0}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-hands-helping"></i> 4Ps Beneficiary</label>
+                            <div class="detail-value-display">
+                                ${patient.is_4ps_beneficiary ? 
+                                    '<span class="detail-badge badge-success"><i class="fas fa-check"></i> Yes</span>' : 
+                                    '<span class="detail-badge badge-warning"><i class="fas fa-times"></i> No</span>'}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                ` : ''}
             </div>
         `,
         showConfirmButton: true,
         confirmButtonText: '<i class="fas fa-times-circle"></i> Close',
         customClass: {
             container: 'swal-patient-modal',
-            popup: 'swal-patient-popup',
+            popup: 'swal-patient-popup swal-view-patient-popup',
+            htmlContainer: 'swal-view-patient-content',
             confirmButton: 'btn btn-secondary'
         },
         width: '950px'
@@ -903,6 +1030,28 @@ function savePatient() {
             }
         }
     });
+    
+    // Handle allergies with Other option
+    const allergiesSelect = form.querySelector('[name="allergies"]');
+    const allergiesOther = form.querySelector('[name="allergies_other"]');
+    if (allergiesSelect) {
+        if (allergiesSelect.value === 'Other' && allergiesOther && allergiesOther.value) {
+            formData.append('allergies', allergiesOther.value);
+        } else {
+            formData.append('allergies', allergiesSelect.value);
+        }
+    }
+    
+    // Handle religion with Other option
+    const religionSelect = form.querySelector('[name="religion"]');
+    const religionOther = form.querySelector('[name="religion_other"]');
+    if (religionSelect) {
+        if (religionSelect.value === 'Other' && religionOther && religionOther.value) {
+            formData.append('religion', religionOther.value);
+        } else {
+            formData.append('religion', religionSelect.value);
+        }
+    }
 
     // Show loading
     Swal.showLoading();
@@ -918,7 +1067,6 @@ function savePatient() {
     .then(data => {
         if (data.success) {
             Swal.fire({
-                icon: 'success',
                 title: 'Success!',
                 text: 'Patient added successfully!',
                 timer: 2000,
@@ -1010,6 +1158,28 @@ function updatePatient(patientId) {
             }
         }
     });
+    
+    // Handle allergies with Other option
+    const allergiesSelect = form.querySelector('[name="allergies"]');
+    const allergiesOther = form.querySelector('[name="allergies_other"]');
+    if (allergiesSelect && !allergiesSelect.disabled) {
+        if (allergiesSelect.value === 'Other' && allergiesOther && allergiesOther.value) {
+            formData.append('allergies', allergiesOther.value);
+        } else {
+            formData.append('allergies', allergiesSelect.value);
+        }
+    }
+    
+    // Handle religion with Other option
+    const religionSelect = form.querySelector('[name="religion"]');
+    const religionOther = form.querySelector('[name="religion_other"]');
+    if (religionSelect && !religionSelect.disabled) {
+        if (religionSelect.value === 'Other' && religionOther && religionOther.value) {
+            formData.append('religion', religionOther.value);
+        } else {
+            formData.append('religion', religionSelect.value);
+        }
+    }
 
     // Show loading
     Swal.showLoading();
@@ -1025,7 +1195,6 @@ function updatePatient(patientId) {
     .then(data => {
         if (data.success) {
             Swal.fire({
-                icon: 'success',
                 title: 'Success!',
                 text: 'Patient updated successfully!',
                 timer: 2000,
@@ -1129,7 +1298,6 @@ function displayScreeningHistoryModal(patient, assessments) {
     // Check if there are no assessments
     if (!assessments || assessments.length === 0) {
         Swal.fire({
-            icon: 'info',
             title: 'No Assessment History',
             html: `
                 <div style="text-align: center; padding: 20px;">
@@ -1699,15 +1867,20 @@ function deletePatient(patientId) {
     Swal.fire({
         title: 'Are you sure?',
         text: "You won't be able to revert this!",
-        icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'Cancel',
         customClass: {
-            popup: 'swal-compact-popup'
-        }
+            popup: 'swal-delete-simple',
+            title: 'swal-delete-title',
+            htmlContainer: 'swal-delete-text',
+            actions: 'swal-delete-actions',
+            confirmButton: 'swal-delete-confirm-btn',
+            cancelButton: 'swal-delete-cancel-btn'
+        },
+        buttonsStyling: false
     }).then((result) => {
         if (result.isConfirmed) {
             Swal.fire({
@@ -1730,7 +1903,6 @@ function deletePatient(patientId) {
             .then(data => {
                 if (data.success) {
                     Swal.fire({
-                        icon: 'success',
                         title: 'Deleted!',
                         text: 'Patient has been deleted.',
                         timer: 2000,

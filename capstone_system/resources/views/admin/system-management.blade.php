@@ -10,12 +10,12 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/system-management-modals.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/system-management-modern.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/system-management-modals.css?v=' . time()) }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/system-management-modern.css?v=' . time()) }}">
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('js/admin/system-management.js') }}"></script>
+    <script src="{{ asset('js/admin/system-management.js?v=' . time()) }}"></script>
 @endpush
 
 @section('content')
@@ -246,7 +246,7 @@
                                             {{ $log->action }}
                                         </span>
                                     </td>
-                                    <td style="color: #6b7280; font-size: 0.875rem;">{{ Str::limit($log->details, 50) }}</td>
+                                    <td style="color: #6b7280; font-size: 0.875rem;">{{ Str::limit($log->description, 50) }}</td>
                                     <td style="color: #6b7280; font-size: 0.875rem;">{{ $log->created_at->diffForHumans() }}</td>
                                 </tr>
                                 @empty
@@ -291,7 +291,6 @@
                         <tr>
                             <th>Category Name</th>
                             <th>Items Count</th>
-                            <th>Created Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -305,7 +304,6 @@
                                     {{ $category->inventory_items_count }} items
                                 </span>
                             </td>
-                            <td style="color: #6b7280;">{{ $category->created_at ? $category->created_at->format('M d, Y') : 'N/A' }}</td>
                             <td>
                                 <div class="action-buttons-modern">
                                     <button class="action-btn edit" 
@@ -324,7 +322,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4">
+                            <td colspan="3">
                                 <div class="empty-state">
                                     <div class="empty-state-icon">
                                         <i class="fas fa-tags"></i>
@@ -420,7 +418,6 @@
                         <tr>
                             <th>Barangay Name</th>
                             <th>Patients Count</th>
-                            <th>Created Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -434,7 +431,6 @@
                                     {{ $barangay->patients_count }} patients
                                 </span>
                             </td>
-                            <td style="color: #6b7280;">{{ $barangay->created_at ? $barangay->created_at->format('M d, Y') : 'N/A' }}</td>
                             <td>
                                 <div class="action-buttons-modern">
                                     <button class="action-btn edit" 
@@ -453,7 +449,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4">
+                            <td colspan="3">
                                 <div class="empty-state">
                                     <div class="empty-state-icon">
                                         <i class="fas fa-map-marker-alt"></i>

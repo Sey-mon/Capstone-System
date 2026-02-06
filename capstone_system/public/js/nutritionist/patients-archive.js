@@ -17,6 +17,8 @@
 
     // Expose globally for patients.js to call after AJAX reloads
     window.initializeArchiveButtons = initializeArchiveButtons;
+    window.getCurrentStatus = function() { return currentStatus; };
+    window.loadPatientsWithStatus = loadPatients;
 
     /**
      * Initialize archive toggle buttons
@@ -55,16 +57,10 @@
     /**
      * Load patients via AJAX
      */
-    function loadPatients(status, page = 1) {
+    function loadPatients(status, page = 1, sortBy = null, sortOrder = null) {
         const tableContainer = document.getElementById('patientsTableContainer');
-        const loadingOverlay = document.getElementById('loadingOverlay');
         
         if (!tableContainer) return;
-
-        // Show loading overlay
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'flex';
-        }
 
         // Get current filters
         const searchTerm = document.getElementById('searchInput')?.value || '';
@@ -81,6 +77,10 @@
             sex: sex,
             age_range: ageRange
         });
+
+        // Add sort parameters if provided
+        if (sortBy) params.append('sort_by', sortBy);
+        if (sortOrder) params.append('sort_order', sortOrder);
 
         // Fetch patients
         fetch(`/nutritionist/patients/ajax?${params.toString()}`, {
@@ -104,12 +104,6 @@
         .catch(error => {
             console.error('Error loading patients:', error);
             showError('An error occurred while loading patients');
-        })
-        .finally(() => {
-            // Hide loading overlay
-            if (loadingOverlay) {
-                loadingOverlay.style.display = 'none';
-            }
         });
     }
 

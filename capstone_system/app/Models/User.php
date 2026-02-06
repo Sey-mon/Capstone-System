@@ -173,8 +173,19 @@ class User extends Authenticatable implements MustVerifyEmail
         
         // If this field should be encrypted and has a value, decrypt it
         if (in_array($key, $this->encrypted) && !empty($value)) {
-            $decrypted = $this->getEncryptionService()->decryptUserData($value);
-            return $decrypted !== null ? $decrypted : $value;
+            try {
+                $decrypted = $this->getEncryptionService()->decryptUserData($value);
+                // Only return decrypted value if successful, otherwise return raw value
+                return $decrypted !== null ? $decrypted : $value;
+            } catch (\Exception $e) {
+                // If decryption fails, log it but return the value as-is
+                // This prevents breaking the application
+                \Log::warning("Failed to decrypt {$key} for user", [
+                    'user_id' => $this->user_id ?? 'unknown',
+                    'error' => $e->getMessage()
+                ]);
+                return $value;
+            }
         }
         
         return $value;
@@ -205,10 +216,18 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // If this field should be encrypted and has a value, encrypt it
         if (in_array($key, $this->encrypted) && !empty($value)) {
-            // Only encrypt if not already encrypted
-            if (!$this->getEncryptionService()->isEncrypted($value)) {
-                $encrypted = $this->getEncryptionService()->encryptUserData($value);
-                $value = $encrypted !== null ? $encrypted : $value;
+            try {
+                // Only encrypt if not already encrypted
+                if (!$this->getEncryptionService()->isEncrypted($value)) {
+                    $encrypted = $this->getEncryptionService()->encryptUserData($value);
+                    $value = $encrypted !== null ? $encrypted : $value;
+                }
+            } catch (\Exception $e) {
+                // If encryption fails, log it but continue with plain value
+                \Log::error("Failed to encrypt {$key}", [
+                    'error' => $e->getMessage()
+                ]);
+                // Continue with original value (don't encrypt)
             }
         }
         
@@ -216,29 +235,59 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Find user by encrypted email
+     * Find user by encrypted email - handles both plain and encrypted emails
      */
     public static function findByEmail($email)
     {
+        if (empty($email)) {
+            return null;
+        }
+
         $encryptionService = app(DataEncryptionService::class);
         
-        // First try to find by plaintext email (for backward compatibility)
+        // Strategy 1: Try direct plaintext match first (fastest, for non-encrypted or new records)
         $user = static::where('email', $email)->whereNull('deleted_at')->first();
+        if ($user) {
+            return $user;
+        }
         
-        if (!$user) {
-            // If not found, search through encrypted emails
+        // Strategy 2: Try to encrypt the search email and match against encrypted values
+        $encryptedEmail = $encryptionService->encryptUserData($email);
+        if ($encryptedEmail) {
+            $user = static::where('email', $encryptedEmail)->whereNull('deleted_at')->first();
+            if ($user) {
+                return $user;
+            }
+        }
+        
+        // Strategy 3: Last resort - decrypt all emails and compare (slowest, for legacy/corrupted data)
+        // Only do this if we have a small number of users to avoid performance issues
+        $userCount = static::whereNull('deleted_at')->count();
+        if ($userCount < 1000) { // Only do full scan if less than 1000 users
             $allUsers = static::whereNotNull('email')->whereNull('deleted_at')->get();
             
             foreach ($allUsers as $potentialUser) {
-                $decryptedEmail = $encryptionService->decryptUserData($potentialUser->getRawOriginal('email'));
-                if ($decryptedEmail && strtolower($decryptedEmail) === strtolower($email)) {
-                    return $potentialUser;
+                try {
+                    // Get raw value from database without auto-decryption
+                    $rawEmail = $potentialUser->getAttributes()['email'] ?? null;
+                    if (!$rawEmail) continue;
+                    
+                    // Try to decrypt it
+                    $decryptedEmail = $encryptionService->decryptUserData($rawEmail);
+                    
+                    // Compare (case-insensitive)
+                    if ($decryptedEmail && strtolower(trim($decryptedEmail)) === strtolower(trim($email))) {
+                        return $potentialUser;
+                    }
+                } catch (\Exception $e) {
+                    // Skip this user if decryption fails
+                    continue;
                 }
             }
-            return null; // Not found
         }
         
-        return $user;
+        // Not found
+        return null;
     }
 
     /**

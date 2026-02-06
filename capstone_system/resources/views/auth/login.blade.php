@@ -9,7 +9,7 @@
     <meta name="description" content="Login to SHARES - Smart Health and Recommender System for Excellence in Nutrition. Access your San Pedro City nutrition management account.">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('img/cho.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('img/cho.png') }}?v={{ filemtime(public_path('img/cho.png')) }}">
     
     <!-- Preconnect to external resources for better performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://www.google.com">
     
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}?v={{ filemtime(public_path('css/login.css')) }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -30,7 +30,7 @@
     <nav class="main-nav">
         <div class="nav-container">
             <div class="nav-logo">
-                <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo">
+                <img src="{{ asset('img/shares-logo.png') }}?v={{ filemtime(public_path('img/shares-logo.png')) }}" alt="SHARES Logo">
             </div>
             <div class="nav-links">
                 <a href="#home">Home</a>
@@ -188,8 +188,8 @@
                         </div>
                         <div class="stat-item">
                             <i class="fas fa-users"></i>
-                            <h3>326,001</h3>
-                            <p>Population (2020 Census)</p>
+                            <h3>348,968</h3>
+                            <p>Population (2024 Census)</p>
                         </div>
                         <div class="stat-item">
                             <i class="fas fa-city"></i>
@@ -306,7 +306,7 @@
                 <!-- About Section -->
                 <div class="footer-section">
                     <div class="footer-logo">
-                        <img src="{{ asset('img/shares-logo.png') }}" alt="SHARES Logo">
+                        <img src="{{ asset('img/shares-logo.png') }}?v={{ filemtime(public_path('img/shares-logo.png')) }}" alt="SHARES Logo">
                     </div>
                     <p class="footer-about">
                         Smart Health and Recommender System for San Pedro City's Nutrition Program - Building a healthier, food-secure future for all San Pedrenses.
@@ -330,10 +330,7 @@
                 <div class="footer-section">
                     <h4>Connect With Us</h4>
                     <div class="footer-social" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start;">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://www.facebook.com/profile.php?id=61555362010142" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
                     </div>
                 </div>
 
@@ -343,15 +340,15 @@
                     <ul class="footer-contact">
                         <li>
                             <i class="fas fa-map-marker-alt"></i>
-                            <span>San Pedro City Health Office<br>Laguna, Philippines</span>
+                            <span>3rd Floor New City Hall Building<br>Brgy. Poblacion, City of San Pedro, Laguna</span>
                         </li>
                         <li>
                             <i class="fas fa-phone"></i>
-                            <span>(049) 123-4567</span>
+                            <span>(02) 8808 - 2020 Loc 302 </span>
                         </li>
                         <li>
                             <i class="fas fa-envelope"></i>
-                            <span>nutrition@sanpedro.gov.ph</span>
+                            <span>chonutrition.spl@gmail.com </span>
                         </li>
                         <li>
                             <i class="fas fa-clock"></i>
@@ -365,9 +362,9 @@
             <div class="footer-bottom">
                 <p class="footer-copyright">© 2025 San Pedro City Health Office - Nutrition Program. All rights reserved.</p>
                 <div class="footer-bottom-links">
-                    <a href="#">Privacy Policy</a>
+                    <a href="{{ route('privacy') }}">Privacy Policy</a>
                     <span>|</span>
-                    <a href="#">Terms of Service</a>
+                    <a href="{{ route('terms') }}">Terms of Service</a>
                     <span>|</span>
                     <a href="{{ route('support.report') }}">Report a Problem</a>
                 </div>
@@ -376,6 +373,26 @@
     </footer>
 
     <script>
+        // Prevent back button caching - reload page once if loaded from cache
+        (function() {
+            // Use sessionStorage to prevent infinite reload loop
+            const navigationEntry = performance.getEntriesByType('navigation')[0];
+            
+            if (navigationEntry && navigationEntry.type === 'back_forward') {
+                // Check if we haven't already reloaded
+                if (!sessionStorage.getItem('pageReloaded')) {
+                    sessionStorage.setItem('pageReloaded', 'true');
+                    window.location.reload();
+                } else {
+                    // Clear the flag so next back button press works
+                    sessionStorage.removeItem('pageReloaded');
+                }
+            } else {
+                // Normal navigation, clear the flag
+                sessionStorage.removeItem('pageReloaded');
+            }
+        })();
+
         // Auto-hide alerts after 10 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const alerts = document.querySelectorAll('.alert');
@@ -391,6 +408,6 @@
         });
     </script>
     
-    <script src="{{ asset('js/login.js') }}"></script>
+    <script src="{{ asset('js/login.js') }}?v={{ filemtime(public_path('js/login.js')) }}"></script>
 </body>
 </html>

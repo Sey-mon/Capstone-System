@@ -2,131 +2,132 @@
 
 /* ========== PAGE LAYOUT ========== */
 .patients-management {
-    padding: 1.5rem;
+    padding: 0;
     background: var(--bg-light);
     min-height: 100vh;
 }
 
-/* ========== FILTERS PANEL ========== */
-.filters-panel {
+/* ========== FILTERS SECTION (UPDATED TO MATCH USERS PAGE) ========== */
+.filter-container {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     overflow: hidden;
 }
 
-.filters-header {
-    background: var(--primary-color);
-    color: white;
+.filter-header-bar {
+    background: linear-gradient(135deg, #5cb85c, #449d44);
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.filters-header h4 {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-}
-
-.filters-header .header-actions {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.filters-header .header-actions .btn {
-    border-color: rgba(255, 255, 255, 0.3);
+.filter-header-bar h3 {
     color: white;
-}
-
-.filters-header .header-actions .btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.5);
-}
-
-.filters-header .header-actions .btn-secondary {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-.filters-header .header-actions .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.5);
-}
-
-.filters-content {
-    padding: 1.5rem;
-    position: relative;
-    overflow: visible;
-}
-
-.filter-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-.filter-group select {
-    z-index: 10;
-    position: relative;
-}
-
-.filter-group label {
+    font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.search-box {
-    position: relative;
+    margin: 0;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
 }
 
-.search-box i {
-    position: absolute;
-    left: 1rem;
-    color: var(--text-muted);
-    z-index: 1;
+.filter-header-bar h3 i {
+    font-size: 0.95rem;
 }
 
-.search-box input {
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 2px solid var(--border-light);
-    border-radius: 8px;
-    font-size: 0.875rem;
+.btn-clear-all {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+}
+
+.btn-clear-all:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.filter-content {
+    padding: 1.5rem;
+    background: #f8f9fa;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
     width: 100%;
-    transition: all 0.2s ease;
 }
 
-.search-box input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
 }
 
-.filter-group select {
-    padding: 0.75rem;
-    border: 2px solid var(--border-light);
-    border-radius: 8px;
-    font-size: 0.875rem;
+.filter-field label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.filter-field .form-control {
     background: white;
-    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #374151;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.filter-group select:focus {
+.filter-field .form-control:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+    border-color: #5cb85c;
+    box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.1);
+}
+
+.search-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.search-input-wrapper .search-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.search-input-wrapper .search-input {
+    padding-left: 2.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ========== RESULTS SUMMARY ========== */
@@ -1059,6 +1060,23 @@
     color: #2e7d32;
 }
 
+/* View Patient Modal Scrollable Content */
+.swal-view-patient-popup {
+    max-height: none !important;
+}
+
+.swal-view-patient-content {
+    max-height: 65vh !important;
+    overflow-y: auto !important;
+    padding: 0 !important;
+    background: #f8f9fa !important;
+}
+
+.swal-view-patient-popup .swal-form-container {
+    max-height: none !important;
+    overflow-y: visible !important;
+}
+
 /* Patient Details View */
 .patient-details-grid {
     display: grid;
@@ -1403,6 +1421,7 @@
     border-radius: 16px;
     padding: 0;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    background: #f8f9fa;
 }
 
 .swal-patient-popup {
@@ -1414,7 +1433,7 @@
     font-size: 1.75rem;
     font-weight: 700;
     color: var(--primary-color);
-    padding: 2rem 2rem 1rem;
+    padding: 2rem 2rem 1rem 2rem;
     margin: 0;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-bottom: 3px solid var(--primary-color);
@@ -1430,10 +1449,23 @@
 
 .swal-form-container {
     text-align: left;
-    padding: 1.5rem 2rem 0.5rem;
+    padding: 1.5rem 2rem 0.5rem 2rem;
     max-height: 65vh;
     overflow-y: auto;
     background: #f8f9fa;
+}
+
+/* Display value styling for view modal */
+.detail-value-display {
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #495057;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
 }
 
 .form-section {
@@ -1735,29 +1767,35 @@
 /* SweetAlert2 Button Customization */
 .swal2-actions {
     gap: 1rem;
-    margin: 1rem 0 0 !important;
-    padding: 1rem 2rem 1rem;
+    margin: 0 !important;
+    padding: 1rem 2rem 2rem 2rem;
     background: #f8f9fa;
 }
 
+.swal2-confirm.btn-success,
 .swal2-confirm.btn-primary {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
-    border: none;
-    padding: 0.875rem 2.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    background: #28a745 !important;
+    border: 2px solid #28a745 !important;
+    color: white !important;
+    padding: 0.875rem 2.5rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: none !important;
 }
 
+.swal2-confirm.btn-success:hover,
 .swal2-confirm.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    background: #218838 !important;
+    border-color: #218838 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
 }
 
+.swal2-confirm.btn-success:active,
 .swal2-confirm.btn-primary:active {
-    transform: translateY(0);
+    transform: translateY(0) !important;
 }
 
 .swal2-cancel.btn-secondary {
@@ -2995,4 +3033,75 @@
     .swal-delete-parent-confirm .btn {
         width: 100% !important;
     }
+}
+
+/* Simplified Delete Confirmation Modal */
+.swal-delete-simple {
+    padding: 0 !important;
+    border-radius: 8px !important;
+    background-color: #f8f9fa !important;
+}
+
+.swal-delete-simple .swal2-html-container {
+    margin: 0 !important;
+}
+
+.swal-delete-title {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    color: #2c3e50 !important;
+    padding: 2rem 2rem 1.5rem 2rem !important;
+    margin: 0 !important;
+    background-color: transparent !important;
+}
+
+.swal-delete-text {
+    font-size: 1rem !important;
+    color: #6c757d !important;
+    padding: 0 2rem 2rem 2rem !important;
+    margin: 0 !important;
+    text-align: center !important;
+}
+
+.swal-delete-actions {
+    margin: 0 !important;
+    padding: 0 2rem 2rem 2rem !important;
+    display: flex !important;
+    gap: 1rem !important;
+    justify-content: center !important;
+}
+
+.swal-delete-confirm-btn,
+.swal-delete-cancel-btn {
+    margin: 0 !important;
+    padding: 0.75rem 2rem !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    min-width: 120px !important;
+}
+
+.swal-delete-confirm-btn {
+    background-color: #d33 !important;
+    color: white !important;
+}
+
+.swal-delete-confirm-btn:hover {
+    background-color: #b52b2b !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(221, 51, 51, 0.3) !important;
+}
+
+.swal-delete-cancel-btn {
+    background-color: #3085d6 !important;
+    color: white !important;
+}
+
+.swal-delete-cancel-btn:hover {
+    background-color: #2773bd !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(48, 133, 214, 0.3) !important;
 }
