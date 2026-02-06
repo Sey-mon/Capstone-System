@@ -115,9 +115,9 @@
                                 @endif
                                 <button type="button" 
                                     class="btn-modern btn-danger" 
-                                    onclick="confirmUnlinkChild({{ $child->patient_id }}, '{{ $child->first_name }} {{ $child->last_name }}')">
-                                    <i class="fas fa-unlink"></i>
-                                    Unlink Child
+                                    onclick="confirmRemoveChild({{ $child->patient_id }}, '{{ $child->first_name }} {{ $child->last_name }}')">
+                                    <i class="fas fa-user-minus"></i>
+                                    Remove from Account
                                 </button>
                             </div>
                         </div>
@@ -161,8 +161,8 @@
                                         <i class="fas fa-user-md"></i>
                                     </div>
                                     <div class="metric-content">
-                                        <span class="metric-label">Care Status</span>
-                                        <span class="metric-value-small">{{ $child->nutritionist ? 'Under Care' : 'Unassigned' }}</span>
+                                        <span class="metric-label">BNS</span>
+                                        <span class="metric-value-small">{{ $child->nutritionist ? $child->nutritionist->first_name . ' ' . $child->nutritionist->last_name : 'Not Assigned' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -593,12 +593,12 @@
             });
         }
 
-        function confirmUnlinkChild(patientId, childName) {
+        function confirmRemoveChild(patientId, childName) {
             Swal.fire({
-                title: '<div class="swal-warning-header"><i class="fas fa-exclamation-triangle"></i> Unlink Child?</div>',
+                title: '<div class="swal-warning-header"><i class="fas fa-exclamation-triangle"></i> Remove from Account?</div>',
                 html: `
                     <div class="unlink-confirmation">
-                        <p>Are you sure you want to unlink <strong>${childName}</strong> from your account?</p>
+                        <p>Are you sure you want to remove <strong>${childName}</strong> from your account?</p>
                         <div class="warning-box">
                             <i class="fas fa-info-circle"></i>
                             <p>You can re-link this child later using their Patient ID.</p>
@@ -607,7 +607,7 @@
                 `,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: '<i class="fas fa-unlink"></i> Yes, Unlink',
+                confirmButtonText: '<i class="fas fa-check"></i> Yes, Remove',
                 cancelButtonText: '<i class="fas fa-times"></i> Cancel',
                 confirmButtonColor: '#dc2626',
                 cancelButtonColor: '#64748b',
@@ -617,15 +617,15 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    unlinkChild(patientId);
+                    removeChild(patientId);
                 }
             });
         }
 
-        function unlinkChild(patientId) {
+        function removeChild(patientId) {
             Swal.fire({
                 title: 'Processing...',
-                html: 'Unlinking child from your account',
+                html: 'Removing child from your account',
                 allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
@@ -647,7 +647,7 @@
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Unlinked!',
+                        title: 'Removed!',
                         text: data.message,
                         confirmButtonColor: '#059669'
                     }).then(() => {
@@ -666,7 +666,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'An error occurred while unlinking the child.',
+                    text: 'An error occurred while removing the child.',
                     confirmButtonColor: '#059669'
                 });
             });
