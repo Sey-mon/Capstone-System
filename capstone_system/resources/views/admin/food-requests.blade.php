@@ -6,7 +6,7 @@
 @section('page-subtitle', 'Review and manage food addition requests from nutritionists')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/food-requests.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/food-requests.css') }}?v={{ time() }}">
 @endpush
 
 @section('navigation')
@@ -187,6 +187,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/admin/food-requests.js') }}"></script>
-    <script src="{{ asset('js/admin/food-requests-enhanced.js') }}"></script>
+    <script src="{{ asset('js/admin/food-requests.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/food-requests-enhanced.js') }}?v={{ time() }}"></script>
 @endpush

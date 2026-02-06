@@ -10,7 +10,7 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/nutritionist/assessment-results.css') }}">
+<link rel="stylesheet" href="{{ asset('css/nutritionist/assessment-results.css') }}?v={{ time() }}">
 @endpush
 
 @section('content')
@@ -283,7 +283,7 @@
         window.downloadPDFRoute = "{{ route('nutritionist.assessment.pdf', $assessment->assessment_id) }}";
 
     </script>
-    <script src="{{ asset('js/nutritionist/assessment-results-new.js') }}"></script>
+    <script src="{{ asset('js/nutritionist/assessment-results-new.js') }}?v={{ time() }}"></script>
 @endpush
 
 @php

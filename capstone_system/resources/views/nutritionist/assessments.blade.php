@@ -13,7 +13,7 @@
     <!-- Preload critical resources for better LCP -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preload" href="{{ asset('css/nutritionist-assessments.css') }}" as="style">
+    <link rel="preload" href="{{ asset('css/nutritionist-assessments.css') }}?v={{ time() }}" as="style">
 @endpush
 
 @section('content')
@@ -190,7 +190,7 @@ window.assessmentsRoutes = {
 window.barangaysData = {!! json_encode(\App\Models\Barangay::all(['barangay_id', 'barangay_name'])) !!};
 window.parentsData = {!! json_encode(\App\Models\User::where('role_id', 4)->get(['user_id', 'first_name', 'last_name'])) !!};
 </script>
-<script src="{{ asset('js/nutritionist-assessments.js') }}" defer></script>
+<script src="{{ asset('js/nutritionist-assessments.js') }}?v={{ time() }}" defer></script>
 
 <script>
 // Pagination keyboard navigation
