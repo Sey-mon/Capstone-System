@@ -177,47 +177,6 @@
             </button>
         </div>
     </div>
-
-            
-            <div class="config-card-modern info full-width">
-                <div class="config-header">
-                    <div class="config-icon">
-                        <i class="fas fa-list"></i>
-                    </div>
-                    <h3>Available Endpoints</h3>
-                </div>
-                <div class="config-content">
-                    <div class="endpoints-grid">
-                        <div class="endpoint-item">
-                            <div class="endpoint-method post">POST</div>
-                            <div class="endpoint-path">/assess/complete</div>
-                            <div class="endpoint-desc">Full malnutrition assessment</div>
-                        </div>
-                        <div class="endpoint-item">
-                            <div class="endpoint-method post">POST</div>
-                            <div class="endpoint-path">/assess/malnutrition-only</div>
-                            <div class="endpoint-desc">Quick assessment screening</div>
-                        </div>
-                        <div class="endpoint-item">
-                            <div class="endpoint-method get">GET</div>
-                            <div class="endpoint-path">/reference/who-standards</div>
-                            <div class="endpoint-desc">WHO reference data</div>
-                        </div>
-                        <div class="endpoint-item">
-                            <div class="endpoint-method get">GET</div>
-                            <div class="endpoint-path">/reference/treatment-protocols</div>
-                            <div class="endpoint-desc">Treatment protocols</div>
-                        </div>
-                        <div class="endpoint-item">
-                            <div class="endpoint-method get">GET</div>
-                            <div class="endpoint-path">/health</div>
-                            <div class="endpoint-desc">API health status</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('styles')
