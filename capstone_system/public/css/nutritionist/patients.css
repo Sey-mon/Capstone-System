@@ -655,6 +655,7 @@
     border-bottom: 1px solid #f3f4f6;
     color: #1f2937;
     vertical-align: middle;
+    text-align: left;
 }
 
 .table tbody tr {
