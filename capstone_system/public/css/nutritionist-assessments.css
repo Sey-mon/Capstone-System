@@ -1451,13 +1451,13 @@ html, body {
 }
 
 .print-btn {
-    background: var(--green-700);
+    background: var(--warning-color);
     color: var(--white);
 }
 
 .print-btn:hover {
-    background: var(--green-800);
-    box-shadow: var(--shadow-green);
+    background: var(--warning-light);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
 }
 
 /* Modern Empty State */
