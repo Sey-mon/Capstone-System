@@ -29,7 +29,7 @@
                     <label>Search Patient</label>
                     <div class="search-input-wrapper">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="searchPatient" class="form-control search-input" placeholder="Search by name, contact...">
+                        <input type="text" id="searchPatient" class="form-control search-input" placeholder="Search by name.">
                     </div>
                 </div>
                 <div class="filter-field">
