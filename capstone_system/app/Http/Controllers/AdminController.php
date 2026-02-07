@@ -14,11 +14,13 @@ use App\Models\Role;
 use App\Models\Food;
 use App\Models\FoodRequest;
 use App\Models\SupportTicket;
+use App\Mail\AccountApprovalMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -2670,13 +2672,9 @@ class AdminController extends Controller
                 ], 400);
             }
 
-            // Generate a new temporary password for the nutritionist
-            $tempPassword = 'nutri_' . substr(md5(time() . $user->email), 0, 8);
-
-            // Activate the user account
+            // Activate the user account (keep their existing password)
             $user->update([
-                'is_active' => true,
-                'password' => Hash::make($tempPassword)
+                'is_active' => true
             ]);
 
             // Log the approval
@@ -2690,13 +2688,17 @@ class AdminController extends Controller
 
             DB::commit();
 
-            // In a real application, you would send an email to the nutritionist here
-            // with their login credentials and welcome information
+            // Send account approval email to the nutritionist
+            try {
+                Mail::to($user->email)->send(new AccountApprovalMail($user));
+            } catch (\Exception $e) {
+                // Log email error but don't fail the approval
+                Log::error('Failed to send approval email to nutritionist: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Nutritionist application approved successfully.',
-                'temp_password' => $tempPassword
+                'message' => 'Nutritionist application approved successfully. An email notification has been sent to the nutritionist.'
             ]);
 
         } catch (\Exception $e) {

@@ -6,8 +6,8 @@
 @section('page-subtitle', 'View and manage problem reports submitted by users')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-users.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/support-tickets.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-users.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/support-tickets.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
         
@@ -284,7 +284,7 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('js/admin/support-tickets.js') }}"></script>
+    <script src="{{ asset('js/admin/support-tickets.js') }}?v={{ time() }}"></script>
 @endpush
 
 

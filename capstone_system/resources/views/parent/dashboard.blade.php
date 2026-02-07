@@ -380,7 +380,7 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/parent/parent-dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('css/parent/parent-dashboard.css') }}?v={{ time() }}">
 @endpush
 
 @push('scripts')
@@ -388,8 +388,8 @@
 <script>
     window.childrenGrowthData = @json($stats['children_with_growth']->values());
 </script>
-<script src="{{ asset('js/parent/parent-dashboard.js') }}"></script>
-<script src="{{ asset('js/parent/parent-onboarding.js') }}"></script>
-<script src="{{ asset('js/parent/dashboard-link-child.js') }}"></script>
+<script src="{{ asset('js/parent/parent-dashboard.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/parent/parent-onboarding.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/parent/dashboard-link-child.js') }}?v={{ time() }}"></script>
 @endpush
 

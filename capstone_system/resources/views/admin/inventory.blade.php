@@ -3,8 +3,8 @@
 @section('title', 'Inventory Management')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory-modern.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory-modern.css') }}?v={{ time() }}">
 @endpush
 
 @section('page-title', 'Inventory Management')
@@ -325,6 +325,6 @@
         }
     </script>
     
-    <script src="{{ asset('js/admin/admin-inventory.js') }}"></script>
+    <script src="{{ asset('js/admin/admin-inventory.js') }}?v={{ time() }}"></script>
 @endpush
 
