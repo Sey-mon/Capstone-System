@@ -815,7 +815,7 @@ class NutritionistController extends Controller
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
-            'contact_number' => 'nullable|string|regex:/^(09|\+639)\d{9}$/',
+            'contact_number' => ['nullable', 'string', 'regex:/^(09|\+639)\d{9}$/'],
             'birth_date' => 'nullable|date',
             'sex' => 'nullable|in:male,female,other',
             'address' => 'nullable|string|max:500',
