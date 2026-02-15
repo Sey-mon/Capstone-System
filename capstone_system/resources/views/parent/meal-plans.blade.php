@@ -331,12 +331,6 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button onclick="printMealPlan()" class="modal-action-btn" title="Print">
-                    <i class="fas fa-print"></i>
-                </button>
-                <button onclick="copyMealPlan()" class="modal-action-btn" title="Copy">
-                    <i class="fas fa-copy"></i>
-                </button>
                 <button onclick="downloadMealPlan()" class="modal-action-btn" title="Download">
                     <i class="fas fa-download"></i>
                 </button>

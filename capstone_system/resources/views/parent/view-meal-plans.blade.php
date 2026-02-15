@@ -244,9 +244,6 @@
                                         <span>View Full Plan</span>
                                     </button>
                                     <div class="quick-actions">
-                                        <button class="icon-btn" onclick="printMealPlan({{ $plan->plan_id }})" title="Print">
-                                            <i class="fas fa-print"></i>
-                                        </button>
                                         <button class="icon-btn" onclick="downloadMealPlan({{ $plan->plan_id }})" title="Download">
                                             <i class="fas fa-download"></i>
                                         </button>
