@@ -66,7 +66,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
+    // Auto-open modal if URL parameter is present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openModal') === 'link-child') {
+        // Wait a brief moment for page to fully load
+        setTimeout(() => {
+            showAddChildModal();
+            // Clean up URL without refreshing the page
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }, 300);
+    }});
 
 /**
  * Validate patient code format

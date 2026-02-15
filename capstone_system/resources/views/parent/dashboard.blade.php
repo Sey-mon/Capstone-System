@@ -50,7 +50,7 @@
                 <span class="quick-action-desc">AI-powered nutrition planning</span>
             </div>
         </a>
-        <a href="{{ route('parent.children') }}" class="quick-action-card">
+        <a href="{{ route('parent.children') }}?openModal=link-child" class="quick-action-card">
             <div class="quick-action-icon">
                 <i class="fas fa-link"></i>
             </div>

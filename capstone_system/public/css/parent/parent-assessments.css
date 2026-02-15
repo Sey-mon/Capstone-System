@@ -501,127 +501,6 @@
     font-size: 0.9375rem;
 }
 
-/* Structured Clinical Data Layout */
-.remarks-section.structured {
-    background: #f9fafb;
-    border-left: 4px solid var(--primary-green);
-    padding: 0;
-    overflow: hidden;
-    margin-top: 1.5rem;
-}
-
-.remarks-section.structured .remarks-header {
-    background: white;
-    color: var(--primary-green);
-    padding: 1rem 1.5rem;
-    margin-bottom: 0;
-    font-weight: 600;
-    font-size: 1rem;
-    border-bottom: 2px solid #e5e7eb;
-}
-
-.remarks-section.structured .remarks-header i {
-    color: var(--primary-green);
-}
-
-.clinical-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    padding: 1.5rem;
-    background: #f9fafb;
-}
-
-.clinical-item {
-    padding: 1rem 1.25rem;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-left: 3px solid var(--primary-green);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
-}
-
-.clinical-item:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-}
-
-.clinical-item.full-width {
-    grid-column: 1 / -1;
-}
-
-.clinical-label {
-    font-size: 0.8125rem;
-    color: #6b7280;
-    font-weight: 600;
-    text-transform: capitalize;
-}
-
-.clinical-value {
-    font-size: 0.9375rem;
-    color: #1f2937;
-    font-weight: 500;
-}
-
-.additional-notes-section {
-    margin-top: 1.5rem;
-    background: white;
-    border-left: 4px solid var(--primary-green);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.additional-notes-section .remarks-header {
-    background: white;
-    padding: 1rem 1.5rem;
-    border-bottom: 2px solid #e5e7eb;
-}
-
-.additional-notes-content {
-    padding: 1.5rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-}
-
-.additional-notes-content p {
-    margin: 0;
-    color: #374151;
-    line-height: 1.6;
-    font-size: 0.9375rem;
-    text-align: center;
-}
-
-/* Responsive Grid for Clinical Items */
-@media (max-width: 992px) {
-    .clinical-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .clinical-item:nth-child(3n) {
-        border-right: 1px solid #e5e7eb;
-    }
-    
-    .clinical-item:nth-child(2n) {
-        border-right: none;
-    }
-}
-
-@media (max-width: 640px) {
-    .clinical-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .clinical-item {
-        border-right: none;
-    }
-}
-
 /* No Assessment State */
 .no-assessment {
     text-align: center;
@@ -1014,11 +893,6 @@
     .diagnosis-section-inline {
         width: 100%;
     }
-    
-    /* Clinical grid responsive in modal - tablet */
-    .swal-assessment-detail .clinical-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
 }
 
 @media (max-width: 768px) {
@@ -1117,7 +991,7 @@ body.swal2-shown {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: clamp(10px, 2vw, 20px) !important;
+    padding: 0 !important;
     margin: 0 !important;
     z-index: 9999 !important;
     overflow-y: auto !important;
@@ -1130,7 +1004,7 @@ body.swal2-shown {
     border-radius: 20px !important;
     border: 1px solid #000 !important;
     overflow: hidden !important;
-    margin: auto !important;
+    margin: 0 !important;
     position: relative !important;
 }
 
@@ -1639,103 +1513,6 @@ body.swal2-shown {
     margin: 0;
 }
 
-/* Structured Clinical Data in Modal */
-.swal-assessment-detail .remarks-section.structured {
-    background: #f9fafb;
-    border-left: 4px solid var(--primary-green);
-    padding: 0;
-    overflow: hidden;
-    margin-top: 1.5rem;
-    border-radius: 8px;
-}
-
-.swal-assessment-detail .remarks-section.structured .remarks-header {
-    background: white;
-    color: var(--primary-green);
-    padding: 1rem 1.5rem;
-    margin-bottom: 0;
-    font-weight: 600;
-    font-size: 1rem;
-    border-bottom: 2px solid #e5e7eb;
-}
-
-.swal-assessment-detail .remarks-section.structured .remarks-header i {
-    color: var(--primary-green);
-}
-
-.swal-assessment-detail .clinical-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    padding: 1.5rem;
-    background: #f9fafb;
-}
-
-.swal-assessment-detail .clinical-item {
-    padding: 1rem 1.25rem;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-left: 3px solid var(--primary-green);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
-}
-
-.swal-assessment-detail .clinical-item:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-}
-
-.swal-assessment-detail .clinical-item.full-width {
-    grid-column: 1 / -1;
-}
-
-.swal-assessment-detail .clinical-label {
-    font-size: 0.8125rem;
-    color: #6b7280;
-    font-weight: 600;
-    text-transform: capitalize;
-}
-
-.swal-assessment-detail .clinical-value {
-    font-size: 0.9375rem;
-    color: #1f2937;
-    font-weight: 500;
-}
-
-.swal-assessment-detail .additional-notes-section {
-    margin-top: 1.5rem;
-    background: white;
-    border-left: 4px solid var(--primary-green);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.swal-assessment-detail .additional-notes-section .remarks-header {
-    background: white;
-    padding: 1rem 1.5rem;
-    border-bottom: 2px solid #e5e7eb;
-}
-
-.swal-assessment-detail .additional-notes-content {
-    padding: 1.5rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-}
-
-.swal-assessment-detail .additional-notes-content p {
-    margin: 0;
-    color: #374151;
-    line-height: 1.6;
-    font-size: 0.9375rem;
-    text-align: center;
-}
-
 /* Nutritional Indicators Section */
 .swal-indicators-section {
     margin-top: 20px;
@@ -1907,17 +1684,6 @@ body.swal2-shown {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
-    }
-    
-    /* Clinical grid responsive in modal */
-    .swal-assessment-detail .clinical-grid {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-        padding: 1rem;
-    }
-    
-    .swal-assessment-detail .clinical-item {
-        border-right: none;
     }
 }
 
