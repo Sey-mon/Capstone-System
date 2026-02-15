@@ -27,35 +27,53 @@ class EmbeddingSearcher:
         self._load_embeddings()
     
     def _get_knowledge_base_hash(self):
-        """Generate hash of knowledge base to detect changes."""
+        """Generate hash of knowledge base to detect changes.
+        Only includes content fields (pdf_text, ai_summary, pdf_name) and excludes
+        dynamic fields (timestamps, user info) to prevent unnecessary cache invalidation.
+        """
         knowledge_base = data_manager.get_knowledge_base()
-        kb_string = str(sorted(knowledge_base.items()))
+        
+        # Build a stable hash using only content fields, sorted by kb_id for consistency
+        content_items = []
+        for kb_id in sorted(knowledge_base.keys(), key=lambda x: str(x)):
+            entry = knowledge_base[kb_id]
+            # Only include fields that represent actual content
+            content_tuple = (
+                str(kb_id),
+                entry.get('pdf_text', ''),
+                entry.get('ai_summary', ''),
+                entry.get('pdf_name', '')
+            )
+            content_items.append(content_tuple)
+        
+        kb_string = str(content_items)
         return hashlib.md5(kb_string.encode()).hexdigest()
     
     def _save_embeddings(self):
         """Save FAISS index and chunks to disk."""
         if self.index is not None:
             faiss.write_index(self.index, self.index_file)
+        
+        # Always save chunks and metadata (can be empty)
+        with open(self.chunks_file, 'wb') as f:
+            pickle.dump(self.chunks, f)
             
-            with open(self.chunks_file, 'wb') as f:
-                pickle.dump(self.chunks, f)
-                
-            with open(self.metadata_file, 'wb') as f:
-                pickle.dump(self.chunk_metadata, f)
-                
-            # Save knowledge base hash
-            hash_file = os.path.join(self.cache_dir, "kb_hash.txt")
-            with open(hash_file, 'w') as f:
-                f.write(self._get_knowledge_base_hash())
+        with open(self.metadata_file, 'wb') as f:
+            pickle.dump(self.chunk_metadata, f)
             
-            print("Embeddings saved to cache.")
+        # Save knowledge base hash
+        hash_file = os.path.join(self.cache_dir, "kb_hash.txt")
+        with open(hash_file, 'w') as f:
+            f.write(self._get_knowledge_base_hash())
+        
+        print("Embeddings saved to cache.")
     
     def _load_embeddings(self):
         """Load FAISS index and chunks from disk if available and valid."""
         hash_file = os.path.join(self.cache_dir, "kb_hash.txt")
         
-        # Check if cache files exist
-        if not all(os.path.exists(f) for f in [self.index_file, self.chunks_file, self.metadata_file, hash_file]):
+        # Check if minimum cache files exist (chunks and metadata are always required)
+        if not all(os.path.exists(f) for f in [self.chunks_file, self.metadata_file, hash_file]):
             return False
         
         # Check if knowledge base changed
@@ -71,20 +89,29 @@ class EmbeddingSearcher:
             return False
         
         try:
-            # Load FAISS index
-            self.index = faiss.read_index(self.index_file)
-            
-            # Load chunks and metadata
+            # Load chunks and metadata (always present)
             with open(self.chunks_file, 'rb') as f:
                 self.chunks = pickle.load(f)
                 
             with open(self.metadata_file, 'rb') as f:
                 self.chunk_metadata = pickle.load(f)
             
-            print(f"Loaded embeddings from cache ({len(self.chunks)} chunks).")
+            # Load FAISS index if it exists (may not exist for empty KB)
+            if os.path.exists(self.index_file):
+                self.index = faiss.read_index(self.index_file)
+                print(f"Loaded embeddings from cache ({len(self.chunks)} chunks).")
+            else:
+                self.index = None
+                if len(self.chunks) == 0:
+                    print("Loaded empty embeddings cache (no PDF content in knowledge base).")
+                else:
+                    # This shouldn't happen - chunks exist but no index
+                    print("Warning: Chunks found but index missing. Will rebuild.")
+                    return False
+            
             return True
-        except:
-            print("Failed to load cache, rebuilding...")
+        except Exception as e:
+            print(f"Failed to load cache: {str(e)}, rebuilding...")
             return False
         
     def build_embeddings_from_knowledge_base(self, batch_size: int = 128, force_rebuild: bool = False):
@@ -132,8 +159,14 @@ class EmbeddingSearcher:
                         })
         
         if not all_chunks:
-            print("No PDF texts found in knowledge base.")
-            return False
+            print("No PDF texts found in knowledge base. Creating empty index.")
+            # Create an empty but valid index so the system can continue without PDF guidance
+            self.chunks = []
+            self.chunk_metadata = []
+            self.index = None
+            # Save empty state to prevent repeated attempts
+            self._save_embeddings()
+            return True  # Return True to indicate successful handling of empty KB
             
         print(f"Processing {len(all_chunks)} chunks...")
         
@@ -266,16 +299,24 @@ class EmbeddingSearcher:
         }
     
     def search_similar_chunks(self, query: str, k: int = 4) -> List[Tuple[str, float, dict]]:
-        """Search for similar chunks using semantic similarity."""
+        """Search for similar chunks using semantic similarity.
+        Automatically builds embeddings if they're not available.
+        Returns empty list if knowledge base is empty (which is normal).
+        """
         # If index is not loaded, try to load from cache
-        if self.index is None or len(self.chunks) == 0:
+        if self.index is None and len(self.chunks) == 0:
             if not self._load_embeddings():
-                # If cache loading fails, return empty results (don't create embeddings)
-                print("Warning: No cached embeddings found. Run build_embeddings_from_knowledge_base() first.")
-                return []
+                # If cache loading fails, try to build embeddings automatically
+                print("Warning: No cached embeddings found. Building embeddings automatically...")
+                try:
+                    self.build_embeddings_from_knowledge_base()
+                except Exception as e:
+                    print(f"Error building embeddings: {str(e)}")
+                    # Continue anyway - meal plans can work without PDF context
         
+        # If still no index or chunks after attempting to build, return empty (not an error)
         if self.index is None or len(self.chunks) == 0:
-            print("No embeddings available for search.")
+            print("No PDF content available in knowledge base. Meal plan will be generated without PDF guidance.")
             return []
         
         # Encode query
