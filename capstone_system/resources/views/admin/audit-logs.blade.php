@@ -6,7 +6,7 @@
 @section('page-subtitle', 'Comprehensive system activity tracking including inventory management, user actions, and data changes.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-audit-logs.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-audit-logs.css') }}?v={{ filemtime(public_path('css/admin/admin-audit-logs.css')) }}">
 @endpush
 
 @section('navigation')
@@ -212,7 +212,7 @@
     </div>
 
 @push('scripts')
-<script src="{{ asset('js/admin/admin-audit-logs.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/admin/admin-audit-logs.js') }}?v={{ filemtime(public_path('js/admin/admin-audit-logs.js')) }}"></script>
 @endpush
 @endsection
 

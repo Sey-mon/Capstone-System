@@ -6,8 +6,8 @@
 @section('page-subtitle', 'Manage and monitor all patients in the system.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-patients.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/patients-archive.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-patients.css') }}?v={{ filemtime(public_path('css/admin/admin-patients.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/patients-archive.css') }}?v={{ filemtime(public_path('css/admin/patients-archive.css')) }}">
 @endpush
 
 @section('navigation')
@@ -371,6 +371,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/admin/admin-patients-swal.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/admin/patients-archive.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/admin-patients-swal.js') }}?v={{ filemtime(public_path('js/admin/admin-patients-swal.js')) }}"></script>
+    <script src="{{ asset('js/admin/patients-archive.js') }}?v={{ filemtime(public_path('js/admin/patients-archive.js')) }}"></script>
 @endpush

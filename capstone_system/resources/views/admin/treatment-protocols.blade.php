@@ -397,9 +397,9 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/treatment-protocols.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/treatment-protocols.css') }}?v={{ filemtime(public_path('css/admin/treatment-protocols.css')) }}">
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('js/admin/treatment-protocols.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/treatment-protocols.js') }}?v={{ filemtime(public_path('js/admin/treatment-protocols.js')) }}"></script>
 @endpush

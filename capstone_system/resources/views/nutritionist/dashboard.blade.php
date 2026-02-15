@@ -10,7 +10,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/dashboard.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/nutritionist/dashboard.css') }}?v={{ filemtime(public_path('css/nutritionist/dashboard.css')) }}">
     <style>
         .dashboard-wrapper {
             background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #ffffff 100%);
@@ -509,5 +509,5 @@
         });
     </script>
     
-    <script src="{{ asset('js/nutritionist/nutritionist-dashboard.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/nutritionist/nutritionist-dashboard.js') }}?v={{ filemtime(public_path('js/nutritionist/nutritionist-dashboard.js')) }}"></script>
 @endpush

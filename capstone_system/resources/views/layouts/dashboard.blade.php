@@ -30,12 +30,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
     @stack('styles')
     @stack('head')
     
-    <link rel="stylesheet" href="{{ asset('css/dashboard-modal.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/modal-backdrop-fix.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard-modal.css') }}?v={{ filemtime(public_path('css/dashboard-modal.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/modal-backdrop-fix.css') }}?v={{ filemtime(public_path('css/modal-backdrop-fix.css')) }}">
     
     <!-- jQuery (required for some legacy scripts) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -44,8 +44,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Modal cleanup utility -->
-    <script src="{{ asset('js/modal-cleanup.js') }}"></script>
-    <script src="{{ asset('js/dashboard-modal.js') }}"></script>
+    <script src="{{ asset('js/modal-cleanup.js') }}?v={{ filemtime(public_path('js/modal-cleanup.js')) }}"></script>
+    <script src="{{ asset('js/dashboard-modal.js') }}?v={{ filemtime(public_path('js/dashboard-modal.js')) }}"></script>
 </head>
 <body>
     <div class="dashboard-layout">
@@ -109,7 +109,7 @@
         </main>
     </div>
     
-    <script src="{{ asset('js/dashboard.js') }}"></script>
+    <script src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}"></script>
     
     <!-- Session Timeout Warning Script -->
     <script>

@@ -6,10 +6,10 @@
     <title>Verify Your Email - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}?v={{ filemtime(public_path('css/login.css')) }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/auth/verify-email.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/auth/verify-email.css') }}?v={{ filemtime(public_path('css/auth/verify-email.css')) }}">
 </head>
 <body>
     <!-- Display Success Messages -->
@@ -150,6 +150,6 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/auth/verify-email.js') }}"></script>
+    <script src="{{ asset('js/auth/verify-email.js') }}?v={{ filemtime(public_path('js/auth/verify-email.js')) }}"></script>
 </body>
 </html>

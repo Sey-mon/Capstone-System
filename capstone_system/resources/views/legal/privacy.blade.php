@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy - SHARES</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{ asset('css/register.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/privacy.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/register.css') }}?v={{ filemtime(public_path('css/register.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/privacy.css') }}?v={{ filemtime(public_path('css/privacy.css')) }}">
 </head>
 <body>
     <div class="privacy-container">

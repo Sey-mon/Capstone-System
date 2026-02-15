@@ -10,7 +10,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/profile.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/profile.css') }}?v={{ filemtime(public_path('css/admin/profile.css')) }}">
 @endpush
 
 @section('content')
@@ -341,5 +341,5 @@
     window.adminProfileUpdateUrl = "{{ route('admin.profile.update') }}";
     window.adminPasswordUpdateUrl = "{{ route('admin.password.update') }}";
 </script>
-<script src="{{ asset('js/admin/profile.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/admin/profile.js') }}?v={{ filemtime(public_path('js/admin/profile.js')) }}"></script>
 @endpush
