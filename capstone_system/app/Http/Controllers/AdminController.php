@@ -2403,6 +2403,21 @@ class AdminController extends Controller
                 'description' => "Restored deleted user account: {$userName}",
             ]);
 
+            // Send approval email for Nutritionist accounts
+            if ($user->role && $user->role->role_name === 'Nutritionist') {
+                try {
+                    Mail::to($user->email)->send(new AccountApprovalMail($user));
+                    Log::info('Account approval email sent to restored nutritionist', ['user_id' => $user->user_id, 'email' => $user->email]);
+                } catch (\Exception $mailException) {
+                    Log::error('Failed to send account approval email', [
+                        'user_id' => $user->user_id,
+                        'email' => $user->email,
+                        'error' => $mailException->getMessage()
+                    ]);
+                    // Don't fail the restoration if email fails, just log it
+                }
+            }
+
             DB::commit();
 
             return response()->json([
@@ -2493,6 +2508,21 @@ class AdminController extends Controller
                 'description' => "Activated user account: {$user->first_name} {$user->last_name}" . 
                     (isset($updateData['email_verified_at']) ? ' (Email auto-verified)' : ''),
             ]);
+
+            // Send approval email for Nutritionist accounts
+            if ($user->role && $user->role->role_name === 'Nutritionist') {
+                try {
+                    Mail::to($user->email)->send(new AccountApprovalMail($user));
+                    Log::info('Account approval email sent to nutritionist', ['user_id' => $user->user_id, 'email' => $user->email]);
+                } catch (\Exception $mailException) {
+                    Log::error('Failed to send account approval email', [
+                        'user_id' => $user->user_id,
+                        'email' => $user->email,
+                        'error' => $mailException->getMessage()
+                    ]);
+                    // Don't fail the activation if email fails, just log it
+                }
+            }
 
             DB::commit();
 
@@ -2618,6 +2648,21 @@ class AdminController extends Controller
                 'record_id' => $user->user_id,
                 'description' => "Reactivated suspended user account: {$user->first_name} {$user->last_name}",
             ]);
+
+            // Send approval email for Nutritionist accounts
+            if ($user->role && $user->role->role_name === 'Nutritionist') {
+                try {
+                    Mail::to($user->email)->send(new AccountApprovalMail($user));
+                    Log::info('Account approval email sent to reactivated nutritionist', ['user_id' => $user->user_id, 'email' => $user->email]);
+                } catch (\Exception $mailException) {
+                    Log::error('Failed to send account approval email', [
+                        'user_id' => $user->user_id,
+                        'email' => $user->email,
+                        'error' => $mailException->getMessage()
+                    ]);
+                    // Don't fail the reactivation if email fails, just log it
+                }
+            }
 
             DB::commit();
 
