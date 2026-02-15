@@ -57,6 +57,22 @@
                         <option value="expired">Expired</option>
                     </select>
                 </div>
+                
+                <div class="filter-field">
+                    <label>Expiry Date Range</label>
+                    <input type="date" 
+                           id="expiryFromFilter" 
+                           class="form-control" 
+                           placeholder="From">
+                </div>
+                
+                <div class="filter-field">
+                    <label>&nbsp;</label>
+                    <input type="date" 
+                           id="expiryToFilter" 
+                           class="form-control" 
+                           placeholder="To">
+                </div>
             </div>
         </div>
     </div>
@@ -73,6 +89,16 @@
             </div>
         </div>
         <div class="management-actions">
+            <div class="bulk-actions" id="bulkActionsContainer">
+                <span class="selected-count" id="selectedCount">0 selected</span>
+                <small class="bulk-actions-hint">(across all pages)</small>
+                <button class="btn btn-sm btn-warning" id="clearSelectionsBtn" title="Clear All Selections">
+                    <i class="fas fa-times-circle"></i> Clear
+                </button>
+                <button class="btn btn-sm btn-danger" id="bulkDeleteBtn" title="Delete Selected">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
             <div class="count-badge">
                 <i class="fas fa-boxes"></i>
                 <span>{{ $items->total() }} items</span>
@@ -106,13 +132,13 @@
             </div>
         </div>
         
-        <div class="stat-card-modern stat-success">
+        <div class="stat-card-modern stat-danger">
             <div class="stat-icon-wrapper">
-                <i class="fas fa-tags"></i>
+                <i class="fas fa-exclamation-circle"></i>
             </div>
             <div class="stat-content">
-                <div class="stat-value">{{ $items->pluck('category')->unique()->count() }}</div>
-                <div class="stat-label">Categories</div>
+                <div class="stat-value">{{ $items->filter(function($item) { return $item->expiry_date && \Carbon\Carbon::now()->gt($item->expiry_date); })->count() }}</div>
+                <div class="stat-label">Expired Items</div>
             </div>
         </div>
     </div>
@@ -120,21 +146,35 @@
     <!-- Inventory Table -->
     <div class="content-card-modern">
             <div class="table-container-modern">
-                <table class="table-modern">
+                <table class="table-modern" id="inventoryTable">
                     <thead>
                         <tr>
-                            <th>Item Name</th>
-                            <th>Category</th>
-                            <th>Quantity</th>
-                            <th>Unit</th>
-                            <th>Expiry Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th class="checkbox-column">
+                                <input type="checkbox" id="selectAllCheckbox" title="Select All">
+                            </th>
+                            <th class="sortable" data-sort="item_name">
+                                Item Name <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable column-category" data-sort="category">
+                                Category <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable column-quantity" data-sort="quantity">
+                                Quantity <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="column-unit">Unit</th>
+                            <th class="sortable column-expiry" data-sort="expiry_date">
+                                Expiry Date <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="column-status">Status</th>
+                            <th class="actions-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($items as $item)
-                        <tr class="table-row-modern">
+                        <tr class="table-row-modern" data-item-id="{{ $item->item_id }}">
+                            <td>
+                                <input type="checkbox" class="row-checkbox" value="{{ $item->item_id }}">
+                            </td>
                             <td>
                                 <div class="user-info">
                                     <div class="user-avatar">
@@ -160,13 +200,25 @@
                             <td>
                                 @php
                                     $quantityClass = 'high';
+                                    $percentage = 100;
                                     if ($item->quantity <= 5) {
                                         $quantityClass = 'low';
+                                        $percentage = ($item->quantity / 5) * 100;
                                     } elseif ($item->quantity <= 10) {
                                         $quantityClass = 'medium';
+                                        $percentage = ($item->quantity / 10) * 100;
                                     }
                                 @endphp
-                                <span class="quantity-badge quantity-{{ $quantityClass }}">{{ $item->quantity }}</span>
+                                <div class="quantity-container">
+                                    <span class="quantity-badge quantity-{{ $quantityClass }}">{{ $item->quantity }}</span>
+                                    @if($item->quantity <= 10)
+                                        <div class="quantity-progress">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill progress-{{ $quantityClass }}" style="width: {{ $percentage }}%;"></div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
                             <td><span class="text-secondary">{{ $item->unit }}</span></td>
                             <td>
@@ -312,18 +364,9 @@
 
 @push('scripts')
     <!-- Hidden data for SweetAlert2 modals -->
-    <div id="categoriesData" style="display: none;" data-categories='@json($categories)'></div>
-    <div id="patientsData" style="display: none;" data-patients='@json($patients ?? [])'></div>
-    
-    <script>
-        function goToPage() {
-            const page = document.getElementById('gotoPage').value;
-            const maxPage = {{ $items->lastPage() }};
-            if (page >= 1 && page <= maxPage) {
-                window.location.href = '{{ $items->url(1) }}'.replace('page=1', 'page=' + page);
-            }
-        }
-    </script>
+    <div id="categoriesData" class="hidden-data" data-categories='@json($categories)'></div>
+    <div id="patientsData" class="hidden-data" data-patients='@json($patients ?? [])'></div>
+    <div id="paginationData" class="hidden-data" data-max-page="{{ $items->lastPage() }}" data-page-url="{{ $items->url(1) }}"></div>
     
     <script src="{{ asset('js/admin/admin-inventory.js') }}?v={{ time() }}"></script>
 @endpush

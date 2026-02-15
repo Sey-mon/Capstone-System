@@ -1,6 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableSequence
 from langchain_groq import ChatGroq
+from pydantic import SecretStr
 import os
 from dotenv import load_dotenv
 from data_manager import data_manager
@@ -133,10 +134,12 @@ def create_nutrition_llm():
         raise ValueError("GROQ_API_KEY not found in environment variables")
     
     return ChatGroq(
-        groq_api_key=api_key,
-        model_name="meta-llama/llama-4-scout-17b-16e-instruct",
+        api_key=SecretStr(api_key),
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         temperature=0.1,
-        max_tokens=1500
+        max_tokens=1500,
+        timeout=120,
+        max_retries=2
     )
 
 def get_relevant_pdf_chunks(query, k=4):
@@ -575,15 +578,15 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         nutrition_queries.append(f"child nutrition {medical_problems} dietary management")
     
     # Growth-related queries based on patient data
-    weight_status = patient_data.get('weight_for_age', '')
-    height_status = patient_data.get('height_for_age', '')
+    weight_status = patient_data.get('weight_for_age', '') or ''
+    height_status = patient_data.get('height_for_age', '') or ''
     
-    if 'underweight' in weight_status.lower() or 'wasted' in weight_status.lower():
+    if weight_status and ('underweight' in weight_status.lower() or 'wasted' in weight_status.lower()):
         nutrition_queries.append("underweight children nutrition dense foods weight gain")
-    elif 'overweight' in weight_status.lower():
+    elif weight_status and 'overweight' in weight_status.lower():
         nutrition_queries.append("overweight children healthy eating weight management")
         
-    if 'stunted' in height_status.lower() or 'short' in height_status.lower():
+    if height_status and ('stunted' in height_status.lower() or 'short' in height_status.lower()):
         nutrition_queries.append("stunting prevention linear growth nutrition")
     
     # Collect all relevant knowledge using unified embedding search
