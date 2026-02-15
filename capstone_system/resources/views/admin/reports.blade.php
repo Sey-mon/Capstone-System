@@ -6,9 +6,9 @@
 @section('page-subtitle', 'View detailed reports and analytics for your nutrition system.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-reports.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/modal.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/report-content.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-reports.css') }}?v={{ filemtime(public_path('css/admin/admin-reports.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/modal.css') }}?v={{ filemtime(public_path('css/admin/modal.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/report-content.css') }}?v={{ filemtime(public_path('css/admin/report-content.css')) }}">
     <style>
         .stats-grid {
             gap: 0.75rem;
@@ -570,7 +570,7 @@
             total_patients: {!! json_encode($reports['total_patients']) !!}
         };
     </script>
-    <script src="{{ asset('js/admin/modal-bootstrap.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/admin/report-content.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/admin/admin-reports-enhanced.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/modal-bootstrap.js') }}?v={{ filemtime(public_path('js/admin/modal-bootstrap.js')) }}"></script>
+    <script src="{{ asset('js/admin/report-content.js') }}?v={{ filemtime(public_path('js/admin/report-content.js')) }}"></script>
+    <script src="{{ asset('js/admin/admin-reports-enhanced.js') }}?v={{ filemtime(public_path('js/admin/admin-reports-enhanced.js')) }}"></script>
 @endpush

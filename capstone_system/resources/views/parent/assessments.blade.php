@@ -9,8 +9,8 @@
 @endsection
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/parent/parent-assessments.css') }}?v={{ time() }}">
-<script src="{{ asset('js/parent/parent-assessments.js') }}?v={{ time() }}" defer></script>
+<link rel="stylesheet" href="{{ asset('css/parent/parent-assessments.css') }}?v={{ filemtime(public_path('css/parent/parent-assessments.css')) }}">
+<script src="{{ asset('js/parent/parent-assessments.js') }}?v={{ filemtime(public_path('js/parent/parent-assessments.js')) }}" defer></script>
 
 <div class="desktop-page-wrapper">
     <!-- Desktop Header Section -->

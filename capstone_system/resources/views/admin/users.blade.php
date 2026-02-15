@@ -6,7 +6,7 @@
 @section('page-subtitle', 'Manage all system users and their roles.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-users.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-users.css') }}?v={{ filemtime(public_path('css/admin/admin-users.css')) }}">
     <meta name="user-id" content="{{ Auth::id() }}">
 @endpush
 
@@ -257,5 +257,5 @@
         // Pass roles data to JavaScript
         window.rolesData = @json($roles);
     </script>
-    <script src="{{ asset('js/admin/admin-users.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/admin-users.js') }}?v={{ filemtime(public_path('js/admin/admin-users.js')) }}"></script>
 @endpush

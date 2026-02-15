@@ -3,8 +3,8 @@
 @section('title', 'Inventory Management')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory-modern.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory.css') }}?v={{ filemtime(public_path('css/admin/admin-inventory.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/admin-inventory-modern.css') }}?v={{ filemtime(public_path('css/admin/admin-inventory-modern.css')) }}">
 @endpush
 
 @section('page-title', 'Inventory Management')
@@ -368,6 +368,6 @@
     <div id="patientsData" class="hidden-data" data-patients='@json($patients ?? [])'></div>
     <div id="paginationData" class="hidden-data" data-max-page="{{ $items->lastPage() }}" data-page-url="{{ $items->url(1) }}"></div>
     
-    <script src="{{ asset('js/admin/admin-inventory.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/admin-inventory.js') }}?v={{ filemtime(public_path('js/admin/admin-inventory.js')) }}"></script>
 @endpush
 

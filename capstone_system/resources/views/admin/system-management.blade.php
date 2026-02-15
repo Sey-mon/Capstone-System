@@ -10,12 +10,12 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/system-management-modals.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/system-management-modern.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/system-management-modals.css') }}?v={{ filemtime(public_path('css/admin/system-management-modals.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/system-management-modern.css') }}?v={{ filemtime(public_path('css/admin/system-management-modern.css')) }}">
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('js/admin/system-management.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/system-management.js') }}?v={{ filemtime(public_path('js/admin/system-management.js')) }}"></script>
 @endpush
 
 @section('content')

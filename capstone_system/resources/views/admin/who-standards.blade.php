@@ -332,11 +332,11 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/who-standards.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/who-standards.css') }}?v={{ filemtime(public_path('css/admin/who-standards.css')) }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('js/admin/who-standards.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/admin/who-standards.js') }}?v={{ filemtime(public_path('js/admin/who-standards.js')) }}"></script>
 @endpush

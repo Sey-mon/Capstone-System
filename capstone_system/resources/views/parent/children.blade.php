@@ -3,7 +3,7 @@
 @section('title', 'My Children')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/parent/children.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/parent/children.css') }}?v={{ filemtime(public_path('css/parent/children.css')) }}">
 @endpush
 
 @section('navigation')
@@ -413,8 +413,7 @@
 </div>
 
 @push('scripts')
-    <script src="{{ asset('js/parent/children.js') }}?v={{ now()->timestamp }}"></script>
-    <script src="{{ asset('js/parent/children.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/parent/children.js') }}?v={{ filemtime(public_path('js/parent/children.js')) }}"></script>
     <script>
         function showAddChildModal() {
             Swal.fire({

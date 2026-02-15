@@ -10,7 +10,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/meal-plans.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/nutritionist/meal-plans.css') }}?v={{ filemtime(public_path('css/nutritionist/meal-plans.css')) }}">
 @endpush
 
 @section('content')
@@ -244,5 +244,5 @@
     <!-- jsPDF for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    <script src="{{ asset('js/nutritionist/meal-plans.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/nutritionist/meal-plans.js') }}?v={{ filemtime(public_path('js/nutritionist/meal-plans.js')) }}"></script>
 @endpush

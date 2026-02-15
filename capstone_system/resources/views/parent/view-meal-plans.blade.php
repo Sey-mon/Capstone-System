@@ -15,16 +15,16 @@
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
 <!-- Preload critical CSS -->
-<link rel="preload" href="{{ asset('css/parent/view-meal-plans.css') }}?v={{ time() }}" as="style">
+<link rel="preload" href="{{ asset('css/parent/view-meal-plans.css') }}?v={{ filemtime(public_path('css/parent/view-meal-plans.css')) }}" as="style">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"></noscript>
-<link rel="stylesheet" href="{{ asset('css/parent/view-meal-plans.css') }}?v={{ time() }}">
+<link rel="stylesheet" href="{{ asset('css/parent/view-meal-plans.css') }}?v={{ filemtime(public_path('css/parent/view-meal-plans.css')) }}">
 @endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
-<script src="{{ asset('js/parent/view-meal-plans.js') }}?v={{ time() }}" defer></script>
+<script src="{{ asset('js/parent/view-meal-plans.js') }}?v={{ filemtime(public_path('js/parent/view-meal-plans.js')) }}" defer></script>
 @endpush
 
 @section('content')

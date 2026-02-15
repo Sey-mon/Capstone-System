@@ -6,7 +6,7 @@
 @section('page-subtitle', 'Browse available food items (Read-Only)')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/foods.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/nutritionist/foods.css') }}?v={{ filemtime(public_path('css/nutritionist/foods.css')) }}">
 @endpush
 
 @section('navigation')
@@ -264,5 +264,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/nutritionist/foods.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/nutritionist/foods.js') }}?v={{ filemtime(public_path('js/nutritionist/foods.js')) }}"></script>
 @endpush
