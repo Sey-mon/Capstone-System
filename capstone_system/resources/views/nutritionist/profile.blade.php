@@ -423,17 +423,27 @@
             preConfirm: () => {
                 const firstName = document.getElementById('swal-first-name').value;
                 const lastName = document.getElementById('swal-last-name').value;
+                const contactNumber = document.getElementById('swal-contact').value;
                 
                 if (!firstName || !lastName) {
                     Swal.showValidationMessage('First Name and Last Name are required');
                     return false;
                 }
                 
+                // Validate contact number if provided
+                if (contactNumber) {
+                    const phoneRegex = /^(09|\+639)\d{9}$/;
+                    if (!phoneRegex.test(contactNumber)) {
+                        Swal.showValidationMessage('Please enter a valid Philippine mobile number (11 digits starting with 09, e.g., 09123456789)');
+                        return false;
+                    }
+                }
+                
                 return {
                     first_name: firstName,
                     middle_name: document.getElementById('swal-middle-name').value,
                     last_name: lastName,
-                    contact_number: document.getElementById('swal-contact').value,
+                    contact_number: contactNumber,
                     sex: document.getElementById('swal-gender').value
                 };
             }
