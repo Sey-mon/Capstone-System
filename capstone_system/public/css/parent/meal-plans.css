@@ -1911,17 +1911,17 @@ main {
 .meal-plan-modal {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
+    left: 250px; /* Sidebar width */
+    width: calc(100% - 250px); /* Account for sidebar */
+    height: 100vh;
+    z-index: 10000;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 1rem;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .meal-plan-modal.active {
@@ -1938,11 +1938,12 @@ main {
     background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(8px);
     cursor: pointer;
+    z-index: 1;
 }
 
 .modal-container {
     position: relative;
-    width: 100%;
+    width: calc(100% - 2rem);
     max-width: 1400px;
     max-height: 90vh;
     background: white;
@@ -1952,10 +1953,18 @@ main {
     flex-direction: column;
     transform: scale(0.9);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 2;
+    margin: auto;
 }
 
 .meal-plan-modal.active .modal-container {
     transform: scale(1);
+}
+
+/* Adjust modal when sidebar is collapsed */
+.sidebar.collapsed ~ .main-content .meal-plan-modal {
+    left: 0;
+    width: 100%;
 }
 
 .modal-header {
@@ -2522,10 +2531,13 @@ main {
 @media (max-width: 768px) {
     .meal-plan-modal {
         padding: 0.5rem;
+        left: 0 !important;
+        width: 100% !important;
     }
     
     .modal-container {
-        max-width: 100%;
+        max-width: calc(100% - 1rem);
+        width: calc(100% - 1rem);
         max-height: 95vh;
         border-radius: 16px;
     }
