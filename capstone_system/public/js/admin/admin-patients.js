@@ -313,7 +313,7 @@ function displayPatientDetails(patient) {
                     <div class="detail-value">${parentName}</div>
                 </div>
                 <div class="detail-group">
-                    <div class="detail-label">Nutritionist</div>
+                    <div class="detail-label">BNS</div>
                     <div class="detail-value">${nutritionistName}</div>
                 </div>
                 <div class="detail-group">

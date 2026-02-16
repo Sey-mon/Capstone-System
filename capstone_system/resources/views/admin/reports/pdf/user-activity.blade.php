@@ -122,7 +122,7 @@
                 <tr>
                     <th>Assessment ID</th>
                     <th>Patient</th>
-                    <th>Nutritionist</th>
+                    <th>BNS</th>
                     <th>Date</th>
                 </tr>
             </thead>

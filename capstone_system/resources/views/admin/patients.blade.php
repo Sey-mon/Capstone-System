@@ -61,9 +61,9 @@
                     </select>
                 </div>
                 <div class="filter-field">
-                    <label>Nutritionist</label>
+                    <label>BNS</label>
                     <select id="filterNutritionist" class="form-control">
-                        <option value="" disabled selected hidden>All Nutritionists</option>
+                        <option value="" disabled selected hidden>All BNS</option>
                         @foreach($nutritionists ?? [] as $nutritionist)
                             <option value="{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}">
                                 {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}
@@ -143,7 +143,7 @@
                                         <i class="fas fa-sort"></i>
                                     </th>
                                     <th class="sortable" data-sort="nutritionist">
-                                        <span>Nutritionist</span>
+                                        <span>BNS</span>
                                         <i class="fas fa-sort"></i>
                                     </th>
                                     <th>Actions</th>
@@ -282,7 +282,7 @@
                                         @endif
                                     </div>
                                     <div class="info-row">
-                                        <span class="label">Nutritionist:</span>
+                                        <span class="label">BNS:</span>
                                         <span class="value">{{ $patient->nutritionist ? $patient->nutritionist->first_name . ' ' . $patient->nutritionist->last_name : 'Not assigned' }}</span>
                                     </div>
                                     <div class="info-row">

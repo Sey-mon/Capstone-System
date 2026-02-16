@@ -63,7 +63,7 @@ function openAddUserModal() {
                         <label for="add_role_id">Role *</label>
                         <select id="add_role_id" name="role_id" class="swal2-select" required>
                             <option value="">Select Role</option>
-                            ${window.rolesData.map(role => `<option value="${role.role_id}">${role.role_name}</option>`).join('')}
+                            ${window.rolesData.map(role => `<option value="${role.role_id}">${role.role_name === 'Nutritionist' ? 'BNS' : role.role_name}</option>`).join('')}
                         </select>
                     </div>
                 </div>
@@ -278,7 +278,7 @@ function editUser(userId) {
                                 <label for="edit_role_id">Role *</label>
                                 <select id="edit_role_id" name="role_id" class="swal2-select" required>
                                     <option value="">Select Role</option>
-                                    ${window.rolesData.map(role => `<option value="${role.role_id}" ${role.role_id == user.role_id ? 'selected' : ''}>${role.role_name}</option>`).join('')}
+                                    ${window.rolesData.map(role => `<option value="${role.role_id}" ${role.role_id == user.role_id ? 'selected' : ''}>${role.role_name === 'Nutritionist' ? 'BNS' : role.role_name}</option>`).join('')}
                                 </select>
                             </div>
                         </div>
@@ -889,7 +889,7 @@ function renderUsersTable(users) {
                 <td class="user-email">${user.email}</td>
                 <td>
                     <span class="role-badge ${roleClass}">
-                        ${roleName}
+                        ${roleName === 'Nutritionist' ? 'BNS' : roleName}
                     </span>
                 </td>
                 <td>
@@ -1432,7 +1432,7 @@ function bulkDelete() {
     
     Swal.fire({
         title: 'Delete Users',
-        html: `Are you sure you want to delete <strong>${count}</strong> user(s)?<br><br><small>${userNames}</small><br><br><em>Note: Nutritionist accounts will be suspended instead of deleted.</em>`,
+        html: `Are you sure you want to delete <strong>${count}</strong> user(s)?<br><br><small>${userNames}</small><br><br><em>Note: BNS accounts will be suspended instead of deleted.</em>`,
         icon: 'error',
         showCancelButton: true,
         confirmButtonColor: '#d33',

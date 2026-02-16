@@ -58,7 +58,7 @@ function generateUserActivityContent(data) {
                         <tr>
                             <!-- Assessment ID column removed -->
                             <th>Patient</th>
-                            <th>Nutritionist</th>
+                            <th>BNS</th>
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -232,7 +232,7 @@ function generateAssessmentTrendsContent(data) {
         
         ${(data.assessments_by_nutritionist && Object.keys(data.assessments_by_nutritionist).length > 0) ? `
         <div class="report-section">
-            <h4>Assessments by Nutritionist</h4>
+            <h4>Assessments by BNS</h4>
             <div class="data-grid">
                 ${Object.entries(data.assessments_by_nutritionist).map(([nutritionist, count]) => `
                     <div class="data-item">

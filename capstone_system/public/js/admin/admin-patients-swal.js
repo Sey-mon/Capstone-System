@@ -41,7 +41,7 @@ function generateSelectOptions(data, valueKey, textKeys, emptyText = 'Select') {
 // SweetAlert2 Modal Functions
 function showAddPatientModal() {
     const parentsOptions = generateSelectOptions(parentsData, 'user_id', ['first_name', 'last_name'], 'Select Parent');
-    const nutritionistsOptions = generateSelectOptions(nutritionistsData, 'user_id', ['first_name', 'last_name'], 'Select Nutritionist');
+    const nutritionistsOptions = generateSelectOptions(nutritionistsData, 'user_id', ['first_name', 'last_name'], 'Select BNS');
     const barangaysOptions = generateSelectOptions(barangaysData, 'barangay_id', ['barangay_name'], 'Select Barangay');
 
     Swal.fire({
@@ -143,7 +143,7 @@ function showAddPatientModal() {
                             </div>
                             <div class="form-group">
                                 <label for="nutritionist_id">
-                                    <i class="fas fa-user-md"></i> Assigned Nutritionist
+                                    <i class="fas fa-user-md"></i> Assigned BNS
                                 </label>
                                 <select id="nutritionist_id" name="nutritionist_id" class="swal2-select">
                                     ${nutritionistsOptions}
@@ -435,7 +435,7 @@ function showAddPatientModal() {
 
 function showEditPatientModal(patient) {
     const parentsOptions = generateSelectOptions(parentsData, 'user_id', ['first_name', 'last_name'], 'Select Parent');
-    const nutritionistsOptions = generateSelectOptions(nutritionistsData, 'user_id', ['first_name', 'last_name'], 'Select Nutritionist');
+    const nutritionistsOptions = generateSelectOptions(nutritionistsData, 'user_id', ['first_name', 'last_name'], 'Select BNS');
     const barangaysOptions = generateSelectOptions(barangaysData, 'barangay_id', ['barangay_name'], 'Select Barangay');
 
     let birthdate = '';
@@ -538,7 +538,7 @@ function showEditPatientModal(patient) {
                             </div>
                             <div class="form-group">
                                 <label for="edit_nutritionist_id">
-                                    <i class="fas fa-user-md"></i> Assigned Nutritionist
+                                    <i class="fas fa-user-md"></i> Assigned BNS
                                 </label>
                                 <select id="edit_nutritionist_id" name="nutritionist_id" class="swal2-select">
                                     ${nutritionistsOptions}
@@ -910,7 +910,7 @@ function showViewPatientModal(patient) {
                             <div class="detail-value-display">${parentName}</div>
                         </div>
                         <div class="form-group">
-                            <label><i class="fas fa-user-md"></i> Assigned Nutritionist</label>
+                            <label><i class="fas fa-user-md"></i> Assigned BNS</label>
                             <div class="detail-value-display">${nutritionistName}</div>
                         </div>
                         <div class="form-group">

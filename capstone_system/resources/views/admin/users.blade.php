@@ -38,7 +38,7 @@
                         <select name="role" class="form-control" id="roleFilter">
                             <option value="" {{ request('role') == '' ? 'selected' : '' }}>All Roles</option>
                             @foreach($roles as $role)
-                                <option value="{{ $role->role_id }}" @if(request('role') == $role->role_id) selected @endif>{{ $role->role_name }}</option>
+                                <option value="{{ $role->role_id }}" @if(request('role') == $role->role_id) selected @endif>{{ $role->role_name === 'Nutritionist' ? 'BNS' : $role->role_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -163,9 +163,10 @@
                                         'Parent' => 'role-parent',
                                         default => 'role-unknown'
                                     };
+                                    $displayRoleName = $roleName === 'Nutritionist' ? 'BNS' : $roleName;
                                 @endphp
                                 <span class="role-badge {{ $roleClass }}">
-                                    {{ $roleName }}
+                                    {{ $displayRoleName }}
                                 </span>
                             </td>
                             <td>

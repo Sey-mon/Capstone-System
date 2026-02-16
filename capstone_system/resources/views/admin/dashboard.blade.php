@@ -320,7 +320,7 @@
                         @if($stats['pending_nutritionist_applications'] > 0)
                             <div class="alert-list">
                                 <div class="alert-item">
-                                    <span class="item-name">Nutritionist Applications</span>
+                                    <span class="item-name">BNS Applications</span>
                                     <span class="item-count">{{ $stats['pending_nutritionist_applications'] }} pending</span>
                                 </div>
                             </div>

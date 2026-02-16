@@ -69,7 +69,7 @@ function bulkApprove() {
             <p>These will be added to the food database.</p>
             <div class="modern-form-group" style="margin-top: 20px;">
                 <label class="modern-label">Admin Notes (Optional)</label>
-                <textarea id="bulk-approve-notes" class="modern-input modern-textarea" rows="3" placeholder="Add notes visible to nutritionists..."></textarea>
+                <textarea id="bulk-approve-notes" class="modern-input modern-textarea" rows="3" placeholder="Add notes visible to BNS..."></textarea>
             </div>
         `,
         icon: 'question',
@@ -151,7 +151,7 @@ function bulkReject() {
             <div class="modern-form-group" style="margin-top: 20px;">
                 <label class="modern-label">Reason for Rejection <span class="required-badge">*</span></label>
                 <textarea id="bulk-reject-notes" class="modern-input modern-textarea" rows="4" placeholder="Explain why these requests are being rejected..." required></textarea>
-                <small class="input-hint">This will be visible to the nutritionists</small>
+                <small class="input-hint">This will be visible to the BNS</small>
             </div>
         `,
         icon: 'warning',
@@ -301,7 +301,7 @@ function rejectRequest(id) {
             <div class="modern-form-group">
                 <label class="modern-label">Reason for Rejection <span class="required-badge">*</span></label>
                 <textarea id="reject-notes" class="modern-input modern-textarea" rows="4" placeholder="Explain why this request is being rejected..." required></textarea>
-                <small class="input-hint">This will be visible to the nutritionist</small>
+                <small class="input-hint">This will be visible to the BNS</small>
             </div>
         `,
         icon: 'warning',
