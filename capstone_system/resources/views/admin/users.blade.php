@@ -36,7 +36,7 @@
                     <div class="filter-field">
                         <label>Role</label>
                         <select name="role" class="form-control" id="roleFilter">
-                            <option value="" disabled selected hidden>All Roles</option>
+                            <option value="" {{ request('role') == '' ? 'selected' : '' }}>All Roles</option>
                             @foreach($roles as $role)
                                 <option value="{{ $role->role_id }}" @if(request('role') == $role->role_id) selected @endif>{{ $role->role_name }}</option>
                             @endforeach
@@ -45,10 +45,10 @@
                     <div class="filter-field">
                         <label>Status</label>
                         <select name="account_status" class="form-control" id="accountStatusFilter">
-                            <option value="" disabled selected hidden>All Status</option>
+                            <option value="" {{ request('account_status') == '' ? 'selected' : '' }}>All Status</option>
                             <option value="pending" @if(request('account_status')==='pending') selected @endif>Pending</option>
                             <option value="active" @if(request('account_status')==='active') selected @endif>Active</option>
-                            <option value="suspended" @if(request('account_status')==='suspended') selected @endif>Suspended</option>
+                            <option value="suspended" @if(request('account_status')==='suspended') selected @endif>Deactivated</option>
                             <option value="rejected" @if(request('account_status')==='rejected') selected @endif>Rejected</option>
                             <option value="deleted" @if(request('account_status')==='deleted') selected @endif>Deleted</option>
                         </select>
@@ -56,7 +56,6 @@
                     <div class="filter-field">
                         <label>Sort By</label>
                         <select name="sort_by" class="form-control" id="sortByFilter">
-                            <option value="" disabled selected hidden>Sort By</option>
                             <option value="newest" @if(request('sort_by')=='newest' || !request('sort_by')) selected @endif>Newest First</option>
                             <option value="oldest" @if(request('sort_by')=='oldest') selected @endif>Oldest First</option>
                             <option value="name_asc" @if(request('sort_by')=='name_asc') selected @endif>Name (A-Z)</option>
@@ -166,7 +165,7 @@
                                 @elseif($status === 'suspended')
                                     <span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;">
                                         <i class="fas fa-ban"></i>
-                                        Suspended
+                                        Deactivated
                                     </span>
                                 @elseif($status === 'rejected')
                                     <span class="status-badge status-rejected" style="background-color: #ef4444; color: white;">
@@ -199,7 +198,7 @@
                                                 <i class="fas fa-undo"></i>
                                             </button>
                                         @elseif($user->account_status === 'suspended')
-                                            <button class="action-btn activate" onclick="reactivateSuspendedUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')" title="Reactivate User">
+                                            <button class="action-btn activate" onclick="reactivateDeactivatedUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')" title="Reactivate User">
                                                 <i class="fas fa-user-check"></i>
                                             </button>
                                         @elseif($user->is_active)

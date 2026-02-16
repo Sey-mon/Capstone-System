@@ -444,7 +444,7 @@ class AdminController extends Controller
             $query->where('role_id', $request->input('role'));
         }
         
-        // Filter by account status (pending, active, suspended, rejected, deleted)
+        // Filter by account status (pending, active, deactivated, rejected, deleted)
         if ($request->input('account_status')) {
             $accountStatus = $request->input('account_status');
             if ($accountStatus === 'deleted') {
@@ -2333,7 +2333,32 @@ class AdminController extends Controller
             DB::beginTransaction();
 
             $userName = "{$user->first_name} {$user->last_name}";
+            $roleName = $user->role ? $user->role->role_name : 'Unknown';
 
+            // Handle Nutritionist accounts differently - suspend instead of delete
+            if ($roleName === 'Nutritionist') {
+                $user->account_status = 'suspended';
+                $user->is_active = false;
+                $user->save();
+
+                // Log the suspension action
+                AuditLog::create([
+                    'user_id' => Auth::id(),
+                    'action' => 'UPDATE',
+                    'table_name' => 'users',
+                    'record_id' => $user->user_id,
+                    'description' => "Suspended nutritionist account: {$userName}",
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Nutritionist account has been suspended successfully.'
+                ]);
+            }
+
+            // For Parent accounts - perform soft delete (permanent deletion)
             // Log the action before deletion
             AuditLog::create([
                 'user_id' => Auth::id(),
@@ -2574,7 +2599,7 @@ class AdminController extends Controller
             if (!$user->is_active || $user->account_status === 'suspended') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User is already inactive or suspended.'
+                    'message' => 'User is already inactive or deactivated.'
                 ], 400);
             }
 
@@ -2612,7 +2637,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Reactivate suspended user
+     * Reactivate deactivated user
      */
     public function reactivateUser($id)
     {
@@ -2629,7 +2654,7 @@ class AdminController extends Controller
 
             DB::beginTransaction();
 
-            // Reactivate suspended account
+            // Reactivate deactivated account
             $user->update([
                 'is_active' => true,
                 'account_status' => 'active'
@@ -2646,7 +2671,7 @@ class AdminController extends Controller
                 'action' => 'REACTIVATE',
                 'table_name' => 'users',
                 'record_id' => $user->user_id,
-                'description' => "Reactivated suspended user account: {$user->first_name} {$user->last_name}",
+                'description' => "Reactivated deactivated user account: {$user->first_name} {$user->last_name}",
             ]);
 
             // Send approval email for Nutritionist accounts

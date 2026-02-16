@@ -27,7 +27,7 @@ function getStatusBadge(user) {
         case 'pending':
             return '<span class="status-badge status-pending" style="background-color: #3b82f6; color: white;"><i class="fas fa-clock"></i> Pending</span>';
         case 'suspended':
-            return '<span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;"><i class="fas fa-ban"></i> Suspended</span>';
+            return '<span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;"><i class="fas fa-ban"></i> Deactivated</span>';
         case 'rejected':
             return '<span class="status-badge status-rejected" style="background-color: #ef4444; color: white;"><i class="fas fa-times-circle"></i> Rejected</span>';
         case 'active':
@@ -566,10 +566,10 @@ function toggleUserStatus(userId, activate, userName) {
     });
 }
 
-// Reactivate suspended user
-function reactivateSuspendedUser(userId, userName) {
+// Reactivate deactivated user
+function reactivateDeactivatedUser(userId, userName) {
     Swal.fire({
-        title: 'Reactivate Suspended Account',
+        title: 'Reactivate Deactivated Account',
         html: `
             <p>Are you sure you want to reactivate <strong>${userName}</strong>?</p>
             <p class="text-muted">This will restore full account access.</p>
@@ -821,7 +821,7 @@ function renderUsersTable(users) {
                                     <i class="fas fa-undo"></i>
                                 </button>
                             ` : user.account_status === 'suspended' ? `
-                                <button class="action-btn activate" onclick="reactivateSuspendedUser(${user.user_id}, '${user.first_name} ${user.last_name}')" title="Reactivate User">
+                                <button class="action-btn activate" onclick="reactivateDeactivatedUser(${user.user_id}, '${user.first_name} ${user.last_name}')" title="Reactivate User">
                                     <i class="fas fa-user-check"></i>
                                 </button>
                             ` : user.is_active ? `

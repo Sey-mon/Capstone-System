@@ -926,7 +926,7 @@ class NutritionistController extends Controller
 
             // Soft delete the user account
             $user->is_active = false; // Deactivate account immediately
-            $user->account_status = 'suspended'; // Update status to suspended
+            $user->account_status = 'suspended'; // Update status to deactivated
             $user->save();
             
             // Perform soft delete

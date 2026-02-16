@@ -49,7 +49,7 @@
                     <div class="filter-field">
                         <label>Priority</label>
                         <select name="priority" class="form-control">
-                            <option value="" disabled selected hidden>All Priorities</option>
+                            <option value="" {{ request('priority') == '' ? 'selected' : '' }}>All Priorities</option>
                             <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>🔥 Urgent</option>
                             <option value="normal" {{ request('priority') == 'normal' ? 'selected' : '' }}>ℹ️ Normal</option>
                         </select>
@@ -59,7 +59,7 @@
                     <div class="filter-field">
                         <label>Status</label>
                         <select name="status" class="form-control">
-                            <option value="" disabled selected hidden>All Statuses</option>
+                            <option value="" {{ request('status') == '' ? 'selected' : '' }}>All Statuses</option>
                             <option value="unread" {{ request('status') == 'unread' ? 'selected' : '' }}>📨 Unread</option>
                             <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>📖 Read</option>
                             <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>✅ Resolved</option>
@@ -70,7 +70,7 @@
                     <div class="filter-field">
                         <label>Category</label>
                         <select name="category" class="form-control">
-                            <option value="" disabled selected hidden>All Categories</option>
+                            <option value="" {{ request('category') == '' ? 'selected' : '' }}>All Categories</option>
                             @foreach($categories as $cat)
                             <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>
                                 {{ ucwords(str_replace('_', ' ', $cat)) }}

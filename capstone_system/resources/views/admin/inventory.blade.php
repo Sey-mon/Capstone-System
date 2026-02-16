@@ -39,7 +39,7 @@
                 <div class="filter-field">
                     <label>Category</label>
                     <select id="categoryFilter" class="form-control">
-                        <option value="" disabled selected hidden>All Categories</option>
+                        <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->category_name }}">{{ $category->category_name }}</option>
                         @endforeach
@@ -49,7 +49,7 @@
                 <div class="filter-field">
                     <label>Status</label>
                     <select id="statusFilter" class="form-control">
-                        <option value="" disabled selected hidden>All Status</option>
+                        <option value="">All Status</option>
                         <option value="in-stock">In Stock</option>
                         <option value="low-stock">Low Stock</option>
                         <option value="critical">Critical</option>
