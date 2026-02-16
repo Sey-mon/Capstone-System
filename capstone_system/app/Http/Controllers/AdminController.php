@@ -604,18 +604,32 @@ class AdminController extends Controller
         }
         
         $request->validate([
+            'first_name' => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'last_name' => 'required|string|max:100',
             'parent_id' => 'nullable|exists:users,user_id',
             'nutritionist_id' => 'nullable|exists:users,user_id',
             'barangay_id' => 'required|exists:barangays,barangay_id',
             'contact_number' => 'required|string|max:20',
             'date_of_admission' => 'required|date',
-            // Note: first_name, middle_name, last_name, birthdate, sex are locked for editing
+            'total_household_adults' => 'nullable|integer|min:0',
+            'total_household_children' => 'nullable|integer|min:0',
+            'total_household_twins' => 'nullable|integer|min:0',
+            'breastfeeding' => 'nullable|string',
+            'allergies' => 'nullable|string',
+            'religion' => 'nullable|string',
+            'other_medical_problems' => 'nullable|string',
+            'edema' => 'nullable|string',
+            // Note: birthdate, sex are locked for editing (managed through assessments)
             // Note: weight_kg, height_cm, and nutritional indicators are managed via assessments
         ]);
         
         try {
-            // Only update non-locked fields (household and contact info)
+            // Update patient information including names
             $patient->update([
+                'first_name' => $request->first_name,
+                'middle_name' => $request->middle_name,
+                'last_name' => $request->last_name,
                 'parent_id' => $request->parent_id ?: null,
                 'nutritionist_id' => $request->nutritionist_id ?: null,
                 'barangay_id' => $request->barangay_id,
