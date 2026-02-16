@@ -2212,7 +2212,20 @@ class AdminController extends Controller
      */
     public function getUser($id)
     {
-        return $this->getRecord(User::class, $id, ['role']);
+        try {
+            // Include soft-deleted users
+            $user = User::withTrashed()->with('role')->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'user' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found: ' . $e->getMessage()
+            ], 404);
+        }
     }
 
     /**
@@ -2354,7 +2367,8 @@ class AdminController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Nutritionist account has been suspended successfully.'
+                    'message' => 'Nutritionist account has been suspended successfully.',
+                    'user' => $user->load('role')
                 ]);
             }
 
@@ -2375,7 +2389,8 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'User deleted successfully.'
+                'message' => 'User deleted successfully.',
+                'user' => $user->load('role')
             ]);
 
         } catch (\Exception $e) {
@@ -2702,6 +2717,462 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to reactivate user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk activate users
+     */
+    public function bulkActivateUsers(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'required|integer|exists:users,user_id'
+            ]);
+
+            $userIds = $request->user_ids;
+            $currentUserId = Auth::id();
+            $results = [
+                'success' => [],
+                'failed' => [],
+                'skipped' => []
+            ];
+
+            DB::beginTransaction();
+
+            foreach ($userIds as $userId) {
+                try {
+                    $user = User::withTrashed()->with('role')->findOrFail($userId);
+
+                    // Skip current user
+                    if ($user->user_id === $currentUserId) {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'Cannot modify your own account'
+                        ];
+                        continue;
+                    }
+
+                    // Skip admin users
+                    if ($user->role && $user->role->role_name === 'Admin') {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'Admin users cannot be modified'
+                        ];
+                        continue;
+                    }
+
+                    // Skip deleted users
+                    if ($user->trashed()) {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'User is deleted. Please restore first'
+                        ];
+                        continue;
+                    }
+
+                    // Skip already active users
+                    if ($user->is_active && $user->account_status === 'active') {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'User is already active'
+                        ];
+                        continue;
+                    }
+
+                    // Activate user
+                    $updateData = ['is_active' => true, 'account_status' => 'active'];
+                    $autoVerifyRoles = ['Nutritionist', 'Health Worker', 'BHW', 'Parent'];
+                    if ($user->role && in_array($user->role->role_name, $autoVerifyRoles) && is_null($user->email_verified_at)) {
+                        $updateData['email_verified_at'] = now();
+                    }
+                    $user->update($updateData);
+
+                    // Log the action
+                    AuditLog::create([
+                        'user_id' => $currentUserId,
+                        'action' => 'ACTIVATE',
+                        'table_name' => 'users',
+                        'record_id' => $user->user_id,
+                        'description' => "Activated user account (bulk): {$user->first_name} {$user->last_name}",
+                    ]);
+
+                    $results['success'][] = [
+                        'user_id' => $userId,
+                        'name' => "{$user->first_name} {$user->last_name}"
+                    ];
+
+                } catch (\Exception $e) {
+                    $results['failed'][] = [
+                        'user_id' => $userId,
+                        'reason' => $e->getMessage()
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            $successCount = count($results['success']);
+            $failedCount = count($results['failed']);
+            $skippedCount = count($results['skipped']);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Bulk activation completed. Success: {$successCount}, Failed: {$failedCount}, Skipped: {$skippedCount}",
+                'results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk activation failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk inactivate users
+     */
+    public function bulkDeactivateUsers(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'required|integer|exists:users,user_id'
+            ]);
+
+            $userIds = $request->user_ids;
+            $currentUserId = Auth::id();
+            $results = [
+                'success' => [],
+                'failed' => [],
+                'skipped' => []
+            ];
+
+            DB::beginTransaction();
+
+            foreach ($userIds as $userId) {
+                try {
+                    $user = User::with('role')->findOrFail($userId);
+
+                    // Skip current user
+                    if ($user->user_id === $currentUserId) {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'Cannot modify your own account'
+                        ];
+                        continue;
+                    }
+
+                    // Skip admin users
+                    if ($user->role && $user->role->role_name === 'Admin') {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'Admin users cannot be modified'
+                        ];
+                        continue;
+                    }
+
+                    // Skip deleted users (soft deleted)
+                    if ($user->deleted_at) {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'User is already deleted'
+                        ];
+                        continue;
+                    }
+
+                    // Skip already inactive users
+                    if (!$user->is_active && $user->account_status === 'suspended') {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'User is already inactivated'
+                        ];
+                        continue;
+                    }
+
+                    // Inactivate user
+                    $user->update([
+                        'is_active' => false,
+                        'account_status' => 'suspended'
+                    ]);
+
+                    // Log the action
+                    AuditLog::create([
+                        'user_id' => $currentUserId,
+                        'action' => 'INACTIVATE',
+                        'table_name' => 'users',
+                        'record_id' => $user->user_id,
+                        'description' => "Inactivated user account (bulk): {$user->first_name} {$user->last_name}",
+                    ]);
+
+                    $results['success'][] = [
+                        'user_id' => $userId,
+                        'name' => "{$user->first_name} {$user->last_name}"
+                    ];
+
+                } catch (\Exception $e) {
+                    $results['failed'][] = [
+                        'user_id' => $userId,
+                        'reason' => $e->getMessage()
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            $successCount = count($results['success']);
+            $failedCount = count($results['failed']);
+            $skippedCount = count($results['skipped']);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Bulk inactivation completed. Success: {$successCount}, Failed: {$failedCount}, Skipped: {$skippedCount}",
+                'results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk inactivation failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk delete users
+     */
+    public function bulkDeleteUsers(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'required|integer|exists:users,user_id'
+            ]);
+
+            $userIds = $request->user_ids;
+            $currentUserId = Auth::id();
+            $results = [
+                'success' => [],
+                'failed' => [],
+                'skipped' => []
+            ];
+
+            DB::beginTransaction();
+
+            foreach ($userIds as $userId) {
+                try {
+                    $user = User::findOrFail($userId);
+
+                    // Skip current user
+                    if ($user->user_id === $currentUserId) {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'Cannot delete your own account'
+                        ];
+                        continue;
+                    }
+
+                    // Skip admin users
+                    if ($user->role && $user->role->role_name === 'Admin') {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'Admin users cannot be deleted'
+                        ];
+                        continue;
+                    }
+
+                    $userName = "{$user->first_name} {$user->last_name}";
+                    $roleName = $user->role ? $user->role->role_name : 'Unknown';
+
+                    // Skip users who are already deleted (soft deleted)
+                    if ($user->deleted_at) {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => $userName,
+                            'reason' => 'User is already deleted'
+                        ];
+                        continue;
+                    }
+
+                    // Skip nutritionists who are already suspended
+                    if ($roleName === 'Nutritionist' && $user->account_status === 'suspended') {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => $userName,
+                            'reason' => 'Nutritionist account is already suspended'
+                        ];
+                        continue;
+                    }
+
+                    // Handle Nutritionist accounts differently - suspend instead of delete
+                    if ($roleName === 'Nutritionist') {
+                        $user->account_status = 'suspended';
+                        $user->is_active = false;
+                        $user->save();
+
+                        // Log the suspension action
+                        AuditLog::create([
+                            'user_id' => $currentUserId,
+                            'action' => 'UPDATE',
+                            'table_name' => 'users',
+                            'record_id' => $user->user_id,
+                            'description' => "Suspended nutritionist account (bulk): {$userName}",
+                        ]);
+                    } else {
+                        // Soft delete for other roles
+                        $user->delete();
+
+                        // Log the deletion
+                        AuditLog::create([
+                            'user_id' => $currentUserId,
+                            'action' => 'DELETE',
+                            'table_name' => 'users',
+                            'record_id' => $user->user_id,
+                            'description' => "Soft deleted user (bulk): {$userName} (Role: {$roleName})",
+                        ]);
+                    }
+
+                    $results['success'][] = [
+                        'user_id' => $userId,
+                        'name' => $userName,
+                        'action' => $roleName === 'Nutritionist' ? 'suspended' : 'deleted'
+                    ];
+
+                } catch (\Exception $e) {
+                    $results['failed'][] = [
+                        'user_id' => $userId,
+                        'reason' => $e->getMessage()
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            $successCount = count($results['success']);
+            $failedCount = count($results['failed']);
+            $skippedCount = count($results['skipped']);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Bulk deletion completed. Success: {$successCount}, Failed: {$failedCount}, Skipped: {$skippedCount}",
+                'results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk deletion failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk restore users
+     */
+    public function bulkRestoreUsers(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'required|integer'
+            ]);
+
+            $userIds = $request->user_ids;
+            $currentUserId = Auth::id();
+            $results = [
+                'success' => [],
+                'failed' => [],
+                'skipped' => []
+            ];
+
+            DB::beginTransaction();
+
+            foreach ($userIds as $userId) {
+                try {
+                    $user = User::withTrashed()->with('role')->findOrFail($userId);
+
+                    // Skip current user
+                    if ($user->user_id === $currentUserId) {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'Cannot modify your own account'
+                        ];
+                        continue;
+                    }
+
+                    // Skip non-deleted users
+                    if (!$user->trashed()) {
+                        $results['skipped'][] = [
+                            'user_id' => $userId,
+                            'name' => "{$user->first_name} {$user->last_name}",
+                            'reason' => 'User is not deleted'
+                        ];
+                        continue;
+                    }
+
+                    // Restore user
+                    $user->restore();
+                    $user->update([
+                        'is_active' => true,
+                        'account_status' => 'active'
+                    ]);
+
+                    // Log the action
+                    AuditLog::create([
+                        'user_id' => $currentUserId,
+                        'action' => 'RESTORE',
+                        'table_name' => 'users',
+                        'record_id' => $user->user_id,
+                        'description' => "Restored deleted user (bulk): {$user->first_name} {$user->last_name}",
+                    ]);
+
+                    $results['success'][] = [
+                        'user_id' => $userId,
+                        'name' => "{$user->first_name} {$user->last_name}"
+                    ];
+
+                } catch (\Exception $e) {
+                    $results['failed'][] = [
+                        'user_id' => $userId,
+                        'reason' => $e->getMessage()
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            $successCount = count($results['success']);
+            $failedCount = count($results['failed']);
+            $skippedCount = count($results['skipped']);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Bulk restore completed. Success: {$successCount}, Failed: {$failedCount}, Skipped: {$skippedCount}",
+                'results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk restore failed: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -158,6 +158,12 @@ Route::middleware(['auth', 'account.verified', 'role:Admin', 'prevent.back'])->p
         Route::post('/users/{id}/reactivate', [AdminController::class, 'reactivateUser'])->name('admin.users.reactivate');
     Route::get('/users-with-trashed', [AdminController::class, 'getUsersWithTrashed'])->name('users.with-trashed');
     
+    // Bulk user actions
+    Route::post('/users/bulk/activate', [AdminController::class, 'bulkActivateUsers'])->name('users.bulk.activate');
+    Route::post('/users/bulk/deactivate', [AdminController::class, 'bulkDeactivateUsers'])->name('users.bulk.deactivate');
+    Route::post('/users/bulk/delete', [AdminController::class, 'bulkDeleteUsers'])->name('users.bulk.delete');
+    Route::post('/users/bulk/restore', [AdminController::class, 'bulkRestoreUsers'])->name('users.bulk.restore');
+    
     // Nutritionist application routes
     Route::get('/nutritionist-applications', [AdminController::class, 'getPendingNutritionistApplications'])->name('nutritionist.applications');
     Route::post('/nutritionist-applications/{id}/approve', [AdminController::class, 'approveNutritionist'])->name('nutritionist.approve');

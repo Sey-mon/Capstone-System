@@ -27,7 +27,7 @@ function getStatusBadge(user) {
         case 'pending':
             return '<span class="status-badge status-pending" style="background-color: #3b82f6; color: white;"><i class="fas fa-clock"></i> Pending</span>';
         case 'suspended':
-            return '<span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;"><i class="fas fa-ban"></i> Deactivated</span>';
+            return '<span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;"><i class="fas fa-ban"></i> Inactivated</span>';
         case 'rejected':
             return '<span class="status-badge status-rejected" style="background-color: #ef4444; color: white;"><i class="fas fa-times-circle"></i> Rejected</span>';
         case 'active':
@@ -517,7 +517,9 @@ function deleteUser(userId, userName) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire('Deleted!', 'User deleted successfully!', 'success').then(() => location.reload());
+                    Swal.fire('Deleted!', 'User deleted successfully!', 'success').then(() => {
+                        location.reload();
+                    });
                 } else {
                     Swal.fire('Error', data.message || 'Failed to delete user', 'error');
                 }
@@ -531,9 +533,10 @@ function deleteUser(userId, userName) {
 
 function toggleUserStatus(userId, activate, userName) {
     const action = activate ? 'activate' : 'deactivate';
+    const displayAction = activate ? 'Active' : 'Inactive';
     Swal.fire({
-        title: `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`,
-        text: `Are you sure you want to ${action} ${userName}?`,
+        title: `Mark as ${displayAction}`,
+        text: `Are you sure you want to mark ${userName} as ${displayAction.toLowerCase()}?`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Yes',
@@ -554,7 +557,14 @@ function toggleUserStatus(userId, activate, userName) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire('Success!', data.message, 'success').then(() => location.reload());
+                    Swal.fire('Success!', data.message, 'success').then(() => {
+                        // Update the user row with new data
+                        if (data.user) {
+                            updateUserRow(userId, data.user);
+                        } else {
+                            location.reload();
+                        }
+                    });
                 } else {
                     Swal.fire('Error', data.message || `Failed to ${action} user`, 'error');
                 }
@@ -596,7 +606,14 @@ function reactivateDeactivatedUser(userId, userName) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire('Success!', data.message || 'User reactivated successfully', 'success').then(() => location.reload());
+                    Swal.fire('Success!', data.message || 'User reactivated successfully', 'success').then(() => {
+                        // Update the user row with new data
+                        if (data.user) {
+                            updateUserRow(userId, data.user);
+                        } else {
+                            location.reload();
+                        }
+                    });
                 } else {
                     Swal.fire('Error', data.message || 'Failed to reactivate user', 'error');
                 }
@@ -639,7 +656,14 @@ function restoreUser(userId, userName) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire('Success!', data.message || 'User restored successfully', 'success').then(() => location.reload());
+                    Swal.fire('Success!', data.message || 'User restored successfully', 'success').then(() => {
+                        // Update the user row with new data
+                        if (data.user) {
+                            updateUserRow(userId, data.user);
+                        } else {
+                            location.reload();
+                        }
+                    });
                 } else {
                     Swal.fire('Error', data.message || 'Failed to restore user', 'error');
                 }
@@ -659,6 +683,40 @@ document.addEventListener('DOMContentLoaded', function() {
     if (userDataDiv) {
         window.storeUserRoute = userDataDiv.getAttribute('data-route');
         window.userUrlBase = userDataDiv.getAttribute('data-user-url-base');
+    }
+
+    // Prevent filter form from submitting traditionally
+    const filterForm = document.getElementById('userFilterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Form changes are handled by individual field listeners
+        });
+    }
+
+    // Setup "Clear All" button to use AJAX
+    const clearAllBtn = document.querySelector('.btn-clear-all');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Clear all filter inputs
+            const searchInput = document.getElementById('searchInput');
+            const roleFilter = document.getElementById('roleFilter');
+            const accountStatusFilter = document.getElementById('accountStatusFilter');
+            const sortByFilter = document.getElementById('sortByFilter');
+            
+            if (searchInput) searchInput.value = '';
+            if (roleFilter) roleFilter.value = '';
+            if (accountStatusFilter) accountStatusFilter.value = '';
+            if (sortByFilter) sortByFilter.value = 'newest';
+            
+            // Clear selections
+            clearAllSelections();
+            
+            // Reload users with no filters
+            loadUsers(1);
+        });
     }
 
     // Setup AJAX filters
@@ -736,10 +794,17 @@ function loadUsers(page = 1) {
     params.append('page', page);
     params.append('ajax', '1');
     
-    // Prevent interaction during loading
+    // Show loading indicator
     const tableContainer = document.querySelector('.users-table-container');
+    const tbody = document.querySelector('.users-table tbody');
+    
     if (tableContainer) {
+        tableContainer.style.opacity = '0.6';
         tableContainer.style.pointerEvents = 'none';
+    }
+    
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Loading users...</td></tr>';
     }
 
     fetch(`${window.location.pathname}?${params.toString()}`, {
@@ -754,19 +819,25 @@ function loadUsers(page = 1) {
         if (data.success) {
             renderUsersTable(data.users);
             renderPagination(data.pagination);
-            updateUserCount(data.total);
+            updateUserCountDisplay(data.total);
             
             // Update URL without reload
-            const newUrl = window.location.pathname + '?' + params.toString().replace('&ajax=1', '');
-            window.history.pushState({}, '', newUrl);
+            const newUrl = window.location.pathname + '?' + params.toString().replace('&ajax=1', '').replace('ajax=1&', '').replace('ajax=1', '');
+            if (newUrl !== window.location.pathname + window.location.search) {
+                window.history.pushState({}, '', newUrl || window.location.pathname);
+            }
         }
     })
     .catch(error => {
         console.error('Error loading users:', error);
         Swal.fire('Error', 'Failed to load users', 'error');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #dc3545;"><i class="fas fa-exclamation-triangle"></i> Failed to load users</td></tr>';
+        }
     })
     .finally(() => {
         if (tableContainer) {
+            tableContainer.style.opacity = '1';
             tableContainer.style.pointerEvents = 'auto';
         }
     });
@@ -776,25 +847,42 @@ function loadUsers(page = 1) {
 function renderUsersTable(users) {
     const tbody = document.querySelector('.users-table tbody');
     if (!tbody) return;
+    
+    const currentUserId = parseInt(window.currentUserId);
 
     if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No users found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No users found</td></tr>';
         return;
     }
 
     tbody.innerHTML = users.map(user => {
         const roleName = user.role?.role_name || 'Unknown';
         const roleClass = getRoleClass(roleName);
+        const isAdmin = roleName === 'Admin';
+        const isDeleted = user.deleted_at !== null;
+        const isSuspended = user.account_status === 'suspended';
+        const isCurrent = user.user_id === currentUserId;
+        const userName = `${user.first_name} ${user.last_name}`;
         
         return `
-            <tr>
+            <tr data-user-id="${user.user_id}" 
+                data-user-name="${userName}"
+                data-is-admin="${isAdmin ? '1' : '0'}"
+                data-is-deleted="${isDeleted ? '1' : '0'}"
+                data-is-suspended="${isSuspended ? '1' : '0'}"
+                data-is-current="${isCurrent ? '1' : '0'}">
+                <td class="checkbox-column">
+                    ${!isCurrent && !isAdmin && !isDeleted && !isSuspended ? `
+                        <input type="checkbox" class="user-checkbox" value="${user.user_id}" onchange="updateBulkActions()">
+                    ` : ''}
+                </td>
                 <td>
                     <div class="user-info">
                         <div class="user-avatar">
                             ${getUserInitials(user.first_name, user.last_name)}
                         </div>
                         <div>
-                            <div class="user-name">${user.first_name} ${user.last_name}</div>
+                            <div class="user-name">${userName}</div>
                         </div>
                     </div>
                 </td>
@@ -809,41 +897,14 @@ function renderUsersTable(users) {
                 </td>
                 <td class="user-created">${formatDate(user.created_at)}</td>
                 <td>
-                    <div class="action-buttons">
-                        ${!user.deleted_at ? `
-                            <button class="action-btn edit" onclick="editUser(${user.user_id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        ` : ''}
-                        ${user.user_id !== window.currentUserId && roleName !== 'Admin' ? `
-                            ${user.deleted_at ? `
-                                <button class="action-btn activate" onclick="restoreUser(${user.user_id}, '${user.first_name} ${user.last_name}')" title="Restore User">
-                                    <i class="fas fa-undo"></i>
-                                </button>
-                            ` : user.account_status === 'suspended' ? `
-                                <button class="action-btn activate" onclick="reactivateDeactivatedUser(${user.user_id}, '${user.first_name} ${user.last_name}')" title="Reactivate User">
-                                    <i class="fas fa-user-check"></i>
-                                </button>
-                            ` : user.is_active ? `
-                                <button class="action-btn deactivate" onclick="toggleUserStatus(${user.user_id}, false, '${user.first_name} ${user.last_name}')">
-                                    <i class="fas fa-user-slash"></i>
-                                </button>
-                            ` : `
-                                <button class="action-btn activate" onclick="toggleUserStatus(${user.user_id}, true, '${user.first_name} ${user.last_name}')">
-                                    <i class="fas fa-user-check"></i>
-                                </button>
-                            `}
-                        ` : ''}
-                        ${roleName !== 'Admin' && !user.deleted_at ? `
-                            <button class="action-btn delete" onclick="deleteUser(${user.user_id}, '${user.first_name} ${user.last_name}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </div>
+                    ${generateActionButtons(user)}
                 </td>
             </tr>
         `;
     }).join('');
+    
+    // Clear any existing selections and reset select all checkbox
+    clearAllSelections();
 }
 
 // Render pagination
@@ -858,10 +919,12 @@ function renderPagination(pagination) {
     
     paginationContainer.style.display = 'flex';
 
-    // Update pagination info
-    const firstItem = pagination.from || 0;
-    const lastItem = pagination.to || 0;
-    const total = pagination.total || 0;
+    // Calculate pagination info
+    const currentPage = pagination.current_page;
+    const perPage = pagination.per_page;
+    const total = pagination.total;
+    const firstItem = total === 0 ? 0 : ((currentPage - 1) * perPage + 1);
+    const lastItem = Math.min(currentPage * perPage, total);
     
     const paginationInfo = paginationContainer.querySelector('.pagination-info-text');
     if (paginationInfo) {
@@ -907,14 +970,6 @@ function renderPagination(pagination) {
     if (pageJumpInput) {
         pageJumpInput.setAttribute('max', pagination.last_page);
         pageJumpInput.value = pagination.current_page;
-    }
-}
-
-// Update user count in header
-function updateUserCount(total) {
-    const countBtn = document.querySelector('.btn-count');
-    if (countBtn) {
-        countBtn.innerHTML = `<i class="fas fa-user"></i> ${total} users`;
     }
 }
 
@@ -995,4 +1050,508 @@ function togglePasswordVisibility(inputId, button) {
         icon.classList.remove('fa-eye-slash');
         icon.classList.add('fa-eye');
     }
+}
+// ==================== BULK SELECTION & ACTIONS ====================
+
+/**
+ * Update user row in the table with new data
+ */
+function updateUserRow(userId, userData) {
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    if (!row) return;
+
+    // Update data attributes
+    row.setAttribute('data-is-deleted', userData.deleted_at ? '1' : '0');
+    row.setAttribute('data-is-suspended', userData.account_status === 'suspended' ? '1' : '0');
+    
+    // Update status badge
+    const statusCell = row.querySelector('td:nth-child(5)');
+    if (statusCell) {
+        statusCell.innerHTML = getStatusBadge(userData);
+    }
+    
+    // Update action buttons
+    const actionsCell = row.querySelector('td:nth-child(7)');
+    if (actionsCell) {
+        actionsCell.innerHTML = generateActionButtons(userData);
+    }
+    
+    // Update checkbox visibility - remove checkbox if suspended or deleted
+    const checkboxCell = row.querySelector('td.checkbox-column');
+    if (checkboxCell) {
+        const isAdmin = userData.role && userData.role.role_name === 'Admin';
+        const isCurrent = userData.user_id === parseInt(window.currentUserId);
+        const isDeleted = userData.deleted_at !== null;
+        const isSuspended = userData.account_status === 'suspended';
+        
+        if (!isCurrent && !isAdmin && !isDeleted && !isSuspended) {
+            checkboxCell.innerHTML = `<input type="checkbox" class="user-checkbox" value="${userData.user_id}" onchange="updateBulkActions()">`;
+        } else {
+            checkboxCell.innerHTML = '';
+        }
+    }
+    
+    // Add visual update animation
+    row.classList.add('row-updated');
+    setTimeout(() => {
+        row.classList.remove('row-updated');
+    }, 1500);
+    
+    // Update bulk actions bar if needed
+    updateBulkActions();
+}
+
+/**
+ * Generate action buttons HTML based on user data
+ */
+function generateActionButtons(user) {
+    const currentUserId = parseInt(window.currentUserId);
+    const isAdmin = user.role && user.role.role_name === 'Admin';
+    const isDeleted = user.deleted_at !== null;
+    const isCurrent = user.user_id === currentUserId;
+    const userName = `${user.first_name} ${user.last_name}`;
+    
+    let buttonsHtml = '<div class="action-buttons">';
+    
+    // Edit button (not for deleted users)
+    if (!isDeleted) {
+        buttonsHtml += `
+            <button class="action-btn edit" onclick="editUser(${user.user_id})">
+                <i class="fas fa-edit"></i>
+            </button>`;
+    }
+    
+    // Status buttons (not for current user and admin users)
+    if (!isCurrent && !isAdmin) {
+        if (isDeleted) {
+            // Restore button for deleted users
+            buttonsHtml += `
+                <button class="action-btn activate" onclick="restoreUser(${user.user_id}, '${userName}')" title="Restore User">
+                    <i class="fas fa-undo"></i>
+                </button>`;
+        } else if (user.account_status === 'suspended') {
+            // Reactivate button for suspended users
+            buttonsHtml += `
+                <button class="action-btn activate" onclick="reactivateDeactivatedUser(${user.user_id}, '${userName}')" title="Reactivate User">
+                    <i class="fas fa-user-check"></i>
+                </button>`;
+        } else if (user.is_active) {
+            // Inactive button for active users
+            buttonsHtml += `
+                <button class="action-btn deactivate" onclick="toggleUserStatus(${user.user_id}, false, '${userName}')">
+                    <i class="fas fa-user-slash"></i>
+                </button>`;
+        } else {
+            // Active button for inactive users
+            buttonsHtml += `
+                <button class="action-btn activate" onclick="toggleUserStatus(${user.user_id}, true, '${userName}')">
+                    <i class="fas fa-user-check"></i>
+                </button>`;
+        }
+    }
+    
+    // Delete button (not for admin users and not for deleted users)
+    if (!isAdmin && !isDeleted) {
+        buttonsHtml += `
+            <button class="action-btn delete" onclick="deleteUser(${user.user_id}, '${userName}')">
+                <i class="fas fa-trash"></i>
+            </button>`;
+    }
+    
+    buttonsHtml += '</div>';
+    return buttonsHtml;
+}
+
+/**
+ * Remove user rows from table (for deleted users)
+ */
+function removeUserRows(userIds) {
+    userIds.forEach(userId => {
+        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+        if (row) {
+            row.style.transition = 'opacity 0.3s ease';
+            row.style.opacity = '0';
+            setTimeout(() => row.remove(), 300);
+        }
+    });
+}
+
+/**
+ * Update user count display after filters
+ */
+function updateUserCountDisplay(totalCount) {
+    const totalCountElement = document.getElementById('totalUserCount');
+    if (totalCountElement) {
+        totalCountElement.textContent = totalCount;
+    }
+}
+
+/**
+ * Update user count display after deletions
+ */
+function updateUserCount() {
+    const visibleRows = document.querySelectorAll('.users-table tbody tr');
+    const totalCountElement = document.getElementById('totalUserCount');
+    
+    if (totalCountElement) {
+        const currentTotal = parseInt(totalCountElement.textContent);
+        const visibleCount = visibleRows.length;
+        
+        // Calculate the difference (deleted rows)
+        const totalRows = document.querySelectorAll('.users-table tbody tr').length;
+        
+        // Update the display
+        totalCountElement.textContent = visibleCount;
+    }
+}
+
+/**
+ * Refresh user data from server
+ */
+function refreshUserData(userIds, callback) {
+    if (!userIds || userIds.length === 0) {
+        if (callback) callback([]);
+        return;
+    }
+    
+    // Fetch updated user data
+    const promises = userIds.map(userId => 
+        fetch(`${window.userUrlBase}/${userId}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .catch(error => {
+            console.error(`Error fetching user ${userId}:`, error);
+            return null;
+        })
+    );
+    
+    Promise.all(promises).then(results => {
+        const validUsers = results.filter(r => r && r.success).map(r => r.user);
+        if (callback) callback(validUsers);
+    });
+}
+
+/**
+ * Toggle select all checkboxes
+ */
+function toggleSelectAll(checkbox) {
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    userCheckboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateBulkActions();
+}
+
+/**
+ * Update bulk actions bar visibility and count
+ */
+function updateBulkActions() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCount = document.getElementById('selectedCount');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    
+    const count = selectedCheckboxes.length;
+    
+    if (count > 0) {
+        bulkActionsBar.style.display = 'flex';
+        selectedCount.textContent = count;
+    } else {
+        bulkActionsBar.style.display = 'none';
+        selectAllCheckbox.checked = false;
+    }
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+    if (allCheckboxes.length > 0) {
+        selectAllCheckbox.checked = count === allCheckboxes.length;
+        selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+    }
+}
+
+/**
+ * Clear all selections
+ */
+function clearAllSelections() {
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    userCheckboxes.forEach(cb => {
+        cb.checked = false;
+    });
+    document.getElementById('selectAll').checked = false;
+    updateBulkActions();
+}
+
+/**
+ * Get selected user IDs and names
+ */
+function getSelectedUsers() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const users = [];
+    
+    selectedCheckboxes.forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        users.push({
+            id: parseInt(checkbox.value),
+            name: row.getAttribute('data-user-name'),
+            isAdmin: row.getAttribute('data-is-admin') === '1',
+            isDeleted: row.getAttribute('data-is-deleted') === '1',
+            isSuspended: row.getAttribute('data-is-suspended') === '1',
+            isCurrent: row.getAttribute('data-is-current') === '1'
+        });
+    });
+    
+    return users;
+}
+
+/**
+ * Bulk activate users
+ */
+function bulkActivate() {
+    const selectedUsers = getSelectedUsers();
+    
+    if (selectedUsers.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Users Selected',
+            text: 'Please select at least one user to activate.'
+        });
+        return;
+    }
+    
+    // Filter out users that cannot be activated
+    const validUsers = selectedUsers.filter(user => !user.isAdmin && !user.isCurrent && !user.isDeleted && !user.isSuspended);
+    
+    if (validUsers.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Valid Users',
+            text: 'None of the selected users can be activated (admin users, current user, deleted users, or suspended users are excluded).'
+        });
+        return;
+    }
+    
+    const userNames = validUsers.map(u => u.name).join(', ');
+    const count = validUsers.length;
+    
+    Swal.fire({
+        title: 'Activate Users',
+        html: `Are you sure you want to activate <strong>${count}</strong> user(s)?<br><br><small>${userNames}</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#5cb85c',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Activate',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            performBulkAction('activate', validUsers.map(u => u.id));
+        }
+    });
+}
+
+/**
+ * Bulk inactivate users
+ */
+function bulkInactivate() {
+    const selectedUsers = getSelectedUsers();
+    
+    if (selectedUsers.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Users Selected',
+            text: 'Please select at least one user to inactivate.'
+        });
+        return;
+    }
+    
+    // Filter out users that cannot be inactivated
+    const validUsers = selectedUsers.filter(user => !user.isAdmin && !user.isCurrent && !user.isDeleted && !user.isSuspended);
+    
+    if (validUsers.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Valid Users',
+            text: 'None of the selected users can be inactivated (admin users, current user, deleted users, or already suspended users are excluded).'
+        });
+        return;
+    }
+    
+    const userNames = validUsers.map(u => u.name).join(', ');
+    const count = validUsers.length;
+    
+    Swal.fire({
+        title: 'Inactivate Users',
+        html: `Are you sure you want to inactivate <strong>${count}</strong> user(s)?<br><br><small>${userNames}</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Inactivate',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            performBulkAction('deactivate', validUsers.map(u => u.id));
+        }
+    });
+}
+
+/**
+ * Bulk delete users
+ */
+function bulkDelete() {
+    const selectedUsers = getSelectedUsers();
+    
+    if (selectedUsers.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Users Selected',
+            text: 'Please select at least one user to delete.'
+        });
+        return;
+    }
+    
+    // Filter out users that cannot be deleted
+    const validUsers = selectedUsers.filter(user => !user.isAdmin && !user.isCurrent && !user.isDeleted && !user.isSuspended);
+    
+    if (validUsers.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Valid Users',
+            text: 'None of the selected users can be deleted (admin users, current user, already deleted users, or already suspended users are excluded).'
+        });
+        return;
+    }
+    
+    const userNames = validUsers.map(u => u.name).join(', ');
+    const count = validUsers.length;
+    
+    Swal.fire({
+        title: 'Delete Users',
+        html: `Are you sure you want to delete <strong>${count}</strong> user(s)?<br><br><small>${userNames}</small><br><br><em>Note: Nutritionist accounts will be suspended instead of deleted.</em>`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            performBulkAction('delete', validUsers.map(u => u.id));
+        }
+    });
+}
+
+/**
+ * Perform bulk action via AJAX
+ */
+function performBulkAction(action, userIds) {
+    const actionUrls = {
+        'activate': '/admin/users/bulk/activate',
+        'deactivate': '/admin/users/bulk/deactivate',
+        'delete': '/admin/users/bulk/delete',
+        'restore': '/admin/users/bulk/restore'
+    };
+    
+    const actionMessages = {
+        'activate': 'Activating users...',
+        'deactivate': 'Inactivating users...',
+        'delete': 'Deleting users...',
+        'restore': 'Restoring users...'
+    };
+    
+    Swal.fire({
+        title: actionMessages[action],
+        html: 'Please wait...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    fetch(actionUrls[action], {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            user_ids: userIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const results = data.results;
+            const successCount = results.success.length;
+            const failedCount = results.failed.length;
+            const skippedCount = results.skipped.length;
+            
+            let resultHtml = '';
+            
+            if (successCount > 0) {
+                resultHtml += `<div class="bulk-result-section success-section">
+                    <strong>✓ Success (${successCount}):</strong><br>
+                    <small>${results.success.map(u => u.name).join(', ')}</small>
+                </div>`;
+            }
+            
+            if (skippedCount > 0) {
+                resultHtml += `<div class="bulk-result-section warning-section">
+                    <strong>⚠ Skipped (${skippedCount}):</strong><br>
+                    <small>${results.skipped.map(u => `${u.name}: ${u.reason}`).join('<br>')}</small>
+                </div>`;
+            }
+            
+            if (failedCount > 0) {
+                resultHtml += `<div class="bulk-result-section error-section">
+                    <strong>✗ Failed (${failedCount}):</strong><br>
+                    <small>${results.failed.map(u => u.reason).join('<br>')}</small>
+                </div>`;
+            }
+            
+            Swal.fire({
+                icon: successCount > 0 ? 'success' : 'warning',
+                title: 'Bulk Action Completed',
+                html: resultHtml,
+                confirmButtonColor: '#5cb85c'
+            }).then(() => {
+                if (action === 'delete') {
+                    // Reload page for delete actions
+                    location.reload();
+                } else {
+                    // For activate/deactivate, update UI dynamically
+                    clearAllSelections();
+                    
+                    if (successCount > 0) {
+                        const successUserIds = results.success.map(u => u.user_id);
+                        refreshUserData(successUserIds, (users) => {
+                            users.forEach(user => {
+                                updateUserRow(user.user_id, user);
+                            });
+                        });
+                    }
+                }
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Bulk action failed'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Bulk action error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while performing bulk action'
+        });
+    });
 }
