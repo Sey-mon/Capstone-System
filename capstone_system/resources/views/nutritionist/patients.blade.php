@@ -74,13 +74,6 @@
         </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-
     <!-- Patients Table -->
     <div class="card patients-card">
         <div class="card-header">
@@ -103,8 +96,7 @@
                     <span class="badge results-badge" id="resultsCount">{{ $patients->total() }} patient(s)</span>
                 </div>
                 <button class="btn-add-patient" onclick="openAddPatientModal()">
-                    <i class="fas fa-plus"></i>
-                    <span>Add Patient</span>
+                    <i class="fas fa-plus"></i> Add
                 </button>
             </div>
         </div>
