@@ -249,10 +249,6 @@ function showAssessmentHistory(childId, childName) {
                                 <i class="fas fa-prescription me-1"></i>
                                 View Treatment Plan
                             </button>
-                            <button class="btn btn-success btn-sm swal-pdf-button" onclick="downloadAssessmentPDF(${assessment.id})">
-                                <i class="fas fa-file-pdf me-1"></i>
-                                Download PDF
-                            </button>
                         </div>
                     </div>
                     <div class="swal-assessment-detail">

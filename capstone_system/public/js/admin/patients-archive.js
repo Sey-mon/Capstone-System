@@ -8,12 +8,14 @@
 
     let currentStatus = 'active'; // Current view: 'active' or 'archived'
     let currentPage = 1;
+    let currentView = 'table'; // Current display mode: 'table' or 'grid'
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         initializeArchiveToggles();
         initializeArchiveButtons();
         initializePageJumpButtons();
+        initializeViewTracking();
     });
 
     /**
@@ -103,7 +105,8 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                renderPatients(data.patients, status);
+                renderPatientsTable(data.patients, status);
+                renderPatientsGrid(data.patients, status);
                 updatePagination(data.pagination);
                 updateCounts(data.pagination.total);
             } else {
@@ -117,9 +120,30 @@
     }
 
     /**
+     * Initialize view tracking
+     */
+    function initializeViewTracking() {
+        const viewButtons = document.querySelectorAll('.view-btn');
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                currentView = this.getAttribute('data-view');
+            });
+        });
+        
+        // Detect current view on load
+        const tableView = document.getElementById('tableView');
+        const gridView = document.getElementById('gridView');
+        if (gridView && gridView.classList.contains('active')) {
+            currentView = 'grid';
+        } else if (tableView && tableView.classList.contains('active')) {
+            currentView = 'table';
+        }
+    }
+
+    /**
      * Render patients table
      */
-    function renderPatients(patients, status) {
+    function renderPatientsTable(patients, status) {
         const tableBody = document.getElementById('patientsTableBody');
         
         if (patients.length === 0) {
@@ -221,20 +245,134 @@
     }
 
     /**
+     * Render patients grid
+     */
+    function renderPatientsGrid(patients, status) {
+        const gridContainer = document.getElementById('patientsGrid');
+        
+        if (!gridContainer) return;
+
+        if (patients.length === 0) {
+            gridContainer.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p>No ${status} patients found.</p>
+                </div>
+            `;
+            return;
+        }
+
+        gridContainer.innerHTML = patients.map(patient => {
+            // Define action buttons based on status
+            let actionButtons = '';
+            
+            if (status === 'archived') {
+                // Archived patients: only View and Restore buttons
+                actionButtons = `
+                    <button class="btn btn-sm btn-primary" data-patient-id="${patient.patient_id}" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-info unarchive-patient-btn" data-patient-id="${patient.patient_id}" title="Restore Patient">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                `;
+            } else {
+                // Active patients: all action buttons
+                actionButtons = `
+                    <button class="btn btn-sm btn-primary" data-patient-id="${patient.patient_id}" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-info" data-patient-id="${patient.patient_id}" title="Assessment History">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning" data-patient-id="${patient.patient_id}" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" data-patient-id="${patient.patient_id}" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="patient-card ${status === 'archived' ? 'archived' : ''}"
+                    data-name="${(patient.first_name + ' ' + patient.last_name).toLowerCase()}"
+                    data-admitted="${patient.date_of_admission_raw || patient.date_of_admission}"
+                    data-age="${patient.age_months}"
+                    data-gender="${patient.sex}"
+                    data-barangay="${patient.barangay || ''}"
+                    data-parent="${patient.parent || ''}"
+                    data-nutritionist="${patient.nutritionist || ''}"
+                    data-contact="${patient.contact_number || ''}">
+                    <div class="card-header">
+                        <div class="patient-info">
+                            <h4 class="patient-name">${patient.first_name} ${patient.last_name}</h4>
+                            <div class="patient-meta">
+                                <span class="age">${patient.age_months} months</span>
+                                <span class="gender badge badge-${patient.sex === 'Male' ? 'primary' : 'secondary'}">
+                                    <i class="fas fa-${patient.sex === 'Male' ? 'mars' : 'venus'}"></i>
+                                    ${patient.sex}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <span class="label">Barangay:</span>
+                            <span class="value">${patient.barangay || 'Not assigned'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Parent:</span>
+                            <span class="value">${patient.parent || 'Not assigned'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">BNS:</span>
+                            <span class="value">${patient.nutritionist || 'Not assigned'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Contact:</span>
+                            <span class="value">${patient.contact_number || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Admitted:</span>
+                            <span class="value">${patient.date_of_admission}</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="action-buttons">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Reinitialize all action buttons
+        initializeArchiveButtons();
+        initializeViewButtons();
+    }
+
+    /**
      * Initialize archive/unarchive buttons
      */
     function initializeArchiveButtons() {
-        // Archive buttons
+        // Archive buttons - Clone and replace to remove duplicate event listeners
         document.querySelectorAll('.archive-patient-btn').forEach(button => {
-            button.addEventListener('click', function() {
+            const newBtn = button.cloneNode(true);
+            button.parentNode.replaceChild(newBtn, button);
+            
+            newBtn.addEventListener('click', function() {
                 const patientId = this.getAttribute('data-patient-id');
                 archivePatient(patientId);
             });
         });
 
-        // Unarchive buttons
+        // Unarchive buttons - Clone and replace to remove duplicate event listeners
         document.querySelectorAll('.unarchive-patient-btn').forEach(button => {
-            button.addEventListener('click', function() {
+            const newBtn = button.cloneNode(true);
+            button.parentNode.replaceChild(newBtn, button);
+            
+            newBtn.addEventListener('click', function() {
                 const patientId = this.getAttribute('data-patient-id');
                 unarchivePatient(patientId);
             });
@@ -307,21 +445,46 @@
      * Update pagination
      */
     function updatePagination(pagination) {
-        // Update pagination controls if they exist
-        const paginationWrapper = document.querySelector('.pagination-wrapper');
-        if (paginationWrapper && pagination.links) {
-            paginationWrapper.innerHTML = pagination.links;
-            
-            // Attach click handlers to pagination links to maintain status
-            const paginationLinks = paginationWrapper.querySelectorAll('a[href*="page="]');
-            paginationLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const url = new URL(this.href);
-                    const page = url.searchParams.get('page') || 1;
-                    loadPatients(currentStatus, page);
-                });
+        // Update all pagination controls (both table and grid view)
+        const paginationWrappers = document.querySelectorAll('.pagination-wrapper');
+        paginationWrappers.forEach(wrapper => {
+            if (wrapper && pagination.links) {
+                wrapper.innerHTML = pagination.links;
+            }
+        });
+        
+        // Attach click handlers to pagination links to maintain status and view
+        const paginationLinks = document.querySelectorAll('.pagination-wrapper a[href*="page="]');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = new URL(this.href);
+                const page = url.searchParams.get('page') || 1;
+                loadPatients(currentStatus, page);
             });
+        });
+        
+        // Update page info for both table and grid view
+        const pageInfo = document.getElementById('pageInfo');
+        const gridPageInfo = document.getElementById('gridPageInfo');
+        if (pageInfo && pagination.from && pagination.to && pagination.total) {
+            const infoText = `Showing <strong>${pagination.from}</strong> to <strong>${pagination.to}</strong> of <strong>${pagination.total}</strong> patients`;
+            pageInfo.innerHTML = infoText;
+            if (gridPageInfo) {
+                gridPageInfo.innerHTML = infoText;
+            }
+        }
+        
+        // Update page jump inputs
+        const pageJump = document.getElementById('pageJump');
+        const gridPageJump = document.getElementById('gridPageJump');
+        if (pageJump && pagination.current_page) {
+            pageJump.value = pagination.current_page;
+            pageJump.max = pagination.last_page || 1;
+        }
+        if (gridPageJump && pagination.current_page) {
+            gridPageJump.value = pagination.current_page;
+            gridPageJump.max = pagination.last_page || 1;
         }
     }
 

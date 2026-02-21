@@ -41,7 +41,7 @@ function generateSelectOptions(data, valueKey, textKeys, emptyText = 'Select') {
 // SweetAlert2 Modal Functions
 function showAddPatientModal() {
     const parentsOptions = generateSelectOptions(parentsData, 'user_id', ['first_name', 'last_name'], 'Select Parent');
-    const nutritionistsOptions = generateSelectOptions(nutritionistsData, 'user_id', ['first_name', 'last_name'], 'Select Nutritionist');
+    const nutritionistsOptions = generateSelectOptions(nutritionistsData, 'user_id', ['first_name', 'last_name'], 'Select BNS');
     const barangaysOptions = generateSelectOptions(barangaysData, 'barangay_id', ['barangay_name'], 'Select Barangay');
 
     Swal.fire({
@@ -143,7 +143,7 @@ function showAddPatientModal() {
                             </div>
                             <div class="form-group">
                                 <label for="nutritionist_id">
-                                    <i class="fas fa-user-md"></i> Assigned Nutritionist
+                                    <i class="fas fa-user-md"></i> Assigned BNS
                                 </label>
                                 <select id="nutritionist_id" name="nutritionist_id" class="swal2-select">
                                     ${nutritionistsOptions}
@@ -435,7 +435,7 @@ function showAddPatientModal() {
 
 function showEditPatientModal(patient) {
     const parentsOptions = generateSelectOptions(parentsData, 'user_id', ['first_name', 'last_name'], 'Select Parent');
-    const nutritionistsOptions = generateSelectOptions(nutritionistsData, 'user_id', ['first_name', 'last_name'], 'Select Nutritionist');
+    const nutritionistsOptions = generateSelectOptions(nutritionistsData, 'user_id', ['first_name', 'last_name'], 'Select BNS');
     const barangaysOptions = generateSelectOptions(barangaysData, 'barangay_id', ['barangay_name'], 'Select Barangay');
 
     let birthdate = '';
@@ -467,31 +467,25 @@ function showEditPatientModal(patient) {
                     <div class="form-section">
                         <h6 class="section-title">
                             <i class="fas fa-user-circle" style="color: #007bff;"></i> Basic Information
-                            <span style="display: block; font-size: 12px; color: #6c757d; font-weight: normal; margin-top: 4px;">
-                                <i class="fas fa-info-circle"></i> Demographic fields are locked and updated through assessments
-                            </span>
                         </h6>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="edit_first_name">
                                     <i class="fas fa-user"></i> First Name *
-                                    <i class="fas fa-lock" style="font-size: 11px; color: #6c757d; margin-left: 5px;"></i>
                                 </label>
-                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${patient.first_name || ''}" disabled style="background-color: #f8f9fa; cursor: not-allowed;">
+                                <input type="text" id="edit_first_name" name="first_name" class="swal2-input" value="${patient.first_name || ''}" required>
                             </div>
                             <div class="form-group">
                                 <label for="edit_middle_name">
                                     <i class="fas fa-user"></i> Middle Name
-                                    <i class="fas fa-lock" style="font-size: 11px; color: #6c757d; margin-left: 5px;"></i>
                                 </label>
-                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${patient.middle_name || ''}" disabled style="background-color: #f8f9fa; cursor: not-allowed;">
+                                <input type="text" id="edit_middle_name" name="middle_name" class="swal2-input" value="${patient.middle_name || ''}">
                             </div>
                             <div class="form-group">
                                 <label for="edit_last_name">
                                     <i class="fas fa-user"></i> Last Name *
-                                    <i class="fas fa-lock" style="font-size: 11px; color: #6c757d; margin-left: 5px;"></i>
                                 </label>
-                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${patient.last_name || ''}" disabled style="background-color: #f8f9fa; cursor: not-allowed;">
+                                <input type="text" id="edit_last_name" name="last_name" class="swal2-input" value="${patient.last_name || ''}" required>
                             </div>
                         </div>
                         <div class="form-row">
@@ -538,7 +532,7 @@ function showEditPatientModal(patient) {
                             </div>
                             <div class="form-group">
                                 <label for="edit_nutritionist_id">
-                                    <i class="fas fa-user-md"></i> Assigned Nutritionist
+                                    <i class="fas fa-user-md"></i> Assigned BNS
                                 </label>
                                 <select id="edit_nutritionist_id" name="nutritionist_id" class="swal2-select">
                                     ${nutritionistsOptions}
@@ -910,7 +904,7 @@ function showViewPatientModal(patient) {
                             <div class="detail-value-display">${parentName}</div>
                         </div>
                         <div class="form-group">
-                            <label><i class="fas fa-user-md"></i> Assigned Nutritionist</label>
+                            <label><i class="fas fa-user-md"></i> Assigned BNS</label>
                             <div class="detail-value-display">${nutritionistName}</div>
                         </div>
                         <div class="form-group">
@@ -1144,9 +1138,9 @@ function updatePatient(patientId) {
     formData.append('_method', 'PUT');
 
     // Get all form fields (excluding disabled ones)
-    const fields = ['parent_id', 'nutritionist_id', 'barangay_id', 'contact_number', 'date_of_admission', 
+    const fields = ['first_name', 'middle_name', 'last_name', 'parent_id', 'nutritionist_id', 'barangay_id', 'contact_number', 'date_of_admission', 
                     'total_household_adults', 'total_household_children', 'total_household_twins', 
-                    'breastfeeding', 'edema', 'other_medical_problems'];
+                    'breastfeeding', 'edema', 'other_medical_problems', 'is_4ps_beneficiary'];
 
     fields.forEach(field => {
         const element = form.querySelector(`[name="${field}"]`);

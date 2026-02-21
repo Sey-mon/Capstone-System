@@ -815,10 +815,12 @@ class NutritionistController extends Controller
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
-            'contact_number' => 'nullable|string|max:20',
+            'contact_number' => ['nullable', 'string', 'regex:/^(09|\+639)\d{9}$/'],
             'birth_date' => 'nullable|date',
             'sex' => 'nullable|in:male,female,other',
             'address' => 'nullable|string|max:500',
+        ], [
+            'contact_number.regex' => 'Please enter a valid Philippine mobile number (11 digits starting with 09, e.g., 09123456789)',
         ]);
 
         try {
@@ -924,7 +926,7 @@ class NutritionistController extends Controller
 
             // Soft delete the user account
             $user->is_active = false; // Deactivate account immediately
-            $user->account_status = 'suspended'; // Update status to suspended
+            $user->account_status = 'suspended'; // Update status to deactivated
             $user->save();
             
             // Perform soft delete

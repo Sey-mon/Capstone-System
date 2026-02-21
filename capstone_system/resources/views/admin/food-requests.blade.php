@@ -3,7 +3,7 @@
 @section('title', 'Food Requests')
 
 @section('page-title', 'Food Requests')
-@section('page-subtitle', 'Review and manage food addition requests from nutritionists')
+@section('page-subtitle', 'Review and manage food addition requests from BNS')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/food-requests.css') }}?v={{ filemtime(public_path('css/admin/food-requests.css')) }}">
@@ -174,7 +174,7 @@
                 <div class="form-group">
                     <label>Reason for Rejection *</label>
                     <textarea name="admin_notes" required rows="4" placeholder="Explain why this request is being rejected..."></textarea>
-                    <small>This will be visible to the nutritionist.</small>
+                    <small>This will be visible to the BNS.</small>
                 </div>
 
                 <button type="submit" class="btn btn-danger">

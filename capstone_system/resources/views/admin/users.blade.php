@@ -36,19 +36,19 @@
                     <div class="filter-field">
                         <label>Role</label>
                         <select name="role" class="form-control" id="roleFilter">
-                            <option value="" disabled selected hidden>All Roles</option>
+                            <option value="" {{ request('role') == '' ? 'selected' : '' }}>All Roles</option>
                             @foreach($roles as $role)
-                                <option value="{{ $role->role_id }}" @if(request('role') == $role->role_id) selected @endif>{{ $role->role_name }}</option>
+                                <option value="{{ $role->role_id }}" @if(request('role') == $role->role_id) selected @endif>{{ $role->role_name === 'Nutritionist' ? 'BNS' : $role->role_name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="filter-field">
                         <label>Status</label>
                         <select name="account_status" class="form-control" id="accountStatusFilter">
-                            <option value="" disabled selected hidden>All Status</option>
+                            <option value="" {{ request('account_status') == '' ? 'selected' : '' }}>All Status</option>
                             <option value="pending" @if(request('account_status')==='pending') selected @endif>Pending</option>
                             <option value="active" @if(request('account_status')==='active') selected @endif>Active</option>
-                            <option value="suspended" @if(request('account_status')==='suspended') selected @endif>Suspended</option>
+                            <option value="suspended" @if(request('account_status')==='suspended') selected @endif>Inactivated</option>
                             <option value="rejected" @if(request('account_status')==='rejected') selected @endif>Rejected</option>
                             <option value="deleted" @if(request('account_status')==='deleted') selected @endif>Deleted</option>
                         </select>
@@ -56,7 +56,6 @@
                     <div class="filter-field">
                         <label>Sort By</label>
                         <select name="sort_by" class="form-control" id="sortByFilter">
-                            <option value="" disabled selected hidden>Sort By</option>
                             <option value="newest" @if(request('sort_by')=='newest' || !request('sort_by')) selected @endif>Newest First</option>
                             <option value="oldest" @if(request('sort_by')=='oldest') selected @endif>Oldest First</option>
                             <option value="name_asc" @if(request('sort_by')=='name_asc') selected @endif>Name (A-Z)</option>
@@ -81,8 +80,8 @@
                 <p class="card-subtitle">Manage and organize all system users and their roles</p>
             </div>
             <div class="header-actions">
-                <button class="btn-count">
-                    <i class="fas fa-user"></i> {{ $users->total() }} users
+                <button class="btn-count" id="userCountDisplay">
+                    <i class="fas fa-user"></i> <span id="totalUserCount">{{ $users->total() }}</span> users
                 </button>
                 <button class="btn btn-primary" onclick="openAddUserModal()">
                     <i class="fas fa-plus"></i>
@@ -90,11 +89,39 @@
                 </button>
             </div>
         </div>
+
+        <!-- Bulk Actions Bar -->
+        <div class="bulk-actions-bar" id="bulkActionsBar" style="display: none;">
+            <div class="bulk-actions-left">
+                <span class="bulk-selected-count">
+                    <i class="fas fa-check-square"></i>
+                    <span id="selectedCount">0</span> selected
+                </span>
+                <button class="btn-clear-selection" onclick="clearAllSelections()">
+                    <i class="fas fa-times"></i> Clear Selection
+                </button>
+            </div>
+            <div class="bulk-actions-right">
+                <button class="btn-bulk-action btn-bulk-activate" onclick="bulkActivate()">
+                    <i class="fas fa-user-check"></i>
+                </button>
+                <button class="btn-bulk-action btn-bulk-deactivate" onclick="bulkInactivate()">
+                    <i class="fas fa-user-slash"></i>
+                </button>
+                <button class="btn-bulk-action btn-bulk-delete" onclick="bulkDelete()">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
         <div class="card-content">
             <div class="users-table-container">
                 <table class="users-table">
                     <thead>
                         <tr>
+                            <th class="checkbox-column">
+                                <input type="checkbox" id="selectAll" class="user-checkbox-main" onchange="toggleSelectAll(this)">
+                            </th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
@@ -105,7 +132,17 @@
                     </thead>
                     <tbody>
                         @foreach($users as $user)
-                        <tr>
+                        <tr data-user-id="{{ $user->user_id }}" 
+                            data-user-name="{{ $user->first_name }} {{ $user->last_name }}"
+                            data-is-admin="{{ ($user->role->role_name ?? '') === 'Admin' ? '1' : '0' }}"
+                            data-is-deleted="{{ $user->deleted_at ? '1' : '0' }}"
+                            data-is-suspended="{{ $user->account_status === 'suspended' ? '1' : '0' }}"
+                            data-is-current="{{ $user->user_id === Auth::id() ? '1' : '0' }}">
+                            <td class="checkbox-column">
+                                @if($user->user_id !== Auth::id() && ($user->role->role_name ?? '') !== 'Admin' && !$user->deleted_at && $user->account_status !== 'suspended')
+                                    <input type="checkbox" class="user-checkbox" value="{{ $user->user_id }}" onchange="updateBulkActions()">
+                                @endif
+                            </td>
                             <td>
                                 <div class="user-info">
                                     <div class="user-avatar">
@@ -126,9 +163,10 @@
                                         'Parent' => 'role-parent',
                                         default => 'role-unknown'
                                     };
+                                    $displayRoleName = $roleName === 'Nutritionist' ? 'BNS' : $roleName;
                                 @endphp
                                 <span class="role-badge {{ $roleClass }}">
-                                    {{ $roleName }}
+                                    {{ $displayRoleName }}
                                 </span>
                             </td>
                             <td>
@@ -166,7 +204,7 @@
                                 @elseif($status === 'suspended')
                                     <span class="status-badge status-suspended" style="background-color: #f59e0b; color: white;">
                                         <i class="fas fa-ban"></i>
-                                        Suspended
+                                        Inactivated
                                     </span>
                                 @elseif($status === 'rejected')
                                     <span class="status-badge status-rejected" style="background-color: #ef4444; color: white;">
@@ -199,7 +237,7 @@
                                                 <i class="fas fa-undo"></i>
                                             </button>
                                         @elseif($user->account_status === 'suspended')
-                                            <button class="action-btn activate" onclick="reactivateSuspendedUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')" title="Reactivate User">
+                                            <button class="action-btn activate" onclick="reactivateDeactivatedUser({{ $user->user_id }}, '{{ $user->first_name }} {{ $user->last_name }}')" title="Reactivate User">
                                                 <i class="fas fa-user-check"></i>
                                             </button>
                                         @elseif($user->is_active)

@@ -395,7 +395,7 @@
                 <div class="signature-line">
                     <div class="signature-name">{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</div>
                 </div>
-                <div class="signature-label">Licensed Nutritionist</div>
+                <div class="signature-label">Barangay Nutrition Scholar (BNS)</div>
                 <div class="signature-label">License No: _____________</div>
             </div>
             <div class="signature-box">
@@ -415,7 +415,7 @@
             <div class="footer-title">Professional Screening Certification</div>
             <div class="footer-info">
                 This comprehensive nutritional screening profile was professionally conducted, analyzed, and documented by<br>
-                <strong>{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</strong> - Licensed Nutritionist<br>
+                <strong>{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</strong> - Barangay Nutrition Scholar (BNS)<br>
                 <br>
                 Document Generated: {{ now()->format('l, F d, Y \a\t g:i A') }}<br>
                 Capstone Nutrition System | Professional Nutritional Care & Management<br>
