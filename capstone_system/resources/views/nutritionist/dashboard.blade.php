@@ -11,80 +11,6 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/nutritionist/dashboard.css') }}?v={{ filemtime(public_path('css/nutritionist/dashboard.css')) }}">
-    <style>
-        .dashboard-wrapper {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #ffffff 100%);
-            min-height: 100vh;
-            padding: 2rem 0;
-        }
-        .chart-container {
-            position: relative;
-            height: 320px;
-            margin-bottom: 20px;
-        }
-        .chart-card {
-            background: white;
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
-            margin-bottom: 24px;
-            border: 2px solid #d1fae5;
-            transition: all 0.3s ease;
-        }
-        .chart-card:hover {
-            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.15);
-            transform: translateY(-2px);
-            border-color: #86efac;
-        }
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .chart-title {
-            font-size: 19px;
-            font-weight: 700;
-            color: #047857;
-        }
-        .chart-subtitle {
-            font-size: 14px;
-            color: #059669;
-            margin-top: 4px;
-        }
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 28px;
-            margin-bottom: 28px;
-        }
-        .page-header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            padding: 2rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-        }
-        .page-header h1 {
-            color: white;
-            margin: 0;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-        .page-header p {
-            color: #d1fae5;
-            margin: 0.5rem 0 0 0;
-            font-size: 1.1rem;
-        }
-        @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-            .dashboard-wrapper {
-                padding: 1rem 0;
-            }
-        }
-    </style>
 @endpush
 
 @section('content')
@@ -128,7 +54,7 @@
             <div class="stat-value">{{ $stats['total_assessments_this_month'] }}</div>
             <div class="stat-change positive">
                 <i class="fas fa-chart-line"></i>
-                <span>Assessments done</span>
+                <span>Screening done</span>
             </div>
         </div>
 
@@ -153,7 +79,7 @@
         <div class="chart-card">
             <div class="chart-header">
                 <div>
-                    <div class="chart-title">Assessment Trends</div>
+                    <div class="chart-title">Screening Trends</div>
                     <div class="chart-subtitle">Last 6 months activity</div>
                 </div>
             </div>
@@ -283,231 +209,14 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    
+
     <script>
-        // Chart.js Global Configuration
-        Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
-        Chart.defaults.color = '#4a5568';
-        
-        // Register datalabels plugin but disable by default
-        Chart.register(ChartDataLabels);
-        Chart.defaults.set('plugins.datalabels', {
-            display: false
-        });
-        
-        // Assessment Trends Chart (Line Chart)
-        const assessmentTrendsData = {!! json_encode($monthlyAssessments) !!};
-        const trendsCtx = document.getElementById('assessmentTrendsChart').getContext('2d');
-        new Chart(trendsCtx, {
-            type: 'line',
-            data: {
-                labels: assessmentTrendsData.map(d => {
-                    const date = new Date(d.month + '-01');
-                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                }),
-                datasets: [{
-                    label: 'Total Assessments',
-                    data: assessmentTrendsData.map(d => d.count),
-                    borderColor: '#4299e1',
-                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }, {
-                    label: 'Completed',
-                    data: assessmentTrendsData.map(d => d.completed),
-                    borderColor: '#48bb78',
-                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }, {
-                    label: 'Pending',
-                    data: assessmentTrendsData.map(d => d.pending),
-                    borderColor: '#ed8936',
-                    backgroundColor: 'rgba(237, 137, 54, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-
-        // Gender Distribution Chart (Pie Chart)
-        const genderData = {!! json_encode($genderStats) !!};
-        const genderCtx = document.getElementById('genderChart').getContext('2d');
-        new Chart(genderCtx, {
-            type: 'doughnut',
-            data: {
-                labels: genderData.map(d => d.sex === 'Male' || d.sex === 'M' ? 'Male' : 'Female'),
-                datasets: [{
-                    data: genderData.map(d => d.count),
-                    backgroundColor: [
-                        'rgba(66, 153, 225, 0.8)',
-                        'rgba(237, 100, 166, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(66, 153, 225, 1)',
-                        'rgba(237, 100, 166, 1)'
-                    ],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return label + ': ' + value + ' (' + percentage + '%)';
-                            }
-                        }
-                    },
-                    datalabels: {
-                        display: true,
-                        color: '#fff',
-                        font: {
-                            weight: 'bold',
-                            size: 14
-                        },
-                        formatter: (value, ctx) => {
-                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return percentage + '%';
-                        }
-                    }
-                }
-            }
-        });
-
-        // Age Distribution Chart (Bar Chart)
-        const ageData = {!! json_encode($ageGroups) !!};
-        const ageCtx = document.getElementById('ageChart').getContext('2d');
-        new Chart(ageCtx, {
-            type: 'bar',
-            data: {
-                labels: ageData.map(d => d.age_years + (d.age_years === 1 ? ' year' : ' years')),
-                datasets: [{
-                    label: 'Number of Patients',
-                    data: ageData.map(d => d.count),
-                    backgroundColor: 'rgba(72, 187, 120, 0.7)',
-                    borderColor: 'rgba(72, 187, 120, 1)',
-                    borderWidth: 2,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-
-        // Nutritional Status Chart (Doughnut Chart)
-        const nutritionalData = {!! json_encode($nutritionalStatus) !!};
-        const nutritionalCtx = document.getElementById('nutritionalStatusChart').getContext('2d');
-        
-        const statusColors = {
-            'Severe Wasting': '#dc2626',
-            'Wasting': '#ef4444',
-            'Underweight': '#3b82f6',
-            'Normal': '#48bb78',
-            'Possible Risk of Overweight': '#ecc94b',
-            'Overweight': '#ed8936',
-            'Obese': '#dc2626'
-        };
-        
-        new Chart(nutritionalCtx, {
-            type: 'doughnut',
-            data: {
-                labels: nutritionalData.map(d => d.bmi_for_age || 'Not Assessed'),
-                datasets: [{
-                    data: nutritionalData.map(d => d.count),
-                    backgroundColor: nutritionalData.map(d => statusColors[d.bmi_for_age] || '#cbd5e0'),
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 10,
-                            font: {
-                                size: 11
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return label + ': ' + value + ' (' + percentage + '%)';
-                            }
-                        }
-                    },
-                    datalabels: {
-                        display: true,
-                        color: '#fff',
-                        font: {
-                            weight: 'bold',
-                            size: 12
-                        },
-                        formatter: (value, ctx) => {
-                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return percentage + '%';
-                        }
-                    }
-                }
-            }
-        });
+        // Pass server-side data to the external JS file
+        window.assessmentTrendsData = {!! json_encode($monthlyAssessments) !!};
+        window.genderData           = {!! json_encode($genderStats) !!};
+        window.ageData              = {!! json_encode($ageGroups) !!};
+        window.nutritionalData      = {!! json_encode($nutritionalStatus) !!};
     </script>
-    
+
     <script src="{{ asset('js/nutritionist/nutritionist-dashboard.js') }}?v={{ filemtime(public_path('js/nutritionist/nutritionist-dashboard.js')) }}"></script>
 @endpush

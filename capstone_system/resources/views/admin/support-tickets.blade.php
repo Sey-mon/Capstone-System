@@ -26,7 +26,7 @@
         </div>
         
         <div class="filter-content">
-            <form method="GET" action="{{ route('admin.support-tickets') }}" onsubmit="event.preventDefault();">
+            <form method="GET" action="{{ route('admin.support-tickets') }}" onsubmit="event.preventDefault();" class="filters-form">
                 <input type="hidden" name="filter" value="{{ request('filter', 'all') }}">
                 
                 <div class="filter-grid" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr;">
@@ -48,7 +48,7 @@
                     <!-- Priority Filter -->
                     <div class="filter-field">
                         <label>Priority</label>
-                        <select name="priority" class="form-control">
+                        <select name="priority" class="form-control filter-select">
                             <option value="" {{ request('priority') == '' ? 'selected' : '' }}>All Priorities</option>
                             <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>🔥 Urgent</option>
                             <option value="normal" {{ request('priority') == 'normal' ? 'selected' : '' }}>ℹ️ Normal</option>
@@ -58,7 +58,7 @@
                     <!-- Status Filter -->
                     <div class="filter-field">
                         <label>Status</label>
-                        <select name="status" class="form-control">
+                        <select name="status" class="form-control filter-select">
                             <option value="" {{ request('status') == '' ? 'selected' : '' }}>All Statuses</option>
                             <option value="unread" {{ request('status') == 'unread' ? 'selected' : '' }}>📨 Unread</option>
                             <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>📖 Read</option>
@@ -69,7 +69,7 @@
                     <!-- Category Filter -->
                     <div class="filter-field">
                         <label>Category</label>
-                        <select name="category" class="form-control">
+                        <select name="category" class="form-control filter-select">
                             <option value="" {{ request('category') == '' ? 'selected' : '' }}>All Categories</option>
                             @foreach($categories as $cat)
                             <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>
@@ -135,11 +135,11 @@
             </div>
             <div class="header-actions">
                 @if(request('filter') != 'archived')
-                    <button class="btn-count">
+                    <button class="btn-count" onclick="filterTickets('active')" title="Show all non-archived tickets">
                         <i class="fas fa-ticket-alt"></i> {{ $stats['total'] }} active
                     </button>
                     @if($stats['unread'] > 0)
-                    <button class="btn-count" style="background: #ef4444; color: white;">
+                    <button class="btn-count" style="background: #ef4444; color: white; cursor: pointer;" onclick="filterTickets('unread')" title="Show unread tickets">
                         <i class="fas fa-exclamation-circle"></i> {{ $stats['unread'] }} unread
                     </button>
                     @endif
@@ -149,7 +149,7 @@
                     @if(request('filter') == 'archived')
                         <i class="fas fa-arrow-left"></i> Back to Active Tickets
                     @else
-                        <i class="fas fa-archive"></i> View Archived ({{ $stats['archived'] }})
+                        <i class="fas fa-archive"></i> Archived ({{ $stats['archived'] }})
                     @endif
                 </button>
             </div>

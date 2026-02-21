@@ -4140,6 +4140,10 @@ class AdminController extends Controller
             case 'archived':
                 $query->archived();
                 break;
+            case 'active':
+                // Show all non-archived tickets (unread, read, resolved — excludes archived only)
+                $query->active();
+                break;
             default:
                 // Show only active (non-archived, non-resolved) tickets by default
                 $query->active()->where('status', '!=', 'resolved');
