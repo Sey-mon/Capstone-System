@@ -910,7 +910,15 @@
 }
 
 .btn-count {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    cursor: pointer;
     transition: all 0.2s ease-in-out;
+}
+
+.btn-count:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Responsive Card Header */

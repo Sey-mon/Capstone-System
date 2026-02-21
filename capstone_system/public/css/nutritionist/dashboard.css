@@ -293,10 +293,6 @@
 }
 
 /* Chart Container Animations */
-.chart-card {
-    animation: fadeInUp 0.5s ease-out;
-}
-
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -349,5 +345,95 @@
     
     .activity-item {
         padding: 0.75rem;
+    }
+}
+
+/* ========================================
+   CHART & LAYOUT STYLES
+   ======================================== */
+
+.dashboard-wrapper {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #ffffff 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.chart-container {
+    position: relative;
+    height: 320px;
+    margin-bottom: 20px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+    margin-bottom: 24px;
+    border: 2px solid #d1fae5;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.chart-card:hover {
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.15);
+    transform: translateY(-2px);
+    border-color: #86efac;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: #047857;
+}
+
+.chart-subtitle {
+    font-size: 14px;
+    color: #059669;
+    margin-top: 4px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 28px;
+    margin-bottom: 28px;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.page-header h1 {
+    color: white;
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.page-header p {
+    color: #d1fae5;
+    margin: 0.5rem 0 0 0;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-wrapper {
+        padding: 1rem 0;
     }
 }
