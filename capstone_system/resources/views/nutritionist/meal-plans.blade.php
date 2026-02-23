@@ -86,10 +86,7 @@
                         <i class="fas fa-file-alt"></i>
                         {{ $feedingProgramPlans->count() }} {{ $feedingProgramPlans->count() === 1 ? 'plan' : 'plans' }}
                     </button>
-                    <button type="button" class="btn-primary" id="open-feeding-program-btn">
-                        <i class="fas fa-plus"></i>
-                        Create New Plan
-                    </button>
+                    <button type="button" class="btn-primary" id="open-feeding-program-btn"><i class="fas fa-plus"></i> Create New Plan</button>
                 </div>
             </div>
 
@@ -206,9 +203,7 @@
                 <i class="fas fa-clipboard-list"></i>
                 <h3>No Meal Plans Yet</h3>
                 <p>Create your first feeding program meal plan to get started!</p>
-                <button type="button" class="btn-primary" id="open-feeding-program-btn-empty">
-                    <i class="fas fa-plus"></i>Create Program Plan
-                </button>
+                <button type="button" class="btn-primary" id="open-feeding-program-btn-empty"><i class="fas fa-plus"></i> Create Program Plan</button>
             </div>
         </div>
 
