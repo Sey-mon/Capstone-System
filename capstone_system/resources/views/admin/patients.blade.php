@@ -35,7 +35,7 @@
                 <div class="filter-field">
                     <label>Barangay</label>
                     <select id="filterBarangay" class="form-control">
-                        <option value="" disabled selected hidden>All Barangays</option>
+                        <option value="" selected>All Barangays</option>
                         @foreach($barangays ?? [] as $barangay)
                             <option value="{{ $barangay->barangay_name }}">{{ $barangay->barangay_name }}</option>
                         @endforeach
@@ -44,7 +44,7 @@
                 <div class="filter-field">
                     <label>Gender</label>
                     <select id="filterGender" class="form-control">
-                        <option value="" disabled selected hidden>All Genders</option>
+                        <option value="" selected>All Genders</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </select>
@@ -52,7 +52,7 @@
                 <div class="filter-field">
                     <label>Age Range</label>
                     <select id="filterAgeRange" class="form-control">
-                        <option value="" disabled selected hidden>All Ages</option>
+                        <option value="" selected>All Ages</option>
                         <option value="0-12">0-12 months</option>
                         <option value="13-24">13-24 months</option>
                         <option value="25-36">25-36 months</option>
@@ -63,7 +63,7 @@
                 <div class="filter-field">
                     <label>BNS</label>
                     <select id="filterNutritionist" class="form-control">
-                        <option value="" disabled selected hidden>All BNS</option>
+                        <option value="" selected>All BNS</option>
                         @foreach($nutritionists ?? [] as $nutritionist)
                             <option value="{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}">
                                 {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}
