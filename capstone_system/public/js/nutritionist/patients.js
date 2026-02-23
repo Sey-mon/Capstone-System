@@ -471,7 +471,7 @@ function openAddPatientModal() {
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-save"></i> Save Patient',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+        cancelButtonText: 'Cancel',
         customClass: {
             container: 'swal-patient-modal',
             popup: 'swal-patient-popup',
@@ -883,7 +883,7 @@ function showEditPatientModal(patient) {
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-save"></i> Update Patient',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+        cancelButtonText: 'Cancel',
         customClass: {
             container: 'swal-patient-modal',
             popup: 'swal-patient-popup',

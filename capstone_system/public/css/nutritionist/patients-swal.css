@@ -314,6 +314,30 @@
     opacity: 0.8 !important;
 }
 
+/* Make confirm button in patient modals match cancel button size */
+.swal-patient-popup .swal2-actions .swal2-confirm.swal2-styled {
+    background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%) !important;
+    border: 2px solid transparent !important;
+    color: #ffffff !important;
+    padding: 10px 24px !important;
+    margin: 4.5px !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    transition: opacity 0.2s ease !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.swal-patient-popup .swal2-actions .swal2-confirm.swal2-styled:hover {
+    opacity: 0.9 !important;
+}
+
+.swal-patient-popup .swal2-actions .swal2-confirm.swal2-styled:active {
+    opacity: 0.8 !important;
+}
+
 .swal2-cancel {
     background: #ffffff !important;
     border: 2px solid #dee2e6 !important;
