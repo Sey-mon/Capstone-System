@@ -310,7 +310,7 @@
     <div class="report-info">
         <table>
             <tr>
-                <td style="width: 50%;"><strong>Nutritionist:</strong> {{ $nutritionist->first_name }} {{ $nutritionist->middle_name ? substr($nutritionist->middle_name, 0, 1) . '.' : '' }} {{ $nutritionist->last_name }}</td>
+                <td style="width: 50%;"><strong>BNS:</strong> {{ $nutritionist->first_name }} {{ $nutritionist->middle_name ? substr($nutritionist->middle_name, 0, 1) . '.' : '' }} {{ $nutritionist->last_name }}</td>
                 <td style="width: 50%;"><strong>Professional ID:</strong> {{ $nutritionist->professional_id ?? 'N/A' }}</td>
             </tr>
             <tr>
