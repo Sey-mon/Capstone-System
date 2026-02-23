@@ -278,7 +278,7 @@ function initializeGrowthChart() {
                     },
                     title: {
                         display: true,
-                        text: 'Assessment Date',
+                        text: 'Screening Date',
                         font: { size: 13, weight: '600', family: "'Inter', sans-serif" },
                         color: '#475569',
                         padding: { top: 10, bottom: 0 }
@@ -346,7 +346,7 @@ function initializeGrowthChart() {
                     },
                     title: {
                         display: true,
-                        text: 'Assessment Date',
+                        text: 'Screening Date',
                         font: { size: 13, weight: '600', family: "'Inter', sans-serif" },
                         color: '#475569',
                         padding: { top: 10, bottom: 0 }
@@ -395,7 +395,7 @@ function initializeGrowthChart() {
                         boxPadding: 8,
                         callbacks: {
                             title: function(context) {
-                                return 'Assessment: ' + context[0].label;
+                                return 'Screening: ' + context[0].label;
                             },
                             label: function(context) {
                                 const value = context.parsed.y;
