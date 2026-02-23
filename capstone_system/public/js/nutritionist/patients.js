@@ -172,18 +172,21 @@ function initializeFilters() {
     const searchClear = document.getElementById('searchClear');
     
     if (searchInput) {
+        // Show/hide clear button as user types, but don't search yet
         searchInput.addEventListener('input', function() {
-            // Show/hide clear button
             if (searchClear) {
                 searchClear.style.display = this.value ? 'block' : 'none';
             }
-            
-            clearTimeout(filterTimeout);
-            filterTimeout = setTimeout(() => {
-                applyFilters();
-            }, 500); // 500ms delay for automatic search
         });
-        
+
+        // Search only when Enter is pressed
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(filterTimeout);
+                applyFilters();
+            }
+        });
+
         // Show clear button if there's initial value
         if (searchClear && searchInput.value) {
             searchClear.style.display = 'block';
