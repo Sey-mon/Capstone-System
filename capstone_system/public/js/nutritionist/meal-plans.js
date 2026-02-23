@@ -1076,12 +1076,19 @@ function filterProgramPlans() {
     const searchTerm = $('#program-search').val().toLowerCase();
     const budgetFilter = $('#program-budget-filter').val().toLowerCase();
     const ageFilter = $('#program-age-filter').val().toLowerCase();
-    
+    const dateFrom = $('#date-from-filter').val();
+    const dateTo = $('#date-to-filter').val();
+
+    // Convert date strings to timestamps (start of day / end of day)
+    const dateFromTs = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() / 1000 : null;
+    const dateToTs = dateTo ? new Date(dateTo + 'T23:59:59').getTime() / 1000 : null;
+
     $('.plan-card').each(function() {
         const $item = $(this);
         const budget = $item.data('budget').toString().toLowerCase();
         const ageGroup = $item.data('age-group').toString().toLowerCase();
         const barangay = $item.data('barangay').toString().toLowerCase();
+        const timestamp = parseInt($item.data('timestamp')) || 0;
         
         // Check search term
         const matchesSearch = !searchTerm || 
@@ -1094,9 +1101,13 @@ function filterProgramPlans() {
         
         // Check age filter
         const matchesAge = !ageFilter || ageGroup === ageFilter;
+
+        // Check date range filter
+        const matchesDateFrom = !dateFromTs || timestamp >= dateFromTs;
+        const matchesDateTo = !dateToTs || timestamp <= dateToTs;
         
         // Show/hide based on all filters
-        if (matchesSearch && matchesBudget && matchesAge) {
+        if (matchesSearch && matchesBudget && matchesAge && matchesDateFrom && matchesDateTo) {
             $item.show();
         } else {
             $item.hide();
