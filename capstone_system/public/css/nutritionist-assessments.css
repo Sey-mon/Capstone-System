@@ -955,6 +955,30 @@ html, body {
     flex-direction: column;
 }
 
+/* Date Range combined group */
+.date-range-group {
+    grid-column: span 2;
+}
+
+.date-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.date-range-inputs .modern-filter-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.date-separator {
+    color: var(--white);
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
 .filter-label {
     font-size: 0.75rem;
     font-weight: 600;

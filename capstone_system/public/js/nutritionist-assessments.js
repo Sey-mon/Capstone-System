@@ -2040,6 +2040,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const diagnosisFilter = document.getElementById('diagnosisFilter');
     const dateFrom = document.getElementById('dateFrom');
     const dateTo = document.getElementById('dateTo');
+    const sortByFilter = document.getElementById('sortBy');
     const perPageFilter = document.getElementById('perPage');
     
     // Debounce function to limit API calls
@@ -2089,6 +2090,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (dateTo && dateTo.value) {
                 searchParams.set('date_to', dateTo.value);
+            }
+            if (sortByFilter && sortByFilter.value) {
+                const [sortByVal, sortOrderVal] = sortByFilter.value.split('|');
+                if (sortByVal) searchParams.set('sort_by', sortByVal);
+                if (sortOrderVal) searchParams.set('sort_order', sortOrderVal);
             }
             if (perPageFilter && perPageFilter.value) {
                 searchParams.set('per_page', perPageFilter.value);
@@ -2156,6 +2162,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (diagnosisFilter) {
         diagnosisFilter.addEventListener('change', function() {
+            updateFilterHighlight(this);
+            applyFiltersAndFetch();
+        });
+    }
+
+    if (sortByFilter) {
+        sortByFilter.addEventListener('change', function() {
             updateFilterHighlight(this);
             applyFiltersAndFetch();
         });
@@ -2359,6 +2372,7 @@ function clearAllFilters() {
         diagnosisFilter: document.getElementById('diagnosisFilter'),
         dateFrom: document.getElementById('dateFrom'),
         dateTo: document.getElementById('dateTo'),
+        sortBy: document.getElementById('sortBy'),
         perPage: document.getElementById('perPage')
     };
     
@@ -2368,6 +2382,7 @@ function clearAllFilters() {
     if (filters.diagnosisFilter) filters.diagnosisFilter.value = '';
     if (filters.dateFrom) filters.dateFrom.value = '';
     if (filters.dateTo) filters.dateTo.value = '';
+    if (filters.sortBy) filters.sortBy.value = 'first_name|asc';
     if (filters.perPage) filters.perPage.value = '15';
     
     // Reload data without filters via AJAX

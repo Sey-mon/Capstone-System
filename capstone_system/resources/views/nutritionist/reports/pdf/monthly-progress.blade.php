@@ -317,7 +317,7 @@
     <div class="report-info">
         <table>
             <tr>
-                <td><strong>Nutritionist:</strong> {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</td>
+                <td><strong>BNS:</strong> {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</td>
                 <td><strong>Professional ID:</strong> {{ $nutritionist->professional_id ?? 'N/A' }}</td>
             </tr>
             <tr>
@@ -481,7 +481,7 @@
             <div style="font-size: 9px; margin-bottom: 5px;"><strong>Prepared by:</strong></div>
             <div class="signature-line">
                 <strong>{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</strong><br>
-                <span style="font-size: 10px;">Nutritionist</span>
+                <span style="font-size: 10px;">BNS</span>
             </div>
         </div>
         <div class="signature-box">

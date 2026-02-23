@@ -172,18 +172,21 @@ function initializeFilters() {
     const searchClear = document.getElementById('searchClear');
     
     if (searchInput) {
+        // Show/hide clear button as user types, but don't search yet
         searchInput.addEventListener('input', function() {
-            // Show/hide clear button
             if (searchClear) {
                 searchClear.style.display = this.value ? 'block' : 'none';
             }
-            
-            clearTimeout(filterTimeout);
-            filterTimeout = setTimeout(() => {
-                applyFilters();
-            }, 500); // 500ms delay for automatic search
         });
-        
+
+        // Search only when Enter is pressed
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(filterTimeout);
+                applyFilters();
+            }
+        });
+
         // Show clear button if there's initial value
         if (searchClear && searchInput.value) {
             searchClear.style.display = 'block';
@@ -468,7 +471,7 @@ function openAddPatientModal() {
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-save"></i> Save Patient',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+        cancelButtonText: 'Cancel',
         customClass: {
             container: 'swal-patient-modal',
             popup: 'swal-patient-popup',
@@ -880,7 +883,7 @@ function showEditPatientModal(patient) {
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-save"></i> Update Patient',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+        cancelButtonText: 'Cancel',
         customClass: {
             container: 'swal-patient-modal',
             popup: 'swal-patient-popup',

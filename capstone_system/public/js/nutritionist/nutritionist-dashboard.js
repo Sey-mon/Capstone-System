@@ -35,7 +35,7 @@ new Chart(trendsCtx, {
             return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         }),
         datasets: [{
-            label: 'Total Assessments',
+            label: 'Total Screenings',
             data: window.assessmentTrendsData.map(d => d.count),
             borderColor: '#4299e1',
             backgroundColor: 'rgba(66, 153, 225, 0.1)',

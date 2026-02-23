@@ -194,14 +194,13 @@ body {
 
 .section-title-group {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 15px;
 }
 
 .section-title-group > i {
     font-size: 32px;
     color: var(--primary-green);
-    margin-top: 5px;
 }
 
 .section-title {
@@ -559,6 +558,7 @@ body {
 .empty-state .btn-primary i {
     font-size: 13px;
     color: white;
+    margin-bottom: 0;
     vertical-align: middle;
 }
 

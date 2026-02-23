@@ -28,8 +28,7 @@
                     if(request('search')) $activeFilters++;
                     if(request('status')) $activeFilters++;
                     if(request('diagnosis')) $activeFilters++;
-                    if(request('date_from')) $activeFilters++;
-                    if(request('date_to')) $activeFilters++;
+                    if(request('date_from') || request('date_to')) $activeFilters++;
                 @endphp
                 @if($activeFilters > 0)
                     <span class="badge bg-primary ms-2">{{ $activeFilters }} active</span>
@@ -84,30 +83,39 @@
                 </select>
             </div>
             
-            <div class="filter-group">
-                <label class="filter-label" for="dateFrom">
+            <div class="filter-group date-range-group">
+                <label class="filter-label">
                     <i class="fas fa-calendar-alt me-1" aria-hidden="true"></i>
-                    Date From
+                    Date Range
                 </label>
-                <input type="date" 
-                       id="dateFrom" 
-                       class="modern-filter-input"
-                       value="{{ request('date_from') }}"
-                       aria-label="Filter screenings from date">
+                <div class="date-range-inputs">
+                    <input type="date" 
+                           id="dateFrom" 
+                           class="modern-filter-input"
+                           value="{{ request('date_from') }}"
+                           aria-label="Filter screenings from date">
+                    <span class="date-separator">→</span>
+                    <input type="date" 
+                           id="dateTo" 
+                           class="modern-filter-input"
+                           value="{{ request('date_to') }}"
+                           aria-label="Filter screenings to date">
+                </div>
             </div>
-            
+
             <div class="filter-group">
-                <label class="filter-label" for="dateTo">
-                    <i class="fas fa-calendar-alt me-1" aria-hidden="true"></i>
-                    Date To
+                <label class="filter-label" for="sortBy">
+                    <i class="fas fa-sort me-1" aria-hidden="true"></i>
+                    Sort By
                 </label>
-                <input type="date" 
-                       id="dateTo" 
-                       class="modern-filter-input"
-                       value="{{ request('date_to') }}"
-                       aria-label="Filter screenings to date">
+                <select id="sortBy" class="modern-filter-select" aria-label="Sort patients">
+                    <option value="first_name|asc" {{ (!request('sort_by') || (request('sort_by') == 'first_name' && request('sort_order', 'asc') == 'asc')) ? 'selected' : '' }}>Name (A → Z)</option>
+                    <option value="first_name|desc" {{ (request('sort_by') == 'first_name' && request('sort_order') == 'desc') ? 'selected' : '' }}>Name (Z → A)</option>
+                    <option value="assessment_date|desc" {{ (request('sort_by') == 'assessment_date' && request('sort_order', 'desc') == 'desc') ? 'selected' : '' }}>Newest First</option>
+                    <option value="assessment_date|asc" {{ (request('sort_by') == 'assessment_date' && request('sort_order') == 'asc') ? 'selected' : '' }}>Oldest First</option>
+                </select>
             </div>
-            
+
             <div class="filter-group">
                 <label class="filter-label" for="perPage">
                     <i class="fas fa-list me-1" aria-hidden="true"></i>

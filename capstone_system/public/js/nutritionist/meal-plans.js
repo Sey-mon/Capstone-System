@@ -1076,12 +1076,19 @@ function filterProgramPlans() {
     const searchTerm = $('#program-search').val().toLowerCase();
     const budgetFilter = $('#program-budget-filter').val().toLowerCase();
     const ageFilter = $('#program-age-filter').val().toLowerCase();
-    
+    const dateFrom = $('#date-from-filter').val();
+    const dateTo = $('#date-to-filter').val();
+
+    // Convert date strings to timestamps (start of day / end of day)
+    const dateFromTs = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() / 1000 : null;
+    const dateToTs = dateTo ? new Date(dateTo + 'T23:59:59').getTime() / 1000 : null;
+
     $('.plan-card').each(function() {
         const $item = $(this);
         const budget = $item.data('budget').toString().toLowerCase();
         const ageGroup = $item.data('age-group').toString().toLowerCase();
         const barangay = $item.data('barangay').toString().toLowerCase();
+        const timestamp = parseInt($item.data('timestamp')) || 0;
         
         // Check search term
         const matchesSearch = !searchTerm || 
@@ -1094,9 +1101,13 @@ function filterProgramPlans() {
         
         // Check age filter
         const matchesAge = !ageFilter || ageGroup === ageFilter;
+
+        // Check date range filter
+        const matchesDateFrom = !dateFromTs || timestamp >= dateFromTs;
+        const matchesDateTo = !dateToTs || timestamp <= dateToTs;
         
         // Show/hide based on all filters
-        if (matchesSearch && matchesBudget && matchesAge) {
+        if (matchesSearch && matchesBudget && matchesAge && matchesDateFrom && matchesDateTo) {
             $item.show();
         } else {
             $item.hide();
@@ -1284,21 +1295,81 @@ function viewFeedingProgramPlan(planId) {
                                 
                                 yPos += 5;
                                 
-                                // Get table data
+                                // Build table data directly from plan data to avoid rowspan issues
                                 const tableData = [];
-                                const visibleTable = document.querySelector('.meal-plan-table tbody');
-                                if (visibleTable) {
-                                    const rows = visibleTable.querySelectorAll('tr');
-                                    rows.forEach(row => {
-                                        const cells = row.querySelectorAll('td');
-                                        const rowData = [];
-                                        cells.forEach(cell => {
-                                            rowData.push(cell.textContent.trim());
+                                let mealPlanSource = plan.plan_details;
+
+                                // Parse JSON if string
+                                let parsedSource = mealPlanSource;
+                                if (typeof mealPlanSource === 'string') {
+                                    let jsonString = mealPlanSource.trim();
+                                    const codeBlockMatch = jsonString.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+                                    if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+                                    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+                                    if (jsonMatch && !codeBlockMatch) jsonString = jsonMatch[0];
+                                    jsonString = jsonString.replace(/^[^{]*/, '').replace(/[^}]*$/, '').trim();
+                                    try { parsedSource = JSON.parse(jsonString); } catch(e) { parsedSource = mealPlanSource; }
+                                }
+
+                                if (typeof parsedSource === 'object' && parsedSource !== null) {
+                                    const mealPlanArray = (parsedSource.meal_plan && Array.isArray(parsedSource.meal_plan))
+                                        ? parsedSource.meal_plan
+                                        : Array.isArray(parsedSource) ? parsedSource : null;
+
+                                    if (mealPlanArray) {
+                                        mealPlanArray.forEach(dayData => {
+                                            if (dayData.meals && Array.isArray(dayData.meals)) {
+                                                dayData.meals.forEach(meal => {
+                                                    let ingredientsStr = '';
+                                                    if (Array.isArray(meal.ingredients)) {
+                                                        ingredientsStr = meal.ingredients.join(', ');
+                                                    } else if (typeof meal.ingredients === 'object' && meal.ingredients !== null) {
+                                                        ingredientsStr = Object.values(meal.ingredients).join(', ');
+                                                    } else if (typeof meal.ingredients === 'string') {
+                                                        ingredientsStr = meal.ingredients;
+                                                    }
+                                                    const mealTypeRaw = meal.meal_name_tagalog || meal.meal_name || meal.meal_type || meal.mealType || meal.type || meal.meal || '';
+                                                    const mealType = (window.mealPlansManager && window.mealPlansManager.normalizeMealType)
+                                                        ? window.mealPlansManager.normalizeMealType(mealTypeRaw)
+                                                        : mealTypeRaw;
+                                                    tableData.push([
+                                                        `Day ${dayData.day}`,
+                                                        mealType,
+                                                        meal.dish_name || meal.dishName || meal.name || 'N/A',
+                                                        ingredientsStr
+                                                    ]);
+                                                });
+                                            }
                                         });
-                                        if (rowData.length > 0) {
-                                            tableData.push(rowData);
-                                        }
-                                    });
+                                    }
+                                }
+
+                                // Fallback: read from DOM while handling rowspan
+                                if (tableData.length === 0) {
+                                    const visibleTable = document.querySelector('.meal-plan-table tbody');
+                                    if (visibleTable) {
+                                        let currentDay = '';
+                                        visibleTable.querySelectorAll('tr').forEach(row => {
+                                            const cells = row.querySelectorAll('td');
+                                            if (cells.length === 4) {
+                                                currentDay = cells[0].textContent.trim();
+                                                tableData.push([
+                                                    currentDay,
+                                                    cells[1].textContent.trim(),
+                                                    cells[2].textContent.trim(),
+                                                    cells[3].textContent.trim()
+                                                ]);
+                                            } else if (cells.length === 3) {
+                                                // Day cell is covered by rowspan — inject tracked day
+                                                tableData.push([
+                                                    currentDay,
+                                                    cells[0].textContent.trim(),
+                                                    cells[1].textContent.trim(),
+                                                    cells[2].textContent.trim()
+                                                ]);
+                                            }
+                                        });
+                                    }
                                 }
                                 
                                 // Add table

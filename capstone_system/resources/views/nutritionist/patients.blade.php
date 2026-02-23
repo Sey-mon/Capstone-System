@@ -35,7 +35,7 @@
                 <label class="filter-label">Search Patient</label>
                 <div class="search-input-wrapper">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="      Search by name" class="filter-input search-input" value="{{ request('search') }}">
+                    <input type="text" id="searchInput" placeholder="Search by name" class="filter-input search-input" value="{{ request('search') }}">
                 </div>
             </div>
 

@@ -75,7 +75,7 @@
                         <input type="text" 
                                id="searchInput" 
                                class="form-control search-input" 
-                               placeholder="Search by name, description..." 
+                               placeholder="Search by name" 
                                value="{{ $search ?? '' }}" 
                                autocomplete="off">
                     </div>
@@ -84,7 +84,7 @@
                 <div class="filter-field">
                     <label>Tags</label>
                     <select id="tagFilter" class="form-control">
-                        <option value="" disabled selected hidden>All Tags</option>
+                        <option value="">All Tags</option>
                         @if(isset($allTags) && count($allTags) > 0)
                             @foreach($allTags as $tagOption)
                                 <option value="{{ $tagOption }}" {{ ($tag ?? '') == $tagOption ? 'selected' : '' }}>{{ $tagOption }}</option>

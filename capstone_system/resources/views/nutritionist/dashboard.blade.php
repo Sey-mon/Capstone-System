@@ -3,7 +3,7 @@
 @section('title', 'Nutritionist Dashboard')
 
 @section('page-title', 'Nutritionist Dashboard')
-@section('page-subtitle', 'Welcome back, ' . Auth::user()->first_name . '! Manage your patients and assessments.')
+@section('page-subtitle', 'Welcome back, ' . Auth::user()->first_name . '! Manage your patients and Screenings.')
 
 @section('navigation')
     @include('partials.navigation')
@@ -168,7 +168,7 @@
         <!-- Recent Assessments -->
         <div class="content-card">
             <div class="card-header">
-                <h3 class="card-title">Recent Assessments</h3>
+                <h3 class="card-title">Recent Screenings</h3>
                 <a href="{{ route('nutritionist.assessments') }}" class="btn btn-secondary">
                     <i class="fas fa-clipboard-list"></i>
                     View All
@@ -197,7 +197,7 @@
                 @empty
                     <div class="text-center py-4">
                         <i class="fas fa-clipboard text-gray-400 text-2xl mb-2"></i>
-                        <p class="text-gray-500">No assessments found.</p>
+                        <p class="text-gray-500">No Screening found.</p>
                     </div>
                 @endforelse
             </div>
