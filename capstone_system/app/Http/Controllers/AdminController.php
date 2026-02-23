@@ -1655,7 +1655,7 @@ class AdminController extends Controller
                     'custom_id' => $patient->custom_patient_id,
                     'name' => $patient->first_name . ' ' . $patient->last_name,
                     'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown',
-                    'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
+                    'age' => $patient->birthdate ? $patient->birthdate->age : ($patient->age_months ? intval($patient->age_months / 12) : null),
                     'total_assessments' => $patient->assessments->count(),
                     'last_assessment' => $latestAssessment ? $latestAssessment->created_at->format('M d, Y') : 'No assessments'
                 ];
@@ -1724,8 +1724,8 @@ class AdminController extends Controller
                 'patient' => [
                     'id' => $patient->patient_id,
                     'name' => $patient->first_name . ' ' . $patient->last_name,
-                    'date_of_birth' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->format('M d, Y') : 'N/A',
-                    'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
+                    'date_of_birth' => $patient->birthdate ? $patient->birthdate->format('M d, Y') : 'N/A',
+                    'age' => $patient->birthdate ? $patient->birthdate->age : ($patient->age_months ? intval($patient->age_months / 12) : null),
                     'sex' => $patient->sex ?? 'N/A',
                     'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown',
                     'address' => $patient->address ?? 'N/A'
@@ -3547,7 +3547,7 @@ class AdminController extends Controller
                     'name' => $patient->first_name . ' ' . $patient->last_name,
                     'barangay' => $barangayName,
                     'bmi' => $bmi,
-                    'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
+                    'age' => $patient->birthdate ? $patient->birthdate->age : ($patient->age_months ? intval($patient->age_months / 12) : null),
                     'last_assessment' => $latestAssessment ? $latestAssessment->created_at->format('M d, Y') : 'No assessment'
                 ];
                 
@@ -3657,7 +3657,7 @@ class AdminController extends Controller
                 $patientData = [
                     'name' => $patient->first_name . ' ' . $patient->last_name,
                     'barangay' => $barangayName,
-                    'age' => $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : null,
+                    'age' => $patient->birthdate ? $patient->birthdate->age : ($patient->age_months ? intval($patient->age_months / 12) : null),
                     'total_assessments' => $patient->assessments->count(),
                     'initial_weight' => $firstAssessment->weight_kg,
                     'current_weight' => $latestAssessment->weight_kg,

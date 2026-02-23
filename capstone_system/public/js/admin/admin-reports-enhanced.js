@@ -154,9 +154,13 @@ function generateComprehensiveReport(reportType) {
                 let content = '';
                 switch(reportType) {
                     case 'malnutrition-cases':
+                        // Sync fresh API data into global so PDF always uses current data
+                        window.patientDistributionData = result.data;
                         content = generateMalnutritionCasesContent(result.data);
                         break;
                     case 'patient-progress':
+                        // Sync fresh API data into global so PDF always uses current data
+                        window.monthlyProgressData = result.data;
                         content = generatePatientProgressContent(result.data);
                         break;
                     case 'low-stock-alert':
