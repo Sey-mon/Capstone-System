@@ -749,24 +749,10 @@ class NutritionistController extends Controller
         
         switch ($sortBy) {
             case 'assessment_date':
-                // Join with the latest assessment for sorting
-                $query->leftJoin('assessments as latest_assessment', function($join) {
-                    $join->on('patients.patient_id', '=', 'latest_assessment.patient_id')
-                         ->whereRaw('latest_assessment.assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)');
-                })
-                ->select('patients.*', 'latest_assessment.assessment_date')
-                ->orderBy('latest_assessment.assessment_date', $sortOrder)
-                ->orderBy('patients.first_name', 'asc'); // Secondary sort by name
-                break;
-            case 'treatment':
-                // Sort by diagnosis in the treatment JSON field
-                $query->leftJoin('assessments as latest_assessment', function($join) {
-                    $join->on('patients.patient_id', '=', 'latest_assessment.patient_id')
-                         ->whereRaw('latest_assessment.assessment_id = (SELECT MAX(assessment_id) FROM assessments WHERE assessments.patient_id = patients.patient_id)');
-                })
-                ->select('patients.*', 'latest_assessment.treatment')
-                ->orderBy('latest_assessment.treatment', $sortOrder)
-                ->orderBy('patients.first_name', 'asc'); // Secondary sort by name
+                // Use a correlated subquery to avoid JOIN conflicts with whereHas
+                $query->orderByRaw(
+                    "(SELECT assessment_date FROM assessments WHERE assessments.patient_id = patients.patient_id ORDER BY assessment_id DESC LIMIT 1) {$sortOrder}"
+                )->orderBy('patients.first_name', 'asc');
                 break;
             case 'patient_id':
                 $query->orderBy('patient_id', $sortOrder);
