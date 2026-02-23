@@ -865,17 +865,119 @@
                 ` : ''}
 
                 <!-- Notes -->
-                ${assessment.notes ? `
-                    <div style="background: white; border: 2px solid #d1fae5; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
-                        <h4 style="color: #111827; font-size: 1.125rem; font-weight: 700; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-sticky-note" style="color: #10b981;"></i>
-                            Additional Notes
-                        </h4>
-                        <div style="background: #f8f9fa; padding: 1.25rem; border-radius: 8px; border-left: 4px solid #10b981;">
-                            <p style="margin: 0; color: #374151; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;">${assessment.notes}</p>
-                        </div>
-                    </div>
-                ` : ''}
+                ${(() => {
+                    if (!assessment.notes) return '';
+
+                    let clinicalData = null;
+                    let additionalNotes = '';
+
+                    try {
+                        const parsedNotes = typeof assessment.notes === 'string'
+                            ? JSON.parse(assessment.notes)
+                            : assessment.notes;
+
+                        if (parsedNotes && parsedNotes.clinical_symptoms) {
+                            clinicalData = parsedNotes.clinical_symptoms;
+                            additionalNotes = parsedNotes.additional_notes || '';
+                        } else if (parsedNotes && typeof parsedNotes === 'object') {
+                            clinicalData = parsedNotes;
+                            additionalNotes = parsedNotes.additional_notes || parsedNotes.additionalNotes || '';
+                        } else {
+                            additionalNotes = assessment.notes;
+                        }
+                    } catch (e) {
+                        additionalNotes = assessment.notes;
+                    }
+
+                    const yesNo = val => {
+                        if (val === '1' || val === 1 || val === true || val === 'yes') return '<span style="color:#dc2626;font-weight:600;">Yes</span>';
+                        if (val === '0' || val === 0 || val === false || val === 'no') return '<span style="color:#059669;font-weight:600;">No</span>';
+                        return val || '—';
+                    };
+
+                    const capitalize = str => str ? str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '—';
+
+                    let clinicalHtml = '';
+                    if (clinicalData) {
+                        const symptomFields = [
+                            { key: 'edema',     label: 'Edema',             icon: 'fas fa-tint' },
+                            { key: 'appetite',  label: 'Appetite',          icon: 'fas fa-utensils' },
+                            { key: 'muac',      label: 'MUAC',              icon: 'fas fa-ruler-horizontal' },
+                            { key: 'diarrhea',  label: 'Diarrhea',          icon: 'fas fa-thermometer-half' },
+                            { key: 'vomiting',  label: 'Vomiting',          icon: 'fas fa-tired' },
+                            { key: 'fever',     label: 'Fever',             icon: 'fas fa-temperature-high' },
+                            { key: 'breastfeeding_status', label: 'Breastfeeding', icon: 'fas fa-baby' },
+                        ];
+
+                        const cells = symptomFields.map(f => {
+                            const raw = clinicalData[f.key];
+                            let display = '—';
+                            if (raw !== undefined && raw !== null && raw !== '') {
+                                if (f.key === 'edema' || f.key === 'breastfeeding_status') {
+                                    display = capitalize(String(raw));
+                                } else if (f.key === 'muac') {
+                                    display = raw ? `${raw} cm` : '—';
+                                } else {
+                                    display = yesNo(raw);
+                                }
+                            }
+                            return `
+                                <div style="background:#f0fdf4;padding:0.75rem 1rem;border-radius:8px;border-left:3px solid #10b981;">
+                                    <div style="color:#6b7280;font-size:0.7rem;font-weight:600;text-transform:uppercase;margin-bottom:0.35rem;">
+                                        <i class="${f.icon}" style="margin-right:4px;color:#10b981;"></i>${f.label}
+                                    </div>
+                                    <div style="color:#111827;font-size:0.9rem;font-weight:600;">${display}</div>
+                                </div>`;
+                        }).join('');
+
+                        // Visible signs
+                        let visibleSignsHtml = '';
+                        const vs = clinicalData.visible_signs;
+                        if (vs && Array.isArray(vs) && vs.length > 0) {
+                            const tags = vs.map(s => `<span style="display:inline-block;background:#dcfce7;color:#166534;font-size:0.75rem;font-weight:600;padding:0.2rem 0.6rem;border-radius:9999px;margin:0.2rem 0.2rem 0.2rem 0;">${capitalize(s)}</span>`).join('');
+                            visibleSignsHtml = `
+                                <div style="margin-top:0.75rem;padding:0.75rem 1rem;background:#f0fdf4;border-radius:8px;border-left:3px solid #10b981;">
+                                    <div style="color:#6b7280;font-size:0.7rem;font-weight:600;text-transform:uppercase;margin-bottom:0.35rem;">
+                                        <i class="fas fa-eye" style="margin-right:4px;color:#10b981;"></i>Visible Signs
+                                    </div>
+                                    <div>${tags}</div>
+                                </div>`;
+                        } else if (vs && !Array.isArray(vs) && vs !== '') {
+                            visibleSignsHtml = `
+                                <div style="margin-top:0.75rem;padding:0.75rem 1rem;background:#f0fdf4;border-radius:8px;border-left:3px solid #10b981;">
+                                    <div style="color:#6b7280;font-size:0.7rem;font-weight:600;text-transform:uppercase;margin-bottom:0.35rem;">
+                                        <i class="fas fa-eye" style="margin-right:4px;color:#10b981;"></i>Visible Signs
+                                    </div>
+                                    <div style="color:#111827;font-size:0.9rem;font-weight:600;">${capitalize(String(vs))}</div>
+                                </div>`;
+                        }
+
+                        clinicalHtml = `
+                            <div style="background:white;border:2px solid #d1fae5;border-radius:12px;padding:1.5rem;margin-bottom:1rem;">
+                                <h4 style="color:#111827;font-size:1.125rem;font-weight:700;margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem;">
+                                    <i class="fas fa-stethoscope" style="color:#10b981;"></i>
+                                    Clinical Symptoms &amp; Physical Signs
+                                </h4>
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem;">
+                                    ${cells}
+                                </div>
+                                ${visibleSignsHtml}
+                            </div>`;
+                    }
+
+                    const notesHtml = additionalNotes ? `
+                        <div style="background:white;border:2px solid #d1fae5;border-radius:12px;padding:1.5rem;margin-bottom:1rem;">
+                            <h4 style="color:#111827;font-size:1.125rem;font-weight:700;margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem;">
+                                <i class="fas fa-sticky-note" style="color:#10b981;"></i>
+                                Additional Notes
+                            </h4>
+                            <div style="background:#f0fdf4;padding:1rem;border-radius:8px;border-left:4px solid #10b981;">
+                                <p style="margin:0;color:#374151;line-height:1.7;white-space:pre-wrap;word-wrap:break-word;">${additionalNotes}</p>
+                            </div>
+                        </div>` : '';
+
+                    return clinicalHtml + notesHtml;
+                })()}
 
                 <!-- Assessed By -->
                 <div style="background: #f9fafb; padding: 0.75rem 1rem; border-radius: 8px; text-align: center; color: #6b7280; font-size: 0.875rem;">
