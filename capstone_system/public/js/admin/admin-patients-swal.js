@@ -2128,51 +2128,27 @@ function filterPatients() {
     const genderFilter = document.getElementById('filterGender');
     const ageRangeFilter = document.getElementById('filterAgeRange');
     const nutritionistFilter = document.getElementById('filterNutritionist');
-    
-    const search = searchInput ? searchInput.value.toLowerCase() : '';
-    const barangay = barangayFilter ? barangayFilter.value.toLowerCase() : '';
-    const gender = genderFilter ? genderFilter.value.toLowerCase() : '';
+
+    const url = new URL(window.location.href);
+    // Reset to page 1 whenever filters change
+    url.searchParams.delete('page');
+
+    const search = searchInput ? searchInput.value.trim() : '';
+    if (search) { url.searchParams.set('search', search); } else { url.searchParams.delete('search'); }
+
+    const barangay = barangayFilter ? barangayFilter.value : '';
+    if (barangay) { url.searchParams.set('barangay', barangay); } else { url.searchParams.delete('barangay'); }
+
+    const gender = genderFilter ? genderFilter.value : '';
+    if (gender) { url.searchParams.set('gender', gender); } else { url.searchParams.delete('gender'); }
+
     const ageRange = ageRangeFilter ? ageRangeFilter.value : '';
-    const nutritionist = nutritionistFilter ? nutritionistFilter.value.toLowerCase() : '';
+    if (ageRange) { url.searchParams.set('age_range', ageRange); } else { url.searchParams.delete('age_range'); }
 
-    let visibleCount = 0;
+    const nutritionist = nutritionistFilter ? nutritionistFilter.value : '';
+    if (nutritionist) { url.searchParams.set('nutritionist', nutritionist); } else { url.searchParams.delete('nutritionist'); }
 
-    allPatients.forEach(patient => {
-        let visible = true;
-        const data = patient.data;
-
-        if (search && !data.name.includes(search) && !data.contact.includes(search)) {
-            visible = false;
-        }
-
-        if (barangay && data.barangay.toLowerCase() !== barangay) {
-            visible = false;
-        }
-
-        if (gender && data.gender.toLowerCase() !== gender) {
-            visible = false;
-        }
-
-        if (ageRange && !isInAgeRange(data.age, ageRange)) {
-            visible = false;
-        }
-
-        if (nutritionist && data.nutritionist.toLowerCase() !== nutritionist) {
-            visible = false;
-        }
-
-        if (visible) {
-            patient.tableElement.classList.remove('patient-hidden');
-            patient.gridElement.classList.remove('patient-hidden');
-            visibleCount++;
-        } else {
-            patient.tableElement.classList.add('patient-hidden');
-            patient.gridElement.classList.add('patient-hidden');
-        }
-    });
-
-    updateFilteredCounts(visibleCount);
-    toggleNoResults(visibleCount === 0);
+    window.location.href = url.toString();
 }
 
 function isInAgeRange(age, range) {
@@ -2279,29 +2255,8 @@ function switchView(view) {
 }
 
 function clearAllFilters() {
-    const searchInput = document.getElementById('searchPatient');
-    const barangayFilter = document.getElementById('filterBarangay');
-    const genderFilter = document.getElementById('filterGender');
-    const ageRangeFilter = document.getElementById('filterAgeRange');
-    const nutritionistFilter = document.getElementById('filterNutritionist');
-    
-    if (searchInput) searchInput.value = '';
-    if (barangayFilter) barangayFilter.value = '';
-    if (genderFilter) genderFilter.value = '';
-    if (ageRangeFilter) ageRangeFilter.value = '';
-    if (nutritionistFilter) nutritionistFilter.value = '';
-
-    sortColumn = null;
-    sortDirection = 'asc';
-    updateSortIcons();
-
-    allPatients.forEach(patient => {
-        patient.tableElement.classList.remove('patient-hidden');
-        patient.gridElement.classList.remove('patient-hidden');
-    });
-
-    updatePatientCounts();
-    toggleNoResults(false);
+    // Navigate to the base patients URL, stripping all filter/page query params
+    window.location.href = window.location.pathname;
 }
 
 function updatePatientCounts() {

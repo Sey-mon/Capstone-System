@@ -46,6 +46,7 @@ function loadTickets(params = {}) {
         updateStats(data.stats);
         updatePagination(data.pagination);
         updateURL(filters);
+        updateUIForFilter(filters.filter || 'all');
     })
     .catch(error => {
         console.error('Error loading tickets:', error);
@@ -143,20 +144,71 @@ function updateTicketsTable(tickets) {
     `).join('');
 }
 
+// Update UI based on current filter (header title, tabs, archive button)
+function updateUIForFilter(filter) {
+    const isArchived = filter === 'archived';
+
+    // Update card header title, subtitle, icon
+    const titleEl = document.querySelector('.title-with-icon h3.card-title-modern');
+    const subtitleEl = document.querySelector('.card-subtitle');
+    const titleIcon = document.querySelector('.title-with-icon i');
+    if (titleEl) titleEl.textContent = isArchived ? 'Archived Tickets' : 'Support Tickets';
+    if (subtitleEl) subtitleEl.textContent = isArchived
+        ? 'Historical ticket records for reference'
+        : 'View and manage problem reports submitted by users';
+    if (titleIcon) titleIcon.className = `fas fa-${isArchived ? 'archive' : 'ticket-alt'}`;
+
+    // Show/hide filter tabs
+    const filterTabsEl = document.querySelector('.filter-tabs');
+    if (filterTabsEl) filterTabsEl.style.display = isArchived ? 'none' : '';
+
+    // Update active state on filter tabs
+    if (!isArchived) {
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            const tabFilter = tab.getAttribute('data-filter') ||
+                (tab.textContent.toLowerCase().includes('unread') ? 'unread' :
+                 tab.textContent.toLowerCase().includes('urgent') ? 'urgent' :
+                 tab.textContent.toLowerCase().includes('resolved') ? 'resolved' : 'all');
+            tab.classList.toggle('active', tabFilter === filter || (filter === 'all' && tabFilter === 'all'));
+        });
+    }
+
+    // Show/hide header count buttons
+    const headerActions = document.querySelector('.header-actions');
+    const countBtns = headerActions ? headerActions.querySelectorAll('.btn-count') : [];
+    countBtns.forEach(btn => { btn.style.display = isArchived ? 'none' : ''; });
+
+    // Update archive toggle button
+    const archiveBtn = document.querySelector('.btn-archive-toggle');
+    if (archiveBtn) {
+        if (isArchived) {
+            archiveBtn.classList.add('active');
+            archiveBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Back to Active Tickets';
+        } else {
+            archiveBtn.classList.remove('active');
+            // The archived count will be set by updateStats
+        }
+    }
+}
+
 // Update stats
 function updateStats(stats) {
     if (!stats) return;
     
-    // Update filter tabs
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-        const filterType = tab.textContent.toLowerCase();
-        if (filterType.includes('all')) {
+    // Update filter tab counts (match by data-filter attribute or position)
+    const tabs = document.querySelectorAll('.filter-tab');
+    tabs.forEach(tab => {
+        const tabFilter = tab.getAttribute('data-filter') ||
+            (tab.textContent.toLowerCase().includes('unread') ? 'unread' :
+             tab.textContent.toLowerCase().includes('urgent') ? 'urgent' :
+             tab.textContent.toLowerCase().includes('resolved') ? 'resolved' : 'all');
+        if (tabFilter === 'all') {
             tab.innerHTML = `<i class="fas fa-list"></i> All Active (${stats.total || 0})`;
-        } else if (filterType.includes('unread')) {
+        } else if (tabFilter === 'unread') {
             tab.innerHTML = `<i class="fas fa-exclamation-circle"></i> Unread (${stats.unread || 0})`;
-        } else if (filterType.includes('urgent')) {
+        } else if (tabFilter === 'urgent') {
             tab.innerHTML = `<i class="fas fa-fire"></i> Urgent (${stats.urgent || 0})`;
-        } else if (filterType.includes('resolved')) {
+        } else if (tabFilter === 'resolved') {
             tab.innerHTML = `<i class="fas fa-check-circle"></i> Resolved (${stats.resolved || 0})`;
         }
     });
@@ -186,11 +238,11 @@ function updateStats(stats) {
         }
     }
     
-    // Update archive button
+    // Update archive button count (only when not in archived view)
     const archiveBtn = document.querySelector('.btn-archive-toggle');
     if (archiveBtn && !archiveBtn.classList.contains('active')) {
         const archivedCount = stats.archived || 0;
-        archiveBtn.innerHTML = `<i class="fas fa-archive"></i> View Archived (${archivedCount})`;
+        archiveBtn.innerHTML = `<i class="fas fa-archive"></i> Archived (${archivedCount})`;
     }
 }
 
@@ -280,6 +332,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Filter tickets by tab
 function filterTickets(filter) {
+    const currentFilter = new URLSearchParams(window.location.search).get('filter') || 'all';
+    const leavingArchived = currentFilter === 'archived' && filter !== 'archived';
+    const enteringArchived = filter === 'archived';
+
+    // Do a full page reload when crossing the archived/active boundary
+    // so the server-side conditional filter tabs are correctly rendered
+    if (leavingArchived || enteringArchived) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('filter', filter);
+        // Clear other filters when toggling archive view
+        ['search', 'priority', 'status', 'category', 'date_from', 'date_to'].forEach(k => url.searchParams.delete(k));
+        window.location.href = url.toString();
+        return;
+    }
+
     loadTickets({ filter: filter });
 }
 

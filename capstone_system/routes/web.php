@@ -148,21 +148,23 @@ Route::middleware(['auth', 'account.verified', 'role:Admin', 'prevent.back'])->p
     
     // User CRUD routes
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
-    Route::get('/users/{id}', [AdminController::class, 'getUser'])->name('users.get');
-    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
-    Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
-    Route::post('/users/{id}/restore', [AdminController::class, 'restoreUser'])->name('users.restore');
-        // User activation/deactivation
-        Route::post('/users/{id}/activate', [AdminController::class, 'activateUser'])->name('admin.users.activate');
-        Route::post('/users/{id}/deactivate', [AdminController::class, 'deactivateUser'])->name('admin.users.deactivate');
-        Route::post('/users/{id}/reactivate', [AdminController::class, 'reactivateUser'])->name('admin.users.reactivate');
     Route::get('/users-with-trashed', [AdminController::class, 'getUsersWithTrashed'])->name('users.with-trashed');
-    
-    // Bulk user actions
+
+    // Bulk user actions (must be defined BEFORE /{id} routes to avoid route conflicts)
     Route::post('/users/bulk/activate', [AdminController::class, 'bulkActivateUsers'])->name('users.bulk.activate');
     Route::post('/users/bulk/deactivate', [AdminController::class, 'bulkDeactivateUsers'])->name('users.bulk.deactivate');
     Route::post('/users/bulk/delete', [AdminController::class, 'bulkDeleteUsers'])->name('users.bulk.delete');
     Route::post('/users/bulk/restore', [AdminController::class, 'bulkRestoreUsers'])->name('users.bulk.restore');
+
+    // User CRUD & per-user actions
+    Route::get('/users/{id}', [AdminController::class, 'getUser'])->name('users.get');
+    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
+    Route::post('/users/{id}/restore', [AdminController::class, 'restoreUser'])->name('users.restore');
+    // User activation/deactivation
+    Route::post('/users/{id}/activate', [AdminController::class, 'activateUser'])->name('admin.users.activate');
+    Route::post('/users/{id}/deactivate', [AdminController::class, 'deactivateUser'])->name('admin.users.deactivate');
+    Route::post('/users/{id}/reactivate', [AdminController::class, 'reactivateUser'])->name('admin.users.reactivate');
     
     // Nutritionist application routes
     Route::get('/nutritionist-applications', [AdminController::class, 'getPendingNutritionistApplications'])->name('nutritionist.applications');

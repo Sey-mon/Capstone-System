@@ -205,6 +205,7 @@
         table.data-table {
             width: 100%;
             border-collapse: collapse;
+            border-spacing: 0;
             margin-top: 10px;
         }
         table.data-table th {
@@ -319,7 +320,7 @@
     <div class="report-info">
         <table>
             <tr>
-                <td><strong>BNS:</strong> {{ $nutritionist->name }}</td>
+                <td><strong>BNS:</strong> {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}</td>
                 <td><strong>Professional ID:</strong> {{ $nutritionist->professional_id ?? 'N/A' }}</td>
             </tr>
             <tr>

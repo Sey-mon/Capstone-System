@@ -108,16 +108,16 @@
     <!-- Filter Tabs -->
     @if(request('filter') != 'archived')
     <div class="filter-tabs">
-        <button class="filter-tab {{ request('filter') == '' || request('filter') == 'all' ? 'active' : '' }}" onclick="filterTickets('all')">
+        <button class="filter-tab {{ request('filter') == '' || request('filter') == 'all' ? 'active' : '' }}" data-filter="all" onclick="filterTickets('all')">
             <i class="fas fa-list"></i> All Active ({{ $stats['total'] }})
         </button>
-        <button class="filter-tab {{ request('filter') == 'unread' ? 'active' : '' }}" onclick="filterTickets('unread')">
+        <button class="filter-tab {{ request('filter') == 'unread' ? 'active' : '' }}" data-filter="unread" onclick="filterTickets('unread')">
             <i class="fas fa-exclamation-circle"></i> Unread ({{ $stats['unread'] }})
         </button>
-        <button class="filter-tab {{ request('filter') == 'urgent' ? 'active' : '' }}" onclick="filterTickets('urgent')">
+        <button class="filter-tab {{ request('filter') == 'urgent' ? 'active' : '' }}" data-filter="urgent" onclick="filterTickets('urgent')">
             <i class="fas fa-fire"></i> Urgent ({{ $stats['urgent'] }})
         </button>
-        <button class="filter-tab {{ request('filter') == 'resolved' ? 'active' : '' }}" onclick="filterTickets('resolved')">
+        <button class="filter-tab {{ request('filter') == 'resolved' ? 'active' : '' }}" data-filter="resolved" onclick="filterTickets('resolved')">
             <i class="fas fa-check-circle"></i> Resolved ({{ $stats['resolved'] }})
         </button>
     </div>

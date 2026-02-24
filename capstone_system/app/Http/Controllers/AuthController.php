@@ -665,8 +665,15 @@ class AuthController extends Controller
             if (!$isVerifiedByEmail) {
                 return redirect()->route('verification.gate');
             }
+        } elseif ($roleName === 'Nutritionist') {
+            // Nutritionists require explicit admin activation (account_status must be 'active')
+            // Email verification alone is NOT sufficient — admin must approve first
+            if ($user->account_status !== 'active' || !$isActivatedByAdmin) {
+                Auth::logout();
+                return redirect()->route('staff.login')->withErrors(['error' => 'Your account is pending admin approval. You will be notified once your account is activated.']);
+            }
         } else {
-            // Staff accounts: require EITHER email verification OR admin activation
+            // Other staff accounts: require EITHER email verification OR admin activation
             if (!$isVerifiedByEmail && !$isActivatedByAdmin) {
                 return redirect()->route('verification.gate');
             }
@@ -1048,6 +1055,8 @@ class AuthController extends Controller
                 'qualifications' => $qualifications,
                 'professional_experience' => $request->professional_experience,
                 'is_active' => false,
+                'account_status' => 'pending',
+                'verification_status' => 'pending',
             ]);
 
             // Note: Email will be auto-verified when admin activates the account

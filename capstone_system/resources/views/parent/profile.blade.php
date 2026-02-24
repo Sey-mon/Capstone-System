@@ -81,7 +81,7 @@
                     <div class="quick-stat-value">
                         {{ Auth::user()->patientsAsParent()->withCount('assessments')->get()->sum('assessments_count') }}
                     </div>
-                    <div class="quick-stat-label">Assessments</div>
+                    <div class="quick-stat-label">Screenings</div>
                 </div>
             </div>
             <div class="quick-stat">
