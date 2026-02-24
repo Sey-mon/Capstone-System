@@ -69,7 +69,7 @@
                         </div>
                         <div class="header-stat-content">
                             <div class="header-stat-value" data-count="{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}">{{ $children ? $children->sum(function($child) { return $child->assessments->count(); }) : 0 }}</div>
-                            <div class="header-stat-label">Total Assessments</div>
+                            <div class="header-stat-label">Total Screenings</div>
                         </div>
                     </div>
                 </div>
@@ -130,7 +130,7 @@
                                 @if($child->assessments->count() > 0)
                                 <a href="{{ route('parent.assessments') }}" class="btn-modern btn-secondary">
                                     <i class="fas fa-file-medical-alt"></i>
-                                    Assessment History
+                                    Screening History
                                 </a>
                                 @endif
                                 <button type="button" 
@@ -171,7 +171,7 @@
                                         <i class="fas fa-clipboard-check"></i>
                                     </div>
                                     <div class="metric-content">
-                                        <span class="metric-label">Assessments</span>
+                                        <span class="metric-label">Screenings</span>
                                         <span class="metric-value">{{ $child->assessments->count() }}</span>
                                     </div>
                                 </div>

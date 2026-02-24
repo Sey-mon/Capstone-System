@@ -216,7 +216,7 @@
                                                 <i class="fas fa-user-md"></i>
                                             </div>
                                             <div class="metric-content">
-                                                <span class="metric-label">Assessed By</span>
+                                                <span class="metric-label">Screened By</span>
                                                 <span class="metric-value">{{ $latestAssessment->nutritionist->first_name ?? 'N/A' }} {{ $latestAssessment->nutritionist->last_name ?? '' }}</span>
                                             </div>
                                         </div>
