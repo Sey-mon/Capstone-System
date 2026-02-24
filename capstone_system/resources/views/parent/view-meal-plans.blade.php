@@ -96,6 +96,7 @@
 
                 @if($mealPlans->count() > 0)
                     <!-- Enhanced Filter & Control Section -->
+                    @if($mealPlans->total() > 1)
                     <div class="control-panel">
                         <div class="control-panel-inner">
                             <div class="filter-section">
@@ -140,6 +141,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
 
                     <!-- Premium Meal Plans Grid -->
                     <div class="meal-plans-grid-premium" id="mealPlansGrid">
