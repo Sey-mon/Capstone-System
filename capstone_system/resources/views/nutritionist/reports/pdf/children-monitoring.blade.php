@@ -461,7 +461,8 @@
         <div class="signature-box">
             <div style="font-size: 10px; margin-bottom: 5px; color: #065f46;"><strong>Prepared by:</strong></div>
             <div class="signature-line">
-                <strong>{{ strtoupper($nutritionist->first_name . ' ' . ($nutritionist->middle_name ? substr($nutritionist->middle_name, 0, 1) . '. ' : '') . $nutritionist->last_name) }}</strong>
+                <strong>{{ strtoupper($nutritionist->first_name . ' ' . ($nutritionist->middle_name ? substr($nutritionist->middle_name, 0, 1) . '. ' : '') . $nutritionist->last_name) }}</strong><br>
+                <span style="font-size: 9px; color: #047857;">BNS</span>
             </div>
         </div>
         <div class="signature-box">
