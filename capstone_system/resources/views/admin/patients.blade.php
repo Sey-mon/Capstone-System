@@ -29,43 +29,43 @@
                     <label>Search Patient</label>
                     <div class="search-input-wrapper">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="searchPatient" class="form-control search-input" placeholder="Search by name.">
+                        <input type="text" id="searchPatient" class="form-control search-input" placeholder="Search by name." value="{{ request('search') }}">
                     </div>
                 </div>
                 <div class="filter-field">
                     <label>Barangay</label>
                     <select id="filterBarangay" class="form-control">
-                        <option value="" selected>All Barangays</option>
+                        <option value="">All Barangays</option>
                         @foreach($barangays ?? [] as $barangay)
-                            <option value="{{ $barangay->barangay_name }}">{{ $barangay->barangay_name }}</option>
+                            <option value="{{ $barangay->barangay_name }}" {{ request('barangay') == $barangay->barangay_name ? 'selected' : '' }}>{{ $barangay->barangay_name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="filter-field">
                     <label>Gender</label>
                     <select id="filterGender" class="form-control">
-                        <option value="" selected>All Genders</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
+                        <option value="">All Genders</option>
+                        <option value="Male" {{ request('gender') == 'Male' ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ request('gender') == 'Female' ? 'selected' : '' }}>Female</option>
                     </select>
                 </div>
                 <div class="filter-field">
                     <label>Age Range</label>
                     <select id="filterAgeRange" class="form-control">
-                        <option value="" selected>All Ages</option>
-                        <option value="0-12">0-12 months</option>
-                        <option value="13-24">13-24 months</option>
-                        <option value="25-36">25-36 months</option>
-                        <option value="37-48">37-48 months</option>
-                        <option value="49+">49+ months</option>
+                        <option value="">All Ages</option>
+                        <option value="0-12" {{ request('age_range') == '0-12' ? 'selected' : '' }}>0-12 months</option>
+                        <option value="13-24" {{ request('age_range') == '13-24' ? 'selected' : '' }}>13-24 months</option>
+                        <option value="25-36" {{ request('age_range') == '25-36' ? 'selected' : '' }}>25-36 months</option>
+                        <option value="37-48" {{ request('age_range') == '37-48' ? 'selected' : '' }}>37-48 months</option>
+                        <option value="49+" {{ request('age_range') == '49+' ? 'selected' : '' }}>49+ months</option>
                     </select>
                 </div>
                 <div class="filter-field">
                     <label>BNS</label>
                     <select id="filterNutritionist" class="form-control">
-                        <option value="" selected>All BNS</option>
+                        <option value="">All BNS</option>
                         @foreach($nutritionists ?? [] as $nutritionist)
-                            <option value="{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}">
+                            <option value="{{ $nutritionist->first_name }} {{ $nutritionist->last_name }}" {{ request('nutritionist') == $nutritionist->first_name . ' ' . $nutritionist->last_name ? 'selected' : '' }}>
                                 {{ $nutritionist->first_name }} {{ $nutritionist->last_name }}
                             </option>
                         @endforeach

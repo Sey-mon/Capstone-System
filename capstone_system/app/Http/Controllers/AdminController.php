@@ -523,14 +523,59 @@ class AdminController extends Controller
     /**
      * Show patients management
      */
-    public function patients()
+    public function patients(Request $request)
     {
         // Only show active (non-archived) patients
-        $patients = Patient::active()
+        $query = Patient::active()
             ->with(['parent', 'nutritionist', 'barangay', 'latestAssessment'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-            
+            ->orderBy('created_at', 'desc');
+
+        // Search by name
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%$search%")
+                  ->orWhere('last_name', 'like', "%$search%");
+            });
+        }
+
+        // Filter by barangay
+        if ($request->filled('barangay')) {
+            $query->whereHas('barangay', function ($q) use ($request) {
+                $q->where('barangay_name', $request->input('barangay'));
+            });
+        }
+
+        // Filter by gender
+        if ($request->filled('gender')) {
+            $query->where('sex', $request->input('gender'));
+        }
+
+        // Filter by age range
+        if ($request->filled('age_range')) {
+            $ageRange = $request->input('age_range');
+            if ($ageRange === '49+') {
+                $query->where('age_months', '>=', 49);
+            } else {
+                [$min, $max] = explode('-', $ageRange);
+                $query->whereBetween('age_months', [(int) $min, (int) $max]);
+            }
+        }
+
+        // Filter by nutritionist / BNS
+        if ($request->filled('nutritionist')) {
+            $nutritionistName = $request->input('nutritionist');
+            $nameParts = explode(' ', $nutritionistName, 2);
+            $query->whereHas('nutritionist', function ($q) use ($nameParts) {
+                $q->where('first_name', $nameParts[0]);
+                if (isset($nameParts[1])) {
+                    $q->where('last_name', $nameParts[1]);
+                }
+            });
+        }
+
+        $patients = $query->paginate(10)->appends($request->query());
+
         $barangays = Barangay::all();
         $nutritionists = User::where('role_id', function($query) {
                 $query->select('role_id')->from('roles')->where('role_name', 'Nutritionist');
