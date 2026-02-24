@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AuditLogController extends Controller
@@ -12,8 +13,22 @@ class AuditLogController extends Controller
         $query = AuditLog::with('user');
         
         // Apply filters
+        if ($request->filled('search')) {
+            $query->where('description', 'like', '%' . $request->search . '%');
+        }
+
         if ($request->filled('action')) {
-            $query->where('action', $request->action);
+            $action = $request->action;
+            // Handle generic login/logout to match all role-specific variants
+            if (in_array(strtolower($action), ['login', 'logout'])) {
+                $query->where('action', 'like', '%' . strtoupper($action) . '%');
+            } else {
+                $query->where('action', $action);
+            }
+        }
+
+        if ($request->filled('user')) {
+            $query->where('user_id', $request->user);
         }
         
         if ($request->filled('date_from')) {
@@ -28,7 +43,9 @@ class AuditLogController extends Controller
         
         // Preserve filter parameters in pagination
         $logs->appends($request->query());
+
+        $users = User::orderBy('first_name')->get();
         
-        return view('admin.audit-logs', compact('logs'));
+        return view('admin.audit-logs', compact('logs', 'users'));
     }
 }

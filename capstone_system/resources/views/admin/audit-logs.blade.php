@@ -49,8 +49,10 @@
                         <select name="action" id="action_filter" class="form-control auto-filter">
                             <option value="" disabled selected hidden>All Actions</option>
                             <optgroup label="User Actions">
-                                <option value="login" {{ request('action') == 'login' ? 'selected' : '' }}>Login</option>
-                                <option value="logout" {{ request('action') == 'logout' ? 'selected' : '' }}>Logout</option>
+                                <option value="login" {{ request('action') == 'login' ? 'selected' : '' }}>All Logins</option>
+                                <option value="STAFF_LOGIN" {{ request('action') == 'STAFF_LOGIN' ? 'selected' : '' }}>Staff Login</option>
+                                <option value="PARENT_LOGIN" {{ request('action') == 'PARENT_LOGIN' ? 'selected' : '' }}>Parent Login</option>
+                                <option value="logout" {{ request('action') == 'logout' ? 'selected' : '' }}>All Logouts</option>
                             </optgroup>
                             <optgroup label="Data Management">
                                 <option value="create" {{ request('action') == 'create' ? 'selected' : '' }}>Create</option>
