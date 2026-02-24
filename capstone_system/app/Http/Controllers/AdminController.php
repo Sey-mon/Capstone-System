@@ -2244,6 +2244,8 @@ class AdminController extends Controller
         try {
             DB::beginTransaction();
 
+            $isActive = $request->has('is_active') ? $request->boolean('is_active') : true;
+
             $user = User::create([
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
@@ -2252,7 +2254,9 @@ class AdminController extends Controller
                 'password' => Hash::make($request->password),
                 'role_id' => $request->role_id,
                 'contact_number' => $request->contact_number,
-                'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
+                'is_active' => $isActive,
+                'account_status' => $isActive ? 'active' : 'pending',
+                'email_verified_at' => $isActive ? now() : null,
             ]);
 
             // Log the action
