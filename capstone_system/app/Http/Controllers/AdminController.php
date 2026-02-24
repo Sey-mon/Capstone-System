@@ -462,29 +462,44 @@ class AdminController extends Controller
 
         // Handle sorting
         $sortBy = $request->input('sort_by', 'newest');
-        switch ($sortBy) {
-            case 'oldest':
-                $query->orderBy('created_at', 'asc');
-                break;
-            case 'name_asc':
-                $query->orderBy('first_name', 'asc')->orderBy('last_name', 'asc');
-                break;
-            case 'name_desc':
-                $query->orderBy('first_name', 'desc')->orderBy('last_name', 'desc');
-                break;
-            case 'email_asc':
-                $query->orderBy('email', 'asc');
-                break;
-            case 'email_desc':
-                $query->orderBy('email', 'desc');
-                break;
-            case 'newest':
-            default:
-                $query->orderBy('created_at', 'desc');
-                break;
+
+        if (in_array($sortBy, ['email_asc', 'email_desc'])) {
+            // Email is encrypted in the DB with a random IV, so DB-level ORDER BY
+            // sorts cipher text, not real addresses. Fetch all matched rows and
+            // sort the decrypted values in PHP, then paginate manually.
+            $allUsers = $query->get();
+            $sorted = ($sortBy === 'email_asc')
+                ? $allUsers->sortBy(fn($u) => strtolower($u->email))->values()
+                : $allUsers->sortByDesc(fn($u) => strtolower($u->email))->values();
+
+            $currentPage = (int) $request->input('page', 1);
+            $slice = $sorted->slice(($currentPage - 1) * $perPage, $perPage);
+            $users = new \Illuminate\Pagination\LengthAwarePaginator(
+                $slice,
+                $sorted->count(),
+                $perPage,
+                $currentPage,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } else {
+            switch ($sortBy) {
+                case 'oldest':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'name_asc':
+                    $query->orderBy('first_name', 'asc')->orderBy('last_name', 'asc');
+                    break;
+                case 'name_desc':
+                    $query->orderBy('first_name', 'desc')->orderBy('last_name', 'desc');
+                    break;
+                case 'newest':
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+
+            $users = $query->paginate($perPage)->appends($request->query());
         }
-        
-        $users = $query->paginate($perPage)->appends($request->query());
         $roles = Role::all();
         
         // Handle AJAX requests
