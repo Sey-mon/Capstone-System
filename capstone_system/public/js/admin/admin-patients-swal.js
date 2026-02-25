@@ -1996,7 +1996,7 @@ function setupEventListeners() {
     const ageRangeFilter = document.getElementById('filterAgeRange');
     const nutritionistFilter = document.getElementById('filterNutritionist');
     
-    if (searchInput) searchInput.addEventListener('input', debounce(filterPatients, 300));
+    if (searchInput) searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') filterPatients(); });
     if (barangayFilter) barangayFilter.addEventListener('change', filterPatients);
     if (genderFilter) genderFilter.addEventListener('change', filterPatients);
     if (ageRangeFilter) ageRangeFilter.addEventListener('change', filterPatients);
