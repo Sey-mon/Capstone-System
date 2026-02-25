@@ -493,12 +493,34 @@ function setupEventListeners() {
     const ageRangeFilter = document.getElementById('filterAgeRange');
     const nutritionistFilter = document.getElementById('filterNutritionist');
     
-    if (searchInput) searchInput.addEventListener('input', debounce(filterPatients, 300));
+    if (searchInput) searchInput.addEventListener('input', debounce(filterPatients, 500));
     if (barangayFilter) barangayFilter.addEventListener('change', filterPatients);
     if (genderFilter) genderFilter.addEventListener('change', filterPatients);
     if (ageRangeFilter) ageRangeFilter.addEventListener('change', filterPatients);
     if (nutritionistFilter) nutritionistFilter.addEventListener('change', filterPatients);
-    
+
+    // "Go to page" jump boxes — preserve current filter params
+    function jumpToPage(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const page = parseInt(input.value);
+        if (isNaN(page) || page < 1) return;
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        window.location.href = window.location.pathname + '?' + params.toString();
+    }
+
+    const jumpBtn = document.getElementById('jumpToPage');
+    const gridJumpBtn = document.getElementById('gridJumpToPage');
+    if (jumpBtn) jumpBtn.addEventListener('click', () => jumpToPage('pageJump'));
+    if (gridJumpBtn) gridJumpBtn.addEventListener('click', () => jumpToPage('gridPageJump'));
+
+    // Allow Enter key in jump inputs
+    const pageJumpInput = document.getElementById('pageJump');
+    const gridPageJumpInput = document.getElementById('gridPageJump');
+    if (pageJumpInput) pageJumpInput.addEventListener('keydown', e => { if (e.key === 'Enter') jumpToPage('pageJump'); });
+    if (gridPageJumpInput) gridPageJumpInput.addEventListener('keydown', e => { if (e.key === 'Enter') jumpToPage('gridPageJump'); });
+
     // Button event listeners
     setupButtonEventListeners();
 }
@@ -675,65 +697,32 @@ function setupSorting() {
     });
 }
 
-// Enhanced filtering function
+// Server-side filtering function — reloads the page with filter params so all
+// paginated pages are searched, not just the current DOM.
 function filterPatients() {
     const searchInput = document.getElementById('searchPatient');
     const barangayFilter = document.getElementById('filterBarangay');
     const genderFilter = document.getElementById('filterGender');
     const ageRangeFilter = document.getElementById('filterAgeRange');
     const nutritionistFilter = document.getElementById('filterNutritionist');
-    
-    const search = searchInput ? searchInput.value.toLowerCase() : '';
-    const barangay = barangayFilter ? barangayFilter.value.toLowerCase() : '';
-    const gender = genderFilter ? genderFilter.value.toLowerCase() : '';
+
+    const params = new URLSearchParams();
+
+    const search = searchInput ? searchInput.value.trim() : '';
+    const barangay = barangayFilter ? barangayFilter.value : '';
+    const gender = genderFilter ? genderFilter.value : '';
     const ageRange = ageRangeFilter ? ageRangeFilter.value : '';
-    const nutritionist = nutritionistFilter ? nutritionistFilter.value.toLowerCase() : '';
+    const nutritionist = nutritionistFilter ? nutritionistFilter.value : '';
 
-    let visibleCount = 0;
+    if (search) params.set('search', search);
+    if (barangay) params.set('barangay', barangay);
+    if (gender) params.set('gender', gender);
+    if (ageRange) params.set('age_range', ageRange);
+    if (nutritionist) params.set('nutritionist', nutritionist);
 
-    allPatients.forEach(patient => {
-        let visible = true;
-        const data = patient.data;
-
-        // Search filter
-        if (search && !data.name.includes(search) && !data.contact.includes(search)) {
-            visible = false;
-        }
-
-        // Barangay filter
-        if (barangay && data.barangay.toLowerCase() !== barangay) {
-            visible = false;
-        }
-
-        // Gender filter
-        if (gender && data.gender.toLowerCase() !== gender) {
-            visible = false;
-        }
-
-        // Age range filter
-        if (ageRange && !isInAgeRange(data.age, ageRange)) {
-            visible = false;
-        }
-
-        // Nutritionist filter
-        if (nutritionist && data.nutritionist.toLowerCase() !== nutritionist) {
-            visible = false;
-        }
-
-        // Show/hide elements using CSS classes
-        if (visible) {
-            patient.tableElement.classList.remove('patient-hidden');
-            patient.gridElement.classList.remove('patient-hidden');
-            visibleCount++;
-        } else {
-            patient.tableElement.classList.add('patient-hidden');
-            patient.gridElement.classList.add('patient-hidden');
-        }
-    });
-
-    // Update counts and show/hide no results
-    updateFilteredCounts(visibleCount);
-    toggleNoResults(visibleCount === 0);
+    // Always go back to page 1 when filters change
+    const baseUrl = window.location.pathname;
+    window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
 }
 
 function isInAgeRange(age, range) {
@@ -869,33 +858,8 @@ function switchView(view) {
 }
 
 function clearAllFilters() {
-    // Clear all filter inputs
-    const searchInput = document.getElementById('searchPatient');
-    const barangayFilter = document.getElementById('filterBarangay');
-    const genderFilter = document.getElementById('filterGender');
-    const ageRangeFilter = document.getElementById('filterAgeRange');
-    const nutritionistFilter = document.getElementById('filterNutritionist');
-    
-    if (searchInput) searchInput.value = '';
-    if (barangayFilter) barangayFilter.value = '';
-    if (genderFilter) genderFilter.value = '';
-    if (ageRangeFilter) ageRangeFilter.value = '';
-    if (nutritionistFilter) nutritionistFilter.value = '';
-
-    // Reset sort
-    sortColumn = null;
-    sortDirection = 'asc';
-    updateSortIcons();
-
-    // Show all patients
-    allPatients.forEach(patient => {
-        patient.tableElement.classList.remove('patient-hidden');
-        patient.gridElement.classList.remove('patient-hidden');
-    });
-
-    // Update counts
-    updatePatientCounts();
-    toggleNoResults(false);
+    // Navigate to the base URL without any filter params
+    window.location.href = window.location.pathname;
 }
 
 function updatePatientCounts() {
