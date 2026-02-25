@@ -217,7 +217,8 @@ console.log('%c Powered by Modern UI Framework ', 'background: #f3f4f6; color: #
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
                                 <i class="fas fa-phone" style="color: #10b981; margin-right: 5px;"></i>Contact Number
                             </label>
-                            <input id="swal-contact" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${adminData.contact_number || ''}">
+                            <input id="swal-contact" class="swal2-input" style="width: 100%; margin: 0; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px;" value="${adminData.contact_number || ''}" maxlength="11" placeholder="09XXXXXXXXX" inputmode="numeric">
+                            <small style="color: #6b7280; font-size: 11px; margin-top: 4px; display: block;">Format: 09XXXXXXXXX (11 digits)</small>
                         </div>
                         <div style="grid-column: 1 / -1;">
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px;">
@@ -251,6 +252,17 @@ console.log('%c Powered by Modern UI Framework ', 'background: #f3f4f6; color: #
                         this.style.boxShadow = 'none';
                     });
                 });
+
+                // Allow only digits in contact number field
+                const contactInput = document.getElementById('swal-contact');
+                if (contactInput) {
+                    contactInput.addEventListener('input', function() {
+                        this.value = this.value.replace(/\D/g, '');
+                    });
+                    contactInput.addEventListener('keypress', function(e) {
+                        if (!/[0-9]/.test(e.key)) e.preventDefault();
+                    });
+                }
             },
             preConfirm: () => {
                 const firstName = document.getElementById('swal-first-name').value;
@@ -261,7 +273,15 @@ console.log('%c Powered by Modern UI Framework ', 'background: #f3f4f6; color: #
                     Swal.showValidationMessage('First Name, Last Name, and Email are required');
                     return false;
                 }
-                
+
+                const contact = document.getElementById('swal-contact').value;
+                if (contact) {
+                    if (!/^09\d{9}$/.test(contact)) {
+                        Swal.showValidationMessage('Contact number must be 11 digits and start with 09 (e.g. 09XXXXXXXXX)');
+                        return false;
+                    }
+                }
+
                 return {
                     first_name: firstName,
                     middle_name: document.getElementById('swal-middle-name').value,
