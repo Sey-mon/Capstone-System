@@ -276,7 +276,7 @@
                                placeholder="Search categories..." 
                                class="filter-input"
                                style="width: 250px; padding-left: 2.5rem;"
-                               onkeyup="searchTable('categories')">
+                               onkeydown="if(event.key==='Enter') searchTable('categories')">
                     </div>
                     <button class="btn btn-primary" onclick="openAddCategoryModal()">
                         <i class="fas fa-plus"></i>
@@ -403,7 +403,7 @@
                                placeholder="Search barangays..." 
                                class="filter-input"
                                style="width: 250px; padding-left: 2.5rem;"
-                               onkeyup="searchTable('barangays')">
+                               onkeydown="if(event.key==='Enter') searchTable('barangays')">
                     </div>
                     <button class="btn btn-primary" onclick="openAddBarangayModal()">
                         <i class="fas fa-plus"></i>

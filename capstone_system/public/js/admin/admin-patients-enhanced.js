@@ -75,7 +75,7 @@ function cachePatientData() {
 
 function setupEventListeners() {
     // Filter inputs
-    document.getElementById('searchPatient').addEventListener('input', debounce(filterPatients, 300));
+    document.getElementById('searchPatient').addEventListener('keydown', function(e) { if (e.key === 'Enter') filterPatients(); });
     document.getElementById('filterBarangay').addEventListener('change', filterPatients);
     document.getElementById('filterGender').addEventListener('change', filterPatients);
     document.getElementById('filterAgeRange').addEventListener('change', filterPatients);

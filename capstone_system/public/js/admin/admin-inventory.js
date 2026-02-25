@@ -737,7 +737,7 @@ function setupRealTimeFilters() {
     const statusFilter = document.getElementById('statusFilter');
     
     if (searchFilter) {
-        searchFilter.addEventListener('input', filterTable);
+        searchFilter.addEventListener('keydown', function(e) { if (e.key === 'Enter') filterTable(); });
         
         searchFilter.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary-color)';
