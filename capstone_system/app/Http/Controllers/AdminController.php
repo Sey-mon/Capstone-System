@@ -473,7 +473,7 @@ class AdminController extends Controller
                 : $allUsers->sortByDesc(fn($u) => strtolower($u->email))->values();
 
             $currentPage = (int) $request->input('page', 1);
-            $slice = $sorted->slice(($currentPage - 1) * $perPage, $perPage);
+            $slice = $sorted->slice(($currentPage - 1) * $perPage, $perPage)->values();
             $users = new \Illuminate\Pagination\LengthAwarePaginator(
                 $slice,
                 $sorted->count(),
