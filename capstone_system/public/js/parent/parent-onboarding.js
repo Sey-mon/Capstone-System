@@ -61,7 +61,7 @@
                     <ul style="line-height: 1.8; padding-left: 1.5rem;">
                         <li><strong>Dashboard Overview:</strong> See your child's growth and health status</li>
                         <li><strong>Children Management:</strong> Link and monitor multiple children</li>
-                        <li><strong>Health Assessments:</strong> View detailed nutrition assessments</li>
+                        <li><strong>Health Screenings:</strong> View detailed nutrition screenings</li>
                         <li><strong>Meal Plans:</strong> Access personalized meal recommendations</li>
                     </ul>
                 `,
@@ -82,7 +82,7 @@
                         </ol>
                     </div>
                     <p style="font-style: italic; color: #6c757d;">
-                        Don't have a Patient ID yet? Contact your nutritionist or visit the health center for your child's first assessment.
+                        Don't have a Patient ID yet? Contact your nutritionist or visit the health center for your child's first screening.
                     </p>
                 `,
                 icon: '<i class="fas fa-link" style="font-size: 3rem; color: #17a2b8;"></i>'
@@ -96,7 +96,7 @@
                     <ul style="line-height: 1.8; padding-left: 1.5rem;">
                         <li><strong>Growth Charts:</strong> Track weight and height over time</li>
                         <li><strong>Nutrition Status:</strong> See current malnutrition indicators</li>
-                        <li><strong>Assessment History:</strong> View past health check-ups</li>
+                        <li><strong>Screening History:</strong> View past health check-ups</li>
                         <li><strong>Recommendations:</strong> Get personalized nutrition advice</li>
                     </ul>
                     <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin-top: 1.5rem; border-left: 4px solid: #ffc107;">
