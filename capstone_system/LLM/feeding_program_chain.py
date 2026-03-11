@@ -174,6 +174,74 @@ def get_feeding_program_budget_context(budget_level='moderate'):
     return budget_contexts.get(budget_level, budget_contexts['moderate'])
 
 
+def validate_meal_plan(parsed_json: Dict, expected_days: int) -> tuple:
+    """
+    Validate a generated meal plan for structural and content correctness.
+
+    Checks:
+    - Presence of 'meal_plan' key
+    - Correct number of days
+    - Exactly 4 meals per day (Almusal, Tanghalian, Meryenda, Hapunan)
+    - No duplicate dish names across the entire plan
+
+    Returns:
+        Tuple of (issues: List[str], all_dishes: List[str])
+        - issues: list of validation problems found (empty = valid)
+        - all_dishes: flat list of every dish_name found (used for forbidding on retry)
+    """
+    import json as _json
+
+    issues: List[str] = []
+    all_dishes: List[str] = []
+    REQUIRED_MEALS = ['Almusal', 'Tanghalian', 'Meryenda', 'Hapunan']
+
+    if 'meal_plan' not in parsed_json:
+        return ["Missing 'meal_plan' key in response"], []
+
+    meal_plan = parsed_json['meal_plan']
+    if not isinstance(meal_plan, list):
+        return ["'meal_plan' is not a list"], []
+
+    if len(meal_plan) != expected_days:
+        issues.append(
+            f"Day count mismatch: expected {expected_days}, got {len(meal_plan)}"
+        )
+
+    seen_dishes: set = set()
+
+    for day_data in meal_plan:
+        day_num = day_data.get('day', '?')
+        meals = day_data.get('meals', [])
+
+        if len(meals) != 4:
+            issues.append(f"Day {day_num}: Expected 4 meals, got {len(meals)}")
+
+        for i, meal in enumerate(meals):
+            expected_type = REQUIRED_MEALS[i] if i < len(REQUIRED_MEALS) else None
+            actual_type = meal.get('meal_name_tagalog', '').strip()
+
+            if expected_type and actual_type != expected_type:
+                issues.append(
+                    f"Day {day_num} meal {i + 1}: Expected '{expected_type}', got '{actual_type}'"
+                )
+
+            dish = meal.get('dish_name', '').strip()
+            if not dish:
+                issues.append(f"Day {day_num} {actual_type}: Empty dish name")
+                continue
+
+            all_dishes.append(dish)
+
+            if dish.lower() in seen_dishes:
+                issues.append(
+                    f"Duplicate dish: '{dish}' appears more than once (Day {day_num} {actual_type})"
+                )
+            else:
+                seen_dishes.add(dish.lower())
+
+    return issues, all_dishes
+
+
 def generate_feeding_program_meal_plan(
     target_age_group: str = 'all',
     program_duration_days: int = 7,
@@ -545,65 +613,137 @@ Return a JSON object with this EXACT structure:
 BEGIN JSON OUTPUT NOW:
 """
     
-    # Create LLM and generate with retry logic
+    # Create LLM and generate with smart retry logic
     max_retries = 3
-    retry_delay = 2  # seconds
-    
+    retry_delay = 2  # seconds (doubles on each retry)
+
+    # Tracks what went wrong and which dishes were produced — injected into the
+    # prompt on subsequent attempts so the LLM knows what to avoid / fix.
+    previously_used_dishes: List[str] = []
+    validation_issues: List[str] = []
+
     for attempt in range(max_retries):
         try:
             logger.info(f"Attempting meal plan generation (attempt {attempt + 1}/{max_retries})")
+
+            # ── Build attempt-specific prompt ────────────────────────────────
+            # On retries, tell the LLM exactly what was wrong and which dishes
+            # are now forbidden so it doesn't repeat them.
+            current_prompt = prompt_template
+            if attempt > 0 and (validation_issues or previously_used_dishes):
+                retry_note = (
+                    f"\n\n⚠️ RETRY ATTEMPT {attempt + 1} — The previous response failed validation.\n"
+                )
+                if validation_issues:
+                    retry_note += "Specific issues that MUST be fixed:\n"
+                    retry_note += "\n".join(f"  - {issue}" for issue in validation_issues[:15])
+                    retry_note += "\n"
+                if previously_used_dishes:
+                    retry_note += (
+                        "\n🚫 FORBIDDEN DISHES — Every dish below was already used. "
+                        "DO NOT repeat any of them under any circumstances:\n"
+                        + "\n".join(f"  ❌ {dish}" for dish in previously_used_dishes)
+                        + "\n\nAll meals in this new attempt MUST use completely different dishes.\n"
+                    )
+                # Inject just before the output format section
+                current_prompt = prompt_template.replace(
+                    "OUTPUT FORMAT - JSON STRUCTURE:",
+                    retry_note + "\nOUTPUT FORMAT - JSON STRUCTURE:",
+                    1,  # only replace the first occurrence
+                )
+            # ── End prompt build ─────────────────────────────────────────────
+
             llm = create_feeding_program_llm()
-            
+
             start_time = time.time()
-            response = llm.invoke(prompt_template)
+            response = llm.invoke(current_prompt)
             generation_time = time.time() - start_time
-            
-            meal_plan_content = response.content if hasattr(response, 'content') else str(response)
-            
+
+            meal_plan_content = str(response.content) if hasattr(response, 'content') else str(response)
+
             # Validate response length
             if not meal_plan_content or len(meal_plan_content) < 100:
                 logger.warning(f"Generated meal plan too short ({len(meal_plan_content)} chars)")
+                validation_issues = ["Response was too short / empty"]
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay)
+                    retry_delay *= 2
                     continue
-            
+
             # Clean the response - remove any text before first { and after last }
             cleaned_content = meal_plan_content.strip()
-            
+
             # Try to extract JSON if wrapped in markdown or has extra text
             import re
             json_match = re.search(r'\{[\s\S]*\}', cleaned_content)
             if json_match:
                 cleaned_content = json_match.group(0)
                 logger.info("Extracted JSON from response")
-            
+
             # Validate it's valid JSON by attempting to parse
             try:
                 import json
                 parsed_json = json.loads(cleaned_content)
-                
+
                 # Validate structure
                 if not isinstance(parsed_json, dict):
                     raise ValueError("Response is not a JSON object")
-                
+
                 if 'meal_plan' not in parsed_json:
-                    logger.warning("Response missing 'meal_plan' key, using original content")
-                    cleaned_content = meal_plan_content  # Fall back to original
+                    validation_issues = ["Missing 'meal_plan' key in response"]
+                    previously_used_dishes = []
+                    logger.warning("Response missing 'meal_plan' key — retrying")
+                    if attempt < max_retries - 1:
+                        time.sleep(retry_delay)
+                        retry_delay *= 2
+                        continue
+                    # Last attempt — accept whatever we have
+                    cleaned_content = meal_plan_content
                 else:
-                    logger.info("Response validated as proper JSON structure")
-                    # Use the cleaned JSON string
+                    # ── Quality validation ────────────────────────────────────
+                    issues, all_dishes = validate_meal_plan(parsed_json, program_duration_days)
+                    previously_used_dishes = all_dishes
+
+                    if issues:
+                        validation_issues = issues
+                        logger.warning(
+                            f"Validation found {len(issues)} issue(s): "
+                            + "; ".join(issues[:5])
+                        )
+                        if attempt < max_retries - 1:
+                            logger.info(
+                                f"Retrying with {len(all_dishes)} forbidden dishes "
+                                f"and {len(issues)} issue(s) injected into prompt"
+                            )
+                            time.sleep(retry_delay)
+                            retry_delay *= 2
+                            continue
+                        # Exhausted retries — return best-effort with warnings
+                        logger.warning(
+                            "Max retries reached — returning best-effort result "
+                            "(validation issues remain)"
+                        )
+                    else:
+                        validation_issues = []
+                        logger.info("Meal plan passed all validation checks")
+
                     cleaned_content = json.dumps(parsed_json, ensure_ascii=False)
-                    
+                    # ── End quality validation ────────────────────────────────
+
             except json.JSONDecodeError as je:
-                logger.warning(f"Response is not valid JSON (will use as-is for markdown parsing): {str(je)[:100]}")
-                # Keep original content for markdown parsing
+                logger.warning(
+                    f"Response is not valid JSON (will use as-is for markdown parsing): "
+                    f"{str(je)[:100]}"
+                )
+                validation_issues = [f"JSON parse error: {str(je)[:100]}"]
                 cleaned_content = meal_plan_content
             except Exception as ve:
                 logger.warning(f"JSON validation issue: {str(ve)}")
+                validation_issues = [str(ve)[:200]]
                 cleaned_content = meal_plan_content
-            
+
             logger.info(f"Meal plan generated successfully in {generation_time:.2f}s")
-            
+
             return {
                 'success': True,
                 'meal_plan': cleaned_content,
@@ -615,12 +755,15 @@ BEGIN JSON OUTPUT NOW:
                 'total_children': total_children,
                 'available_ingredients': available_ingredients,
                 'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'generation_time_seconds': round(generation_time, 2)
+                'generation_time_seconds': round(generation_time, 2),
+                # None when clean; populated if best-effort result returned
+                'validation_issues': validation_issues if validation_issues else None,
             }
-        
+
         except Exception as e:
             logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
-            
+            validation_issues = [f"Exception: {str(e)[:200]}"]
+
             if attempt < max_retries - 1:
                 logger.info(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
@@ -630,15 +773,15 @@ BEGIN JSON OUTPUT NOW:
                 return {
                     'success': False,
                     'error': f'Failed after {max_retries} attempts: {str(e)}',
-                    'meal_plan': None
+                    'meal_plan': None,
                 }
-    
+
     # Fallback return (should never reach here, but ensures all paths return)
-    logger.error("Unexpected code path - no meal plan generated")
+    logger.error("Unexpected code path — no meal plan generated")
     return {
         'success': False,
         'error': 'Unexpected error: meal plan generation failed',
-        'meal_plan': None
+        'meal_plan': None,
     }
 
 
