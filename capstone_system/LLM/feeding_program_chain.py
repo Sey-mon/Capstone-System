@@ -47,10 +47,11 @@ def create_feeding_program_llm():
         return ChatGroq(
             api_key=SecretStr(api_key),
             model="meta-llama/llama-4-scout-17b-16e-instruct",
-            temperature=0.3,
-            max_tokens=3000,
-            timeout=120,  # 2 minute timeout for production
-            max_retries=2  # Retry failed requests
+            temperature=0.1,   # Lower = tighter JSON structure adherence
+            max_tokens=5000,   # 5-day plan needs ~5000 tokens; truncation breaks JSON
+            timeout=120,
+            max_retries=2,
+            model_kwargs={"response_format": {"type": "json_object"}},
         )
     except Exception as e:
         logger.error(f"Failed to create ChatGroq instance: {str(e)}")
@@ -239,7 +240,230 @@ def validate_meal_plan(parsed_json: Dict, expected_days: int) -> tuple:
             else:
                 seen_dishes.add(dish.lower())
 
+            # Flag prohibited ingredients that slipped into a dish name
+            _PROHIBITED_IN_NAME = [
+                'hotdog', 'spam', 'luncheon meat', 'instant noodle', 'canned sardine',
+                'canned tuna', 'canned corned', 'cornsilog', 'cup noodle', 'instant mami',
+            ]
+            if any(p in dish.lower() for p in _PROHIBITED_IN_NAME):
+                issues.append(
+                    f"Prohibited ingredient in dish name: '{dish}' (Day {day_num} {actual_type})"
+                )
+
     return issues, all_dishes
+
+
+def _plan_dish_names(
+    duration_days: int,
+    available_ingredients: Optional[str],
+    budget_context: Dict,
+    target_age_group: str,
+) -> List[str]:
+    """
+    Pre-generate a locked, deduplicated list of dish names BEFORE the main plan is built.
+
+    Makes a cheap, focused LLM call that asks ONLY for dish names — no ingredients,
+    no portions. Returns a flat list of (4 * duration_days) unique names ordered as:
+        Day 1 Almusal, Day 1 Tanghalian, Day 1 Meryenda, Day 1 Hapunan, Day 2 ...
+
+    Returns [] on any failure so the caller falls back gracefully to the original
+    single-call path.
+    """
+    import json as _json
+
+    total_slots = duration_days * 4
+    meal_types = [
+        'Almusal (Breakfast)',
+        'Tanghalian (Lunch)',
+        'Meryenda (Snack)',
+        'Hapunan (Dinner)',
+    ]
+    slot_labels = [
+        f'Day {d} — {mt}'
+        for d in range(1, duration_days + 1)
+        for mt in meal_types
+    ]
+    slots_str = '\n'.join(f'{i + 1}. {label}' for i, label in enumerate(slot_labels))
+
+    if available_ingredients:
+        ingredient_hint = f'∙ Available ingredients to prioritize: {available_ingredients}'
+    else:
+        ingredient_hint = (
+            f"∙ Proteins to use: {', '.join(budget_context['proteins'][:5])}\n"
+            f"∙ Vegetables to use: {', '.join(budget_context['vegetables'][:5])}"
+        )
+
+    prompt = (
+        f'You are a Filipino pediatric nutritionist planning a {duration_days}-day '
+        f'community feeding program.\n\n'
+        f'Generate exactly {total_slots} unique Filipino dish names — one per slot.\n\n'
+        f'Rules:\n'
+        f'- Every dish must be a named, complete Filipino recipe '
+        f'(e.g. "Tinolang Manok with Malunggay", "Champorado with Tuyo").\n'
+        f'- NO duplicates anywhere in the list.\n'
+        f'- NO processed/canned items (no hotdog, spam, instant noodles, canned sardines).\n'
+        f'- Vary cooking methods: Adobo, Sinigang, Tinola, Pritong, Ginisa, Nilaga, Ginataang.\n'
+        f'- Almusal: lugaw, champorado, silog meals, or pandesal with filling.\n'
+        f'- Meryenda: traditional Filipino kakanin or fresh fruit snacks.\n'
+        f'{ingredient_hint}\n\n'
+        f'Slots:\n{slots_str}\n\n'
+        f'Return a JSON object with key "dishes" containing exactly {total_slots} strings.\n'
+        f'Format: {{"dishes": ["Dish 1", "Dish 2", ...]}}\n'
+        f'JSON:'
+    )
+
+    api_key = os.getenv('GROQ_API_KEY')
+    if not api_key:
+        logger.warning('_plan_dish_names: GROQ_API_KEY not set, skipping pre-plan')
+        return []
+
+    # Terms that must not appear in any returned dish name
+    _PROHIBITED = [
+        'hotdog', 'spam', 'luncheon meat', 'instant noodle', 'canned sardine',
+        'canned tuna', 'canned corned', 'cornsilog', 'cup noodle', 'instant mami',
+    ]
+
+    try:
+        llm = ChatGroq(
+            api_key=SecretStr(api_key),
+            model='meta-llama/llama-4-scout-17b-16e-instruct',
+            temperature=0.8,   # High variety so dish names are diverse
+            max_tokens=700,
+            timeout=60,
+            max_retries=1,
+            model_kwargs={"response_format": {"type": "json_object"}},
+        )
+        response = llm.invoke(prompt)
+        content = str(response.content) if hasattr(response, 'content') else str(response)
+
+        data = _json.loads(content)
+        # Support {"dishes": [...]} object or bare list
+        if isinstance(data, dict):
+            dishes_raw = data.get('dishes', data.get('dish_names', data.get('meal_plan', [])))
+        elif isinstance(data, list):
+            dishes_raw = data
+        else:
+            logger.warning('_plan_dish_names: unexpected response shape')
+            return []
+
+        if not isinstance(dishes_raw, list):
+            logger.warning('_plan_dish_names: dishes value is not a list')
+            return []
+
+        # Flatten any nested lists and stringify
+        flat: List[str] = []
+        for item in dishes_raw:
+            if isinstance(item, list):
+                flat.extend(str(x).strip() for x in item)
+            else:
+                flat.append(str(item).strip())
+
+        # Remove any dish names containing prohibited ingredients
+        flat = [d for d in flat if d and not any(p in d.lower() for p in _PROHIBITED)]
+
+        if len(flat) < total_slots:
+            logger.warning(f'_plan_dish_names: got {len(flat)} names, need {total_slots}')
+            return []
+
+        # Deduplicate while preserving order
+        seen: set = set()
+        unique: List[str] = []
+        for dish in flat[:total_slots]:
+            norm = dish.lower()
+            if norm not in seen and dish:
+                seen.add(norm)
+                unique.append(dish)
+
+        if len(unique) < total_slots:
+            logger.warning(
+                f'_plan_dish_names: only {len(unique)} unique names after dedup (need {total_slots})'
+            )
+            return []
+
+        logger.info(f'Pre-planned {total_slots} unique dish names')
+        return unique[:total_slots]
+
+    except Exception as e:
+        logger.warning(f'_plan_dish_names failed ({str(e)[:100]}), proceeding without pre-plan')
+        return []
+
+
+def _save_seed(params: Dict, clean_json: str) -> None:
+    """
+    Append a validated meal plan output to the seed file.
+    Seeds are stored as JSONL at LLM/seeds/feeding_program_seeds.jsonl and are
+    used by _load_seed() for few-shot injection on future calls.
+    """
+    import json as _json
+
+    seeds_dir = os.path.join(os.path.dirname(__file__), 'seeds')
+    os.makedirs(seeds_dir, exist_ok=True)
+    seed_path = os.path.join(seeds_dir, 'feeding_program_seeds.jsonl')
+
+    record = {
+        'saved_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'params': params,
+        'output': _json.loads(clean_json),
+    }
+    MAX_SEEDS = 50  # Prevent unbounded file growth
+    try:
+        with open(seed_path, 'a', encoding='utf-8') as f:
+            f.write(_json.dumps(record, ensure_ascii=False) + '\n')
+        # Trim oldest entries once the file exceeds MAX_SEEDS lines
+        with open(seed_path, 'r', encoding='utf-8') as f:
+            lines = [ln for ln in f if ln.strip()]
+        if len(lines) > MAX_SEEDS:
+            with open(seed_path, 'w', encoding='utf-8') as f:
+                f.writelines(lines[-MAX_SEEDS:])
+        logger.info(f'Seed saved → {seed_path} ({min(len(lines), MAX_SEEDS)} records)')
+    except Exception as e:
+        logger.warning(f'Failed to save seed: {str(e)}')
+
+
+def _load_seed(duration_days: int, budget_level: str) -> str:
+    """
+    Load the most recent validated seed whose parameters match the current request.
+    Returns a formatted few-shot block to inject into the prompt, or '' if none found.
+    """
+    import json as _json
+
+    seed_path = os.path.join(os.path.dirname(__file__), 'seeds', 'feeding_program_seeds.jsonl')
+    if not os.path.exists(seed_path):
+        return ''
+
+    try:
+        matching: List[Dict] = []
+        with open(seed_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                record = _json.loads(line)
+                p = record.get('params', {})
+                if (
+                    p.get('program_duration_days') == duration_days
+                    and p.get('budget_level') == budget_level
+                ):
+                    matching.append(record)
+
+        if not matching:
+            return ''
+
+        example_json = _json.dumps(matching[-1]['output'], ensure_ascii=False, indent=2)
+        return (
+            '\n\n'
+            '═══════════════════════════════════════════════════════════════════\n'
+            '📋 REFERENCE EXAMPLE — a past validated meal plan for this program\n'
+            '═══════════════════════════════════════════════════════════════════\n'
+            'Study this output structure carefully and use it as your template.\n'
+            'You MUST produce a COMPLETELY DIFFERENT meal plan with DIFFERENT dishes.\n\n'
+            f'{example_json}\n'
+            '═══════════════════════════════════════════════════════════════════\n'
+            'END REFERENCE — generate your NEW, different meal plan now:\n'
+        )
+    except Exception as e:
+        logger.warning(f'Failed to load seed: {str(e)}')
+        return ''
 
 
 def generate_feeding_program_meal_plan(
@@ -351,7 +575,55 @@ def generate_feeding_program_meal_plan(
     }
     
     target_description = age_group_info.get(target_age_group, age_group_info['all'])
-    
+
+    # ── Phase 2: Pre-plan dish names so the main call cannot repeat them ─────
+    dish_names = _plan_dish_names(
+        program_duration_days, available_ingredients, budget_context, target_age_group
+    )
+    _MEAL_SLOTS = ['Almusal', 'Tanghalian', 'Meryenda', 'Hapunan']
+    if dish_names:
+        _lines = [
+            '═══════════════════════════════════════════════════════════════════',
+            '🔒 PRE-APPROVED DISH NAMES — MANDATORY — USE EXACTLY THESE IN ORDER',
+            '═══════════════════════════════════════════════════════════════════',
+            'These dish names are LOCKED. Do NOT rename, swap, or substitute any of them.',
+            'Your only job is to supply: ingredients, portions, and shopping_list.',
+            '',
+        ]
+        _idx = 0
+        for _d in range(1, program_duration_days + 1):
+            for _m in _MEAL_SLOTS:
+                if _idx < len(dish_names):
+                    _lines.append(f'  Day {_d} {_m}: {dish_names[_idx]}')
+                    _idx += 1
+        _lines.append('')
+        dish_constraint_block = '\n'.join(_lines)
+    else:
+        dish_constraint_block = (
+            '⚠️ No pre-approved dish list — generate unique dish names yourself '
+            'following all NO REPETITION rules strictly.'
+        )
+
+    # ── Phase 4: Inject a past validated output as a few-shot example ────────
+    seed_example = _load_seed(program_duration_days, budget_level)
+
+    # ── Conditional prompt blocks: shorter when dish names are already locked ──
+    # Skip the 100-item food database when dishes are pre-planned — the model
+    # already knows what ingredients each named dish needs.
+    food_section = (
+        f"FOOD DATABASE:\n{food_list_str}\n"
+        if not dish_names
+        else ""
+    )
+    # When dishes are locked, requirements 1-9 only add noise and contradictory
+    # instructions (e.g. "choose dishes" when dishes are already chosen).
+    fill_mode_notice = (
+        "🔒 DISH NAMES ARE LOCKED (see PRE-APPROVED list above). "
+        "Your ONLY task: fill in ingredients, portions, and shopping_list for each locked dish. "
+        "SKIP requirements 1-9 below — they were handled during dish-name pre-planning.\n\n"
+        if dish_names else ""
+    )
+
     # Build the prompt
     prompt_template = f"""You are a Pediatric Nutritionist designing a GENERIC FEEDING PROGRAM meal plan for Filipino children.
 
@@ -394,16 +666,15 @@ BUDGET CONSTRAINTS ({budget_level}):
 - Recommended Grains: {', '.join(budget_context['grains'])}
 - Recommended Fruits: {', '.join(budget_context['fruits'])}
 
-FOOD DATABASE:
-{food_list_str}
-
-{pdf_context}
+{food_section}
+{pdf_context}{seed_example}
+{dish_constraint_block}
 
 ═══════════════════════════════════════════════════════════════════
-YOUR TASK: Create a {program_duration_days}-day GENERIC FEEDING PROGRAM meal plan
+YOUR TASK: Complete the {program_duration_days}-day meal plan — fill in ingredients, portions, and shopping list
 ═══════════════════════════════════════════════════════════════════
 
-CRITICAL REQUIREMENTS:
+{fill_mode_notice}CRITICAL REQUIREMENTS:
 
 1. **🔴 PRIORITIZE AVAILABLE INGREDIENTS (ABSOLUTE PRIORITY):**
    - If available ingredients are specified, they are the FOUNDATION of your meal plan
@@ -726,6 +997,15 @@ BEGIN JSON OUTPUT NOW:
                     else:
                         validation_issues = []
                         logger.info("Meal plan passed all validation checks")
+                        # Phase 4: persist this clean output for future few-shot use
+                        _save_seed(
+                            {
+                                'program_duration_days': program_duration_days,
+                                'budget_level': budget_level,
+                                'target_age_group': target_age_group,
+                            },
+                            json.dumps(parsed_json, ensure_ascii=False),
+                        )
 
                     cleaned_content = json.dumps(parsed_json, ensure_ascii=False)
                     # ── End quality validation ────────────────────────────────
