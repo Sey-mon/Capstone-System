@@ -527,15 +527,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ========== SEARCH & FILTER ==========
-let searchTimeout;
-document.getElementById('searchInput')?.addEventListener('input', function(e) {
-    clearTimeout(searchTimeout);
-    const search = e.target.value;
-    const tag = document.getElementById('tagFilter')?.value || '';
-    
-    searchTimeout = setTimeout(() => {
+document.getElementById('searchInput')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const search = e.target.value;
+        const tag = document.getElementById('tagFilter')?.value || '';
         updateUrl(search, tag);
-    }, 500);
+    }
 });
 
 document.getElementById('tagFilter')?.addEventListener('change', function(e) {

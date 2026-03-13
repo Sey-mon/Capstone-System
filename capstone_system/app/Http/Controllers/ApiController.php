@@ -9,6 +9,7 @@ use App\Services\MalnutritionService;
 use App\Services\NutritionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -315,6 +316,20 @@ class ApiController extends Controller
      */
     public function generateFeedingProgram(Request $request)
     {
+        $breakerOpenKey = 'feeding_program:breaker_open';
+        $failureCountKey = 'feeding_program:failure_count';
+        $breakerStore = env('FEEDING_PROGRAM_BREAKER_STORE', config('cache.limiter', config('cache.default')));
+        $breakerCache = Cache::store($breakerStore);
+
+        // Circuit breaker: temporarily block generation after repeated upstream failures.
+        if ($breakerCache->get($breakerOpenKey)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'SERVICE_TEMP_UNAVAILABLE',
+                'message' => 'Service temporarily unavailable. Please try again in about 1 minute.'
+            ], 503);
+        }
+
         $request->validate([
             'target_age_group' => 'required|string|in:all,6-12months,12-24months,24-60months',
             'program_duration_days' => 'required|integer|min:1|max:5',
@@ -324,6 +339,22 @@ class ApiController extends Controller
             'available_ingredients' => 'nullable|string'
         ]);
 
+        // Canonical ingredient normalization + validation before spending LLM credits
+        $ingredientsRaw = $request->available_ingredients;
+        $normalizedIngredients = null;
+        if (!empty(trim((string) $ingredientsRaw))) {
+            $normalizedIngredients = $this->normalizeIngredients(trim((string) $ingredientsRaw));
+
+            $validationError = $this->validateIngredients($normalizedIngredients);
+            if ($validationError) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'INVALID_INGREDIENTS',
+                    'message' => $validationError,
+                ], 422);
+            }
+        }
+
         try {
             $nutritionService = new NutritionService();
             $result = $nutritionService->generateFeedingProgram(
@@ -332,19 +363,257 @@ class ApiController extends Controller
                 $request->budget_level,
                 $request->barangay,
                 $request->total_children,
-                $request->available_ingredients
+                $normalizedIngredients
             );
+
+            // Successful run closes the current failure streak.
+            $breakerCache->forget($failureCountKey);
 
             return response()->json([
                 'success' => true,
                 'data' => $result
             ]);
         } catch (\Exception $e) {
+            $code = (int) $e->getCode();
+
+            // Count server-side failures and open breaker for 60s after threshold.
+            if ($code >= 500 || $code === 0) {
+                $count = (int) $breakerCache->increment($failureCountKey);
+                $breakerCache->put($failureCountKey, $count, now()->addMinutes(2));
+                if ($count >= 5) {
+                    $breakerCache->put($breakerOpenKey, true, now()->addSeconds(60));
+                }
+            } else {
+                // Validation/client errors should not trip breaker.
+                $breakerCache->forget($failureCountKey);
+            }
+
+            if ($code >= 400 && $code < 500) {
+                $raw = str_replace('Feeding program generation failed: ', '', $e->getMessage());
+                $message = $raw;
+                $validationIssues = null;
+
+                // If upstream detail arrived as JSON string, extract a clean human message.
+                $decoded = json_decode($raw, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    if (!empty($decoded['message'])) {
+                        $message = $decoded['message'];
+                        if (!empty($decoded['validation_issues']) && is_array($decoded['validation_issues'])) {
+                            $validationIssues = $decoded['validation_issues'];
+                        }
+                    } elseif (!empty($decoded['detail']['message'])) {
+                        $message = $decoded['detail']['message'];
+                        if (!empty($decoded['detail']['validation_issues']) && is_array($decoded['detail']['validation_issues'])) {
+                            $validationIssues = $decoded['detail']['validation_issues'];
+                        }
+                    }
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'REQUEST_BLOCKED',
+                    'message' => $message,
+                    'validation_issues' => $validationIssues,
+                ], $code);
+            }
+
+            if ($code === 429) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'RATE_LIMITED',
+                    'message' => 'Too many requests. Please wait a moment and try again.'
+                ], 429);
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to generate feeding program: ' . $e->getMessage()
+                'error_code' => 'GENERATION_FAILED',
+                'message' => 'Generation failed. Please try again.'
             ], 500);
         }
+    }
+
+    /**
+     * Canonicalize available ingredients so aliases/typos map to stable terms.
+     * Example: "chicken, string beans, squash" => "manok, sitaw, kalabasa"
+     */
+    private function normalizeIngredients(string $raw): string
+    {
+        $aliasMap = [
+            // Protein aliases
+            'chicken' => 'manok',
+            'native chicken' => 'manok',
+            'pork' => 'baboy',
+            'beef' => 'baka',
+            'fish' => 'isda',
+            'milkfish' => 'bangus',
+            'egg' => 'itlog',
+            'eggs' => 'itlog',
+            'shrimp' => 'hipon',
+            'prawn' => 'hipon',
+            'crab' => 'alimango',
+            'squid' => 'pusit',
+
+            // Common produce aliases
+            'water spinach' => 'kangkong',
+            'string beans' => 'sitaw',
+            'yardlong beans' => 'sitaw',
+            'squash' => 'kalabasa',
+            'pumpkin' => 'kalabasa',
+            'sweet potato' => 'kamote',
+            'moringa' => 'malunggay',
+            'malungay' => 'malunggay',
+            'eggplant' => 'talong',
+            'bitter gourd' => 'ampalaya',
+            'tomato' => 'kamatis',
+            'onion' => 'sibuyas',
+            'garlic' => 'bawang',
+            'ginger' => 'luya',
+            'potato' => 'patatas',
+
+            // Legumes / staples
+            'munggo' => 'monggo',
+            'mungo' => 'monggo',
+            'mongo' => 'monggo',
+            'rice' => 'rice',
+        ];
+
+        // Accept comma, semicolon, or newline separators from users
+        $parts = preg_split('/[,;\n\r]+/', $raw) ?: [];
+
+        $normalized = [];
+        foreach ($parts as $part) {
+            $item = strtolower(trim((string) $part));
+            if ($item === '') {
+                continue;
+            }
+
+            // Remove noisy punctuation while keeping spaces/hyphens
+            $item = preg_replace('/[^a-z0-9\s\-]/', '', $item) ?? $item;
+            $item = preg_replace('/\s+/', ' ', trim($item)) ?? $item;
+            if ($item === '') {
+                continue;
+            }
+
+            if (array_key_exists($item, $aliasMap)) {
+                $item = $aliasMap[$item];
+            }
+
+            if (strlen($item) >= 2) {
+                $normalized[] = $item;
+            }
+        }
+
+        // Deduplicate while preserving input order
+        $seen = [];
+        $unique = [];
+        foreach ($normalized as $item) {
+            if (!isset($seen[$item])) {
+                $seen[$item] = true;
+                $unique[] = $item;
+            }
+        }
+
+        return implode(', ', $unique);
+    }
+
+    /**
+     * Validate the available_ingredients string before sending to the LLM.
+     * Returns a human-readable error string, or null if valid.
+     */
+    private function validateIngredients(string $raw): ?string
+    {
+        $prohibited = [
+            // Candy & confectionery
+            'candy', 'candies', 'gummy', 'gummies', 'lollipop', 'bubblegum',
+            'bubble gum', 'chewing gum', 'jawbreaker', 'skittles', 'm&m',
+            'snickers', 'kitkat', 'kit kat', 'reese', 'hershey', 'twix',
+            'mars bar', 'jelly bean', 'chocolate bar', 'milk chocolate',
+            'white chocolate', 'dark chocolate bar',
+            // Junk food
+            'chips', 'doritos', 'cheetos', 'pringles', 'popcorn',
+            'pretzel', 'chicharron', 'junk food',
+            // Sodas & sugary drinks
+            'soda', 'cola', 'sprite', 'pepsi', 'coca-cola', 'energy drink',
+            'softdrink', 'soft drink', 'powdered juice', 'juice drink',
+            'tang juice', 'nestea', 'c2',
+            // Fast food
+            'burger', 'pizza', 'french fries', 'nuggets',
+            // Alcohol
+            'beer', 'wine', 'alcohol', 'liquor', 'gin', 'vodka',
+            'rum', 'whiskey', 'tequila', 'brandy',
+            // Non-food
+            'cigarette', 'tobacco', 'medicine', 'shampoo', 'soap',
+        ];
+
+        $knownFoodHints = [
+            'manok','baboy','baka','isda','bangus','tilapia','galunggong',
+            'itlog','monggo','sitaw','kangkong','kalabasa','kamote','malunggay',
+            'talong','ampalaya','saging','papaya','mangga','karne','gatas',
+            'hipon','alimango','sugpo','pusit','liempo','atay','rice','kanin',
+            'bigas','potato','carrot','tomato','onion','garlic','ginger',
+            'spinach','chicken','pork','beef','fish','egg','bean','corn',
+            'squash','cabbage','pechay','patis','toyo','vinegar','coconut',
+            'niyog','gabi','sardinas','dilis','tuyo','bagoong','tokwa','tofu',
+            'bawang','patatas','luya','sibuyas','kamatis','sayote','labanos',
+            'singkamas','alugbati',
+        ];
+
+        $items = array_filter(
+            array_map('trim', explode(',', $raw)),
+            fn($i) => $i !== ''
+        );
+
+        if (empty($items)) {
+            return null; // empty after split → treat as blank (optional field)
+        }
+
+        // 1. Prohibited item check
+        foreach ($items as $item) {
+            $lower = strtolower($item);
+            foreach ($prohibited as $p) {
+                if (str_contains($lower, $p)) {
+                    return "Invalid ingredient detected: \"$item\". Please enter real food ingredients only (e.g., manok, bangus, kangkong, kamote).";
+                }
+            }
+        }
+
+        // 2. Minimum length / numbers-only
+        foreach ($items as $item) {
+            if (strlen($item) < 2 || ctype_digit($item)) {
+                return "\"$item\" doesn't look like a food ingredient. Please use ingredient names like manok, bangus, kangkong.";
+            }
+        }
+
+        // 3. Per-item gibberish check:
+        //    a) No vowels at all
+        //    b) Not a known food word AND only 1 unique vowel
+        //       e.g. "asdasd" only uses 'a' → 1 unique vowel → gibberish
+        //       whereas "manok" uses a+o → 2 unique vowels → valid
+        foreach ($items as $item) {
+            $lower = strtolower($item);
+
+            // No vowels at all
+            if (strlen($lower) >= 2 && !preg_match('/[aeiou]/', $lower)) {
+                return "\"$item\" doesn't look like a real ingredient. Please enter actual food names (e.g., manok, bangus, kangkong).";
+            }
+
+            // Not a known food AND only 1 unique vowel
+            preg_match_all('/[aeiou]/', $lower, $vowelMatches);
+            $uniqueVowels = count(array_unique($vowelMatches[0]));
+            $matchesHint = false;
+            foreach ($knownFoodHints as $hint) {
+                if (str_contains($lower, $hint)) {
+                    $matchesHint = true;
+                    break;
+                }
+            }
+            if (!$matchesHint && $uniqueVowels < 2) {
+                return "\"$item\" doesn't look like a real food ingredient. Please use actual food names like manok, bangus, kangkong, kamote.";
+            }
+        }
+
+        return null;
     }
 
     /**

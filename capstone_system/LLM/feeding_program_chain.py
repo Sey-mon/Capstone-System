@@ -21,6 +21,7 @@ import re
 import os
 import logging
 import time
+import threading
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
 from data_manager import data_manager
@@ -35,6 +36,69 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+_SEED_IO_LOCK = threading.Lock()
+
+
+def _seeds_enabled() -> bool:
+    """
+    Control whether local JSONL seed storage is used.
+
+    Production default is OFF to avoid multi-instance drift/race on local files.
+    Override with FEEDING_PROGRAM_SEEDS_ENABLED=true if you intentionally want it.
+    """
+    explicit = os.getenv('FEEDING_PROGRAM_SEEDS_ENABLED')
+    if explicit is not None:
+        return explicit.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+    app_env = os.getenv('APP_ENV', '').strip().lower()
+    if app_env in {'production', 'prod', 'staging'}:
+        return False
+    return True
+
+
+def _allowed_main_ingredients(available_ingredients: Optional[str]) -> List[str]:
+    """Parse normalized comma-separated available ingredients into keyword list."""
+    if not available_ingredients:
+        return []
+    parts = [p.strip().lower() for p in str(available_ingredients).split(',')]
+    return [p for p in parts if p]
+
+
+def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool:
+    """
+    Hard post-generation gate for strict ingredient mode.
+    Each ingredient list item must reference ONLY:
+    - explicitly allowed main ingredients
+    - basic condiments/seasonings
+    """
+    text = str(item_text).lower().strip()
+    if not text:
+        return True
+
+    condiments = [
+        'garlic', 'bawang', 'onion', 'sibuyas', 'oil', 'mantika', 'salt', 'asin',
+        'soy sauce', 'toyo', 'fish sauce', 'patis', 'ginger', 'luya', 'water', 'tubig',
+        'pepper', 'paminta', 'vinegar', 'suka',
+    ]
+    allowed = allowed_main + condiments
+
+    # Break compound lines into rough ingredient segments.
+    segments = re.split(r',|/|\band\b|\bwith\b', text)
+    segments = [s.strip() for s in segments if s.strip()]
+
+    if not segments:
+        return True
+
+    for segment in segments:
+        matched = False
+        for kw in allowed:
+            if re.search(rf'\b{re.escape(kw)}\b', segment):
+                matched = True
+                break
+        if not matched:
+            return False
+    return True
+
 
 def create_feeding_program_llm():
     """Create a standardized ChatGroq instance for feeding program functions."""
@@ -47,10 +111,11 @@ def create_feeding_program_llm():
         return ChatGroq(
             api_key=SecretStr(api_key),
             model="meta-llama/llama-4-scout-17b-16e-instruct",
-            temperature=0.3,
-            max_tokens=3000,
-            timeout=120,  # 2 minute timeout for production
-            max_retries=2  # Retry failed requests
+            temperature=0.1,   # Lower = tighter JSON structure adherence
+            max_tokens=5000,   # 5-day plan needs ~5000 tokens; truncation breaks JSON
+            timeout=120,
+            max_retries=2,
+            model_kwargs={"response_format": {"type": "json_object"}},
         )
     except Exception as e:
         logger.error(f"Failed to create ChatGroq instance: {str(e)}")
@@ -174,6 +239,406 @@ def get_feeding_program_budget_context(budget_level='moderate'):
     return budget_contexts.get(budget_level, budget_contexts['moderate'])
 
 
+def validate_meal_plan(
+    parsed_json: Dict,
+    expected_days: int,
+    available_ingredients: Optional[str] = None,
+) -> tuple:
+    """
+    Validate a generated meal plan for structural and content correctness.
+
+    Checks:
+    - Presence of 'meal_plan' key
+    - Correct number of days
+    - Exactly 4 meals per day (Almusal, Tanghalian, Meryenda, Hapunan)
+    - No duplicate dish names across the entire plan
+
+    Returns:
+        Tuple of (issues: List[str], all_dishes: List[str])
+        - issues: list of validation problems found (empty = valid)
+        - all_dishes: flat list of every dish_name found (used for forbidding on retry)
+    """
+    import json as _json
+
+    issues: List[str] = []
+    all_dishes: List[str] = []
+    REQUIRED_MEALS = ['Almusal', 'Tanghalian', 'Meryenda', 'Hapunan']
+    allowed_main = _allowed_main_ingredients(available_ingredients)
+    strict_mode = len(allowed_main) > 0
+
+    if 'meal_plan' not in parsed_json:
+        return ["Missing 'meal_plan' key in response"], []
+
+    meal_plan = parsed_json['meal_plan']
+    if not isinstance(meal_plan, list):
+        return ["'meal_plan' is not a list"], []
+
+    if len(meal_plan) != expected_days:
+        issues.append(
+            f"Day count mismatch: expected {expected_days}, got {len(meal_plan)}"
+        )
+
+    seen_dishes: set = set()
+
+    for day_data in meal_plan:
+        day_num = day_data.get('day', '?')
+        meals = day_data.get('meals', [])
+
+        if len(meals) != 4:
+            issues.append(f"Day {day_num}: Expected 4 meals, got {len(meals)}")
+
+        for i, meal in enumerate(meals):
+            expected_type = REQUIRED_MEALS[i] if i < len(REQUIRED_MEALS) else None
+            actual_type = meal.get('meal_name_tagalog', '').strip()
+
+            if expected_type and actual_type != expected_type:
+                issues.append(
+                    f"Day {day_num} meal {i + 1}: Expected '{expected_type}', got '{actual_type}'"
+                )
+
+            dish = meal.get('dish_name', '').strip()
+            if not dish:
+                issues.append(f"Day {day_num} {actual_type}: Empty dish name")
+                continue
+
+            all_dishes.append(dish)
+
+            if dish.lower() in seen_dishes:
+                issues.append(
+                    f"Duplicate dish: '{dish}' appears more than once (Day {day_num} {actual_type})"
+                )
+            else:
+                seen_dishes.add(dish.lower())
+
+            # Flag prohibited ingredients that slipped into a dish name
+            _PROHIBITED_IN_NAME = [
+                'hotdog', 'spam', 'luncheon meat', 'instant noodle', 'canned sardine',
+                'canned tuna', 'canned corned', 'cornsilog', 'cup noodle', 'instant mami',
+            ]
+            if any(p in dish.lower() for p in _PROHIBITED_IN_NAME):
+                issues.append(
+                    f"Prohibited ingredient in dish name: '{dish}' (Day {day_num} {actual_type})"
+                )
+
+            # Hard post-generation enforcement in strict ingredient mode
+            if strict_mode:
+                ingredients = meal.get('ingredients', [])
+                if not isinstance(ingredients, list):
+                    issues.append(
+                        f"Day {day_num} {actual_type}: 'ingredients' must be a list in strict mode"
+                    )
+                else:
+                    for item in ingredients:
+                        if not _is_allowed_ingredient_item(str(item), allowed_main):
+                            issues.append(
+                                f"Ingredient outside allowed list in Day {day_num} {actual_type}: '{item}'"
+                            )
+                            # Keep issue list bounded
+                            if len(issues) >= 25:
+                                return issues, all_dishes
+
+    return issues, all_dishes
+
+
+def _load_past_dishes() -> List[str]:
+    """
+    Read all dish names ever saved in the seed file so _plan_dish_names can
+    avoid repeating them across sessions.
+    Returns a flat deduplicated list of lowercase dish names, or [] if none.
+    """
+    import json as _json
+
+    if not _seeds_enabled():
+        return []
+
+    seed_path = os.path.join(os.path.dirname(__file__), 'seeds', 'feeding_program_seeds.jsonl')
+    if not os.path.exists(seed_path):
+        return []
+
+    dishes: List[str] = []
+    try:
+        with _SEED_IO_LOCK:
+            with open(seed_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    record = _json.loads(line)
+                    meal_plan = record.get('output', {}).get('meal_plan', [])
+                    for day in meal_plan:
+                        for meal in day.get('meals', []):
+                            name = meal.get('dish_name', '').strip()
+                            if name:
+                                dishes.append(name.lower())
+    except Exception:
+        pass
+
+    # Deduplicate, preserve order
+    seen: set = set()
+    unique: List[str] = []
+    for d in dishes:
+        if d not in seen:
+            seen.add(d)
+            unique.append(d)
+    return unique
+
+
+def _plan_dish_names(
+    duration_days: int,
+    available_ingredients: Optional[str],
+    budget_context: Dict,
+    target_age_group: str,
+) -> List[str]:
+    """
+    Pre-generate a locked, deduplicated list of dish names BEFORE the main plan is built.
+
+    Makes a cheap, focused LLM call that asks ONLY for dish names — no ingredients,
+    no portions. Returns a flat list of (4 * duration_days) unique names ordered as:
+        Day 1 Almusal, Day 1 Tanghalian, Day 1 Meryenda, Day 1 Hapunan, Day 2 ...
+
+    Returns [] on any failure so the caller falls back gracefully to the original
+    single-call path.
+    """
+    import json as _json
+    import random
+
+    total_slots = duration_days * 4
+    meal_types = [
+        'Almusal (Breakfast)',
+        'Tanghalian (Lunch)',
+        'Meryenda (Snack)',
+        'Hapunan (Dinner)',
+    ]
+    slot_labels = [
+        f'Day {d} — {mt}'
+        for d in range(1, duration_days + 1)
+        for mt in meal_types
+    ]
+    slots_str = '\n'.join(f'{i + 1}. {label}' for i, label in enumerate(slot_labels))
+
+    # Randomly pick a variety directive so the LLM can't default to the same
+    # Adobo/Tinola/Sinigang set every time the same ingredients are provided.
+    _VARIETY_SETS = [
+        'Focus this session on BRAISED and STEWED dishes (Adobo, Mechado, Afritada, Menudo, Kaldereta).',
+        'Focus this session on SOUP-BASED dishes (Sinigang, Tinola, Nilaga, Bulalo, Arroz Caldo, Goto).',
+        'Focus this session on GRILLED and FRIED dishes (Inihaw, Pritong, Paksiw, Escabeche, Daing).',
+        'Focus this session on COCONUT-BASED dishes (Ginataang, Bicol Express, Laing, Kare-Kare, Ginataan).',
+        'Focus this session on SAUTÉED and STIR-FRIED dishes (Ginisa, Pinakbet, Chopsuey, Mongo Guisado).',
+        'Focus this session on STEAMED and SLOW-COOKED dishes (Steamed, Nilaga, Pinaputok, Binagoongan).',
+    ]
+    variety_directive = random.choice(_VARIETY_SETS)
+
+    # Load dishes from previous runs so repeat calls with the same input
+    # produce a different set each time.
+    past_dishes = _load_past_dishes()
+    if past_dishes:
+        recent = past_dishes[-40:]  # only last ~10 plans worth
+        avoid_block = (
+            f'\n∙ AVOID these dish names already used in previous programs (pick completely different dishes):\n'
+            + '\n'.join(f'  - {d}' for d in recent)
+        )
+    else:
+        avoid_block = ''
+
+    if available_ingredients:
+        ingredient_hint = (
+            f'🔴 STRICT RULE — Use ONLY these main ingredients (no additions, no substitutions):\n'
+            f'   {available_ingredients}\n'
+            f'∙ Every dish MUST be built around ONLY the main ingredients listed above.\n'
+            f'∙ Do NOT add proteins, vegetables, or starches not present in the list above.\n'
+            f'∙ Basic cooking essentials (garlic, onion, oil, salt, soy sauce, fish sauce, ginger)\n'
+            f'  may be used as minor seasoning only — they are NOT featured ingredients.'
+        )
+    else:
+        ingredient_hint = (
+            f"∙ Proteins to use: {', '.join(budget_context['proteins'][:5])}\n"
+            f"∙ Vegetables to use: {', '.join(budget_context['vegetables'][:5])}"
+        )
+
+    prompt = (
+        f'You are a Filipino pediatric nutritionist planning a {duration_days}-day '
+        f'community feeding program.\n\n'
+        f'🎲 VARIETY DIRECTIVE FOR THIS SESSION: {variety_directive}\n\n'
+        f'Generate exactly {total_slots} unique Filipino dish names — one per slot.\n\n'
+        f'Rules:\n'
+        f'- Every dish must be a named, complete Filipino recipe '
+        f'(e.g. "Tinolang Manok with Malunggay", "Champorado with Tuyo").\n'
+        f'- NO duplicates anywhere in the list.\n'
+        f'- NO processed/canned items (no hotdog, spam, instant noodles, canned sardines).\n'
+        f'- Vary cooking methods: Adobo, Sinigang, Tinola, Pritong, Ginisa, Nilaga, Ginataang.\n'
+        f'- Almusal: lugaw, champorado, silog meals, or pandesal with filling.\n'
+        f'- Meryenda: traditional Filipino kakanin or fresh fruit snacks.\n'
+        f'{ingredient_hint}'
+        f'{avoid_block}\n\n'
+        f'Slots:\n{slots_str}\n\n'
+        f'Return a JSON object with key "dishes" containing exactly {total_slots} strings.\n'
+        f'Format: {{"dishes": ["Dish 1", "Dish 2", ...]}}\n'
+        f'JSON:'
+    )
+
+    api_key = os.getenv('GROQ_API_KEY')
+    if not api_key:
+        logger.warning('_plan_dish_names: GROQ_API_KEY not set, skipping pre-plan')
+        return []
+
+    # Terms that must not appear in any returned dish name
+    _PROHIBITED = [
+        'hotdog', 'spam', 'luncheon meat', 'instant noodle', 'canned sardine',
+        'canned tuna', 'canned corned', 'cornsilog', 'cup noodle', 'instant mami',
+    ]
+
+    try:
+        llm = ChatGroq(
+            api_key=SecretStr(api_key),
+            model='meta-llama/llama-4-scout-17b-16e-instruct',
+            temperature=0.8,   # High variety so dish names are diverse
+            max_tokens=700,
+            timeout=60,
+            max_retries=1,
+            model_kwargs={"response_format": {"type": "json_object"}},
+        )
+        response = llm.invoke(prompt)
+        content = str(response.content) if hasattr(response, 'content') else str(response)
+
+        data = _json.loads(content)
+        # Support {"dishes": [...]} object or bare list
+        if isinstance(data, dict):
+            dishes_raw = data.get('dishes', data.get('dish_names', data.get('meal_plan', [])))
+        elif isinstance(data, list):
+            dishes_raw = data
+        else:
+            logger.warning('_plan_dish_names: unexpected response shape')
+            return []
+
+        if not isinstance(dishes_raw, list):
+            logger.warning('_plan_dish_names: dishes value is not a list')
+            return []
+
+        # Flatten any nested lists and stringify
+        flat: List[str] = []
+        for item in dishes_raw:
+            if isinstance(item, list):
+                flat.extend(str(x).strip() for x in item)
+            else:
+                flat.append(str(item).strip())
+
+        # Remove any dish names containing prohibited ingredients
+        flat = [d for d in flat if d and not any(p in d.lower() for p in _PROHIBITED)]
+
+        if len(flat) < total_slots:
+            logger.warning(f'_plan_dish_names: got {len(flat)} names, need {total_slots}')
+            return []
+
+        # Deduplicate while preserving order
+        seen: set = set()
+        unique: List[str] = []
+        for dish in flat[:total_slots]:
+            norm = dish.lower()
+            if norm not in seen and dish:
+                seen.add(norm)
+                unique.append(dish)
+
+        if len(unique) < total_slots:
+            logger.warning(
+                f'_plan_dish_names: only {len(unique)} unique names after dedup (need {total_slots})'
+            )
+            return []
+
+        logger.info(f'Pre-planned {total_slots} unique dish names')
+        return unique[:total_slots]
+
+    except Exception as e:
+        logger.warning(f'_plan_dish_names failed ({str(e)[:100]}), proceeding without pre-plan')
+        return []
+
+
+def _save_seed(params: Dict, clean_json: str) -> None:
+    """
+    Append a validated meal plan output to the seed file.
+    Seeds are stored as JSONL at LLM/seeds/feeding_program_seeds.jsonl and are
+    used by _load_seed() for few-shot injection on future calls.
+    """
+    import json as _json
+
+    if not _seeds_enabled():
+        return
+
+    seeds_dir = os.path.join(os.path.dirname(__file__), 'seeds')
+    os.makedirs(seeds_dir, exist_ok=True)
+    seed_path = os.path.join(seeds_dir, 'feeding_program_seeds.jsonl')
+
+    record = {
+        'saved_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'params': params,
+        'output': _json.loads(clean_json),
+    }
+    MAX_SEEDS = 50  # Prevent unbounded file growth
+    try:
+        with _SEED_IO_LOCK:
+            with open(seed_path, 'a', encoding='utf-8') as f:
+                f.write(_json.dumps(record, ensure_ascii=False) + '\n')
+            # Trim oldest entries once the file exceeds MAX_SEEDS lines
+            with open(seed_path, 'r', encoding='utf-8') as f:
+                lines = [ln for ln in f if ln.strip()]
+            if len(lines) > MAX_SEEDS:
+                with open(seed_path, 'w', encoding='utf-8') as f:
+                    f.writelines(lines[-MAX_SEEDS:])
+        logger.info(f'Seed saved → {seed_path} ({min(len(lines), MAX_SEEDS)} records)')
+    except Exception as e:
+        logger.warning(f'Failed to save seed: {str(e)}')
+
+
+def _load_seed(duration_days: int, budget_level: str) -> str:
+    """
+    Load the most recent validated seed whose parameters match the current request.
+    Returns a formatted few-shot block to inject into the prompt, or '' if none found.
+    """
+    import json as _json
+
+    if not _seeds_enabled():
+        return ''
+
+    seed_path = os.path.join(os.path.dirname(__file__), 'seeds', 'feeding_program_seeds.jsonl')
+    if not os.path.exists(seed_path):
+        return ''
+
+    try:
+        matching: List[Dict] = []
+        with _SEED_IO_LOCK:
+            with open(seed_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    record = _json.loads(line)
+                    p = record.get('params', {})
+                    if (
+                        p.get('program_duration_days') == duration_days
+                        and p.get('budget_level') == budget_level
+                    ):
+                        matching.append(record)
+
+        if not matching:
+            return ''
+
+        example_json = _json.dumps(matching[-1]['output'], ensure_ascii=False, indent=2)
+
+        return (
+            '\n\n'
+            '═══════════════════════════════════════════════════════════════════\n'
+            '📋 REFERENCE EXAMPLE — a past validated meal plan for this program\n'
+            '═══════════════════════════════════════════════════════════════════\n'
+            'Study this output structure carefully and use it as your template.\n'
+            'You MUST produce a COMPLETELY DIFFERENT meal plan with DIFFERENT dishes.\n\n'
+            f'{example_json}\n'
+            '═══════════════════════════════════════════════════════════════════\n'
+            'END REFERENCE — generate your NEW, different meal plan now:\n'
+        )
+    except Exception as e:
+        logger.warning(f'Failed to load seed: {str(e)}')
+        return ''
+
+
 def generate_feeding_program_meal_plan(
     target_age_group: str = 'all',
     program_duration_days: int = 7,
@@ -283,7 +748,58 @@ def generate_feeding_program_meal_plan(
     }
     
     target_description = age_group_info.get(target_age_group, age_group_info['all'])
-    
+
+    # ── Phase 2: Pre-plan dish names so the main call cannot repeat them ─────
+    dish_names = _plan_dish_names(
+        program_duration_days, available_ingredients, budget_context, target_age_group
+    )
+    _MEAL_SLOTS = ['Almusal', 'Tanghalian', 'Meryenda', 'Hapunan']
+    if dish_names:
+        _lines = [
+            '═══════════════════════════════════════════════════════════════════',
+            '🔒 PRE-APPROVED DISH NAMES — MANDATORY — USE EXACTLY THESE IN ORDER',
+            '═══════════════════════════════════════════════════════════════════',
+            'These dish names are LOCKED. Do NOT rename, swap, or substitute any of them.',
+            'Your only job is to supply: ingredients, portions, and shopping_list.',
+            '',
+        ]
+        _idx = 0
+        for _d in range(1, program_duration_days + 1):
+            for _m in _MEAL_SLOTS:
+                if _idx < len(dish_names):
+                    _lines.append(f'  Day {_d} {_m}: {dish_names[_idx]}')
+                    _idx += 1
+        _lines.append('')
+        dish_constraint_block = '\n'.join(_lines)
+    else:
+        dish_constraint_block = (
+            '⚠️ No pre-approved dish list — generate unique dish names yourself '
+            'following all NO REPETITION rules strictly.'
+        )
+
+    # ── Phase 4: Inject a past validated output as a few-shot example ────────
+    # SKIP when dish names are already pre-planned — the constraint block already
+    # locks the dishes, so a seed example would only confuse the model and cause
+    # it to copy the seed's dish names instead of using the locked ones.
+    seed_example = '' if dish_names else _load_seed(program_duration_days, budget_level)
+
+    # ── Conditional prompt blocks: shorter when dish names are already locked ──
+    # Skip the 100-item food database when dishes are pre-planned — the model
+    # already knows what ingredients each named dish needs.
+    food_section = (
+        f"FOOD DATABASE:\n{food_list_str}\n"
+        if not dish_names
+        else ""
+    )
+    # When dishes are locked, requirements 1-9 only add noise and contradictory
+    # instructions (e.g. "choose dishes" when dishes are already chosen).
+    fill_mode_notice = (
+        "🔒 DISH NAMES ARE LOCKED (see PRE-APPROVED list above). "
+        "Your ONLY task: fill in ingredients, portions, and shopping_list for each locked dish. "
+        "SKIP requirements 1-9 below — they were handled during dish-name pre-planning.\n\n"
+        if dish_names else ""
+    )
+
     # Build the prompt
     prompt_template = f"""You are a Pediatric Nutritionist designing a GENERIC FEEDING PROGRAM meal plan for Filipino children.
 
@@ -303,21 +819,22 @@ FEEDING PROGRAM OVERVIEW:
 AVAILABLE INGREDIENTS:
 {available_ingredients if available_ingredients else '❌ None specified'}
 
-{'⚠️ MANDATORY REQUIREMENT - AVAILABLE INGREDIENTS HAVE ABSOLUTE PRIORITY:' if available_ingredients else '✅ NO SPECIFIC INGREDIENTS PROVIDED:'}
-{'''- You MUST use the available ingredients listed above as the PRIMARY ingredients
-- Build ALL meals around the available ingredients listed above
-- Every meal MUST prominently feature available ingredients as main components
-- Design dishes specifically to showcase the available ingredients
+{'🔴 STRICT RULE — USE ONLY THE AVAILABLE INGREDIENTS LISTED ABOVE:' if available_ingredients else '✅ NO SPECIFIC INGREDIENTS PROVIDED — USE BUDGET RECOMMENDATIONS:'}
+{'''- The available ingredients above are the ONLY main ingredients allowed in the entire meal plan.
+- Do NOT add any protein, vegetable, or starch not present in the available list above.
+- Budget-recommended proteins/vegetables/grains are COMPLETELY IGNORED — available ingredients replace them.
+- Build every meal around ONLY the ingredients from the available list.
+- Basic seasoning/condiments (garlic, onion, oil, salt, soy sauce, fish sauce, ginger, patis) are fine.
 - Examples:
-  * If "manok, kangkong, kamote" → Plan "Tinolang Manok with Kangkong" 
-  * If "bangus, sitaw, kalabasa" → Plan "Sinigang na Bangus with Sitaw and Kalabasa"
-- Only supplement with budget recommendations if available ingredients alone are insufficient
-- DO NOT ignore available ingredients in favor of budget recommendations
-- Track which available ingredients you've used to ensure all are utilized''' if available_ingredients else '''- Use the budget recommendations below as your ingredient guide
-- Select ingredients appropriate for the budget level
-- Focus on cost-effective, nutritious, locally available Filipino ingredients
-- Prioritize seasonal ingredients for better value
-- Design varied meals using the recommended ingredient categories'''}
+  * "manok, kangkong, kamote" are listed → use ONLY those three main ingredients; no bangus, monggo, or sitaw
+  * "bangus, sitaw, kalabasa" are listed → no chicken, monggo, or other produce may appear in any meal
+- Every "ingredients" array in your JSON output MUST contain ONLY items from the available list
+  plus minor condiments (garlic, onion, oil, salt, soy sauce, fish sauce, ginger).
+- DO NOT invent or introduce any ingredient not explicitly listed above.''' if available_ingredients else '''- Use the budget recommendations below as your ingredient guide.
+- Select ingredients appropriate for the budget level.
+- Focus on cost-effective, nutritious, locally available Filipino ingredients.
+- Prioritize seasonal ingredients for better value.
+- Design varied meals using the recommended ingredient categories.'''}
 
 BUDGET CONSTRAINTS ({budget_level}):
 - Focus: {budget_context['focus']}
@@ -325,27 +842,30 @@ BUDGET CONSTRAINTS ({budget_level}):
 - Recommended Vegetables: {', '.join(budget_context['vegetables'])}
 - Recommended Grains: {', '.join(budget_context['grains'])}
 - Recommended Fruits: {', '.join(budget_context['fruits'])}
+{"⚠️ BUDGET RECOMMENDATIONS ABOVE ARE IGNORED — available ingredients specified above override them completely." if available_ingredients else ""}
 
-FOOD DATABASE:
-{food_list_str}
-
-{pdf_context}
+{food_section}
+{pdf_context}{seed_example}
+{dish_constraint_block}
 
 ═══════════════════════════════════════════════════════════════════
-YOUR TASK: Create a {program_duration_days}-day GENERIC FEEDING PROGRAM meal plan
+YOUR TASK: Complete the {program_duration_days}-day meal plan — fill in ingredients, portions, and shopping list
 ═══════════════════════════════════════════════════════════════════
 
-CRITICAL REQUIREMENTS:
+{fill_mode_notice}CRITICAL REQUIREMENTS:
 
-1. **🔴 PRIORITIZE AVAILABLE INGREDIENTS (ABSOLUTE PRIORITY):**
-   - If available ingredients are specified, they are the FOUNDATION of your meal plan
-   - Each meal MUST prominently feature available ingredients as main components
-   - Design dishes specifically around the available ingredients
+{'''1. **🔴 EXCLUSIVE INGREDIENT RULE — STRICTLY ENFORCED:**
+   - ONLY the available ingredients listed at the top are allowed as main ingredients.
+   - Do NOT add any protein, vegetable, starch, or featured ingredient not in the available list.
+   - Budget-recommended ingredients do NOT apply — available ingredients replace them entirely.
    - Examples:
-     * If "manok, kangkong, kamote" are available → Plan "Tinolang Manok with Kangkong" NOT generic chicken dishes
-     * If "bangus, sitaw, kalabasa" are available → Plan "Sinigang na Bangus with Sitaw and Kalabasa"
-   - Only use budget recommendations as SUPPLEMENTS, not replacements
-   - Track which available ingredients you've used to ensure all are utilized throughout the program
+     * "manok, kangkong, kamote" listed → ONLY those as main ingredients; no bangus, monggo, or extra veg
+     * "bangus, sitaw, kalabasa" listed → no chicken or other produce may appear anywhere in the plan
+   - Basic condiments (garlic, onion, oil, salt, soy sauce, fish sauce, ginger) are OK as seasoning.
+   - Every "ingredients" array in your JSON MUST reference ONLY the available list + basic condiments.''' if available_ingredients else '''1. **✅ NO SPECIFIED INGREDIENTS — USE BUDGET RECOMMENDATIONS FREELY:**
+   - No specific ingredients were provided; select varied Filipino ingredients appropriate for the budget.
+   - Prioritize proteins, vegetables, and grains from the budget recommendations section.
+   - Focus on seasonal, locally available, cost-effective Filipino ingredients.'''}
 
 2. **NO DISH REPETITION (MANDATORY):**
    - Each meal across the ENTIRE {program_duration_days}-day period must be UNIQUE
@@ -545,65 +1065,164 @@ Return a JSON object with this EXACT structure:
 BEGIN JSON OUTPUT NOW:
 """
     
-    # Create LLM and generate with retry logic
+    # Create LLM and generate with smart retry logic
     max_retries = 3
-    retry_delay = 2  # seconds
-    
+    retry_delay = 2  # seconds (doubles on each retry)
+
+    # Tracks what went wrong and which dishes were produced — injected into the
+    # prompt on subsequent attempts so the LLM knows what to avoid / fix.
+    previously_used_dishes: List[str] = []
+    validation_issues: List[str] = []
+
     for attempt in range(max_retries):
         try:
             logger.info(f"Attempting meal plan generation (attempt {attempt + 1}/{max_retries})")
+
+            # ── Build attempt-specific prompt ────────────────────────────────
+            # On retries, tell the LLM exactly what was wrong and which dishes
+            # are now forbidden so it doesn't repeat them.
+            current_prompt = prompt_template
+            if attempt > 0 and (validation_issues or previously_used_dishes):
+                retry_note = (
+                    f"\n\n⚠️ RETRY ATTEMPT {attempt + 1} — The previous response failed validation.\n"
+                )
+                if validation_issues:
+                    retry_note += "Specific issues that MUST be fixed:\n"
+                    retry_note += "\n".join(f"  - {issue}" for issue in validation_issues[:15])
+                    retry_note += "\n"
+                if previously_used_dishes:
+                    retry_note += (
+                        "\n🚫 FORBIDDEN DISHES — Every dish below was already used. "
+                        "DO NOT repeat any of them under any circumstances:\n"
+                        + "\n".join(f"  ❌ {dish}" for dish in previously_used_dishes)
+                        + "\n\nAll meals in this new attempt MUST use completely different dishes.\n"
+                    )
+                # Inject just before the output format section
+                current_prompt = prompt_template.replace(
+                    "OUTPUT FORMAT - JSON STRUCTURE:",
+                    retry_note + "\nOUTPUT FORMAT - JSON STRUCTURE:",
+                    1,  # only replace the first occurrence
+                )
+            # ── End prompt build ─────────────────────────────────────────────
+
             llm = create_feeding_program_llm()
-            
+
             start_time = time.time()
-            response = llm.invoke(prompt_template)
+            response = llm.invoke(current_prompt)
             generation_time = time.time() - start_time
-            
-            meal_plan_content = response.content if hasattr(response, 'content') else str(response)
-            
+
+            meal_plan_content = str(response.content) if hasattr(response, 'content') else str(response)
+
             # Validate response length
             if not meal_plan_content or len(meal_plan_content) < 100:
                 logger.warning(f"Generated meal plan too short ({len(meal_plan_content)} chars)")
+                validation_issues = ["Response was too short / empty"]
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay)
+                    retry_delay *= 2
                     continue
-            
+
             # Clean the response - remove any text before first { and after last }
             cleaned_content = meal_plan_content.strip()
-            
+
             # Try to extract JSON if wrapped in markdown or has extra text
             import re
             json_match = re.search(r'\{[\s\S]*\}', cleaned_content)
             if json_match:
                 cleaned_content = json_match.group(0)
                 logger.info("Extracted JSON from response")
-            
+
             # Validate it's valid JSON by attempting to parse
             try:
                 import json
                 parsed_json = json.loads(cleaned_content)
-                
+
                 # Validate structure
                 if not isinstance(parsed_json, dict):
                     raise ValueError("Response is not a JSON object")
-                
+
                 if 'meal_plan' not in parsed_json:
-                    logger.warning("Response missing 'meal_plan' key, using original content")
-                    cleaned_content = meal_plan_content  # Fall back to original
+                    validation_issues = ["Missing 'meal_plan' key in response"]
+                    previously_used_dishes = []
+                    logger.warning("Response missing 'meal_plan' key — retrying")
+                    if attempt < max_retries - 1:
+                        time.sleep(retry_delay)
+                        retry_delay *= 2
+                        continue
+                    # Last attempt — accept whatever we have
+                    cleaned_content = meal_plan_content
                 else:
-                    logger.info("Response validated as proper JSON structure")
-                    # Use the cleaned JSON string
+                    # ── Quality validation ────────────────────────────────────
+                    issues, all_dishes = validate_meal_plan(
+                        parsed_json,
+                        program_duration_days,
+                        available_ingredients=available_ingredients,
+                    )
+                    previously_used_dishes = all_dishes
+
+                    if issues:
+                        validation_issues = issues
+                        logger.warning(
+                            f"Validation found {len(issues)} issue(s): "
+                            + "; ".join(issues[:5])
+                        )
+                        if attempt < max_retries - 1:
+                            logger.info(
+                                f"Retrying with {len(all_dishes)} forbidden dishes "
+                                f"and {len(issues)} issue(s) injected into prompt"
+                            )
+                            time.sleep(retry_delay)
+                            retry_delay *= 2
+                            continue
+                        # Exhausted retries — fail closed for production safety
+                        logger.error(
+                            "Max retries reached — failing closed (validation issues remain)"
+                        )
+                        return {
+                            'success': False,
+                            'error': 'Generated plan failed validation after all retries',
+                            'error_type': 'validation_failed',
+                            'validation_issues': validation_issues,
+                            'meal_plan': None,
+                            'audit': {
+                                'validation_passed': False,
+                                'attempts_used': attempt + 1,
+                                'max_attempts': max_retries,
+                                'strict_ingredient_mode': bool(available_ingredients),
+                                'seed_mode_enabled': _seeds_enabled(),
+                            },
+                        }
+                    else:
+                        validation_issues = []
+                        logger.info("Meal plan passed all validation checks")
+                        # Phase 4: persist this clean output for future few-shot use
+                        _save_seed(
+                            {
+                                'program_duration_days': program_duration_days,
+                                'budget_level': budget_level,
+                                'target_age_group': target_age_group,
+                                'available_ingredients': available_ingredients,
+                            },
+                            json.dumps(parsed_json, ensure_ascii=False),
+                        )
+
                     cleaned_content = json.dumps(parsed_json, ensure_ascii=False)
-                    
+                    # ── End quality validation ────────────────────────────────
+
             except json.JSONDecodeError as je:
-                logger.warning(f"Response is not valid JSON (will use as-is for markdown parsing): {str(je)[:100]}")
-                # Keep original content for markdown parsing
+                logger.warning(
+                    f"Response is not valid JSON (will use as-is for markdown parsing): "
+                    f"{str(je)[:100]}"
+                )
+                validation_issues = [f"JSON parse error: {str(je)[:100]}"]
                 cleaned_content = meal_plan_content
             except Exception as ve:
                 logger.warning(f"JSON validation issue: {str(ve)}")
+                validation_issues = [str(ve)[:200]]
                 cleaned_content = meal_plan_content
-            
+
             logger.info(f"Meal plan generated successfully in {generation_time:.2f}s")
-            
+
             return {
                 'success': True,
                 'meal_plan': cleaned_content,
@@ -615,12 +1234,22 @@ BEGIN JSON OUTPUT NOW:
                 'total_children': total_children,
                 'available_ingredients': available_ingredients,
                 'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'generation_time_seconds': round(generation_time, 2)
+                'generation_time_seconds': round(generation_time, 2),
+                # None when clean; populated if best-effort result returned
+                'validation_issues': validation_issues if validation_issues else None,
+                'audit': {
+                    'validation_passed': True,
+                    'attempts_used': attempt + 1,
+                    'max_attempts': max_retries,
+                    'strict_ingredient_mode': bool(available_ingredients),
+                    'seed_mode_enabled': _seeds_enabled(),
+                },
             }
-        
+
         except Exception as e:
             logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
-            
+            validation_issues = [f"Exception: {str(e)[:200]}"]
+
             if attempt < max_retries - 1:
                 logger.info(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
@@ -630,15 +1259,15 @@ BEGIN JSON OUTPUT NOW:
                 return {
                     'success': False,
                     'error': f'Failed after {max_retries} attempts: {str(e)}',
-                    'meal_plan': None
+                    'meal_plan': None,
                 }
-    
+
     # Fallback return (should never reach here, but ensures all paths return)
-    logger.error("Unexpected code path - no meal plan generated")
+    logger.error("Unexpected code path — no meal plan generated")
     return {
         'success': False,
         'error': 'Unexpected error: meal plan generation failed',
-        'meal_plan': None
+        'meal_plan': None,
     }
 
 

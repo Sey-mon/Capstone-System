@@ -43,5 +43,14 @@ class AppServiceProvider extends ServiceProvider
                 }),
             ];
         });
+
+        // Limit expensive LLM generation endpoint to protect uptime/cost.
+        RateLimiter::for('feeding.program.generate', function (Request $request) {
+            $key = ($request->user()?->id ?? 'guest') . '|' . $request->ip();
+            return [
+                Limit::perMinute(6)->by($key),
+                Limit::perHour(60)->by($key),
+            ];
+        });
     }
 }

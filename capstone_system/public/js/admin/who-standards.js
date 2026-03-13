@@ -90,14 +90,12 @@ function initializeModalControls() {
     
     // Search functionality
     const searchInput = document.getElementById('swalDataSearch');
-    let searchTimeout;
     
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
             currentSearchTerm = this.value;
             filterData(currentSearchTerm);
-        }, 300);
+        }
     });
     
     // View toggle handlers

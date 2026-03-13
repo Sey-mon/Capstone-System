@@ -473,7 +473,7 @@ class AdminController extends Controller
                 : $allUsers->sortByDesc(fn($u) => strtolower($u->email))->values();
 
             $currentPage = (int) $request->input('page', 1);
-            $slice = $sorted->slice(($currentPage - 1) * $perPage, $perPage);
+            $slice = $sorted->slice(($currentPage - 1) * $perPage, $perPage)->values();
             $users = new \Illuminate\Pagination\LengthAwarePaginator(
                 $slice,
                 $sorted->count(),
@@ -4027,8 +4027,10 @@ class AdminController extends Controller
                 'middle_name' => 'nullable|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($admin->user_id, 'user_id')],
-                'contact_number' => 'nullable|string|max:20',
+                'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
                 'sex' => 'nullable|in:male,female,other',
+            ], [
+                'contact_number.regex' => 'Contact number must be 11 digits and start with 09 (e.g. 09XXXXXXXXX).',
             ]);
 
             $admin->update($validated);

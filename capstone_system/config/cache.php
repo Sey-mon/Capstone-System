@@ -19,6 +19,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cache Limiter Store
+    |--------------------------------------------------------------------------
+    |
+    | This store is used by Laravel's rate limiter. Set CACHE_LIMITER=redis
+    | in production for distributed throttling across app instances.
+    |
+    */
+
+    'limiter' => env('CACHE_LIMITER', env('CACHE_STORE', 'database')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |

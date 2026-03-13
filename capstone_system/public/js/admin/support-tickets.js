@@ -1,5 +1,4 @@
 // Support Tickets JavaScript
-let searchTimeout;
 
 // Get current filter parameters
 function getCurrentFilters() {
@@ -297,12 +296,9 @@ function formatDate(dateString) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// Debounced search function
+// Search on Enter key
 function handleSearchInput() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        loadTickets({ search: document.querySelector('[name="search"]').value });
-    }, 500);
+    loadTickets({ search: document.querySelector('[name="search"]').value });
 }
 
 // Clear search
@@ -318,7 +314,7 @@ function clearSearch() {
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.querySelector('input[name="search"]');
     if (searchInput) {
-        searchInput.addEventListener('input', handleSearchInput);
+        searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleSearchInput(); });
     }
     
     // Add change listeners to filter selects

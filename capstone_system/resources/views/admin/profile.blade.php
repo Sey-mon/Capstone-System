@@ -99,7 +99,7 @@
                 </div>
                 <div class="quick-stat-info">
                     <div class="quick-stat-value">{{ \App\Models\Assessment::count() }}</div>
-                    <div class="quick-stat-label">Assessments</div>
+                    <div class="quick-stat-label">Screenings</div>
                 </div>
             </div>
         </div>

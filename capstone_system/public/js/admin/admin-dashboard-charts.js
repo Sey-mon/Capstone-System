@@ -457,7 +457,6 @@ function fetchChartData(type, params = {}) {
 function initializeMapFilters() {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const searchInput = document.getElementById('barangaySearch');
-    let searchTimeout = null;
     
     // Filter buttons with visual feedback
     filterButtons.forEach(btn => {
@@ -493,23 +492,11 @@ function initializeMapFilters() {
     
     // Search input with debouncing
     if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const value = this.value;
-            
-            // Clear previous timeout
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
-            }
-            
-            // Debounce search - wait 300ms after user stops typing
-            searchTimeout = setTimeout(() => {
-                searchBarangays(value);
-            }, 300);
-        });
-
-        // Clear search on Escape key
+        // Search on Enter, clear on Escape
         searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
+            if (e.key === 'Enter') {
+                searchBarangays(this.value);
+            } else if (e.key === 'Escape') {
                 this.value = '';
                 searchBarangays('');
             }

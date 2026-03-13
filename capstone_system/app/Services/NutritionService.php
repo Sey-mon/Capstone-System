@@ -133,13 +133,25 @@ class NutritionService
                 ]);
                 return $response->json();
             } else {
+                $status = $response->status();
+                $detail = $response->json('detail');
+                if (is_array($detail)) {
+                    $detail = json_encode($detail);
+                }
+                if (empty($detail)) {
+                    $detail = $response->body();
+                }
                 Log::error('Feeding program generation failed', [
-                    'status' => $response->status(),
+                    'status' => $status,
                     'response' => $response->body()
                 ]);
-                throw new \Exception('Feeding program generation failed: ' . $response->body());
+                throw new \Exception('Feeding program generation failed: ' . $detail, $status);
             }
         } catch (\Exception $e) {
+            // Preserve upstream HTTP-like status codes for controller handling.
+            if ($e->getCode() >= 400 && $e->getCode() < 600) {
+                throw $e;
+            }
             Log::error('Feeding program generation error', [
                 'error' => $e->getMessage()
             ]);

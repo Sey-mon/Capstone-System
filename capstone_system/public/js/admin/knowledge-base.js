@@ -103,7 +103,7 @@ function setupEventListeners() {
     // Search
     const searchInput = document.getElementById('search-documents');
     if (searchInput) {
-        searchInput.addEventListener('input', handleSearch);
+        searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleSearch(e); });
     }
 
     // Toast close

@@ -13,6 +13,9 @@ embeddings_cache/
 *.pkl
 *.idx
 
+# Generated LLM seeds
+seeds/
+
 # Virtual Environment
 venv/
 env/

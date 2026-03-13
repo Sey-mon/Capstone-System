@@ -762,15 +762,12 @@ function setupFilters() {
     const accountStatusFilter = document.getElementById('accountStatusFilter');
     const sortByFilter = document.getElementById('sortByFilter');
 
-    let searchTimeout;
-
-    // Search input with debounce
+    // Search input on Enter key
     if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
                 loadUsers();
-            }, 500); // Wait 500ms after user stops typing
+            }
         });
     }
 
