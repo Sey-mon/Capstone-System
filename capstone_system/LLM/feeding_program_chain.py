@@ -21,6 +21,7 @@ import re
 import os
 import logging
 import time
+import threading
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
 from data_manager import data_manager
@@ -34,6 +35,69 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+_SEED_IO_LOCK = threading.Lock()
+
+
+def _seeds_enabled() -> bool:
+    """
+    Control whether local JSONL seed storage is used.
+
+    Production default is OFF to avoid multi-instance drift/race on local files.
+    Override with FEEDING_PROGRAM_SEEDS_ENABLED=true if you intentionally want it.
+    """
+    explicit = os.getenv('FEEDING_PROGRAM_SEEDS_ENABLED')
+    if explicit is not None:
+        return explicit.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+    app_env = os.getenv('APP_ENV', '').strip().lower()
+    if app_env in {'production', 'prod', 'staging'}:
+        return False
+    return True
+
+
+def _allowed_main_ingredients(available_ingredients: Optional[str]) -> List[str]:
+    """Parse normalized comma-separated available ingredients into keyword list."""
+    if not available_ingredients:
+        return []
+    parts = [p.strip().lower() for p in str(available_ingredients).split(',')]
+    return [p for p in parts if p]
+
+
+def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool:
+    """
+    Hard post-generation gate for strict ingredient mode.
+    Each ingredient list item must reference ONLY:
+    - explicitly allowed main ingredients
+    - basic condiments/seasonings
+    """
+    text = str(item_text).lower().strip()
+    if not text:
+        return True
+
+    condiments = [
+        'garlic', 'bawang', 'onion', 'sibuyas', 'oil', 'mantika', 'salt', 'asin',
+        'soy sauce', 'toyo', 'fish sauce', 'patis', 'ginger', 'luya', 'water', 'tubig',
+        'pepper', 'paminta', 'vinegar', 'suka',
+    ]
+    allowed = allowed_main + condiments
+
+    # Break compound lines into rough ingredient segments.
+    segments = re.split(r',|/|\band\b|\bwith\b', text)
+    segments = [s.strip() for s in segments if s.strip()]
+
+    if not segments:
+        return True
+
+    for segment in segments:
+        matched = False
+        for kw in allowed:
+            if re.search(rf'\b{re.escape(kw)}\b', segment):
+                matched = True
+                break
+        if not matched:
+            return False
+    return True
 
 
 def create_feeding_program_llm():
@@ -175,7 +239,11 @@ def get_feeding_program_budget_context(budget_level='moderate'):
     return budget_contexts.get(budget_level, budget_contexts['moderate'])
 
 
-def validate_meal_plan(parsed_json: Dict, expected_days: int) -> tuple:
+def validate_meal_plan(
+    parsed_json: Dict,
+    expected_days: int,
+    available_ingredients: Optional[str] = None,
+) -> tuple:
     """
     Validate a generated meal plan for structural and content correctness.
 
@@ -195,6 +263,8 @@ def validate_meal_plan(parsed_json: Dict, expected_days: int) -> tuple:
     issues: List[str] = []
     all_dishes: List[str] = []
     REQUIRED_MEALS = ['Almusal', 'Tanghalian', 'Meryenda', 'Hapunan']
+    allowed_main = _allowed_main_ingredients(available_ingredients)
+    strict_mode = len(allowed_main) > 0
 
     if 'meal_plan' not in parsed_json:
         return ["Missing 'meal_plan' key in response"], []
@@ -250,6 +320,23 @@ def validate_meal_plan(parsed_json: Dict, expected_days: int) -> tuple:
                     f"Prohibited ingredient in dish name: '{dish}' (Day {day_num} {actual_type})"
                 )
 
+            # Hard post-generation enforcement in strict ingredient mode
+            if strict_mode:
+                ingredients = meal.get('ingredients', [])
+                if not isinstance(ingredients, list):
+                    issues.append(
+                        f"Day {day_num} {actual_type}: 'ingredients' must be a list in strict mode"
+                    )
+                else:
+                    for item in ingredients:
+                        if not _is_allowed_ingredient_item(str(item), allowed_main):
+                            issues.append(
+                                f"Ingredient outside allowed list in Day {day_num} {actual_type}: '{item}'"
+                            )
+                            # Keep issue list bounded
+                            if len(issues) >= 25:
+                                return issues, all_dishes
+
     return issues, all_dishes
 
 
@@ -261,24 +348,28 @@ def _load_past_dishes() -> List[str]:
     """
     import json as _json
 
+    if not _seeds_enabled():
+        return []
+
     seed_path = os.path.join(os.path.dirname(__file__), 'seeds', 'feeding_program_seeds.jsonl')
     if not os.path.exists(seed_path):
         return []
 
     dishes: List[str] = []
     try:
-        with open(seed_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                record = _json.loads(line)
-                meal_plan = record.get('output', {}).get('meal_plan', [])
-                for day in meal_plan:
-                    for meal in day.get('meals', []):
-                        name = meal.get('dish_name', '').strip()
-                        if name:
-                            dishes.append(name.lower())
+        with _SEED_IO_LOCK:
+            with open(seed_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    record = _json.loads(line)
+                    meal_plan = record.get('output', {}).get('meal_plan', [])
+                    for day in meal_plan:
+                        for meal in day.get('meals', []):
+                            name = meal.get('dish_name', '').strip()
+                            if name:
+                                dishes.append(name.lower())
     except Exception:
         pass
 
@@ -469,6 +560,9 @@ def _save_seed(params: Dict, clean_json: str) -> None:
     """
     import json as _json
 
+    if not _seeds_enabled():
+        return
+
     seeds_dir = os.path.join(os.path.dirname(__file__), 'seeds')
     os.makedirs(seeds_dir, exist_ok=True)
     seed_path = os.path.join(seeds_dir, 'feeding_program_seeds.jsonl')
@@ -480,14 +574,15 @@ def _save_seed(params: Dict, clean_json: str) -> None:
     }
     MAX_SEEDS = 50  # Prevent unbounded file growth
     try:
-        with open(seed_path, 'a', encoding='utf-8') as f:
-            f.write(_json.dumps(record, ensure_ascii=False) + '\n')
-        # Trim oldest entries once the file exceeds MAX_SEEDS lines
-        with open(seed_path, 'r', encoding='utf-8') as f:
-            lines = [ln for ln in f if ln.strip()]
-        if len(lines) > MAX_SEEDS:
-            with open(seed_path, 'w', encoding='utf-8') as f:
-                f.writelines(lines[-MAX_SEEDS:])
+        with _SEED_IO_LOCK:
+            with open(seed_path, 'a', encoding='utf-8') as f:
+                f.write(_json.dumps(record, ensure_ascii=False) + '\n')
+            # Trim oldest entries once the file exceeds MAX_SEEDS lines
+            with open(seed_path, 'r', encoding='utf-8') as f:
+                lines = [ln for ln in f if ln.strip()]
+            if len(lines) > MAX_SEEDS:
+                with open(seed_path, 'w', encoding='utf-8') as f:
+                    f.writelines(lines[-MAX_SEEDS:])
         logger.info(f'Seed saved → {seed_path} ({min(len(lines), MAX_SEEDS)} records)')
     except Exception as e:
         logger.warning(f'Failed to save seed: {str(e)}')
@@ -500,29 +595,34 @@ def _load_seed(duration_days: int, budget_level: str) -> str:
     """
     import json as _json
 
+    if not _seeds_enabled():
+        return ''
+
     seed_path = os.path.join(os.path.dirname(__file__), 'seeds', 'feeding_program_seeds.jsonl')
     if not os.path.exists(seed_path):
         return ''
 
     try:
         matching: List[Dict] = []
-        with open(seed_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                record = _json.loads(line)
-                p = record.get('params', {})
-                if (
-                    p.get('program_duration_days') == duration_days
-                    and p.get('budget_level') == budget_level
-                ):
-                    matching.append(record)
+        with _SEED_IO_LOCK:
+            with open(seed_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    record = _json.loads(line)
+                    p = record.get('params', {})
+                    if (
+                        p.get('program_duration_days') == duration_days
+                        and p.get('budget_level') == budget_level
+                    ):
+                        matching.append(record)
 
         if not matching:
             return ''
 
         example_json = _json.dumps(matching[-1]['output'], ensure_ascii=False, indent=2)
+
         return (
             '\n\n'
             '═══════════════════════════════════════════════════════════════════\n'
@@ -1053,7 +1153,11 @@ BEGIN JSON OUTPUT NOW:
                     cleaned_content = meal_plan_content
                 else:
                     # ── Quality validation ────────────────────────────────────
-                    issues, all_dishes = validate_meal_plan(parsed_json, program_duration_days)
+                    issues, all_dishes = validate_meal_plan(
+                        parsed_json,
+                        program_duration_days,
+                        available_ingredients=available_ingredients,
+                    )
                     previously_used_dishes = all_dishes
 
                     if issues:
@@ -1070,11 +1174,24 @@ BEGIN JSON OUTPUT NOW:
                             time.sleep(retry_delay)
                             retry_delay *= 2
                             continue
-                        # Exhausted retries — return best-effort with warnings
-                        logger.warning(
-                            "Max retries reached — returning best-effort result "
-                            "(validation issues remain)"
+                        # Exhausted retries — fail closed for production safety
+                        logger.error(
+                            "Max retries reached — failing closed (validation issues remain)"
                         )
+                        return {
+                            'success': False,
+                            'error': 'Generated plan failed validation after all retries',
+                            'error_type': 'validation_failed',
+                            'validation_issues': validation_issues,
+                            'meal_plan': None,
+                            'audit': {
+                                'validation_passed': False,
+                                'attempts_used': attempt + 1,
+                                'max_attempts': max_retries,
+                                'strict_ingredient_mode': bool(available_ingredients),
+                                'seed_mode_enabled': _seeds_enabled(),
+                            },
+                        }
                     else:
                         validation_issues = []
                         logger.info("Meal plan passed all validation checks")
@@ -1084,6 +1201,7 @@ BEGIN JSON OUTPUT NOW:
                                 'program_duration_days': program_duration_days,
                                 'budget_level': budget_level,
                                 'target_age_group': target_age_group,
+                                'available_ingredients': available_ingredients,
                             },
                             json.dumps(parsed_json, ensure_ascii=False),
                         )
@@ -1119,6 +1237,13 @@ BEGIN JSON OUTPUT NOW:
                 'generation_time_seconds': round(generation_time, 2),
                 # None when clean; populated if best-effort result returned
                 'validation_issues': validation_issues if validation_issues else None,
+                'audit': {
+                    'validation_passed': True,
+                    'attempts_used': attempt + 1,
+                    'max_attempts': max_retries,
+                    'strict_ingredient_mode': bool(available_ingredients),
+                    'seed_mode_enabled': _seeds_enabled(),
+                },
             }
 
         except Exception as e:

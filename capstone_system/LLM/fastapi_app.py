@@ -442,6 +442,15 @@ def generate_feeding_program_meal_plan_endpoint(request: FeedingProgramMealPlanR
         )
         
         if not result['success']:
+            if result.get('error_type') == 'validation_failed':
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        'message': 'Plan blocked: generated output did not pass quality checks. Please try again.',
+                        'validation_issues': result.get('validation_issues', []),
+                        'audit': result.get('audit', {}),
+                    },
+                )
             raise HTTPException(status_code=500, detail=result.get('error', 'Failed to generate meal plan'))
         
         return {
@@ -450,7 +459,8 @@ def generate_feeding_program_meal_plan_endpoint(request: FeedingProgramMealPlanR
             "program_duration_days": result['program_duration_days'],
             "budget_level": result['budget_level'],
             "target_age_group": result.get('target_age_group', request.target_age_group),
-            "generated_at": result['generated_at']
+            "generated_at": result['generated_at'],
+            "audit": result.get('audit', {}),
         }
     
     except HTTPException:

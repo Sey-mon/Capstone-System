@@ -367,7 +367,9 @@ Route::middleware(['auth', 'account.verified', 'role:Nutritionist', 'prevent.bac
     Route::get('/nutrition/test-api', [ApiController::class, 'testNutritionAPI'])->name('nutrition.test-api');
     
     // Feeding Program routes
-    Route::post('/feeding-program/generate', [ApiController::class, 'generateFeedingProgram'])->name('feeding-program.generate');
+    Route::post('/feeding-program/generate', [ApiController::class, 'generateFeedingProgram'])
+        ->middleware('throttle:feeding.program.generate')
+        ->name('feeding-program.generate');
     Route::post('/feeding-program/save', [NutritionistController::class, 'saveFeedingProgramPlan'])->name('feeding-program.save');
     Route::get('/feeding-program/{id}', [NutritionistController::class, 'getFeedingProgramPlan'])->name('feeding-program.show');
     Route::delete('/feeding-program/{id}', [NutritionistController::class, 'deleteFeedingProgramPlan'])->name('feeding-program.delete');

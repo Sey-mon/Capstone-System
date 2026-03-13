@@ -449,39 +449,48 @@ class MealPlansManager {
             }
         } catch (error) {
             console.error('Error:', error);
-            
-            let errorMessage = 'Failed to connect to AI service.';
-            let isValidationError = false;
+
+            const payload = error.responseJSON || {};
+            const detail = payload.detail;
+
+            let title = 'Generation Failed';
+            let icon = 'error';
+            let errorMessage = 'Generation failed. Please try again.';
 
             if (error.status === 422) {
-                // Ingredient validation rejected by the server — extract the human-readable message
-                isValidationError = true;
-                const json = error.responseJSON || {};
-                errorMessage = json.message || 'Invalid ingredients entered. Please use real food names like manok, bangus, kangkong, kamote.';
+                icon = 'warning';
+                title = 'Request Blocked';
+                errorMessage = payload.message
+                    || detail?.message
+                    || 'Your request was blocked by validation. Please check ingredients and try again.';
+            } else if (error.status === 429) {
+                title = 'Too Many Requests';
+                errorMessage = payload.message || 'Too many requests. Please wait a moment and try again.';
+            } else if (error.status === 503) {
+                title = 'Service Busy';
+                errorMessage = payload.message || 'Service temporarily unavailable. Please try again in about 1 minute.';
             } else if (error.status === 504 || error.statusText === 'timeout') {
-                errorMessage = 'Request timed out. The AI service is taking too long to respond. Please try again.';
-            } else if (error.responseJSON?.detail) {
-                errorMessage = error.responseJSON.detail;
-            } else if (error.responseJSON?.message) {
-                errorMessage = error.responseJSON.message;
+                title = 'Request Timeout';
+                errorMessage = 'Request timed out. Please try again.';
+            } else if (payload.message) {
+                errorMessage = payload.message;
+            } else if (detail?.message) {
+                errorMessage = detail.message;
+            } else if (typeof detail === 'string' && detail.trim()) {
+                errorMessage = detail;
             } else if (error.responseText) {
                 try {
                     const parsed = JSON.parse(error.responseText);
-                    errorMessage = parsed.message || parsed.detail || error.responseText;
+                    errorMessage = parsed.message || parsed.detail?.message || parsed.detail || errorMessage;
                 } catch (_) {
-                    errorMessage = error.responseText;
+                    // Keep concise fallback
                 }
-            } else if (error.message) {
-                errorMessage = error.message;
             }
 
             Swal.fire({
-                icon: isValidationError ? 'warning' : 'error',
-                title: isValidationError ? 'Invalid Ingredients' : 'Error',
-                html: `
-                    <p>${errorMessage}</p>
-                    ${!isValidationError ? `<p style="font-size: 0.9em; color: #6c757d; margin-top: 10px;">Check if FastAPI server is running on port 8002.</p>` : ''}
-                `,
+                icon,
+                title,
+                text: errorMessage,
                 confirmButtonColor: '#2d7a4f',
                 confirmButtonText: 'OK'
             });
