@@ -128,4 +128,4 @@ LLM/
 
 - Personalized flow and feeding-program flow are intentionally separate.
 - Feeding program is optimized for reliability and safety over free-form creativity.
-- Keep this README aligned whenever endpoint contracts or validation behavior changes.
+- Keep this README aligned whenever endpoint contracts or validation behavior changes.aasdas
