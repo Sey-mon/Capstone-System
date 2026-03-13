@@ -120,8 +120,42 @@ class MealPlansManager {
                         <label>
                             <i class="fas fa-shopping-basket"></i> Available Ingredients (Optional)
                         </label>
-                        <textarea id="swal-ingredients" class="swal2-textarea" placeholder="List available ingredients from suppliers or donations (e.g., manok, bangus, monggo, kangkong, saging, kalabasa)"></textarea>
-                        <small>Comma-separated list helps customize meal plans based on what you have</small>
+                        <style>
+                            #ingredient-tag-box {
+                                display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+                                min-height: 44px; padding: 6px 10px;
+                                border: 1px solid #d1d5db; border-radius: 8px;
+                                background: #fff; cursor: text;
+                                font-size: 0.9rem; box-sizing: border-box;
+                            }
+                            #ingredient-tag-box:focus-within { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.2); }
+                            .ing-tag {
+                                display: inline-flex; align-items: center; gap: 4px;
+                                background: #d1fae5; color: #065f46;
+                                border: 1px solid #6ee7b7; border-radius: 999px;
+                                padding: 2px 10px 2px 10px; font-size: 0.82rem; font-weight: 500;
+                                white-space: nowrap;
+                            }
+                            .ing-tag .ing-remove {
+                                cursor: pointer; font-size: 0.9rem; line-height: 1;
+                                color: #065f46; margin-left: 2px; background: none; border: none; padding: 0;
+                            }
+                            .ing-tag .ing-remove:hover { color: #dc2626; }
+                            #ingredient-type-input {
+                                border: none; outline: none; font-size: 0.88rem;
+                                min-width: 160px; flex: 1; padding: 2px 4px;
+                                background: transparent;
+                            }
+                        </style>
+                        <div id="ingredient-tag-box">
+                            <input id="ingredient-type-input" type="text"
+                                placeholder="Type an ingredient and press comma or Enter (e.g., manok)" />
+                        </div>
+                        <input type="hidden" id="swal-ingredients" />
+                        <small style="display:block; margin-top:4px; color:#6b7280;">
+                            Type an ingredient and press <kbd>,</kbd> or <kbd>Enter</kbd> to add it as a tag.
+                            Two-word names (e.g., <em>sweet potato</em>, <em>green beans</em>) are supported.
+                        </small>
                     </div>
                 </div>
             `,
@@ -136,14 +170,177 @@ class MealPlansManager {
                 popup: 'feeding-program-modal',
                 htmlContainer: 'feeding-program-form'
             },
+            didOpen: () => {
+                const box   = document.getElementById('ingredient-tag-box');
+                const input = document.getElementById('ingredient-type-input');
+                const hidden = document.getElementById('swal-ingredients');
+
+                // Click anywhere in the box focuses the text input
+                box.addEventListener('click', () => input.focus());
+
+                function syncHidden() {
+                    const tags = [...box.querySelectorAll('.ing-tag')]
+                        .map(t => t.dataset.value);
+                    hidden.value = tags.join(', ');
+                }
+
+                function addTag(raw) {
+                    const val = raw.trim();
+                    if (!val) return;
+                    // Prevent duplicates (case-insensitive)
+                    const existing = [...box.querySelectorAll('.ing-tag')]
+                        .map(t => t.dataset.value.toLowerCase());
+                    if (existing.includes(val.toLowerCase())) {
+                        input.value = '';
+                        return;
+                    }
+                    const tag = document.createElement('span');
+                    tag.className = 'ing-tag';
+                    tag.dataset.value = val;
+                    tag.innerHTML = `${val} <button type="button" class="ing-remove" aria-label="Remove">&#x2715;</button>`;
+                    tag.querySelector('.ing-remove').addEventListener('click', () => {
+                        tag.remove();
+                        syncHidden();
+                    });
+                    box.insertBefore(tag, input);
+                    input.value = '';
+                    syncHidden();
+                }
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === ',' || e.key === 'Enter') {
+                        e.preventDefault();
+                        addTag(input.value.replace(/,/g, ''));
+                    } else if (e.key === 'Backspace' && input.value === '') {
+                        // Remove last tag on backspace when input is empty
+                        const tags = box.querySelectorAll('.ing-tag');
+                        if (tags.length) tags[tags.length - 1].remove();
+                        syncHidden();
+                    }
+                });
+
+                // Also accept comma typed mid-word
+                input.addEventListener('input', () => {
+                    if (input.value.includes(',')) {
+                        const parts = input.value.split(',');
+                        parts.slice(0, -1).forEach(p => addTag(p));
+                        input.value = parts[parts.length - 1];
+                    }
+                });
+            },
             preConfirm: () => {
+                // Commit any ingredient still being typed that wasn't confirmed with comma/Enter
+                const typeInput = document.getElementById('ingredient-type-input');
+                if (typeInput && typeInput.value.trim()) {
+                    const box = document.getElementById('ingredient-tag-box');
+                    const val = typeInput.value.trim();
+                    const existing = [...box.querySelectorAll('.ing-tag')]
+                        .map(t => t.dataset.value.toLowerCase());
+                    if (!existing.includes(val.toLowerCase())) {
+                        const tag = document.createElement('span');
+                        tag.className = 'ing-tag';
+                        tag.dataset.value = val;
+                        box.insertBefore(tag, typeInput);
+                    }
+                    typeInput.value = '';
+                    const hidden = document.getElementById('swal-ingredients');
+                    hidden.value = [...box.querySelectorAll('.ing-tag')].map(t => t.dataset.value).join(', ');
+                }
+
+                const rawIngredients = document.getElementById('swal-ingredients').value.trim();
+
+                if (rawIngredients) {
+                    // Terms that are clearly not real cooking ingredients
+                    const PROHIBITED_ITEMS = [
+                        // Candy & confectionery
+                        'candy', 'candies', 'gummy', 'gummies', 'lollipop', 'lollipops',
+                        'bubblegum', 'bubble gum', 'chewing gum', 'jawbreaker',
+                        'skittles', 'm&m', 'snickers', 'kitkat', 'kit kat',
+                        'reese', 'hershey', 'twix', 'mars bar', 'jelly bean',
+                        // Chocolate as candy (not cocoa powder which is valid for champorado)
+                        'chocolate bar', 'milk chocolate', 'white chocolate', 'dark chocolate bar',
+                        // Junk food / chips
+                        'chips', 'doritos', 'cheetos', 'pringles', 'popcorn',
+                        'pretzel', 'chicharron', 'junk food',
+                        // Sodas & sugary drinks
+                        'soda', 'cola', 'sprite', 'pepsi', 'coca-cola', 'coke',
+                        'energy drink', 'softdrink', 'soft drink', 'powdered juice',
+                        'juice drink', 'tang juice', 'nestea', 'c2',
+                        // Fast food items not usable as ingredients
+                        'burger', 'pizza', 'french fries', 'fries', 'nuggets',
+                        // Alcohol
+                        'beer', 'wine', 'alcohol', 'liquor', 'gin', 'vodka',
+                        'rum', 'whiskey', 'tequila', 'brandy',
+                        // Non-food
+                        'cigarette', 'tobacco', 'medicine', 'shampoo', 'soap',
+                    ];
+
+                    const itemList = rawIngredients
+                        .split(',')
+                        .map(i => i.trim().toLowerCase())
+                        .filter(i => i.length > 0);
+
+                    const invalid = itemList.filter(item =>
+                        PROHIBITED_ITEMS.some(p => item.includes(p))
+                    );
+
+                    if (invalid.length > 0) {
+                        Swal.showValidationMessage(
+                            `⚠️ Invalid ingredient(s) detected: <strong>${invalid.join(', ')}</strong>.<br>
+                            Please enter real food ingredients only (e.g., manok, bangus, kangkong, kamote).`
+                        );
+                        return false;
+                    }
+
+                    // Check for obviously non-food entries: numbers only, single characters, etc.
+                    const nonsense = itemList.filter(item => /^\d+$/.test(item) || item.length < 2);
+                    if (nonsense.length > 0) {
+                        Swal.showValidationMessage(
+                            `⚠️ Some entries don't look like ingredients: <strong>${nonsense.join(', ')}</strong>.<br>
+                            Please use ingredient names like manok, bangus, kangkong.`
+                        );
+                        return false;
+                    }
+
+                    // Check for gibberish per item:
+                    // 1) No vowels at all (e.g. "bcd")
+                    // 2) Not a known food word AND only 1 unique vowel
+                    //    e.g. "asdasd" only ever uses 'a' → 1 unique vowel → gibberish
+                    //    whereas "manok" uses a+o, "sitaw" uses i+a → 2 unique vowels → valid
+                    const KNOWN_FOOD_HINTS = [
+                        'manok','baboy','baka','isda','bangus','tilapia','galunggong','sardinas',
+                        'itlog','monggo','sitaw','kangkong','kalabasa','kamote','malunggay',
+                        'talong','ampalaya','saging','papaya','mangga','karne','gatas','hipon',
+                        'alimango','sugpo','pusit','liempo','atay','rice','kanin','bigas',
+                        'potato','carrot','tomato','onion','garlic','ginger','spinach',
+                        'chicken','pork','beef','fish','egg','bean','corn','squash','cabbage',
+                        'pechay','patis','toyo','vinegar','coconut','niyog','gabi',
+                        'dilis','tuyo','bagoong','tokwa','tofu','bawang','patatas','luya',
+                        'sibuyas','kamatis','sayote','labanos','singkamas','alugbati',
+                    ];
+                    const gibberish = itemList.filter(item => {
+                        if (item.length < 2) return false; // already caught above
+                        if (KNOWN_FOOD_HINTS.some(hint => item.includes(hint))) return false;
+                        // Count unique vowels
+                        const uniqueVowels = new Set(item.replace(/[^aeiou]/g, '').split('')).size;
+                        return uniqueVowels < 2;
+                    });
+                    if (gibberish.length > 0) {
+                        Swal.showValidationMessage(
+                            `⚠️ "${gibberish.join('", "')}" ${gibberish.length === 1 ? "doesn't" : "don't"} look like real food ingredient${gibberish.length === 1 ? '' : 's'}.<br>
+                            Please enter actual food names (e.g., manok, bangus, kangkong, kamote).`
+                        );
+                        return false;
+                    }
+                }
+
                 return {
                     ageGroup: document.getElementById('swal-age-group').value,
                     totalChildren: document.getElementById('swal-total-children').value,
                     duration: document.getElementById('swal-duration').value,
                     budget: document.getElementById('swal-budget').value,
                     barangay: document.getElementById('swal-barangay').value,
-                    ingredients: document.getElementById('swal-ingredients').value
+                    ingredients: rawIngredients
                 }
             }
         });
@@ -254,25 +451,36 @@ class MealPlansManager {
             console.error('Error:', error);
             
             let errorMessage = 'Failed to connect to AI service.';
-            
-            if (error.status === 504 || error.statusText === 'timeout') {
+            let isValidationError = false;
+
+            if (error.status === 422) {
+                // Ingredient validation rejected by the server — extract the human-readable message
+                isValidationError = true;
+                const json = error.responseJSON || {};
+                errorMessage = json.message || 'Invalid ingredients entered. Please use real food names like manok, bangus, kangkong, kamote.';
+            } else if (error.status === 504 || error.statusText === 'timeout') {
                 errorMessage = 'Request timed out. The AI service is taking too long to respond. Please try again.';
             } else if (error.responseJSON?.detail) {
                 errorMessage = error.responseJSON.detail;
+            } else if (error.responseJSON?.message) {
+                errorMessage = error.responseJSON.message;
             } else if (error.responseText) {
-                errorMessage = error.responseText;
+                try {
+                    const parsed = JSON.parse(error.responseText);
+                    errorMessage = parsed.message || parsed.detail || error.responseText;
+                } catch (_) {
+                    errorMessage = error.responseText;
+                }
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
+
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
+                icon: isValidationError ? 'warning' : 'error',
+                title: isValidationError ? 'Invalid Ingredients' : 'Error',
                 html: `
                     <p>${errorMessage}</p>
-                    <p style="font-size: 0.9em; color: #6c757d; margin-top: 10px;">
-                        Check if FastAPI server is running on port 8002.
-                    </p>
+                    ${!isValidationError ? `<p style="font-size: 0.9em; color: #6c757d; margin-top: 10px;">Check if FastAPI server is running on port 8002.</p>` : ''}
                 `,
                 confirmButtonColor: '#2d7a4f',
                 confirmButtonText: 'OK'

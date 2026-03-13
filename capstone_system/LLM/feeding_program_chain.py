@@ -253,6 +253,45 @@ def validate_meal_plan(parsed_json: Dict, expected_days: int) -> tuple:
     return issues, all_dishes
 
 
+def _load_past_dishes() -> List[str]:
+    """
+    Read all dish names ever saved in the seed file so _plan_dish_names can
+    avoid repeating them across sessions.
+    Returns a flat deduplicated list of lowercase dish names, or [] if none.
+    """
+    import json as _json
+
+    seed_path = os.path.join(os.path.dirname(__file__), 'seeds', 'feeding_program_seeds.jsonl')
+    if not os.path.exists(seed_path):
+        return []
+
+    dishes: List[str] = []
+    try:
+        with open(seed_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                record = _json.loads(line)
+                meal_plan = record.get('output', {}).get('meal_plan', [])
+                for day in meal_plan:
+                    for meal in day.get('meals', []):
+                        name = meal.get('dish_name', '').strip()
+                        if name:
+                            dishes.append(name.lower())
+    except Exception:
+        pass
+
+    # Deduplicate, preserve order
+    seen: set = set()
+    unique: List[str] = []
+    for d in dishes:
+        if d not in seen:
+            seen.add(d)
+            unique.append(d)
+    return unique
+
+
 def _plan_dish_names(
     duration_days: int,
     available_ingredients: Optional[str],
@@ -270,6 +309,7 @@ def _plan_dish_names(
     single-call path.
     """
     import json as _json
+    import random
 
     total_slots = duration_days * 4
     meal_types = [
@@ -285,8 +325,39 @@ def _plan_dish_names(
     ]
     slots_str = '\n'.join(f'{i + 1}. {label}' for i, label in enumerate(slot_labels))
 
+    # Randomly pick a variety directive so the LLM can't default to the same
+    # Adobo/Tinola/Sinigang set every time the same ingredients are provided.
+    _VARIETY_SETS = [
+        'Focus this session on BRAISED and STEWED dishes (Adobo, Mechado, Afritada, Menudo, Kaldereta).',
+        'Focus this session on SOUP-BASED dishes (Sinigang, Tinola, Nilaga, Bulalo, Arroz Caldo, Goto).',
+        'Focus this session on GRILLED and FRIED dishes (Inihaw, Pritong, Paksiw, Escabeche, Daing).',
+        'Focus this session on COCONUT-BASED dishes (Ginataang, Bicol Express, Laing, Kare-Kare, Ginataan).',
+        'Focus this session on SAUTÉED and STIR-FRIED dishes (Ginisa, Pinakbet, Chopsuey, Mongo Guisado).',
+        'Focus this session on STEAMED and SLOW-COOKED dishes (Steamed, Nilaga, Pinaputok, Binagoongan).',
+    ]
+    variety_directive = random.choice(_VARIETY_SETS)
+
+    # Load dishes from previous runs so repeat calls with the same input
+    # produce a different set each time.
+    past_dishes = _load_past_dishes()
+    if past_dishes:
+        recent = past_dishes[-40:]  # only last ~10 plans worth
+        avoid_block = (
+            f'\n∙ AVOID these dish names already used in previous programs (pick completely different dishes):\n'
+            + '\n'.join(f'  - {d}' for d in recent)
+        )
+    else:
+        avoid_block = ''
+
     if available_ingredients:
-        ingredient_hint = f'∙ Available ingredients to prioritize: {available_ingredients}'
+        ingredient_hint = (
+            f'🔴 STRICT RULE — Use ONLY these main ingredients (no additions, no substitutions):\n'
+            f'   {available_ingredients}\n'
+            f'∙ Every dish MUST be built around ONLY the main ingredients listed above.\n'
+            f'∙ Do NOT add proteins, vegetables, or starches not present in the list above.\n'
+            f'∙ Basic cooking essentials (garlic, onion, oil, salt, soy sauce, fish sauce, ginger)\n'
+            f'  may be used as minor seasoning only — they are NOT featured ingredients.'
+        )
     else:
         ingredient_hint = (
             f"∙ Proteins to use: {', '.join(budget_context['proteins'][:5])}\n"
@@ -296,6 +367,7 @@ def _plan_dish_names(
     prompt = (
         f'You are a Filipino pediatric nutritionist planning a {duration_days}-day '
         f'community feeding program.\n\n'
+        f'🎲 VARIETY DIRECTIVE FOR THIS SESSION: {variety_directive}\n\n'
         f'Generate exactly {total_slots} unique Filipino dish names — one per slot.\n\n'
         f'Rules:\n'
         f'- Every dish must be a named, complete Filipino recipe '
@@ -305,7 +377,8 @@ def _plan_dish_names(
         f'- Vary cooking methods: Adobo, Sinigang, Tinola, Pritong, Ginisa, Nilaga, Ginataang.\n'
         f'- Almusal: lugaw, champorado, silog meals, or pandesal with filling.\n'
         f'- Meryenda: traditional Filipino kakanin or fresh fruit snacks.\n'
-        f'{ingredient_hint}\n\n'
+        f'{ingredient_hint}'
+        f'{avoid_block}\n\n'
         f'Slots:\n{slots_str}\n\n'
         f'Return a JSON object with key "dishes" containing exactly {total_slots} strings.\n'
         f'Format: {{"dishes": ["Dish 1", "Dish 2", ...]}}\n'
@@ -605,7 +678,10 @@ def generate_feeding_program_meal_plan(
         )
 
     # ── Phase 4: Inject a past validated output as a few-shot example ────────
-    seed_example = _load_seed(program_duration_days, budget_level)
+    # SKIP when dish names are already pre-planned — the constraint block already
+    # locks the dishes, so a seed example would only confuse the model and cause
+    # it to copy the seed's dish names instead of using the locked ones.
+    seed_example = '' if dish_names else _load_seed(program_duration_days, budget_level)
 
     # ── Conditional prompt blocks: shorter when dish names are already locked ──
     # Skip the 100-item food database when dishes are pre-planned — the model
@@ -643,21 +719,22 @@ FEEDING PROGRAM OVERVIEW:
 AVAILABLE INGREDIENTS:
 {available_ingredients if available_ingredients else '❌ None specified'}
 
-{'⚠️ MANDATORY REQUIREMENT - AVAILABLE INGREDIENTS HAVE ABSOLUTE PRIORITY:' if available_ingredients else '✅ NO SPECIFIC INGREDIENTS PROVIDED:'}
-{'''- You MUST use the available ingredients listed above as the PRIMARY ingredients
-- Build ALL meals around the available ingredients listed above
-- Every meal MUST prominently feature available ingredients as main components
-- Design dishes specifically to showcase the available ingredients
+{'🔴 STRICT RULE — USE ONLY THE AVAILABLE INGREDIENTS LISTED ABOVE:' if available_ingredients else '✅ NO SPECIFIC INGREDIENTS PROVIDED — USE BUDGET RECOMMENDATIONS:'}
+{'''- The available ingredients above are the ONLY main ingredients allowed in the entire meal plan.
+- Do NOT add any protein, vegetable, or starch not present in the available list above.
+- Budget-recommended proteins/vegetables/grains are COMPLETELY IGNORED — available ingredients replace them.
+- Build every meal around ONLY the ingredients from the available list.
+- Basic seasoning/condiments (garlic, onion, oil, salt, soy sauce, fish sauce, ginger, patis) are fine.
 - Examples:
-  * If "manok, kangkong, kamote" → Plan "Tinolang Manok with Kangkong" 
-  * If "bangus, sitaw, kalabasa" → Plan "Sinigang na Bangus with Sitaw and Kalabasa"
-- Only supplement with budget recommendations if available ingredients alone are insufficient
-- DO NOT ignore available ingredients in favor of budget recommendations
-- Track which available ingredients you've used to ensure all are utilized''' if available_ingredients else '''- Use the budget recommendations below as your ingredient guide
-- Select ingredients appropriate for the budget level
-- Focus on cost-effective, nutritious, locally available Filipino ingredients
-- Prioritize seasonal ingredients for better value
-- Design varied meals using the recommended ingredient categories'''}
+  * "manok, kangkong, kamote" are listed → use ONLY those three main ingredients; no bangus, monggo, or sitaw
+  * "bangus, sitaw, kalabasa" are listed → no chicken, monggo, or other produce may appear in any meal
+- Every "ingredients" array in your JSON output MUST contain ONLY items from the available list
+  plus minor condiments (garlic, onion, oil, salt, soy sauce, fish sauce, ginger).
+- DO NOT invent or introduce any ingredient not explicitly listed above.''' if available_ingredients else '''- Use the budget recommendations below as your ingredient guide.
+- Select ingredients appropriate for the budget level.
+- Focus on cost-effective, nutritious, locally available Filipino ingredients.
+- Prioritize seasonal ingredients for better value.
+- Design varied meals using the recommended ingredient categories.'''}
 
 BUDGET CONSTRAINTS ({budget_level}):
 - Focus: {budget_context['focus']}
@@ -665,6 +742,7 @@ BUDGET CONSTRAINTS ({budget_level}):
 - Recommended Vegetables: {', '.join(budget_context['vegetables'])}
 - Recommended Grains: {', '.join(budget_context['grains'])}
 - Recommended Fruits: {', '.join(budget_context['fruits'])}
+{"⚠️ BUDGET RECOMMENDATIONS ABOVE ARE IGNORED — available ingredients specified above override them completely." if available_ingredients else ""}
 
 {food_section}
 {pdf_context}{seed_example}
@@ -676,15 +754,18 @@ YOUR TASK: Complete the {program_duration_days}-day meal plan — fill in ingred
 
 {fill_mode_notice}CRITICAL REQUIREMENTS:
 
-1. **🔴 PRIORITIZE AVAILABLE INGREDIENTS (ABSOLUTE PRIORITY):**
-   - If available ingredients are specified, they are the FOUNDATION of your meal plan
-   - Each meal MUST prominently feature available ingredients as main components
-   - Design dishes specifically around the available ingredients
+{'''1. **🔴 EXCLUSIVE INGREDIENT RULE — STRICTLY ENFORCED:**
+   - ONLY the available ingredients listed at the top are allowed as main ingredients.
+   - Do NOT add any protein, vegetable, starch, or featured ingredient not in the available list.
+   - Budget-recommended ingredients do NOT apply — available ingredients replace them entirely.
    - Examples:
-     * If "manok, kangkong, kamote" are available → Plan "Tinolang Manok with Kangkong" NOT generic chicken dishes
-     * If "bangus, sitaw, kalabasa" are available → Plan "Sinigang na Bangus with Sitaw and Kalabasa"
-   - Only use budget recommendations as SUPPLEMENTS, not replacements
-   - Track which available ingredients you've used to ensure all are utilized throughout the program
+     * "manok, kangkong, kamote" listed → ONLY those as main ingredients; no bangus, monggo, or extra veg
+     * "bangus, sitaw, kalabasa" listed → no chicken or other produce may appear anywhere in the plan
+   - Basic condiments (garlic, onion, oil, salt, soy sauce, fish sauce, ginger) are OK as seasoning.
+   - Every "ingredients" array in your JSON MUST reference ONLY the available list + basic condiments.''' if available_ingredients else '''1. **✅ NO SPECIFIED INGREDIENTS — USE BUDGET RECOMMENDATIONS FREELY:**
+   - No specific ingredients were provided; select varied Filipino ingredients appropriate for the budget.
+   - Prioritize proteins, vegetables, and grains from the budget recommendations section.
+   - Focus on seasonal, locally available, cost-effective Filipino ingredients.'''}
 
 2. **NO DISH REPETITION (MANDATORY):**
    - Each meal across the ENTIRE {program_duration_days}-day period must be UNIQUE

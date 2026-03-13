@@ -324,6 +324,18 @@ class ApiController extends Controller
             'available_ingredients' => 'nullable|string'
         ]);
 
+        // Validate ingredients server-side before spending any LLM credits
+        $ingredientsRaw = $request->available_ingredients;
+        if (!empty(trim((string) $ingredientsRaw))) {
+            $validationError = $this->validateIngredients(trim((string) $ingredientsRaw));
+            if ($validationError) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validationError,
+                ], 422);
+            }
+        }
+
         try {
             $nutritionService = new NutritionService();
             $result = $nutritionService->generateFeedingProgram(
@@ -345,6 +357,105 @@ class ApiController extends Controller
                 'message' => 'Failed to generate feeding program: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Validate the available_ingredients string before sending to the LLM.
+     * Returns a human-readable error string, or null if valid.
+     */
+    private function validateIngredients(string $raw): ?string
+    {
+        $prohibited = [
+            // Candy & confectionery
+            'candy', 'candies', 'gummy', 'gummies', 'lollipop', 'bubblegum',
+            'bubble gum', 'chewing gum', 'jawbreaker', 'skittles', 'm&m',
+            'snickers', 'kitkat', 'kit kat', 'reese', 'hershey', 'twix',
+            'mars bar', 'jelly bean', 'chocolate bar', 'milk chocolate',
+            'white chocolate', 'dark chocolate bar',
+            // Junk food
+            'chips', 'doritos', 'cheetos', 'pringles', 'popcorn',
+            'pretzel', 'chicharron', 'junk food',
+            // Sodas & sugary drinks
+            'soda', 'cola', 'sprite', 'pepsi', 'coca-cola', 'energy drink',
+            'softdrink', 'soft drink', 'powdered juice', 'juice drink',
+            'tang juice', 'nestea', 'c2',
+            // Fast food
+            'burger', 'pizza', 'french fries', 'nuggets',
+            // Alcohol
+            'beer', 'wine', 'alcohol', 'liquor', 'gin', 'vodka',
+            'rum', 'whiskey', 'tequila', 'brandy',
+            // Non-food
+            'cigarette', 'tobacco', 'medicine', 'shampoo', 'soap',
+        ];
+
+        $knownFoodHints = [
+            'manok','baboy','baka','isda','bangus','tilapia','galunggong',
+            'itlog','monggo','sitaw','kangkong','kalabasa','kamote','malunggay',
+            'talong','ampalaya','saging','papaya','mangga','karne','gatas',
+            'hipon','alimango','sugpo','pusit','liembro','atay','rice','kanin',
+            'bigas','potato','carrot','tomato','onion','garlic','ginger',
+            'spinach','chicken','pork','beef','fish','egg','bean','corn',
+            'squash','cabbage','pechay','patis','toyo','vinegar','coconut',
+            'niyog','gabi','sardinas','dilis','tuyo','bagoong','tokwa','tofu',
+            'bawang','patatas','luya','sibuyas','kamatis','sayote','labanos',
+            'singkamas','alugbati',
+        ];
+
+        $items = array_filter(
+            array_map('trim', explode(',', $raw)),
+            fn($i) => $i !== ''
+        );
+
+        if (empty($items)) {
+            return null; // empty after split → treat as blank (optional field)
+        }
+
+        // 1. Prohibited item check
+        foreach ($items as $item) {
+            $lower = strtolower($item);
+            foreach ($prohibited as $p) {
+                if (str_contains($lower, $p)) {
+                    return "Invalid ingredient detected: \"$item\". Please enter real food ingredients only (e.g., manok, bangus, kangkong, kamote).";
+                }
+            }
+        }
+
+        // 2. Minimum length / numbers-only
+        foreach ($items as $item) {
+            if (strlen($item) < 2 || ctype_digit($item)) {
+                return "\"$item\" doesn't look like a food ingredient. Please use ingredient names like manok, bangus, kangkong.";
+            }
+        }
+
+        // 3. Per-item gibberish check:
+        //    a) No vowels at all
+        //    b) Not a known food word AND only 1 unique vowel
+        //       e.g. "asdasd" only uses 'a' → 1 unique vowel → gibberish
+        //       whereas "manok" uses a+o → 2 unique vowels → valid
+        foreach ($items as $item) {
+            $lower = strtolower($item);
+
+            // No vowels at all
+            if (strlen($lower) >= 2 && !preg_match('/[aeiou]/', $lower)) {
+                return "\"$item\" doesn't look like a real ingredient. Please enter actual food names (e.g., manok, bangus, kangkong).";
+            }
+
+            // Not a known food AND only 1 unique vowel
+            preg_match_all('/[aeiou]/', $lower, $vowelMatches);
+            $uniqueVowels = count(array_unique($vowelMatches[0]));
+            $matchesHint = false;
+            foreach ($knownFoodHints as $hint) {
+                if (str_contains($lower, $hint)) {
+                    $matchesHint = true;
+                    break;
+                }
+            }
+            if (!$matchesHint && $uniqueVowels < 2) {
+                return "\"$item\" doesn't look like a real food ingredient. Please use actual food names like manok, bangus, kangkong, kamote.";
+            }
+        }
+
+        return null;
     }
 
     /**
