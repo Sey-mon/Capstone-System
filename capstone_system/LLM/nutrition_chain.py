@@ -10,6 +10,22 @@ import re
 
 load_dotenv()
 
+
+def _is_non_meal_placeholder(dish_name):
+    """Return True for explicit non-meal placeholders that should not count as dishes."""
+    text = str(dish_name or '').strip().lower()
+    placeholders = {
+        'walang meryenda',
+        'no meryenda',
+        'walang snack',
+        'no snack',
+        'none',
+        'n/a',
+        'tubig lamang',
+        'water only',
+    }
+    return text in placeholders
+
 def validate_meal_plan_variety(meal_plan_text):
     """Validate that no dishes are repeated across the 7-day meal plan."""
     # Extract all dishes from the meal plan
@@ -17,7 +33,11 @@ def validate_meal_plan_variety(meal_plan_text):
     dishes = re.findall(dish_pattern, meal_plan_text)
     
     # Count dish occurrences
-    dish_names = [dish[1].strip().lower() for dish in dishes]
+    dish_names = [
+        dish[1].strip().lower()
+        for dish in dishes
+        if not _is_non_meal_placeholder(dish[1])
+    ]
     duplicates = [dish for dish in set(dish_names) if dish_names.count(dish) > 1]
     
     if duplicates:
@@ -79,6 +99,8 @@ def _normalize_dish_name(dish_text):
     dish = re.sub(r'\([^\)]*\)', '', dish)
     dish = re.sub(r'[\*\[\]]', '', dish)
     dish = re.sub(r'\s+', ' ', dish).strip().lower()
+    if _is_non_meal_placeholder(dish):
+        return ''
     return dish
 
 
@@ -118,7 +140,11 @@ def _check_similarity_against_recent_plans(candidate_plan_text, recent_plans, th
 def calculate_diversity_score(meal_plan_text):
     """Calculate diversity score based on variety of ingredients and cooking methods."""
     # Extract all dishes
-    dishes = re.findall(r'\*\*(?:Breakfast|Almusal|Lunch|Tanghalian|Snack|Meryenda|Dinner|Hapunan).*?\*\*:\s*([^\(]+)', meal_plan_text)
+    dishes = [
+        dish.strip()
+        for dish in re.findall(r'\*\*(?:Breakfast|Almusal|Lunch|Tanghalian|Snack|Meryenda|Dinner|Hapunan).*?\*\*:\s*([^\(]+)', meal_plan_text)
+        if not _is_non_meal_placeholder(dish)
+    ]
     
     # Common Filipino cooking methods - expanded for more variety detection
     cooking_methods = ['adobo', 'sinigang', 'tinola', 'ginisa', 'prito', 'inihaw', 
@@ -257,8 +283,25 @@ def _derive_nutrition_priority(weight_for_age: str, height_for_age: str,
     bfa = (bmi_for_age or '').lower()
     lines = []
 
+    # Overnutrition should be driven primarily by BMI-for-age, not weight-for-age.
+    if 'obese' in bfa or ('obese' in wfa and 'underweight' not in wfa and 'wasted' not in wfa):
+        lines.append(
+            'NUTRITIONAL PRIORITY - Obese: create a lighter, vegetable-forward meal plan. '
+            'Prefer: sinigang, tinola, nilagang gulay, steamed or grilled fish, and clear soups with vegetables. '
+            'Avoid calorie-dense catch-up feeding. Fried dishes should appear at most 1 out of 7 days. '
+            'Choose fruit-based or boiled snacks instead of sugary kakanin or heavily fried snacks. '
+            'Do not add extra oil, extra gata, or double starch portions. Keep dinner lighter than lunch.'
+        )
+    elif 'overweight' in bfa or ('overweight' in wfa and 'underweight' not in wfa and 'wasted' not in wfa):
+        lines.append(
+            'NUTRITIONAL PRIORITY - Overweight: choose vegetable-forward, lower-fat dishes. '
+            'Prefer: sinigang, tinola, ginisang gulay, steamed fish, and simple sabaw-based meals. '
+            'Limit fried dishes to at most 2 out of 7 days. Prefer prutas, kamote, or boiled corn for snacks '
+            'instead of sweet pastries or deep-fried snacks. Use age-appropriate portions and avoid second servings '
+            'of calorie-dense foods.'
+        )
     # Weight-for-age / wasting
-    if any(k in wfa for k in ['severely underweight', 'severe wasting', 'severe']):
+    elif any(k in wfa for k in ['severely underweight', 'severe wasting', 'severe']):
         lines.append(
             'MALNUTRITION ALERT - Severely underweight: EVERY meal must be calorie-dense. '
             'Prioritize energy-rich foods: kanin, kamote, saging, gata ng niyog, itlog, karne. '
@@ -316,6 +359,35 @@ def _age_portions_guide(age_months: int) -> str:
         return '1/3 tasa (maliliit na tipak, family food texture)'
     else:
         return '1/2 tasa (regular na texture, tamang sukat na tipak)'
+
+
+def _build_snack_rule(weight_for_age: str, bmi_for_age: str, age_months: int) -> str:
+    """Build snack guidance that is safer for overweight/obese children.
+    For overweight/obese children under 24 months, keep a light healthy snack.
+    For 24+ months, snack may be omitted and written explicitly as 'Walang meryenda'.
+    """
+    wfa = (weight_for_age or '').lower()
+    bfa = (bmi_for_age or '').lower()
+    is_overnutrition = any(k in bfa for k in ['overweight', 'obese']) or any(k in wfa for k in ['overweight', 'obese'])
+
+    if not is_overnutrition:
+        return (
+            'Meryenda rule: magbigay ng magaang ngunit masustansyang snack kada araw. '
+            'Iwasan pa rin ang junk food at sobrang matatamis.'
+        )
+
+    if age_months < 24:
+        return (
+            'Meryenda rule for overweight/obese child under 24 months: HUWAG alisin ang meryenda. '
+            'Magbigay lamang ng magaang at masustansyang snack tulad ng prutas, pinakuluang kamote, '
+            'mais, o gulay. HUWAG magbigay ng matamis na kakanin o pritong meryenda.'
+        )
+
+    return (
+        'Meryenda rule for overweight/obese child age 24 months and above: puwedeng light snack lamang '
+        '(prutas, pipino, kamote, mais) o puwedeng isulat ang "No meryenda" kung sapat ang meals at hindi gutom ang bata. '
+        'HUWAG gumamit ng sugary drinks, sweet pastries, o deep-fried snacks.'
+    )
 
 
 def _available_ingredients_rule(available_ingredients) -> str:
@@ -776,9 +848,14 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     
     # Growth-related queries based on patient data
     weight_status = patient_data.get('weight_for_age', '') or ''
+    bmi_status = patient_data.get('bmi_for_age', '') or ''
     height_status = patient_data.get('height_for_age', '') or ''
     
-    if weight_status and ('underweight' in weight_status.lower() or 'wasted' in weight_status.lower()):
+    if bmi_status and 'obese' in str(bmi_status).lower():
+        nutrition_queries.append("obese children healthy eating lower fat lower sugar meal planning")
+    elif bmi_status and 'overweight' in str(bmi_status).lower():
+        nutrition_queries.append("overweight children healthy eating weight management")
+    elif weight_status and ('underweight' in weight_status.lower() or 'wasted' in weight_status.lower()):
         nutrition_queries.append("underweight children nutrition dense foods weight gain")
     elif weight_status and 'overweight' in weight_status.lower():
         nutrition_queries.append("overweight children healthy eating weight management")
@@ -974,6 +1051,11 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         age_months,
     )
     portions_guide             = _age_portions_guide(age_months)
+    snack_rule                 = _build_snack_rule(
+        patient_data.get('weight_for_age', ''),
+        patient_data.get('bmi_for_age', ''),
+        age_months,
+    )
     available_ingredients_rule = _available_ingredients_rule(available_ingredients)
 
     # Recent plans context for anti-repetition (same child, last 3 plans)
@@ -993,6 +1075,7 @@ CHILD PROFILE
 ================================================================
 Edad: {age_months} buwan  |  Timbang: {weight_kg} kg  |  Taas: {height_cm} cm
 BMI-for-Age: {bmi_for_age}
+{snack_rule}
 Allergy: {allergies}
 Karamdaman: {other_medical_problems}
 Relihiyon: {religion}
@@ -1033,15 +1116,15 @@ Mga panuntunan:
 - Baguhin ang protein bawat araw (manok, baboy, isda, itlog, hipon, baka, monggo, atay, etc.)
 - Baguhin ang paraan ng pagluto (adobo, sinigang, tinola, inihaw, ginisa, ginataan, nilaga, prito, etc.)
 - Almusal = rice porridge, sinangag dishes, lugaw -- HINDI main ulam
-- Meryenda = magaang na pagkain (prutas, kakanin, porridge) -- HINDI full meal
+- Meryenda = sundin ang snack rule sa itaas; kung pinapayagan, maaaring isulat nang eksakto ang "No meryenda"
 
-Day 1 (Lunes):     Almusal=[  ]  Tanghalian=[  ]  Meryenda=[  ]  Hapunan=[  ]
-Day 2 (Martes):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[  ]  Hapunan=[  ]
-Day 3 (Miyerkules):Almusal=[  ]  Tanghalian=[  ]  Meryenda=[  ]  Hapunan=[  ]
-Day 4 (Huwebes):   Almusal=[  ]  Tanghalian=[  ]  Meryenda=[  ]  Hapunan=[  ]
-Day 5 (Biyernes):  Almusal=[  ]  Tanghalian=[  ]  Meryenda=[  ]  Hapunan=[  ]
-Day 6 (Sabado):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[  ]  Hapunan=[  ]
-Day 7 (Linggo):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[  ]  Hapunan=[  ]
+Day 1 (Lunes):     Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 2 (Martes):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 3 (Miyerkules):Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 4 (Huwebes):   Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 5 (Biyernes):  Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 6 (Sabado):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 7 (Linggo):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
 
 ================================================================
 HAKBANG 2 -- ISULAT ANG BUONG 7-ARAW NA MEAL PLAN
@@ -1114,7 +1197,7 @@ PINAKAMAHALAGANG PANUNTUNAN:
             "food_list_str", "pdf_context", "nutrition_analysis",
             "age_months", "weight_kg", "height_cm", "bmi_for_age",
             "allergies", "other_medical_problems", "religion",
-            "nutrition_priority", "portions_guide", "available_ingredients_rule",
+            "nutrition_priority", "portions_guide", "snack_rule", "available_ingredients_rule",
             "age_guidelines", "seasonal_context", "recent_dishes_to_avoid",
         ],
         template=prompt_str
@@ -1133,6 +1216,7 @@ PINAKAMAHALAGANG PANUNTUNAN:
         "religion": religion_val,
         "nutrition_priority": nutrition_priority,
         "portions_guide": portions_guide,
+        "snack_rule": snack_rule,
         "available_ingredients_rule": available_ingredients_rule,
         "age_guidelines": age_guidelines,
         "seasonal_context": seasonal_context,

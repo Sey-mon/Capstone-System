@@ -1134,6 +1134,11 @@ function cleanMealText(text) {
     
     // Trim whitespace
     cleaned = cleaned.trim();
+
+    // Normalize explicit no-snack wording so the UI shows one consistent phrase
+    if (/^(walang\s+meryenda|walang\s+snack|no\s+snack|no\s+meryenda|none|n\/a)$/i.test(cleaned)) {
+        return 'No meryenda';
+    }
     
     return cleaned;
 }
@@ -1142,6 +1147,10 @@ function cleanMealText(text) {
 function formatMealCell(mealText) {
     if (!mealText || mealText === 'N/A') {
         return '<span class="no-meal">No meal specified</span>';
+    }
+
+    if (/^No meryenda$/i.test(mealText)) {
+        return '<span class="no-meal">No meryenda</span>';
     }
     
     // Split into dish name and portion (if exists)
