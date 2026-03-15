@@ -623,7 +623,7 @@ class ApiController extends Controller
     {
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,patient_id',
-            'available_foods' => 'required|string',
+            'available_foods' => 'nullable|string',
         ]);
 
         $parent = Auth::user();
@@ -686,6 +686,17 @@ class ApiController extends Controller
             }
         }
 
+        // Normalize and validate available_foods before sending to LLM (optional input)
+        $rawFoods = trim((string) ($validated['available_foods'] ?? ''));
+        $normalizedFoods = '';
+        if ($rawFoods !== '') {
+            $normalizedFoods = $this->normalizeIngredients($rawFoods);
+            $foodValidationError = $this->validateIngredients($normalizedFoods);
+            if ($foodValidationError) {
+                return back()->withErrors(['available_foods' => $foodValidationError])->withInput();
+            }
+        }
+
         try {
             // Get LLM API URL from config (proper Laravel way)
             $llmApiUrl = config('services.nutrition_api.base_url');
@@ -701,7 +712,7 @@ class ApiController extends Controller
             // Prepare the data exactly as your FastAPI expects
             $requestData = [
                 'patient_id' => (int) $validated['patient_id'],
-                'available_foods' => $validated['available_foods'] // Keep as string, not array
+                'available_foods' => $normalizedFoods, // Normalized, validated string
             ];
 
             $fullUrl = rtrim($llmApiUrl, '/') . '/generate_meal_plan';

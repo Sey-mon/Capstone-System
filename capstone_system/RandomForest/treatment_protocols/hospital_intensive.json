@@ -96,6 +96,47 @@
           "Immunization tracking"
         ]
       }
+    },
+    "Overweight": {
+      "standard": {
+        "treatment": "Outpatient dietitian-led dietary counseling",
+        "details": "Structured dietary assessment and individualized meal plan. Reduce caloric-density foods; increase fibre and micronutrient-rich foods. Family nutrition education and physical activity prescription.",
+        "follow_up": "Monthly outpatient dietitian review for 6 months; then quarterly",
+        "priority": "medium",
+        "duration_weeks": "24",
+        "medications": [
+          "No pharmacotherapy under 5 years",
+          "Micronutrient screening; supplement if deficient (Vitamin D, iron, zinc)"
+        ],
+        "monitoring": [
+          "Monthly weight, height, and BMI-for-age",
+          "Blood pressure at every visit (if ≥3 years)",
+          "3-day dietary intake record reviewed at each visit",
+          "Physical activity log (active-play minutes per day)"
+        ]
+      }
+    },
+    "Obese": {
+      "standard": {
+        "treatment": "Multidisciplinary weight management clinic",
+        "details": "Comprehensive evaluation by paediatrician, registered dietitian, and clinical psychologist. Structured weight management programme with medical supervision. Screen and manage comorbidities. Rule out endocrine or genetic aetiology.",
+        "follow_up": "Monthly medical review; quarterly multidisciplinary team assessment",
+        "priority": "medium-high",
+        "duration_weeks": "ongoing",
+        "medications": [
+          "No anti-obesity medications under 5 years without specialist authorisation",
+          "Treat identified comorbidities per specialist guidance",
+          "Vitamin D and micronutrient replacement as indicated by blood results",
+          "Refer to paediatric endocrinology if endocrine cause suspected"
+        ],
+        "monitoring": [
+          "Monthly weight, height, BMI-for-age",
+          "Blood pressure at every visit",
+          "Fasting glucose and lipid profile every 6 months if indicated",
+          "Liver ultrasound if NAFLD suspected",
+          "Annual developmental and psychological well-being assessment"
+        ]
+      }
     }
   },
   "admission_criteria": {

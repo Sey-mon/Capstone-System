@@ -208,23 +208,118 @@
                                 </div>
                                 
                                 <div class="ingredient-input-wrapper">
-                                    <div class="input-field-ultra">
-                                        <input type="text" 
-                                               name="available_foods" 
-                                               id="available_foods" 
-                                               placeholder="e.g., chicken, rice, vegetables, eggs, fish, fruits"
-                                               value="{{ old('available_foods') }}"
-                                               required>
-                                        <div class="input-decoration">
-                                            <div class="input-glow"></div>
-                                        </div>
-                                        <div class="input-icon">
-                                            <i class="fas fa-apple-alt"></i>
-                                        </div>
+                                    <style>
+                                        #ingredient-tag-box {
+                                            display: flex;
+                                            flex-wrap: wrap;
+                                            align-items: center;
+                                            gap: 6px;
+                                            padding: 8px 12px;
+                                            border: 1.5px solid #d1fae5;
+                                            border-radius: 10px;
+                                            background: #f0fdf4;
+                                            min-height: 48px;
+                                            cursor: text;
+                                            transition: border-color 0.2s, box-shadow 0.2s;
+                                        }
+                                        #ingredient-tag-box:focus-within {
+                                            border-color: #10b981;
+                                            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+                                        }
+                                        #ingredient-tag-box.ing-error {
+                                            border-color: #ef4444;
+                                            background: #fff5f5;
+                                            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+                                        }
+                                        @keyframes ing-shake {
+                                            0%,100% { transform: translateX(0); }
+                                            20%      { transform: translateX(-6px); }
+                                            40%      { transform: translateX(6px); }
+                                            60%      { transform: translateX(-4px); }
+                                            80%      { transform: translateX(4px); }
+                                        }
+                                        #ingredient-tag-box.ing-shake {
+                                            animation: ing-shake 0.35s ease;
+                                        }
+                                        .ing-tag {
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 4px;
+                                            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+                                            color: #065f46;
+                                            border-radius: 6px;
+                                            padding: 3px 9px;
+                                            font-size: 0.84rem;
+                                            font-weight: 500;
+                                        }
+                                        .ing-tag .ing-remove {
+                                            cursor: pointer;
+                                            font-size: 0.9rem;
+                                            line-height: 1;
+                                            color: #065f46;
+                                            margin-left: 2px;
+                                            background: none;
+                                            border: none;
+                                            padding: 0;
+                                        }
+                                        .ing-tag .ing-remove:hover { color: #dc2626; }
+                                        #ingredient-type-input {
+                                            border: none;
+                                            outline: none;
+                                            font-size: 0.88rem;
+                                            min-width: 160px;
+                                            flex: 1;
+                                            padding: 2px 4px;
+                                            background: transparent;
+                                        }
+                                        #ingredient-inline-error {
+                                            display: none;
+                                            align-items: flex-start;
+                                            gap: 8px;
+                                            margin-top: 8px;
+                                            padding: 10px 14px;
+                                            background: #fef2f2;
+                                            border: 1px solid #fecaca;
+                                            border-radius: 8px;
+                                            color: #b91c1c;
+                                            font-size: 0.85rem;
+                                            line-height: 1.45;
+                                        }
+                                        #ingredient-inline-error.visible {
+                                            display: flex;
+                                        }
+                                        #ingredient-inline-error i {
+                                            margin-top: 1px;
+                                            flex-shrink: 0;
+                                            color: #dc2626;
+                                        }
+                                        #ingredient-inline-error .ing-err-close {
+                                            margin-left: auto;
+                                            flex-shrink: 0;
+                                            background: none;
+                                            border: none;
+                                            cursor: pointer;
+                                            color: #ef4444;
+                                            font-size: 1rem;
+                                            line-height: 1;
+                                            padding: 0 2px;
+                                        }
+                                        #ingredient-inline-error .ing-err-close:hover { color: #991b1b; }
+                                    </style>
+                                    <div id="ingredient-tag-box">
+                                        <input id="ingredient-type-input" type="text"
+                                               placeholder="Type an ingredient and press , or Enter (e.g., manok)" />
                                     </div>
+                                    <div id="ingredient-inline-error" role="alert">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <span id="ingredient-inline-error-text"></span>
+                                        <button class="ing-err-close" onclick="clearIngredientError()" aria-label="Dismiss">&times;</button>
+                                    </div>
+                                    <input type="hidden" name="available_foods" id="available_foods"
+                                         value="{{ old('available_foods') }}">
                                     <div class="ingredient-help-text">
                                         <i class="fas fa-info-circle"></i>
-                                        <span>List the ingredients you have at home, separated by commas. The AI will prioritize these in your meal plan.</span>
+                                        <span>Type an ingredient and press <strong>,</strong> or <strong>Enter</strong> to add it as a tag. Click a suggestion below to add it instantly.</span>
                                     </div>
                                     <div class="ingredient-suggestions">
                                         <div class="suggestion-category">
