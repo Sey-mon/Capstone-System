@@ -2,6 +2,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize custom dropdown
     initializeCustomDropdown();
+
+    // Initialize tag-based ingredient input
+    initIngredientTagBox();
     
     // Add smooth scrolling to results or alerts
     const resultsCard = document.querySelector('.results-card');
@@ -30,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             const submitBtn = form.querySelector('.ultra-button.primary');
             const selectedChild = document.getElementById('patient_id');
-            const availableFoods = form.querySelector('#available_foods');
             
             // Validate inputs
             if (!selectedChild || !selectedChild.value) {
@@ -38,14 +40,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 showValidationError('Please select a child');
                 return;
             }
-            
-            if (!availableFoods || !availableFoods.value.trim()) {
-                e.preventDefault();
-                showValidationError('Please enter available ingredients');
-                availableFoods?.focus();
-                return;
+
+            // Final pass: validate every existing tag before submit
+            const tagBox = document.getElementById('ingredient-tag-box');
+            if (tagBox) {
+                const tags = [...tagBox.querySelectorAll('.ing-tag')].map(t => t.dataset.value);
+                for (const t of tags) {
+                    const err = validateIngredientItem(t);
+                    if (err) {
+                        e.preventDefault();
+                        showValidationError(err + ' Please remove the invalid ingredient.');
+                        return;
+                    }
+                }
             }
-            
+
             // Show loading state
             if (submitBtn) {
                 submitBtn.innerHTML = `
@@ -223,10 +232,10 @@ function checkChildAge(ageMonths, childName) {
         if (availableFoodsSection) {
             availableFoodsSection.style.opacity = '0.5';
             availableFoodsSection.style.pointerEvents = 'none';
-            const foodsInput = availableFoodsSection.querySelector('#available_foods');
-            if (foodsInput) {
-                foodsInput.disabled = true;
-                foodsInput.placeholder = 'Not applicable for babies under 6 months';
+            const typeInput = availableFoodsSection.querySelector('#ingredient-type-input');
+            if (typeInput) {
+                typeInput.disabled = true;
+                typeInput.placeholder = 'Not applicable for babies under 6 months';
             }
         }
         
@@ -249,10 +258,10 @@ function checkChildAge(ageMonths, childName) {
         if (availableFoodsSection) {
             availableFoodsSection.style.opacity = '1';
             availableFoodsSection.style.pointerEvents = 'auto';
-            const foodsInput = availableFoodsSection.querySelector('#available_foods');
-            if (foodsInput) {
-                foodsInput.disabled = false;
-                foodsInput.placeholder = 'e.g., chicken, rice, vegetables, eggs, fish, fruits';
+            const typeInput = availableFoodsSection.querySelector('#ingredient-type-input');
+            if (typeInput) {
+                typeInput.disabled = false;
+                typeInput.placeholder = 'Type an ingredient and press , or Enter (e.g., manok)';
             }
         }
         
@@ -341,46 +350,199 @@ function initializeChildSearch() {
     });
 }
 
-// Add ingredient to input field with improved UX
-function addIngredient(ingredient) {
-    const input = document.getElementById('available_foods');
-    if (!input) return;
-    
-    const currentValue = input.value.trim();
-    
-    if (currentValue === '') {
-        input.value = ingredient;
-    } else {
-        // Split by comma and clean up
-        const ingredients = currentValue.split(',').map(item => item.trim().toLowerCase());
-        
-        // Check if ingredient already exists (case-insensitive)
-        if (!ingredients.includes(ingredient.toLowerCase())) {
-            input.value = currentValue + ', ' + ingredient;
-        } else {
-            // Show feedback that ingredient already exists
-            showToast(`${ingredient} is already in your list`, 'info');
-            return;
+// ─── Inline ingredient error helpers ─────────────────────────────────────────
+function showIngredientError(message) {
+    const box    = document.getElementById('ingredient-tag-box');
+    const banner = document.getElementById('ingredient-inline-error');
+    const textEl = document.getElementById('ingredient-inline-error-text');
+    if (!banner || !textEl) return;
+
+    textEl.textContent = message;
+    banner.classList.add('visible');
+
+    if (box) {
+        box.classList.add('ing-error');
+        // Replay shake animation
+        box.classList.remove('ing-shake');
+        void box.offsetWidth;
+        box.classList.add('ing-shake');
+        box.addEventListener('animationend', () => box.classList.remove('ing-shake'), { once: true });
+    }
+}
+
+function clearIngredientError() {
+    const box    = document.getElementById('ingredient-tag-box');
+    const banner = document.getElementById('ingredient-inline-error');
+    if (banner) banner.classList.remove('visible');
+    if (box)    box.classList.remove('ing-error', 'ing-shake');
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
+// ─── Ingredient validation constants ────────────────────────────────────────
+const PROHIBITED_ITEMS = [
+    // Candy & confectionery
+    'candy', 'candies', 'gummy', 'gummies', 'lollipop', 'lollipops',
+    'bubblegum', 'bubble gum', 'chewing gum', 'jawbreaker',
+    'skittles', 'm&m', 'snickers', 'kitkat', 'kit kat',
+    'reese', 'hershey', 'twix', 'mars bar', 'jelly bean',
+    'chocolate bar', 'milk chocolate', 'white chocolate', 'dark chocolate bar',
+    // Junk food / chips
+    'chips', 'doritos', 'cheetos', 'pringles', 'popcorn',
+    'pretzel', 'chicharron', 'junk food',
+    // Sodas & sugary drinks
+    'soda', 'cola', 'sprite', 'pepsi', 'coca-cola', 'coke',
+    'energy drink', 'softdrink', 'soft drink', 'powdered juice',
+    'juice drink', 'tang juice', 'nestea', 'c2',
+    // Fast food items not usable as ingredients
+    'burger', 'pizza', 'french fries', 'fries', 'nuggets',
+    // Alcohol
+    'beer', 'wine', 'alcohol', 'liquor', 'gin', 'vodka',
+    'rum', 'whiskey', 'tequila', 'brandy',
+    // Non-food
+    'cigarette', 'tobacco', 'medicine', 'shampoo', 'soap',
+];
+
+const KNOWN_FOOD_HINTS = [
+    'manok','baboy','baka','isda','bangus','tilapia','galunggong','sardinas',
+    'itlog','monggo','sitaw','kangkong','kalabasa','kamote','malunggay',
+    'talong','ampalaya','saging','papaya','mangga','karne','gatas','hipon',
+    'alimango','sugpo','pusit','liempo','atay','rice','kanin','bigas',
+    'potato','carrot','tomato','onion','garlic','ginger','spinach',
+    'chicken','pork','beef','fish','egg','bean','corn','squash','cabbage',
+    'pechay','patis','toyo','vinegar','coconut','niyog','gabi',
+    'dilis','tuyo','bagoong','tokwa','tofu','bawang','patatas','luya',
+    'sibuyas','kamatis','sayote','labanos','singkamas','alugbati',
+];
+
+/**
+ * Validates a single ingredient value.
+ * Returns an error string if invalid, or null if OK.
+ */
+function validateIngredientItem(val) {
+    const lower = val.toLowerCase();
+
+    // 1. Prohibited / unhealthy items
+    if (PROHIBITED_ITEMS.some(p => lower.includes(p))) {
+        return `"${val}" is not a healthy food ingredient. Please enter real food items only (e.g., manok, bangus, kangkong).`;
+    }
+
+    // 2. Too short or digits only
+    if (val.length < 2 || /^\d+$/.test(val)) {
+        return `"${val}" doesn't look like a food ingredient. Please use ingredient names like manok, bangus, kangkong.`;
+    }
+
+    // 3. No vowels at all
+    if (!/[aeiou]/.test(lower)) {
+        return `"${val}" doesn't look like a real ingredient. Please enter actual food names.`;
+    }
+
+    // 4. Not a known food AND only 1 unique vowel → likely gibberish
+    if (!KNOWN_FOOD_HINTS.some(h => lower.includes(h))) {
+        const uniqueVowels = new Set(lower.replace(/[^aeiou]/g, '').split('')).size;
+        if (uniqueVowels < 2) {
+            return `"${val}" doesn't look like a real food ingredient. Please use actual food names (e.g., manok, bangus, kangkong, kamote).`;
         }
     }
-    
-    // Add visual feedback to the clicked tag
+
+    return null;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Initialize the tag-based ingredient input box
+function initIngredientTagBox() {
+    const box    = document.getElementById('ingredient-tag-box');
+    const input  = document.getElementById('ingredient-type-input');
+    const hidden = document.getElementById('available_foods');
+
+    if (!box || !input || !hidden) return;
+
+    // Click anywhere in the box focuses the text input
+    box.addEventListener('click', () => input.focus());
+
+    function syncHidden() {
+        const tags = [...box.querySelectorAll('.ing-tag')].map(t => t.dataset.value);
+        hidden.value = tags.join(', ');
+        // Nudge the user to add more ingredients for a better-personalized plan
+        if (tags.length === 0) {
+            input.placeholder = 'Type an ingredient and press , or Enter (e.g., manok)';
+        } else if (tags.length < 3) {
+            input.placeholder = `Add ${3 - tags.length} more ingredient${3 - tags.length > 1 ? 's' : ''} for a better plan…`;
+        } else {
+            input.placeholder = `${tags.length} ingredients — looking good!`;
+        }
+    }
+
+    function addTagToBox(raw) {
+        const val = raw.trim();
+        if (!val) return;
+        const existing = [...box.querySelectorAll('.ing-tag')].map(t => t.dataset.value.toLowerCase());
+        if (existing.includes(val.toLowerCase())) {
+            input.value = '';
+            showIngredientError(`"${val}" is already in your list.`);
+            return;
+        }
+        // Validate before adding
+        const validationError = validateIngredientItem(val);
+        if (validationError) {
+            input.value = '';
+            showIngredientError(validationError + ' Try: manok, isda, itlog, kangkong, kamote.');
+            return;
+        }
+        // Valid — clear any previous error
+        clearIngredientError();
+        const tag = document.createElement('span');
+        tag.className = 'ing-tag';
+        tag.dataset.value = val;
+        tag.innerHTML = `${val} <button type="button" class="ing-remove" aria-label="Remove">&#x2715;</button>`;
+        tag.querySelector('.ing-remove').addEventListener('click', () => { tag.remove(); syncHidden(); });
+        box.insertBefore(tag, input);
+        input.value = '';
+        syncHidden();
+    }
+
+    // Expose so addIngredient() can call it
+    box._addTag = addTagToBox;
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === ',' || e.key === 'Enter') {
+            e.preventDefault();
+            addTagToBox(input.value.replace(/,/g, ''));
+        } else if (e.key === 'Backspace' && input.value === '') {
+            const tags = box.querySelectorAll('.ing-tag');
+            if (tags.length) { tags[tags.length - 1].remove(); syncHidden(); }
+        }
+    });
+
+    input.addEventListener('input', () => {
+        // Clear error as soon as user starts typing a correction
+        clearIngredientError();
+        if (input.value.includes(',')) {
+            const parts = input.value.split(',');
+            parts.slice(0, -1).forEach(p => addTagToBox(p));
+            input.value = parts[parts.length - 1];
+        }
+    });
+
+    // If old() value is present (validation error re-render), restore tags
+    if (hidden.value.trim()) {
+        hidden.value.split(',').forEach(v => addTagToBox(v));
+    }
+}
+
+// Add ingredient via suggestion tag click
+function addIngredient(ingredient) {
+    const box = document.getElementById('ingredient-tag-box');
+    if (!box || !box._addTag) return;
+
+    box._addTag(ingredient);
+
+    // Visual feedback on the clicked suggestion tag
     const tag = event.target;
     tag.style.background = 'var(--success-gradient)';
     tag.style.color = 'white';
     tag.style.transform = 'scale(0.95)';
-    
-    setTimeout(() => {
-        tag.style.background = '';
-        tag.style.color = '';
-        tag.style.transform = '';
-    }, 400);
-    
-    // Focus input and scroll to show added ingredient
-    input.focus();
-    input.scrollLeft = input.scrollWidth;
-    
-    // Show success feedback
+    setTimeout(() => { tag.style.background = ''; tag.style.color = ''; tag.style.transform = ''; }, 400);
+
     showToast(`Added: ${ingredient}`, 'success');
 }
 
@@ -972,6 +1134,11 @@ function cleanMealText(text) {
     
     // Trim whitespace
     cleaned = cleaned.trim();
+
+    // Normalize explicit no-snack wording so the UI shows one consistent phrase
+    if (/^(walang\s+meryenda|walang\s+snack|no\s+snack|no\s+meryenda|none|n\/a)$/i.test(cleaned)) {
+        return 'No meryenda';
+    }
     
     return cleaned;
 }
@@ -980,6 +1147,10 @@ function cleanMealText(text) {
 function formatMealCell(mealText) {
     if (!mealText || mealText === 'N/A') {
         return '<span class="no-meal">No meal specified</span>';
+    }
+
+    if (/^No meryenda$/i.test(mealText)) {
+        return '<span class="no-meal">No meryenda</span>';
     }
     
     // Split into dish name and portion (if exists)

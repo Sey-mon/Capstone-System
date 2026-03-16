@@ -181,6 +181,82 @@
           }
         }
       }
+    },
+    "Overweight": {
+      "standard": {
+        "treatment": "Dietary counseling and lifestyle modification",
+        "details": "Reduce high-energy-density foods, increase fruit and vegetable intake, promote active play. Focus on diet quality rather than caloric restriction at this age.",
+        "follow_up": "Monthly growth monitoring for 6 months, then quarterly",
+        "priority": "medium",
+        "duration_weeks": "24",
+        "medications": [
+          "No pharmacotherapy indicated under 5 years",
+          "Screen for and treat Vitamin D deficiency",
+          "Screen for iron-deficiency anaemia"
+        ],
+        "monitoring": [
+          "Monthly weight and height",
+          "BMI-for-age trend tracking",
+          "Blood pressure measurement (if ≥3 years)",
+          "Dietary diversity and intake assessment"
+        ],
+        "age_specific": {
+          "0-6_months": {
+            "treatment": "Breastfeeding and feeding practice optimization",
+            "details": "Assess for overfeeding via formula or excessive supplementation. Support appropriate breastfeeding volumes. Do NOT restrict calories in infants.",
+            "special_considerations": "Adjust feeding practices rather than food volume; reassess at 3 months"
+          },
+          "6-24_months": {
+            "treatment": "Complementary feeding correction",
+            "details": "Reduce excess solids or high-calorie additions. Encourage age-appropriate portions and textures. Eliminate juice and sweetened beverages; promote water.",
+            "special_considerations": "Avoid using food as reward; model healthy eating within family"
+          },
+          "24-60_months": {
+            "treatment": "Family-based dietary counseling",
+            "details": "Traffic-light food system education, portion guidance, promotion of at least 60 min structured active play per day.",
+            "special_considerations": "Involve whole family in meal planning; establish consistent meal and snack schedules"
+          }
+        }
+      }
+    },
+    "Obese": {
+      "standard": {
+        "treatment": "Physician referral and structured weight management programme",
+        "details": "Refer to pediatrician for evaluation of obesity comorbidities (hypertension, insulin resistance, dyslipidaemia). Structured dietary modification and supervised physical activity programme. Rule out endocrine or genetic aetiology.",
+        "follow_up": "Monthly monitoring for first 3 months; quarterly physician review thereafter",
+        "priority": "medium-high",
+        "duration_weeks": "ongoing",
+        "medications": [
+          "No anti-obesity medications under 5 years without specialist authorisation",
+          "Screen and treat Vitamin D deficiency",
+          "Screen for iron-deficiency anaemia",
+          "If blood pressure or blood glucose elevated: refer to paediatric specialist"
+        ],
+        "monitoring": [
+          "Monthly weight, height, BMI-for-age",
+          "Blood pressure at every visit (if ≥3 years)",
+          "Fasting blood glucose and lipid profile every 6 months if clinically indicated",
+          "Dietary intake diary reviewed at each visit",
+          "Physical activity log"
+        ],
+        "age_specific": {
+          "0-6_months": {
+            "treatment": "Urgent paediatric review and feeding correction",
+            "details": "Urgent paediatric referral to exclude endocrine or metabolic cause. Correct overfeeding practices under specialist guidance. Do NOT place infants on calorie-restricted diets.",
+            "special_considerations": "Rule out Prader-Willi syndrome or other genetic cause; involve paediatric endocrinology if indicated"
+          },
+          "6-24_months": {
+            "treatment": "Structured feeding correction with paediatric review",
+            "details": "Eliminate excess caloric additions (fats, sugar, starchy supplements). Correct complementary feeding schedule and portion sizes.",
+            "special_considerations": "If BMI >99th percentile or rapid weight gain trajectory, refer paediatric endocrinology"
+          },
+          "24-60_months": {
+            "treatment": "Family-based weight management programme",
+            "details": "Balanced diet with caloric-density reduction; structured physical activity ≥30 min/day. Comorbidity screening. Avoid stigmatizing language with child and family.",
+            "special_considerations": "Involve parents as primary agents of change; set small, realistic, measurable goals"
+          }
+        }
+      }
     }
   },
   "risk_factors": {

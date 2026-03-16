@@ -10,6 +10,22 @@ import re
 
 load_dotenv()
 
+
+def _is_non_meal_placeholder(dish_name):
+    """Return True for explicit non-meal placeholders that should not count as dishes."""
+    text = str(dish_name or '').strip().lower()
+    placeholders = {
+        'walang meryenda',
+        'no meryenda',
+        'walang snack',
+        'no snack',
+        'none',
+        'n/a',
+        'tubig lamang',
+        'water only',
+    }
+    return text in placeholders
+
 def validate_meal_plan_variety(meal_plan_text):
     """Validate that no dishes are repeated across the 7-day meal plan."""
     # Extract all dishes from the meal plan
@@ -17,7 +33,11 @@ def validate_meal_plan_variety(meal_plan_text):
     dishes = re.findall(dish_pattern, meal_plan_text)
     
     # Count dish occurrences
-    dish_names = [dish[1].strip().lower() for dish in dishes]
+    dish_names = [
+        dish[1].strip().lower()
+        for dish in dishes
+        if not _is_non_meal_placeholder(dish[1])
+    ]
     duplicates = [dish for dish in set(dish_names) if dish_names.count(dish) > 1]
     
     if duplicates:
@@ -26,10 +46,105 @@ def validate_meal_plan_variety(meal_plan_text):
     return True, "All dishes are unique"
 
 
+def _extract_day_sections(meal_plan_text):
+    """Extract Day 1..7 blocks from meal plan text."""
+    pattern = re.compile(
+        r'(?is)(?:\*\*)?Day\s*([1-7])(?:\*\*)?[^\n]*:\s*(.*?)'
+        r'(?=(?:\n\s*(?:\*\*)?Day\s*[1-7](?:\*\*)?[^\n]*:)|\Z)'
+    )
+    sections = {}
+    for d, block in pattern.findall(meal_plan_text or ''):
+        sections[int(d)] = block.strip()
+    return sections
+
+
+def validate_meal_plan_structure(meal_plan_text):
+    """Strictly validate: exactly 7 days, each with 4 meal categories."""
+    sections = _extract_day_sections(meal_plan_text)
+    missing_days = [d for d in range(1, 8) if d not in sections]
+    extra_days = [d for d in sections.keys() if d < 1 or d > 7]
+
+    if missing_days:
+        return False, f"Missing day sections: {', '.join(map(str, missing_days))}"
+    if extra_days:
+        return False, f"Invalid day sections found: {', '.join(map(str, extra_days))}"
+    if len(sections) != 7:
+        return False, f"Expected 7 day sections, found {len(sections)}"
+
+    required_meals = {
+        'almusal': r'\b(almusal|breakfast)\b',
+        'tanghalian': r'\b(tanghalian|lunch)\b',
+        'meryenda': r'\b(meryenda|snack)\b',
+        'hapunan': r'\b(hapunan|dinner)\b',
+    }
+
+    for day in range(1, 8):
+        block = sections.get(day, '')
+        missing = []
+        for meal_name, meal_pattern in required_meals.items():
+            if not re.search(meal_pattern, block, flags=re.IGNORECASE):
+                missing.append(meal_name)
+        if missing:
+            return False, f"Day {day} missing meals: {', '.join(missing)}"
+
+    return True, "Structure valid: 7 days x 4 meals"
+
+
+def _normalize_dish_name(dish_text):
+    """Normalize dish text for overlap comparison."""
+    if not dish_text:
+        return ''
+    dish = str(dish_text).strip()
+    dish = dish.split('--')[0].split(' - ')[0]
+    dish = re.sub(r'\([^\)]*\)', '', dish)
+    dish = re.sub(r'[\*\[\]]', '', dish)
+    dish = re.sub(r'\s+', ' ', dish).strip().lower()
+    if _is_non_meal_placeholder(dish):
+        return ''
+    return dish
+
+
+def extract_dishes_for_overlap(meal_plan_text):
+    """Extract normalized dish names from meal lines only."""
+    lines = re.findall(
+        r'(?im)^\s*-\s*\*\*(?:Breakfast|Almusal|Lunch|Tanghalian|Snack|Meryenda|Dinner|Hapunan)\*\*:\s*(.+)$',
+        meal_plan_text or ''
+    )
+    dishes = [_normalize_dish_name(line) for line in lines]
+    return {d for d in dishes if d}
+
+
+def _check_similarity_against_recent_plans(candidate_plan_text, recent_plans, threshold=0.60):
+    """Reject near-duplicate plans against recent plans for the same child."""
+    candidate_dishes = extract_dishes_for_overlap(candidate_plan_text)
+    if not candidate_dishes:
+        return False, "No dishes extracted for overlap check", 1.0
+
+    max_overlap = 0.0
+    max_plan_id = None
+    for prev in recent_plans or []:
+        prev_text = (prev or {}).get('plan_details', '')
+        prev_dishes = extract_dishes_for_overlap(prev_text)
+        if not prev_dishes:
+            continue
+        overlap = len(candidate_dishes & prev_dishes) / max(len(candidate_dishes), len(prev_dishes), 1)
+        if overlap > max_overlap:
+            max_overlap = overlap
+            max_plan_id = (prev or {}).get('plan_id')
+
+    if max_overlap >= threshold:
+        return False, f"High overlap with recent plan {max_plan_id}: {max_overlap * 100:.1f}%", max_overlap
+    return True, f"Novelty check passed: max overlap {max_overlap * 100:.1f}%", max_overlap
+
+
 def calculate_diversity_score(meal_plan_text):
     """Calculate diversity score based on variety of ingredients and cooking methods."""
     # Extract all dishes
-    dishes = re.findall(r'\*\*(?:Breakfast|Almusal|Lunch|Tanghalian|Snack|Meryenda|Dinner|Hapunan).*?\*\*:\s*([^\(]+)', meal_plan_text)
+    dishes = [
+        dish.strip()
+        for dish in re.findall(r'\*\*(?:Breakfast|Almusal|Lunch|Tanghalian|Snack|Meryenda|Dinner|Hapunan).*?\*\*:\s*([^\(]+)', meal_plan_text)
+        if not _is_non_meal_placeholder(dish)
+    ]
     
     # Common Filipino cooking methods - expanded for more variety detection
     cooking_methods = ['adobo', 'sinigang', 'tinola', 'ginisa', 'prito', 'inihaw', 
@@ -141,6 +256,159 @@ def create_nutrition_llm():
         timeout=120,
         max_retries=2
     )
+
+def create_meal_plan_llm(temperature: float = 0.35):
+    """Dedicated ChatGroq for 7-day meal plan generation.
+    Accepts optional temperature so retry attempts can progressively lower it,
+    forcing more conservative/structured output on each subsequent try.
+    """
+    api_key = os.getenv('GROQ_API_KEY')
+    if not api_key:
+        raise ValueError("GROQ_API_KEY not found in environment variables")
+    return ChatGroq(
+        api_key=SecretStr(api_key),
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        temperature=temperature,
+        max_tokens=4000,
+        timeout=180,
+        max_retries=2,
+    )
+
+
+def _derive_nutrition_priority(weight_for_age: str, height_for_age: str,
+                               bmi_for_age: str, age_months: int) -> str:
+    """Map clinical growth indicators to concrete dietary priority instructions."""
+    wfa = (weight_for_age or '').lower()
+    hfa = (height_for_age or '').lower()
+    bfa = (bmi_for_age or '').lower()
+    lines = []
+
+    # Overnutrition should be driven primarily by BMI-for-age, not weight-for-age.
+    if 'obese' in bfa or ('obese' in wfa and 'underweight' not in wfa and 'wasted' not in wfa):
+        lines.append(
+            'NUTRITIONAL PRIORITY - Obese: create a lighter, vegetable-forward meal plan. '
+            'Prefer: sinigang, tinola, nilagang gulay, steamed or grilled fish, and clear soups with vegetables. '
+            'Avoid calorie-dense catch-up feeding. Fried dishes should appear at most 1 out of 7 days. '
+            'Choose fruit-based or boiled snacks instead of sugary kakanin or heavily fried snacks. '
+            'Do not add extra oil, extra gata, or double starch portions. Keep dinner lighter than lunch.'
+        )
+    elif 'overweight' in bfa or ('overweight' in wfa and 'underweight' not in wfa and 'wasted' not in wfa):
+        lines.append(
+            'NUTRITIONAL PRIORITY - Overweight: choose vegetable-forward, lower-fat dishes. '
+            'Prefer: sinigang, tinola, ginisang gulay, steamed fish, and simple sabaw-based meals. '
+            'Limit fried dishes to at most 2 out of 7 days. Prefer prutas, kamote, or boiled corn for snacks '
+            'instead of sweet pastries or deep-fried snacks. Use age-appropriate portions and avoid second servings '
+            'of calorie-dense foods.'
+        )
+    # Weight-for-age / wasting
+    elif any(k in wfa for k in ['severely underweight', 'severe wasting', 'severe']):
+        lines.append(
+            'MALNUTRITION ALERT - Severely underweight: EVERY meal must be calorie-dense. '
+            'Prioritize energy-rich foods: kanin, kamote, saging, gata ng niyog, itlog, karne. '
+            'No watery soups without a dense protein/starch side. '
+            'Add healthy fats (gata, egg yolk) to every meal.'
+        )
+    elif any(k in wfa for k in ['underweight', 'wasted', 'moderately']):
+        lines.append(
+            'NUTRITIONAL PRIORITY - Underweight: choose calorie-dense dishes every meal. '
+            'Prefer: lugaw na may itlog at gata, kanin na may karne/isda, '
+            'kamote-based snacks, monggo na may atay, ginataang gulay na may karne.'
+        )
+    elif any(k in wfa for k in ['overweight', 'obese']):
+        lines.append(
+            'NUTRITIONAL PRIORITY - Overweight: choose vegetable-forward, lower-fat dishes. '
+            'Prefer: sinigang, tinola, ginisang gulay, steamed fish. '
+            'Limit fried dishes to at most 2 out of 7 days. No extra oil/gata in most meals.'
+        )
+    else:
+        lines.append(
+            'NUTRITIONAL STATUS - Normal weight: aim for balanced variety '
+            'across proteins, vegetables, fruits, and grains every day.'
+        )
+
+    # Height-for-age / stunting
+    if any(k in hfa for k in ['severely stunted', 'stunted']):
+        lines.append(
+            'GROWTH PRIORITY - Stunted: maximize zinc, calcium, iron, and protein for linear growth. '
+            'Include DAILY: isda/baboy/manok for protein, malunggay/kangkong for micronutrients, '
+            'gata for healthy fats. Use bone broth (sabaw ng buto) as soup base where possible.'
+        )
+
+    # BMI-for-age / acute malnutrition
+    if any(k in bfa for k in ['severely wasted', 'wasted']):
+        lines.append(
+            'BMI PRIORITY - Acute malnutrition: every single meal must include '
+            'a protein source (isda, manok, baboy, itlog, monggo, atay). '
+            'No protein-free meals allowed.'
+        )
+
+    return '\n'.join(lines) if lines else (
+        'NUTRITIONAL STATUS: Normal - maintain balance across all food groups.'
+    )
+
+
+def _age_portions_guide(age_months: int) -> str:
+    """Return age-appropriate portion size string for the meal plan prompt."""
+    if age_months < 8:
+        return '2-3 kutsara (mashed o pureed lamang)'
+    elif age_months <= 12:
+        return '3-4 kutsara (malambot, walang malalaking tipak)'
+    elif age_months <= 24:
+        return '1/4 tasa (pinong tinadtad, malambot na finger food pwede na)'
+    elif age_months <= 36:
+        return '1/3 tasa (maliliit na tipak, family food texture)'
+    else:
+        return '1/2 tasa (regular na texture, tamang sukat na tipak)'
+
+
+def _build_snack_rule(weight_for_age: str, bmi_for_age: str, age_months: int) -> str:
+    """Build snack guidance that is safer for overweight/obese children.
+    For overweight/obese children under 24 months, keep a light healthy snack.
+    For 24+ months, snack may be omitted and written explicitly as 'Walang meryenda'.
+    """
+    wfa = (weight_for_age or '').lower()
+    bfa = (bmi_for_age or '').lower()
+    is_overnutrition = any(k in bfa for k in ['overweight', 'obese']) or any(k in wfa for k in ['overweight', 'obese'])
+
+    if not is_overnutrition:
+        return (
+            'Meryenda rule: magbigay ng magaang ngunit masustansyang snack kada araw. '
+            'Iwasan pa rin ang junk food at sobrang matatamis.'
+        )
+
+    if age_months < 24:
+        return (
+            'Meryenda rule for overweight/obese child under 24 months: HUWAG alisin ang meryenda. '
+            'Magbigay lamang ng magaang at masustansyang snack tulad ng prutas, pinakuluang kamote, '
+            'mais, o gulay. HUWAG magbigay ng matamis na kakanin o pritong meryenda.'
+        )
+
+    return (
+        'Meryenda rule for overweight/obese child age 24 months and above: puwedeng light snack lamang '
+        '(prutas, pipino, kamote, mais) o puwedeng isulat ang "No meryenda" kung sapat ang meals at hindi gutom ang bata. '
+        'HUWAG gumamit ng sugary drinks, sweet pastries, o deep-fried snacks.'
+    )
+
+
+def _available_ingredients_rule(available_ingredients) -> str:
+    """Build the available-ingredients constraint block for the prompt."""
+    if not available_ingredients or not str(available_ingredients).strip():
+        return (
+            'AVAILABLE INGREDIENTS: Walang specific na ingredients ang ibinigay ng magulang. '
+            'Gumamit ng seasonal Filipino foods mula sa food database.'
+        )
+    return (
+        'AVAILABLE INGREDIENTS - MAHIGPIT NA PANUNTUNAN (Valid sa LAHAT ng 7 araw):\n'
+        f'Mga available na ingredients: {available_ingredients}\n\n'
+        'Mga dapat sundin:\n'
+        '- Gamitin LAMANG ang mga nakalista bilang pangunahing sangkap (protein, gulay, prutas)\n'
+        '- HUWAG gumamit ng ibang protein, gulay, o starch na WALA sa listahan\n'
+        '- OK lang ang basic na seasonings/condiments bilang pampalasa: '
+        'bawang, sibuyas, asin, toyo, patis, gata, luya, suka, mantika\n'
+        '- Halimbawa: kung "manok, kangkong, kamote" lamang ang nakalista - '
+        'TANGING iyon lamang ang gagamitin; walang bangus, monggo, o ibang gulay'
+    )
+
 
 def get_relevant_pdf_chunks(query, k=4):
     """Retrieve relevant PDF text using semantic similarity search."""
@@ -281,9 +549,10 @@ def generate_patient_assessment(patient_id):
     meal_plan_notes = ""
     if latest_meal_plan:
         plan_id = latest_meal_plan.get('plan_id')
-        notes = data_manager.get_notes_for_meal_plan(plan_id)
-        if notes:
-            meal_plan_notes = "; ".join([note.get('notes', '') for note in notes])
+        if isinstance(plan_id, str) and plan_id:
+            notes = data_manager.get_notes_for_meal_plan(plan_id)
+            if notes:
+                meal_plan_notes = "; ".join([note.get('notes', '') for note in notes])
 
     # Get foods data for context
     foods_data = data_manager.get_foods_data()
@@ -579,9 +848,14 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     
     # Growth-related queries based on patient data
     weight_status = patient_data.get('weight_for_age', '') or ''
+    bmi_status = patient_data.get('bmi_for_age', '') or ''
     height_status = patient_data.get('height_for_age', '') or ''
     
-    if weight_status and ('underweight' in weight_status.lower() or 'wasted' in weight_status.lower()):
+    if bmi_status and 'obese' in str(bmi_status).lower():
+        nutrition_queries.append("obese children healthy eating lower fat lower sugar meal planning")
+    elif bmi_status and 'overweight' in str(bmi_status).lower():
+        nutrition_queries.append("overweight children healthy eating weight management")
+    elif weight_status and ('underweight' in weight_status.lower() or 'wasted' in weight_status.lower()):
         nutrition_queries.append("underweight children nutrition dense foods weight gain")
     elif weight_status and 'overweight' in weight_status.lower():
         nutrition_queries.append("overweight children healthy eating weight management")
@@ -652,10 +926,10 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         # Custom prompt for structured output
         analysis_result = nutrition_ai.analyze_child_nutrition(
             patient_id=patient_id,
-            age_in_months=patient_data.get('age_months'),
-            allergies=patient_data.get('allergies'),
-            other_medical_problems=patient_data.get('other_medical_problems'),
-            parent_id=patient_data.get('parent_id'),
+            age_in_months=int(patient_data.get('age_months') or 0),
+            allergies=str(patient_data.get('allergies') or ''),
+            other_medical_problems=str(patient_data.get('other_medical_problems') or ''),
+            parent_id=str(patient_data.get('parent_id') or ''),
             notes=latest_assessment.get('notes', ''),
             treatment=latest_assessment.get('treatment', ''),
             sex=patient_data.get('sex', ''),
@@ -768,352 +1042,164 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     
     # Create the streamlined prompt - separate f-string variables from template variables
     age_guidelines = get_age_specific_guidelines(age_months)
-    
+
+    # -- Prompt helpers -------------------------------------------------------
+    nutrition_priority      = _derive_nutrition_priority(
+        patient_data.get('weight_for_age', ''),
+        patient_data.get('height_for_age', ''),
+        patient_data.get('bmi_for_age', ''),
+        age_months,
+    )
+    portions_guide             = _age_portions_guide(age_months)
+    snack_rule                 = _build_snack_rule(
+        patient_data.get('weight_for_age', ''),
+        patient_data.get('bmi_for_age', ''),
+        age_months,
+    )
+    available_ingredients_rule = _available_ingredients_rule(available_ingredients)
+
+    # Recent plans context for anti-repetition (same child, last 3 plans)
+    recent_plans = data_manager.get_meal_plans_by_patient(patient_id, months_back=6)[:3]
+    recent_dish_pool = set()
+    for _plan in recent_plans:
+        recent_dish_pool.update(extract_dishes_for_overlap((_plan or {}).get('plan_details', '')))
+    recent_dishes_to_avoid = ', '.join(sorted(recent_dish_pool)[:30]) if recent_dish_pool else 'Walang recent dish history'
+    # -------------------------------------------------------------------------
+
     prompt_str = """You are a Pediatric Nutritionist specializing in Filipino cuisine for children 0-5 years.
+Language: Sagutin sa Tagalog. English ay OK para sa medikal na termino o kapag walang Tagalog equivalent.
+Gamitin ang simpleng salita na naiintindihan ng ordinaryong Filipino na magulang.
 
-    LANGUAGE INSTRUCTIONS: You may answer in Tagalog, but it's okay to use English if you are unsure of the correct Tagalog word or if there isn't an accurate Tagalog equivalent. Use simple, everyday words that ordinary Filipino parents can understand.
+================================================================
+CHILD PROFILE
+================================================================
+Edad: {age_months} buwan  |  Timbang: {weight_kg} kg  |  Taas: {height_cm} cm
+BMI-for-Age: {bmi_for_age}
+{snack_rule}
+Allergy: {allergies}
+Karamdaman: {other_medical_problems}
+Relihiyon: {religion}
 
-    ## PRIMARY CONSTRAINT
-    ONLY recommend foods from the database below. Never mention generic food groups or unlisted foods.
-    
-    ## CRITICAL VARIETY REQUIREMENT
-    You MUST create a meal plan where NO DISH is repeated across the entire 7 days. This is MANDATORY.
-    - If you use chicken, prepare it differently each time (e.g., Day 1: Tinola, Day 3: Adobo, Day 5: Fried)
-    - Never repeat the same dish name (e.g., don't use "Lugaw" on Day 1 and Day 4)
-    - Ensure maximum variety in vegetables, fruits, proteins, and cooking methods
-    - Think of how Filipino families eat throughout the week - they vary their dishes daily
+================================================================
+NUTRITIONAL PRIORITY -- BASAHIN ITO MUNA BAGO MAG-GENERATE
+================================================================
+{nutrition_priority}
 
-    ## FOOD DATABASE
-    {food_list_str}
+================================================================
+AGE GUIDELINES AT TAMANG SUKAT NG PAGKAIN
+================================================================
+{age_guidelines}
+Portion bawat serving: {portions_guide}
 
-    {pdf_context}
+================================================================
+{available_ingredients_rule}
+================================================================
 
-    Base your response on {nutrition_analysis}
+FOOD DATABASE -- Gumamit lamang ng pagkain mula sa listahan na ito:
+{food_list_str}
+{pdf_context}
+Nutrition context: {nutrition_analysis}
+{seasonal_context}
 
-    ## MANDATORY RESPONSE FORMAT - ALL SECTIONS MUST BE INCLUDED IN THIS EXACT ORDER
+ANTI-REPETITION CONTEXT (recent plans for this same child):
+Iwasan hangga't maaari ang mga dish na ito para hindi paulit-ulit ang output:
+{recent_dishes_to_avoid}
 
-    ### CHILD PROFILE (MUST include this exact header)
-    **Edad**: {age_months} buwan
-    **Timbang**: {weight_kg} kg
-    **Taas**: {height_cm} cm
-    **BMI**: {bmi_for_age}
-    **Allergy**: {allergies}
-    **Karamdaman**: {other_medical_problems}
-    **Relihiyon**: {religion}
-    **Available Ingredients**: {available_ingredients}
+================================================================
+HAKBANG 1 -- PRE-PLAN: PUMILI NG 28 NATATANGING DISHES BAGO MAGSIMULA
+================================================================
+Bago isulat ang buong plano, punan ang 28 slots na ito.
 
-    AGE-SPECIFIC GUIDELINES:
-    **Kasalukuyang Edad ({age_months} buwan)**:
-    {age_guidelines}
+Mga panuntunan:
+- Bawat slot ay NAIIBANG dish -- WALANG PAULIT-ULIT sa lahat ng 28 slots
+- Sundin: allergies ({allergies}), relihiyon ({religion}), at available ingredients rule sa itaas
+- Baguhin ang protein bawat araw (manok, baboy, isda, itlog, hipon, baka, monggo, atay, etc.)
+- Baguhin ang paraan ng pagluto (adobo, sinigang, tinola, inihaw, ginisa, ginataan, nilaga, prito, etc.)
+- Almusal = rice porridge, sinangag dishes, lugaw -- HINDI main ulam
+- Meryenda = sundin ang snack rule sa itaas; kung pinapayagan, maaaring isulat nang eksakto ang "No meryenda"
 
-    **Allergy**: {allergies} {allergy_section}
+Day 1 (Lunes):     Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 2 (Martes):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 3 (Miyerkules):Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 4 (Huwebes):   Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 5 (Biyernes):  Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 6 (Sabado):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
+Day 7 (Linggo):    Almusal=[  ]  Tanghalian=[  ]  Meryenda=[light snack or "No meryenda" if allowed]  Hapunan=[  ]
 
-    **Relihiyon**: {religion} {religion_section}
+================================================================
+HAKBANG 2 -- ISULAT ANG BUONG 7-ARAW NA MEAL PLAN
+================================================================
+Gamitin ang EKSAKTONG 28 dishes mula sa Hakbang 1 (walang pagpapalit o dagdag).
 
-    **Karamdaman**: {other_medical_problems} [If none, briefly state "Walang special dietary restrictions." If specified, provide brief dietary guidance.]
+### CHILD PROFILE
+**Edad**: {age_months} buwan
+**Timbang**: {weight_kg} kg  |  **Taas**: {height_cm} cm  |  **BMI-for-Age**: {bmi_for_age}
+**Allergy**: {allergies}  |  **Karamdaman**: {other_medical_problems}
+**Relihiyon**: {religion}
 
-    ### 7-DAY MEAL PLAN (MUST include this exact header)
-    
-    **MANDATORY: COMPLETE ALL 7 DAYS WITH ALL MEAL CATEGORIES**
-    **CRITICAL: Each day MUST have DIFFERENT dishes - NO REPETITION across all 7 days**
-    
-    **Day 1** (Monday - Lunes):
-    - **Breakfast (Almusal)**: [Specific Filipino dish in Tagalog] ([portion]) - [benefit in Tagalog]
-    - **Lunch (Tanghalian)**: [Different Filipino dish] ([portion]) - [benefit in Tagalog]
-    - **Snack (Meryenda)**: [Filipino snack] ([portion]) - [benefit in Tagalog]
-    - **Dinner (Hapunan)**: [Different Filipino dish] ([portion]) - [benefit in Tagalog]
+### 7-DAY MEAL PLAN
 
-    **Day 2** (Tuesday - Martes):
-    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Day 1] ([portion]) - [benefit in Tagalog]
-    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Day 1] ([portion]) - [benefit in Tagalog]
-    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Day 1] ([portion]) - [benefit in Tagalog]
-    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Day 1] ([portion]) - [benefit in Tagalog]
+**Day 1** (Lunes):
+- **Almusal**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Tanghalian**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Meryenda**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Hapunan**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
 
-    **Day 3** (Wednesday - Miyerkules):
-    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-2] ([portion]) - [benefit in Tagalog]
-    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-2] ([portion]) - [benefit in Tagalog]
-    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-2] ([portion]) - [benefit in Tagalog]
-    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-2] ([portion]) - [benefit in Tagalog]
+**Day 2** (Martes):
+- **Almusal**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Tanghalian**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Meryenda**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Hapunan**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
 
-    **Day 4** (Thursday - Huwebes):
-    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-3] ([portion]) - [benefit in Tagalog]
-    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-3] ([portion]) - [benefit in Tagalog]
-    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-3] ([portion]) - [benefit in Tagalog]
-    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-3] ([portion]) - [benefit in Tagalog]
+**Day 3** (Miyerkules):
+- **Almusal**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Tanghalian**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Meryenda**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Hapunan**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
 
-    **Day 5** (Friday - Biyernes):
-    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-4] ([portion]) - [benefit in Tagalog]
-    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-4] ([portion]) - [benefit in Tagalog]
-    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-4] ([portion]) - [benefit in Tagalog]
-    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-4] ([portion]) - [benefit in Tagalog]
+**Day 4** (Huwebes):
+- **Almusal**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Tanghalian**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Meryenda**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Hapunan**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
 
-    **Day 6** (Saturday - Sabado):
-    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-5] ([portion]) - [benefit in Tagalog]
-    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-5] ([portion]) - [benefit in Tagalog]
-    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-5] ([portion]) - [benefit in Tagalog]
-    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-5] ([portion]) - [benefit in Tagalog]
+**Day 5** (Biyernes):
+- **Almusal**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Tanghalian**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Meryenda**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Hapunan**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
 
-    **Day 7** (Sunday - Linggo):
-    - **Breakfast (Almusal)**: [DIFFERENT Filipino dish from Days 1-6] ([portion]) - [benefit in Tagalog]
-    - **Lunch (Tanghalian)**: [DIFFERENT Filipino dish from Days 1-6] ([portion]) - [benefit in Tagalog]
-    - **Snack (Meryenda)**: [DIFFERENT Filipino snack from Days 1-6] ([portion]) - [benefit in Tagalog]
-    - **Dinner (Hapunan)**: [DIFFERENT Filipino dish from Days 1-6] ([portion]) - [benefit in Tagalog]
+**Day 6** (Sabado):
+- **Almusal**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Tanghalian**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Meryenda**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Hapunan**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
 
-    **CRITICAL MEAL PLAN RULES:**
-    1. NEVER repeat the same dish or ingredient across different days (MANDATORY)
-    2. Use only foods from the database
-    3. All food names and preparation methods MUST be in Tagalog
-    4. Use common, affordable Filipino dishes (pangmasa)
-    5. For 6-59 months: Use mechanical diet (finely chopped food)
-    6. For 0-6 months: State "Breastfeeding lamang" instead of meal plan
-    7. DO NOT include calorie numbers
-    8. Day 1: Prioritize available ingredients: {available_ingredients}
+**Day 7** (Linggo):
+- **Almusal**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Tanghalian**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Meryenda**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
+- **Hapunan**: [dish mula Hakbang 1] ({portions_guide}) -- [1 pangungusap na benepisyo sa Tagalog]
 
-    **FILIPINO TRADITIONAL CUISINE EXAMPLES (Use these styles of dishes):**
-    
-    **Breakfast (Almusal) Options - Traditional & Healthy:**
-    - Champorado (chocolate rice porridge)
-    - Ginataang bilo-bilo (sweet rice balls in coconut milk)
-    - Lugaw na baboy/manok (rice porridge with pork/chicken)
-    - Arroz caldo (chicken rice porridge with ginger)
-    - Goto (tripe rice porridge)
-    - Sinangag na itlog (fried rice with egg)
-    - Pandesal with kesong puti
-    - Tuyo at sinangag (dried fish and fried rice)
-    - Bangus at sinangag (milkfish and fried rice)
-    - Tortang talong (eggplant omelette)
-    - Scrambled eggs with tomatoes
-    - Oatmeal/oats with saging
-    - Champorado
-    - Pandesal with peanut butter
-    - Fresh fish with sinangag
-    - Boiled egg with brown rice
-    - Native rice porridge with vegetables
-    
-    **Lunch/Dinner (Tanghalian/Hapunan) Options - Regional Varieties:**
-    
-    *Adobo Varieties:*
-    - Adobong manok (chicken adobo)
-    - Adobong baboy (pork adobo)
-    - Adobong pusit (squid adobo)
-    - Adobong kangkong (water spinach adobo)
-    - Adobong sitaw (string beans adobo)
-    
-    *Sinigang Varieties:*
-    - Sinigang na baboy sa sampalok (pork in tamarind soup)
-    - Sinigang na isda sa bayabas (fish in guava soup)
-    - Sinigang na hipon (shrimp sinigang)
-    - Sinigang na bangus belly
-    - Sinigang na baka (beef sinigang)
-    
-    *Ginataan Dishes:*
-    - Ginataang kalabasa at sitaw (squash and string beans in coconut milk)
-    - Ginataang hipon (shrimp in coconut milk)
-    - Ginataang manok (chicken in coconut milk)
-    - Ginataang gulay (mixed vegetables in coconut milk)
-    - Bicol express (spicy pork in coconut milk)
-    - Laing (taro leaves in coconut milk)
-    - Ginataang langka (jackfruit in coconut milk)
-    
-    *Soup-based:*
-    - Tinola (ginger chicken soup)
-    - Nilagang baka (boiled beef soup)
-    - Bulalo (beef marrow soup)
-    - Sinigang (sour soup varieties)
-    - Pochero (Filipino beef stew)
-    - Molo soup (wonton soup)
-    
-    *Stewed/Braised:*
-    - Kare-kare (peanut stew)
-    - Menudo (pork and liver stew)
-    - Afritada (chicken/pork in tomato sauce)
-    - Mechado (beef stew)
-    - Kaldereta (goat/beef stew)
-    - Asado (sweet braised pork)
-    - Humba (Visayan pork stew)
-    - Paksiw na isda/baboy (fish/pork in vinegar)
-    
-    *Grilled/Baked/Lightly Fried:*
-    - Pritong isda (pan-fried fish - tilapia, bangus, galunggong)
-    - Pritong manok (pan-fried chicken)
-    - Inihaw na liempo (grilled pork)
-    - Inihaw na manok (grilled chicken)
-    - Inihaw na isda (grilled fish)
-    - Pinaputok na bangus (steamed-grilled milkfish)
-    - Baked chicken
-    - Grilled seafood
-    
-    *Sautéed (Ginisa):*
-    - Ginisang ampalaya at itlog (sauteed bitter melon with egg)
-    - Ginisang monggo (sauteed mung beans)
-    - Ginisang kangkong (sauteed water spinach)
-    - Ginisang sitaw at kalabasa (sauteed string beans and squash)
-    - Ginisang repolyo (sauteed cabbage)
-    - Ginisang togue (sauteed bean sprouts)
-    - Chopsuey (mixed vegetables stir-fry)
-    
-    *Vegetables:*
-    - Pinakbet (vegetable stew with bagoong)
-    - Dinengdeng (vegetable soup with bagoong)
-    - Bulanglang (vegetable soup)
-    - Ensaladang talong (eggplant salad)
-    - Ensaladang mangga (green mango salad)
-    - Atchara (pickled papaya)
-    
-    *Egg Dishes (Torta):*
-    - Tortang talong (eggplant omelette)
-    - Tortang giniling (ground meat omelette)
-    - Tortang alamang (shrimp paste omelette)
-    - Tortang dulong (silverfish omelette)
-    - Pritong itlog (fried egg)
-    
-    *Noodle Dishes:*
-    - Pancit canton (stir-fried wheat noodles)
-    - Pancit bihon (rice noodles)
-    - Pancit palabok (noodles with shrimp sauce)
-    - Pancit malabon (seafood noodles)
-    - Lomi (thick egg noodle soup)
-    - Sotanghon (glass noodles)
-    - Pancit luglog (similar to palabok)
-    
-    *Modern Filipino Fusion:*
-    - Chicken curry (Filipino-style)
-    - Sweet and sour fish/pork
-    - Baked tahong (baked mussels)
-    - Rellenong bangus (stuffed milkfish)
-    - Embutido (Filipino meatloaf)
-    - Morcon (beef roll)
-    - Fish fillet (breaded/fried)
-    
-    **Snacks (Meryenda) Options - Sweet & Savory:**
-    
-    *Sweet Snacks (Natural & Healthy):*
-    - Turon (banana spring rolls)
-    - Banana cue (caramelized banana - moderate sugar)
-    - Kamote cue (caramelized sweet potato - moderate sugar)
-    - Maruya (banana fritters)
-    - Ginataang mais (corn in coconut milk)
-    - Ginataang saging (banana in coconut milk)
-    - Puto (steamed rice cake)
-    - Kutsinta (brown rice cake)
-    - Sapin-sapin (layered rice cake)
-    - Suman (sticky rice wrapped in banana leaves)
-    - Biko (sweet rice cake)
-    - Palitaw (sweet rice cakes)
-    - Bibingka (rice cake)
-    - Puto bumbong (purple rice cake)
-    - Maja blanca (coconut pudding)
-    - Ube halaya (purple yam jam)
-    - Ginataan (various fruits/vegetables in coconut milk)
-    - Buko salad (young coconut salad)
-    - Fresh fruits: Saging, mangga, papaya, suha, dalandan, pakwan, melon
-    - Pinaupong saging (steamed banana)
-    - Nilupak (mashed cassava/sweet potato/banana)
-    - Fresh fruit salad
-    - Steamed sweet potato
-    - Boiled saging na saba
-    
-    *Savory Snacks (Healthy Options):*
-    - Lugaw (rice porridge)
-    - Arroz caldo (chicken porridge)
-    - Pancit (various noodle dishes)
-    - Lumpia (spring rolls - fresh/fried)
-    - Okoy (shrimp fritters)
-    - Ukoy (vegetable fritters)
-    - Sopas (Filipino chicken macaroni soup)
-    - Champorado with tuyo
-    - Pandesal with various healthy fillings
-    - Monay (bread)
-    - Steamed siopao (if homemade)
-    - Vegetable lumpia
-    - Fresh lumpia with peanut sauce
-    
-    **PREPARATION METHODS IN TAGALOG (Comprehensive List):**
-    - **Pritong** = Fried (e.g., pritong tilapia, pritong itlog, pritong manok)
-    - **Nilagang** = Boiled (e.g., nilagang saging, nilagang mais, nilagang baka)
-    - **Ginisang** = Sautéed (e.g., ginisang kangkong, ginisang monggo, ginisang gulay)
-    - **Ginataang** = Cooked in coconut milk (e.g., ginataang kalabasa, ginataang hipon)
-    - **Inihaw** = Grilled (e.g., inihaw na manok, inihaw na liempo, inihaw na isda)
-    - **Haluing** = Mashed/pureed (e.g., haluing saging para sa bata, haluing kalabasa)
-    - **Sinangag** = Fried rice
-    - **Hinog** = Ripe (e.g., hinog na saging, hinog na mangga)
-    - **Piniritong** = Deep-fried (e.g., piniritong lumpia, piniritong manok)
-    - **Pinakuluang** = Boiled/simmered (e.g., pinakuluang itlog, pinakuluang saging)
-    - **Sinaing** = Steamed/cooked (e.g., sinaing na isda, sinaing na kanin)
-    - **Ihaw/Inihaw** = Grilled/charcoal-grilled
-    - **Pinaksiw** = Cooked in vinegar (e.g., paksiw na isda, paksiw na lechon)
-    - **Binalot** = Wrapped (e.g., binalot na suman)
-    - **Nilasing** = Cooked with alcohol (e.g., nilasing na hipon)
-    - **Pinaupong** = Steamed upright (e.g., pinaupong saging)
-    - **Sinabawan** = In broth/soupy (e.g., sinabawang gulay)
-    - **Tinapa** = Smoked (e.g., tinapa na bangus)
-    - **Tuyong** = Dried (e.g., tuyong isda, tuyong pusit)
-    - **Sinaligang** = Made into sinigang/sour soup
-    - **Inadobo** = Made into adobo
-    - **Kinare-kare** = Made into kare-kare style
-    - **Rebosado** = Battered (e.g., rebosadong isda)
-    - **Relleno/Rellenong** = Stuffed (e.g., rellenong bangus, rellenong manok)
-    - **Escabetse/Eskabetse** = Sweet and sour style
-    - **Binabad** = Marinated
-    - **Sinangkutsa** = With tomato sauce
-    - **Sinarsahan** = With sarsang sauce
-    - **Kinamatisan** = With tomatoes
-    
-    **AGE-APPROPRIATE FILIPINO FOOD TEXTURES:**
-    - 6-8 months: Lugaw, haluing saging/papaya/kalabasa, sopas na may durog na gulay
-    - 9-11 months: Lugaw with small pieces, mashed rice with ulam, soft pancit
-    - 12-23 months: Kanin with finely chopped ulam, sopas, soft fruits
-    - 24-59 months: Regular family foods, chopped to appropriate size
+### REKOMENDASYON SA PAGKAIN
+[3-5 bullet points ng praktikal na payo sa pagpapakain sa Tagalog, batay sa nutritional status ng bata]
 
-    ### REGULAR NA OBSERBAHAN (MUST include this exact header)
-    
-    **Araw-Araw** (MUST include this exact subheader):
-    - Gana kumain (Mabuti/Katamtaman/Hindi mabuti) - Sigla ng bata - Tulog (mahimbing ba?) - Dumi (normal ba?)
+PINAKAMAHALAGANG PANUNTUNAN:
+1. Gamitin ang EKSAKTONG dishes mula Hakbang 1 -- WALANG pagpapalit
+2. WALANG dish na paulit-ulit sa lahat ng 7 araw
+3. Lahat ng pangalan ng pagkain sa Tagalog
+4. HUWAG isulat ang bilang ng calories
+5. Mahigpit na iwasan ang mga allergen: {allergies}
+6. Sundin ang dietary guidelines ng relihiyon: {religion}"""
 
-    **Bawat Linggo** (MUST include this exact subheader):
-    - Timbang - Paglaki - Bagong natututunan
-
-    **Bawat Buwan**:
-    - Taas - Gustong pagkain - Pagiging independent sa pagkain
-
-    ## BALANSENG PAGKAIN PARA SA BATA
-
-    Bawat pagkain dapat may:
-    - Pagkain na nagbibigay lakas at enerhiya (tulad ng kanin, tinapay, mais)
-    - Pagkain na tumutulong sa paglaki ng bata (tulad ng isda, manok, itlog)
-    - Pagkain na nagpapalakas ng katawan (tulad ng gulay, prutas)
-    - Tubig - laging importante
-
-    {filipino_context}
-    
-    {seasonal_context}
-
-    ### FINAL VERIFICATION CHECKLIST:
-    ✓ CHILD PROFILE section is included with exact header
-    ✓ 7-DAY MEAL PLAN section is included with exact header
-    ✓ All 7 days (Day 1 Monday, Day 2 Tuesday, Day 3 Wednesday, Day 4 Thursday, Day 5 Friday, Day 6 Saturday, Day 7 Sunday) are included
-    ✓ Each day has Breakfast (Almusal), Lunch (Tanghalian), Snack (Meryenda), Dinner (Hapunan)
-    ✓ REGULAR NA OBSERBAHAN section with Araw-Araw and Bawat Linggo subheaders
-    ✓ Entire response is in simple Tagalog
-    ✓ Only database foods are recommended
-    ✓ NO SINGLE DISH OR MAIN INGREDIENT IS REPEATED ACROSS ANY OF THE 7 DAYS (MANDATORY - Double check this!)
-    ✓ All dishes are Filipino traditional cuisine that ordinary Filipinos eat regularly
-    ✓ All dishes use Tagalog names and preparation methods
-    ✓ No calorie numbers included
-    ✓ Allergies ({allergies}) are avoided
-    ✓ Religious restrictions ({religion}) are respected
-    
-    **DIVERSITY REQUIREMENTS:**
-    - Use at least 10 different protein sources across 7 days (e.g., manok, baboy, isda, itlog, hipon, pusit, baka, etc.)
-    - Use at least 15 different vegetables/fruits across 7 days
-    - Vary cooking methods: adobo, sinigang, tinola, ginisa, prito, inihaw, nilaga, ginataan
-    - Each breakfast should be unique (no repeating lugaw, champorado, etc.)
-    - Each snack should be unique (turon one day, banana cue another, puto another, etc.)
-    - Ensure traditional Filipino dishes like sinigang, adobo, tinola, kare-kare, pinakbet appear across different days
-    - Main ingredients (like chicken, pork, fish) should be prepared differently each time they appear"""
-        
     prompt_template = PromptTemplate(
-        input_variables=["food_list_str", "pdf_context", "nutrition_analysis", "age_months", "weight_kg", "height_cm", "bmi_for_age", "allergies", "other_medical_problems", "religion", "available_ingredients", "nutrition_tags", "age_guidelines", "allergy_section", "religion_section", "filipino_context", "seasonal_context"],
+        input_variables=[
+            "food_list_str", "pdf_context", "nutrition_analysis",
+            "age_months", "weight_kg", "height_cm", "bmi_for_age",
+            "allergies", "other_medical_problems", "religion",
+            "nutrition_priority", "portions_guide", "snack_rule", "available_ingredients_rule",
+            "age_guidelines", "seasonal_context", "recent_dishes_to_avoid",
+        ],
         template=prompt_str
     )
 
@@ -1128,32 +1214,61 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         "allergies": patient_data.get('allergies', 'None'),
         "other_medical_problems": patient_data.get('other_medical_problems', 'None'),
         "religion": religion_val,
-        "available_ingredients": available_ingredients if available_ingredients else "None specified",
-        "nutrition_tags": nutrition_tags_str,
+        "nutrition_priority": nutrition_priority,
+        "portions_guide": portions_guide,
+        "snack_rule": snack_rule,
+        "available_ingredients_rule": available_ingredients_rule,
         "age_guidelines": age_guidelines,
-        "allergy_section": allergy_section,
-        "religion_section": religion_section,
-        "filipino_context": filipino_context,
-        "seasonal_context": seasonal_context
+        "seasonal_context": seasonal_context,
+        "recent_dishes_to_avoid": recent_dishes_to_avoid,
     }
 
-    llm = create_nutrition_llm()
+    # Progressive temperature: first attempt uses 0.35 for variety;
+    # each retry drops lower to force more structured, conservative output.
+    import logging as _log
+    _retry_temps = [0.35, 0.20, 0.10]
+    result = ""
+    _is_valid, _msg = False, "No attempts made"
+    _structure_ok, _structure_msg = False, "No attempts made"
+    _variety_ok, _variety_msg = False, "No attempts made"
+    _similarity_ok, _similarity_msg, _max_overlap = True, "No recent plans to compare", 0.0
+    for _attempt in range(3):
+        llm = create_meal_plan_llm(_retry_temps[_attempt])
+        chain = prompt_template | llm
+        _raw = chain.invoke(prompt_inputs)
+        if hasattr(_raw, 'content'):
+            _raw = _raw.content
+        if not isinstance(_raw, str):
+            _raw = str(_raw)
+        result = _raw
 
-    # Create runnable sequence using modern LangChain pattern
-    chain = prompt_template | llm
+        _structure_ok, _structure_msg = validate_meal_plan_structure(result)
+        _variety_ok, _variety_msg = validate_meal_plan_variety(result)
+        _similarity_ok, _similarity_msg, _max_overlap = _check_similarity_against_recent_plans(
+            result,
+            recent_plans,
+            threshold=0.60
+        )
 
-    result = chain.invoke(prompt_inputs)
-    
-    # Handle AIMessage objects by extracting content
-    if hasattr(result, 'content'):
-        result = result.content
-    
-    # Ensure we have a string
-    if not isinstance(result, str):
-        result = str(result)
-    
-    # Validate the meal plan
-    is_valid, message = validate_meal_plan_variety(result)
+        _is_valid = _structure_ok and _variety_ok and _similarity_ok
+        _msg = f"{_structure_msg}; {_variety_msg}; {_similarity_msg}"
+        if _is_valid:
+            break
+        if _attempt < 2:
+            _failed_checks = []
+            if not _structure_ok:
+                _failed_checks.append(f"structure: {_structure_msg}")
+            if not _variety_ok:
+                _failed_checks.append(f"variety: {_variety_msg}")
+            if not _similarity_ok:
+                _failed_checks.append(f"novelty: {_similarity_msg}")
+            _log.getLogger(__name__).warning(
+                f"Meal plan validation failed (attempt {_attempt + 1}/3): {' | '.join(_failed_checks)}. "
+                f"Retrying at temperature {_retry_temps[_attempt + 1]}..."
+            )
+
+    # Reuse validation result already computed in the loop (avoids a redundant re-check)
+    is_valid, message = _is_valid, _msg
     diversity = calculate_diversity_score(result)
     ingredients = extract_ingredients_from_plan(result)
     
@@ -1161,7 +1276,9 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
     print("\n" + "="*50)
     print("MEAL PLAN QUALITY ASSESSMENT")
     print("="*50)
-    print(f"✓ Variety Check: {message}")
+    print(f"✓ Structure Check: {_structure_msg}")
+    print(f"✓ Variety Check: {_variety_msg}")
+    print(f"✓ Novelty Check: {_similarity_msg}")
     print(f"✓ Diversity Score: {diversity['score']}/100")
     print(f"  - Unique Dishes: {diversity['unique_dishes']}/{diversity['total_dishes']}")
     print(f"  - Cooking Methods: {diversity['method_variety']} ({', '.join(diversity['cooking_methods_used'])})")
@@ -1170,6 +1287,10 @@ def get_meal_plan_with_langchain(patient_id, available_ingredients=None, religio
         print(f"  - {', '.join([f'{k}({v})' for k, v in list(ingredients.items())[:10]])}")
     if not is_valid:
         print(f"⚠ WARNING: {message}")
+    if not _structure_ok:
+        print("⚠ WARNING: Output structure is invalid (expected 7 days x 4 meals).")
+    if not _similarity_ok:
+        print(f"⚠ WARNING: Output too similar to recent plans ({_max_overlap * 100:.1f}% overlap).")
     if diversity['score'] < 70:
         print(f"⚠ WARNING: Low diversity score. Consider regenerating for more variety.")
     print("="*50 + "\n")

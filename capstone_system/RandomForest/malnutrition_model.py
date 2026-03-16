@@ -32,40 +32,49 @@ class WHO_ZScoreCalculator:
         self.who_folder = "who_standard"
         self._load_who_reference_data()
         
-        # Fallback data in case Excel files are not available (keeping original for safety)
+        # WHO 2006 Child Growth Standards – Weight-for-Height reference
+        # Source: WHO Multicentre Growth Reference Study Group (2006)
+        # Values: median weight (mean) in kg and standard deviation (sd) per height in cm.
+        # Previously this block had incorrect values that inflated medians above 80 cm,
+        # causing severe negative WHZ scores for normal children.  The data below is
+        # derived directly from the published WHO 2006 WFH tables and is correct.
         self.fallback_who_reference = {
             'weight_for_height': {
                 'boys': {
-                    45: {'mean': 2.5, 'sd': 0.3},
-                    50: {'mean': 3.3, 'sd': 0.4},
-                    55: {'mean': 4.3, 'sd': 0.4},
-                    60: {'mean': 5.4, 'sd': 0.5},
-                    65: {'mean': 6.7, 'sd': 0.5},
-                    70: {'mean': 8.2, 'sd': 0.6},
-                    75: {'mean': 9.9, 'sd': 0.6},
-                    80: {'mean': 11.8, 'sd': 0.7},
-                    85: {'mean': 13.9, 'sd': 0.8},
-                    90: {'mean': 16.2, 'sd': 0.9},
-                    95: {'mean': 18.7, 'sd': 1.0},
-                    100: {'mean': 21.4, 'sd': 1.1},
-                    105: {'mean': 24.3, 'sd': 1.2},
-                    110: {'mean': 27.4, 'sd': 1.3}
+                    45:  {'mean': 2.441, 'sd': 0.268},
+                    50:  {'mean': 3.272, 'sd': 0.359},
+                    55:  {'mean': 4.257, 'sd': 0.441},
+                    60:  {'mean': 5.398, 'sd': 0.516},
+                    65:  {'mean': 6.668, 'sd': 0.597},
+                    70:  {'mean': 7.985, 'sd': 0.696},
+                    75:  {'mean': 9.287, 'sd': 0.773},
+                    80:  {'mean': 10.617, 'sd': 0.845},
+                    85:  {'mean': 12.046, 'sd': 0.918},
+                    90:  {'mean': 13.534, 'sd': 1.000},
+                    95:  {'mean': 15.023, 'sd': 1.090},
+                    100: {'mean': 16.471, 'sd': 1.176},
+                    105: {'mean': 17.988, 'sd': 1.278},
+                    110: {'mean': 19.602, 'sd': 1.396},
+                    115: {'mean': 21.226, 'sd': 1.513},
+                    120: {'mean': 22.810, 'sd': 1.619},
                 },
                 'girls': {
-                    45: {'mean': 2.4, 'sd': 0.3},
-                    50: {'mean': 3.2, 'sd': 0.4},
-                    55: {'mean': 4.2, 'sd': 0.4},
-                    60: {'mean': 5.3, 'sd': 0.5},
-                    65: {'mean': 6.5, 'sd': 0.5},
-                    70: {'mean': 7.9, 'sd': 0.6},
-                    75: {'mean': 9.5, 'sd': 0.6},
-                    80: {'mean': 11.3, 'sd': 0.7},
-                    85: {'mean': 13.3, 'sd': 0.8},
-                    90: {'mean': 15.5, 'sd': 0.9},
-                    95: {'mean': 17.9, 'sd': 1.0},
-                    100: {'mean': 20.5, 'sd': 1.1},
-                    105: {'mean': 23.3, 'sd': 1.2},
-                    110: {'mean': 26.3, 'sd': 1.3}
+                    45:  {'mean': 2.428, 'sd': 0.263},
+                    50:  {'mean': 3.202, 'sd': 0.351},
+                    55:  {'mean': 4.196, 'sd': 0.435},
+                    60:  {'mean': 5.280, 'sd': 0.501},
+                    65:  {'mean': 6.549, 'sd': 0.587},
+                    70:  {'mean': 7.873, 'sd': 0.684},
+                    75:  {'mean': 9.131, 'sd': 0.751},
+                    80:  {'mean': 10.460, 'sd': 0.830},
+                    85:  {'mean': 11.967, 'sd': 0.918},
+                    90:  {'mean': 13.479, 'sd': 1.007},
+                    95:  {'mean': 14.891, 'sd': 1.092},
+                    100: {'mean': 16.284, 'sd': 1.181},
+                    105: {'mean': 17.773, 'sd': 1.289},
+                    110: {'mean': 19.430, 'sd': 1.424},
+                    115: {'mean': 21.143, 'sd': 1.574},
+                    120: {'mean': 22.794, 'sd': 1.701},
                 }
             }
         }
@@ -239,18 +248,21 @@ class WHO_ZScoreCalculator:
     
     def classify_bmi_status(self, bmi, age_months):
         """
-        Classify BMI status for children based on WHO standards
+        Classify BMI status for children based on WHO standards.
+        Thresholds follow WHO child growth standards for under-5s.
         """
         try:
             if age_months < 24:  # Under 2 years
                 if bmi < 13:
                     return "Severely Underweight"
                 elif bmi < 15:
-                    return "Underweight" 
+                    return "Underweight"
                 elif bmi <= 18:
                     return "Normal"
-                else:
+                elif bmi <= 20:
                     return "Overweight"
+                else:
+                    return "Obese"
             else:  # 2-5 years
                 if bmi < 13.5:
                     return "Severely Underweight"
@@ -258,42 +270,54 @@ class WHO_ZScoreCalculator:
                     return "Underweight"
                 elif bmi <= 17.5:
                     return "Normal"
-                else:
+                elif bmi <= 19.5:
                     return "Overweight"
+                else:
+                    return "Obese"
         except Exception as e:
             print(f"Error classifying BMI status: {e}")
             return "Unknown"
     
     def classify_nutritional_status(self, wfa_zscore, hfa_zscore, bmi, age_months, has_edema=False):
         """
-        Classify nutritional status based on multiple indicators
-        Following WHO guidelines with comprehensive assessment
+        Classify nutritional status based on multiple indicators.
+        Following WHO guidelines with comprehensive assessment.
+        Categories: SAM, MAM, At Risk, Normal, Overweight, Obese.
+        Overweight/Obese are checked first (before undernutrition) when no edema.
         """
         if has_edema:
             return "Severe Acute Malnutrition (SAM)"
-        
+
         # Classify based on BMI status
         bmi_status = self.classify_bmi_status(bmi, age_months)
-        
-        # Count severe indicators
+
+        # --- Overnutrition check (WHO: WHZ > +2 = overweight, > +3 = obese) ---
+        # Use WFA z-score as a proxy when WHZ is not directly available here;
+        # BMI status is the primary overnutrition signal.
+        if bmi_status == "Obese" or wfa_zscore > 3:
+            return "Obese"
+        if bmi_status == "Overweight" or wfa_zscore > 2:
+            return "Overweight"
+
+        # --- Undernutrition check ---
         severe_indicators = 0
         moderate_indicators = 0
-        
+
         if wfa_zscore < -3:
             severe_indicators += 1
         elif wfa_zscore < -2:
             moderate_indicators += 1
-            
+
         if hfa_zscore < -3:
-            severe_indicators += 1  
+            severe_indicators += 1
         elif hfa_zscore < -2:
             moderate_indicators += 1
-            
-        if bmi_status in ["Severely Underweight"]:
+
+        if bmi_status == "Severely Underweight":
             severe_indicators += 1
-        elif bmi_status in ["Underweight"]:
+        elif bmi_status == "Underweight":
             moderate_indicators += 1
-            
+
         # Classification logic
         if severe_indicators >= 2:
             return "Severe Acute Malnutrition (SAM)"
@@ -448,6 +472,7 @@ class MalnutritionRandomForestModel:
             max_depth=15,
             min_samples_split=5,
             min_samples_leaf=2,
+            class_weight='balanced',  # corrects imbalance across all 5 classes
             oob_score=True  # Enable OOB scoring for evaluation
         )
         self.label_encoders = {}
@@ -562,21 +587,42 @@ class MalnutritionRandomForestModel:
     
     def create_target_variable(self, df):
         """
-        Create target variable based on WHZ score and clinical assessment
-        Following the flowchart logic
+        Create target variable based on WHZ score, BMI status and clinical assessment.
+        Five classes: SAM, MAM, Normal, Overweight, Obese.
+        WHO thresholds:
+          WHZ > +3  -> Obese
+          WHZ > +2  -> Overweight
+          WHZ -2 to +2 -> Normal (or BMI-driven OW/Obese)
+          WHZ -3 to -2 -> MAM
+          WHZ < -3 or edema -> SAM
         """
         def classify_status(row):
             whz = row['whz_score']
+            bmi_status = row.get('bmi_status', 'Normal')
+            # bmi_status may be the encoded integer after preprocessing;
+            # decode safely.
+            if isinstance(bmi_status, (int, float, np.integer)):
+                bmi_status = 'Normal'  # fallback; raw string expected here
             edema = row.get('edema', False)
-            
-            # Following the flowchart logic
-            if edema or whz < -3:
+
+            # Edema always means SAM
+            if edema:
                 return "Severe Acute Malnutrition (SAM)"
-            elif whz >= -3 and whz < -2:
+
+            # Overnutrition (WHO WHZ thresholds)
+            if whz > 3 or str(bmi_status) == 'Obese':
+                return "Obese"
+            if whz > 2 or str(bmi_status) == 'Overweight':
+                return "Overweight"
+
+            # Undernutrition
+            if whz < -3:
+                return "Severe Acute Malnutrition (SAM)"
+            elif whz < -2:
                 return "Moderate Acute Malnutrition (MAM)"
             else:
                 return "Normal"
-        
+
         return df.apply(classify_status, axis=1)
     
     def train_model(self, df):
@@ -671,7 +717,14 @@ class MalnutritionRandomForestModel:
         # Print detailed classification report
         print(f"\n📋 DETAILED CLASSIFICATION REPORT:")
         print(classification_report(y_test, y_pred))
-        
+
+        # Multi-class AUC (One-vs-Rest, macro average)
+        try:
+            macro_auc = roc_auc_score(y_test, y_pred_proba, multi_class='ovr', average='macro')
+            print(f"\n📊 MULTI-CLASS AUC (One-vs-Rest, Macro): {macro_auc:.3f} {'✅' if macro_auc > 0.95 else '⚠️'}")
+        except Exception:
+            pass
+
         return X_test, y_test, y_pred
     
     def _generate_evaluation_plots(self, X_train, X_test, y_train, y_test, y_pred, y_pred_proba):
@@ -773,92 +826,111 @@ class MalnutritionRandomForestModel:
             plt.text(0.5, 0.5, f'Tree Depth Distribution\nError: {str(e)[:30]}...', ha='center', va='center')
             plt.title('🌳 Tree Depth Distribution (Error)')
         
-        # 7. ROC Curve (for binary classification, we'll use the positive class)
+        # 7. Multi-class ROC Curves (One-vs-Rest)
         plt.subplot(3, 3, 7)
         try:
-            if len(np.unique(y_test)) == 2:
-                from sklearn.metrics import roc_curve, auc
-                fpr, tpr, _ = roc_curve(y_test, y_pred_proba[:, 1])
-                roc_auc = auc(fpr, tpr)
-                plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
-                plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-                plt.xlim([0.0, 1.0])
-                plt.ylim([0.0, 1.05])
-                plt.xlabel('False Positive Rate')
-                plt.ylabel('True Positive Rate')
-                plt.title('📊 ROC Curve')
-                plt.legend(loc="lower right")
-            else:
-                plt.text(0.5, 0.5, 'ROC Curve\n(Multi-class)', ha='center', va='center', fontsize=12)
-                plt.title('📊 ROC Curve (Multi-class)')
+            from sklearn.preprocessing import label_binarize
+            from sklearn.metrics import auc as sklearn_auc
+
+            unique_classes = self.model.classes_
+            y_test_bin = label_binarize(y_test, classes=unique_classes)
+            colors_roc = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+
+            for i, cls in enumerate(unique_classes):
+                if i < y_pred_proba.shape[1] and np.sum(y_test_bin[:, i]) > 0:
+                    fpr_i, tpr_i, _ = roc_curve(y_test_bin[:, i], y_pred_proba[:, i])
+                    roc_auc_i = sklearn_auc(fpr_i, tpr_i)
+                    short_label = (cls
+                                   .replace('Severe Acute Malnutrition (SAM)', 'SAM')
+                                   .replace('Moderate Acute Malnutrition (MAM)', 'MAM'))
+                    plt.plot(fpr_i, tpr_i, color=colors_roc[i % len(colors_roc)],
+                             lw=1.5, label=f'{short_label} (AUC={roc_auc_i:.2f})')
+
+            plt.plot([0, 1], [0, 1], 'k--', lw=1.0)
+            plt.xlim([0.0, 1.0])
+            plt.ylim([0.0, 1.05])
+            plt.xlabel('False Positive Rate')
+            plt.ylabel('True Positive Rate')
+            plt.title('📊 ROC Curves (One-vs-Rest)')
+            plt.legend(loc='lower right', fontsize=7)
+            plt.grid(True, alpha=0.2)
         except Exception as e:
-            plt.text(0.5, 0.5, f'ROC Curve\nError: {str(e)[:30]}...', ha='center', va='center')
-            plt.title('📊 ROC Curve (Error)')
+            plt.text(0.5, 0.5, f'ROC Curves\nError: {str(e)[:50]}', ha='center', va='center')
+            plt.title('📊 ROC Curves (Error)')
         
-        # 8. Validation Curve (Max Depth)
+        # 8. Validation Curve (Max Depth — real cross-validation)
         plt.subplot(3, 3, 8)
         try:
-            # Simple parameter comparison instead of validation curve
-            param_range = [5, 10, 15, 20, 25]
-            dummy_scores = [0.85, 0.87, 0.89, 0.88, 0.86]  # Example scores
-            
-            plt.plot(param_range, dummy_scores, 'o-', color='blue', label='Max Depth Impact')
+            param_range_vc = [3, 5, 7, 10, 15, 20, 25]
+            train_scores_vc, test_scores_vc = validation_curve(
+                RandomForestClassifier(n_estimators=50, random_state=42,
+                                       class_weight='balanced'),
+                X_train, y_train,
+                param_name='max_depth',
+                param_range=param_range_vc,
+                cv=5,
+                scoring='f1_weighted',
+                n_jobs=-1
+            )
+            train_mean_vc = np.mean(train_scores_vc, axis=1)
+            test_mean_vc  = np.mean(test_scores_vc,  axis=1)
+            train_std_vc  = np.std(train_scores_vc,  axis=1)
+            test_std_vc   = np.std(test_scores_vc,   axis=1)
+            best_depth_vc = param_range_vc[np.argmax(test_mean_vc)]
+
+            plt.plot(param_range_vc, train_mean_vc, 'o-', color='blue', lw=2, label='Training F1')
+            plt.plot(param_range_vc, test_mean_vc,  'o-', color='red',  lw=2, label='CV F1')
+            plt.fill_between(param_range_vc,
+                             train_mean_vc - train_std_vc, train_mean_vc + train_std_vc,
+                             alpha=0.1, color='blue')
+            plt.fill_between(param_range_vc,
+                             test_mean_vc - test_std_vc, test_mean_vc + test_std_vc,
+                             alpha=0.1, color='red')
+            plt.axvline(x=best_depth_vc, color='green', linestyle='--', alpha=0.7,
+                        label=f'Best depth={best_depth_vc}')
             plt.xlabel('Max Depth')
-            plt.ylabel('Estimated Accuracy')
-            plt.title('🔧 Max Depth Parameter Analysis')
-            plt.legend()
+            plt.ylabel('Weighted F1 Score')
+            plt.title('🔧 Validation Curve (Max Depth)')
+            plt.legend(fontsize=8)
             plt.grid(True, alpha=0.3)
         except Exception as e:
-            plt.text(0.5, 0.5, f'Validation Curve\nError: {str(e)[:30]}...', ha='center', va='center')
+            plt.text(0.5, 0.5, f'Validation Curve\nError: {str(e)[:50]}', ha='center', va='center')
             plt.title('🔧 Validation Curve (Error)')
         
-        # 9. Feature Importance Summary Stats
-        plt.subplot(3, 3, 9)
-        plt.axis('off')
-        
-        # Calculate feature importance statistics
+        # 9. Per-class Precision / Recall / F1 Bar Chart
+        # Also keep feature importance vars alive for the print section below
         sorted_importance = np.sort(feature_importance['importance'])[::-1]
         top_20_percent = int(len(sorted_importance) * 0.2)
         top_20_contribution = np.sum(sorted_importance[:top_20_percent])
-        
-        # Get model parameters safely
-        n_estimators = getattr(self.model, 'n_estimators', 'Unknown')
-        max_depth = getattr(self.model, 'max_depth', 'Unknown')
-        
-        # Calculate tree depth stats if possible
+
+        plt.subplot(3, 3, 9)
         try:
-            tree_depths = [getattr(tree.tree_, 'max_depth', 10) for tree in self.model.estimators_]
-            mean_depth = np.mean(tree_depths)
-            std_depth = np.std(tree_depths)
-        except:
-            mean_depth = 'Unknown'
-            std_depth = 'Unknown'
-        
-        stats_text = f"""
-        📈 MODEL PERFORMANCE SUMMARY
-        
-        🎯 Classification Metrics:
-        • Accuracy: {accuracy_score(y_test, y_pred):.3f}
-        • OOB Score: {self.model.oob_score_:.3f}
-        
-        🌲 Random Forest Metrics:
-        • Number of Trees: {n_estimators}
-        • Max Depth: {max_depth}
-        • Features: {len(self.feature_columns)}
-        
-        🔥 Feature Importance:
-        • Top 20% features contribute: {top_20_contribution:.1%}
-        • Most important: {feature_importance.iloc[0]['feature']}
-        • Least important: {feature_importance.iloc[-1]['feature']}
-        
-        🌳 Tree Statistics:
-        • Mean depth: {mean_depth}
-        • Depth std: {std_depth}
-        """
-        
-        plt.text(0.05, 0.95, stats_text, transform=plt.gca().transAxes, 
-                fontsize=10, verticalalignment='top', fontfamily='monospace')
-        
+            classes_list = list(self.model.classes_)
+            prec_pc, rec_pc, f1_pc, support_pc = precision_recall_fscore_support(
+                y_test, y_pred, labels=classes_list
+            )
+            short_labels = [
+                c.replace('Severe Acute Malnutrition (SAM)', 'SAM')
+                 .replace('Moderate Acute Malnutrition (MAM)', 'MAM')
+                for c in classes_list
+            ]
+            x_pos = np.arange(len(short_labels))
+            width = 0.25
+            plt.bar(x_pos - width, prec_pc, width, label='Precision', color='steelblue', alpha=0.85)
+            plt.bar(x_pos,         rec_pc,  width, label='Recall',    color='salmon',    alpha=0.85)
+            plt.bar(x_pos + width, f1_pc,   width, label='F1-Score',  color='seagreen',  alpha=0.85)
+            plt.xticks(x_pos, short_labels, rotation=20, ha='right', fontsize=8)
+            plt.ylim(0, 1.18)
+            plt.ylabel('Score')
+            plt.title('📊 Per-class Precision / Recall / F1')
+            plt.legend(fontsize=8)
+            plt.grid(True, alpha=0.2, axis='y')
+            for i, (s, f) in enumerate(zip(support_pc, f1_pc)):
+                plt.text(x_pos[i] + width, f + 0.02, f'n={s}', ha='center', fontsize=7)
+        except Exception as e:
+            plt.text(0.5, 0.5, f'Per-class Metrics\nError: {str(e)[:50]}', ha='center', va='center')
+            plt.title('📊 Per-class Metrics (Error)')
+
         plt.tight_layout()
         plt.savefig('random_forest_evaluation.png', dpi=300, bbox_inches='tight')
         plt.show()
@@ -893,19 +965,92 @@ class MalnutritionRandomForestModel:
         # Predict
         prediction = self.model.predict(X_scaled)[0]
         probability = self.model.predict_proba(X_scaled)[0]
+
+        # Apply conservative post-prediction clinical safety override.
+        # This preserves the RF decision in most cases but corrects obvious
+        # high-risk undernutrition misses and low-risk SAM overcalls.
+        adjusted_prediction = self._apply_clinical_override(
+            prediction=prediction,
+            patient_data=patient_data,
+            patient_row=df_processed.iloc[0]
+        )
         
         # Get class probabilities
         classes = self.model.classes_
         prob_dict = dict(zip(classes, probability))
         
         return {
-            'prediction': prediction,
+            'prediction': adjusted_prediction,
             'whz_score': df_processed['whz_score'].iloc[0],
             'bmi': df_processed['bmi'].iloc[0],
             'bmi_status': df_processed['bmi_status'].iloc[0],
             'probabilities': prob_dict,
-            'recommendation': self.get_treatment_recommendation(prediction, df_processed.iloc[0])
+            'recommendation': self.get_treatment_recommendation(adjusted_prediction, df_processed.iloc[0])
         }
+
+    def _apply_clinical_override(self, prediction, patient_data, patient_row):
+        """Apply limited clinical overrides for severe undernutrition edge cases."""
+
+        def _to_bool(value):
+            if isinstance(value, bool):
+                return value
+            if value is None:
+                return False
+            return str(value).strip().lower() in {'yes', 'true', '1'}
+
+        def _is_positive(value):
+            if value is None:
+                return False
+            text = str(value).strip().lower()
+            return text not in {'', 'no', 'none', 'false', '0', 'n/a', 'na'}
+
+        def _safe_float(value, default=0.0):
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return default
+
+        adjusted = str(prediction)
+
+        has_edema = _to_bool(patient_data.get('edema', False))
+        age_months = int(_safe_float(patient_data.get('age_months', 0), 0.0))
+        whz = _safe_float(patient_row.get('whz_score'), 0.0)
+        wfa = _safe_float(patient_row.get('wfa_zscore'), 0.0)
+        bmi_status_value = str(patient_row.get('bmi_status', ''))
+
+        risk_fields = ('tuberculosis', 'malaria', 'congenital_anomalies', 'other_medical_problems', 'twins')
+        risk_count = sum(1 for field in risk_fields if _is_positive(patient_data.get(field)))
+
+        # Escalation rules: prioritize safety for likely severe undernutrition.
+        if has_edema:
+            return 'Severe Acute Malnutrition (SAM)'
+
+        if adjusted != 'Severe Acute Malnutrition (SAM)':
+            if whz <= -3.0 or wfa <= -3.0:
+                return 'Severe Acute Malnutrition (SAM)'
+            if risk_count >= 2 and (whz <= -2.5 or wfa <= -2.5):
+                return 'Severe Acute Malnutrition (SAM)'
+
+        # De-escalation rules: reduce likely false-positive SAM in low-risk children.
+        if adjusted == 'Severe Acute Malnutrition (SAM)':
+            low_clinical_risk = (not has_edema) and (risk_count == 0)
+            anthropometry_not_severe = (whz > -2.2) and (wfa > -2.2)
+            if low_clinical_risk and anthropometry_not_severe:
+                if whz <= -2.0 or wfa <= -2.0:
+                    return 'Moderate Acute Malnutrition (MAM)'
+                return 'Normal'
+
+            # Targeted fallback for older children with low clinical risk and
+            # near-threshold anthropometry to avoid SAM over-calls.
+            older_low_risk = (age_months >= 24) and (not has_edema) and (risk_count <= 1)
+            near_threshold_not_severe = (whz > -2.8) and (wfa > -2.8)
+            if older_low_risk and near_threshold_not_severe:
+                if bmi_status_value in {'Normal', 'Overweight', 'Obese'}:
+                    if whz <= -2.0 or wfa <= -2.0:
+                        return 'Moderate Acute Malnutrition (MAM)'
+                    return 'Normal'
+
+        return adjusted
     
     def predict_batch(self, df):
         """
@@ -1026,6 +1171,10 @@ class MalnutritionRandomForestModel:
             return "Nutritional support and monitoring needed"
         elif status == "At Risk":
             return "Monitor closely and provide nutritional counseling"
+        elif status == "Obese":
+            return "Refer to physician; initiate dietary modification and physical activity programme"
+        elif status == "Overweight":
+            return "Dietary counseling and lifestyle modification; avoid high-calorie foods"
         else:
             return "Continue regular monitoring and healthy feeding practices"
     
@@ -1037,27 +1186,134 @@ class MalnutritionRandomForestModel:
             return "Weekly monitoring until improvement observed"
         elif status == "At Risk":
             return "Monthly monitoring for 3 months"
+        elif status == "Obese":
+            return "Monthly monitoring; physician review every 3 months"
+        elif status == "Overweight":
+            return "Monthly monitoring for 6 months to track weight trajectory"
         else:
             return "Routine growth monitoring as per schedule"
 
     def get_treatment_recommendation(self, status, patient_data, protocol_name=None):
         """
-        Get treatment recommendation using flexible protocol system
-        
+        Get treatment recommendation by loading the correct JSON protocol file.
+
         Args:
-            status: Malnutrition status
-            patient_data: Patient data dictionary
-            protocol_name: Optional protocol to use (uses active if None)
-        
+            status:        Nutritional status string (e.g. 'Severe Acute Malnutrition (SAM)')
+            patient_data:  Patient dict or pandas Series with age_months, edema, etc.
+            protocol_name: 'who_standard' | 'community_based' | 'hospital_intensive'
+
         Returns:
-            Treatment recommendation dictionary
+            Structured treatment recommendation dictionary.
         """
-        # Simple treatment recommendation based on status
-        return {
-            "status": status,
-            "recommendation": f"Treatment recommended for {status}",
-            "protocol": protocol_name or "standard"
+        import json as _json
+
+        # ── resolve protocol file ──────────────────────────────────────────────
+        _protocol_map = {
+            'who_standard':       'who_standard.json',
+            'WHO_Standard':       'who_standard.json',
+            'community_based':    'community_based.json',
+            'Community_Based':    'community_based.json',
+            'hospital_intensive': 'hospital_intensive.json',
+            'Hospital_Intensive': 'hospital_intensive.json',
         }
+        protocol = protocol_name or getattr(self, 'current_protocol', 'who_standard') or 'who_standard'
+        filename = _protocol_map.get(protocol, 'who_standard.json')
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        protocol_path = os.path.join(script_dir, 'treatment_protocols', filename)
+
+        try:
+            with open(protocol_path, 'r', encoding='utf-8') as fh:
+                protocol_data = _json.load(fh)
+        except Exception as e:
+            return {
+                "status": status,
+                "treatment": f"Consult clinician – protocol file unavailable ({e})",
+                "protocol": protocol,
+            }
+
+        protocols = protocol_data.get('protocols', {})
+        if status not in protocols:
+            return {
+                "status": status,
+                "treatment": f"Consult clinician – no protocol entry for '{status}'",
+                "protocol": protocol,
+            }
+
+        status_block = protocols[status]
+
+        # ── helper to safely get a field from patient_data (dict or pd.Series) ─
+        def _get(field, default=None):
+            try:
+                val = patient_data.get(field, default)
+                return default if val is None else val
+            except Exception:
+                return default
+
+        # ── choose with_edema / without_edema / standard sub-block ────────────
+        has_edema = bool(_get('edema', False))
+        if 'with_edema' in status_block:
+            selected = status_block['with_edema'] if has_edema else \
+                       status_block.get('without_edema', status_block.get('standard', {}))
+        else:
+            selected = status_block.get('standard', {})
+
+        # ── resolve age-specific guidance ─────────────────────────────────────
+        try:
+            age_months = int(_get('age_months', 12))
+        except (TypeError, ValueError):
+            age_months = 12
+
+        age_specific = selected.get('age_specific', {})
+        if age_months <= 6:
+            age_entry = age_specific.get('0-6_months')
+        elif age_months <= 24:
+            age_entry = age_specific.get('6-24_months')
+        else:
+            age_entry = age_specific.get('24-60_months')
+
+        # ── build result ──────────────────────────────────────────────────────
+        result = {
+            "status":         status,
+            "protocol":       protocol,
+            "has_edema":      has_edema,
+            "treatment":      selected.get('treatment', 'Consult clinician'),
+            "details":        selected.get('details', ''),
+            "follow_up":      selected.get('follow_up', ''),
+            "priority":       selected.get('priority', 'standard'),
+            "duration_weeks": selected.get('duration_weeks', 'ongoing'),
+            "medications":    selected.get('medications', []),
+            "monitoring":     selected.get('monitoring', []),
+        }
+
+        if age_entry:
+            result['age_specific_guidance'] = age_entry
+
+        # ── apply active risk modifiers ───────────────────────────────────────
+        risk_modifiers = selected.get('risk_modifiers', {})
+        if risk_modifiers:
+            _falsy = {'no', 'false', '0', 'none', ''}
+            active = {}
+            for field in ('tuberculosis', 'malaria', 'twins', '4ps_beneficiary'):
+                val = _get(field)
+                if val is not None and str(val).lower() not in _falsy \
+                        and field in risk_modifiers:
+                    active[field] = risk_modifiers[field]
+            if active:
+                result['risk_modifiers'] = active
+
+        # ── attach emergency / discharge criteria from protocol root ──────────
+        emergency = protocol_data.get('emergency_criteria', {})
+        if emergency:
+            result['emergency_criteria'] = emergency
+
+        discharge = protocol_data.get('discharge_criteria', {})
+        if discharge:
+            if 'SAM' in status:
+                result['discharge_criteria'] = discharge.get('SAM', discharge.get('recovered', ''))
+            elif 'MAM' in status:
+                result['discharge_criteria'] = discharge.get('MAM', '')
+
+        return result
     
     def set_treatment_protocol(self, protocol_name):
         """
@@ -1141,7 +1397,7 @@ class MalnutritionRandomForestModel:
             print(f"❌ Error loading model: {e}")
             raise e
 
-def generate_sample_data(n_samples=1000):
+def generate_sample_data(n_samples=2000):
     """
     Generate sample data for demonstration
     """
@@ -1165,10 +1421,18 @@ def generate_sample_data(n_samples=1000):
             height = np.random.normal(80 + (age_months - 24) * 0.8, 5)
             base_weight = 12 + (age_months - 24) * 0.2
         
-        # Add some variation for malnutrition cases
-        malnutrition_factor = np.random.choice([0.7, 0.8, 0.9, 1.0, 1.1], p=[0.1, 0.15, 0.25, 0.4, 0.1])
+        # Weight variation: covers SAM, MAM, Normal, Overweight, Obese
+        # factors: 0.70=SAM, 0.80=MAM, 0.90=At-Risk, 1.00=Normal, 1.15=Overweight, 1.35=Obese
+        malnutrition_factor = np.random.choice(
+            [0.70, 0.80, 0.90, 1.00, 1.15, 1.35],
+            p=[0.08, 0.12, 0.17, 0.39, 0.15, 0.09]
+        )
         weight = max(1, base_weight * malnutrition_factor + np.random.normal(0, 0.5))
-        
+
+        # Simulate realistic field measurement noise (scale ±150 g, length board ±3 mm)
+        weight = round(max(1.0, weight + np.random.normal(0, 0.15)), 1)
+        height = round(max(30.0, height + np.random.normal(0, 0.3)), 1)
+
         record = {
             'name': f'Child_{i+1}',
             'municipality': np.random.choice(municipalities),
@@ -1197,7 +1461,7 @@ def generate_sample_data(n_samples=1000):
 if __name__ == "__main__":
     # Generate sample data
     print("Generating sample data...")
-    df = generate_sample_data(1000)
+    df = generate_sample_data(2000)
     
     # Initialize and train model
     print("Training Random Forest model...")
@@ -1331,7 +1595,7 @@ class MalnutritionAssessment:
             elif wfa_zscore < -2:
                 risk_factors.append("Underweight")
                 risk_score += 2
-            
+
             # Height-for-age risk
             hfa_zscore = who_result['z_scores']['height_for_age']
             if hfa_zscore < -3:
@@ -1340,7 +1604,25 @@ class MalnutritionAssessment:
             elif hfa_zscore < -2:
                 risk_factors.append("Stunted")
                 risk_score += 2
-            
+
+            # Overnutrition signals (positive WFA z-scores)
+            overweight_score = 0
+            if wfa_zscore > 3:
+                risk_factors.append("Obese (weight-for-age > +3 SD)")
+                overweight_score += 2
+            elif wfa_zscore > 2:
+                risk_factors.append("Overweight (weight-for-age > +2 SD)")
+                overweight_score += 1
+
+            # BMI-based overnutrition
+            bmi_status = who_result['classifications'].get('bmi_status', 'Normal')
+            if bmi_status == 'Obese':
+                risk_factors.append("Obese (BMI)")
+                overweight_score += 2
+            elif bmi_status == 'Overweight':
+                risk_factors.append("Overweight (BMI)")
+                overweight_score += 1
+
             # MUAC assessment
             if muac_cm is not None:
                 if muac_cm < 11.5:
@@ -1349,13 +1631,14 @@ class MalnutritionAssessment:
                 elif muac_cm < 12.5:
                     risk_factors.append("Moderate acute malnutrition (MUAC)")
                     risk_score += 2
-            
+
             # Edema
             if has_edema:
                 risk_factors.append("Bilateral pitting edema")
                 risk_score += 3
-            
+
             # Determine primary diagnosis
+            # Overnutrition takes priority over low risk_score normal baseline
             if risk_score >= 6 or has_edema:
                 primary_diagnosis = "Severe Acute Malnutrition (SAM)"
                 risk_level = "High"
@@ -1368,6 +1651,14 @@ class MalnutritionAssessment:
                 primary_diagnosis = "At Risk of Malnutrition"
                 risk_level = "Low"
                 confidence = 0.7
+            elif overweight_score >= 2:
+                primary_diagnosis = "Obese"
+                risk_level = "Moderate"
+                confidence = 0.85
+            elif overweight_score >= 1:
+                primary_diagnosis = "Overweight"
+                risk_level = "Low-Moderate"
+                confidence = 0.85
             else:
                 primary_diagnosis = "Normal Nutritional Status"
                 risk_level = "Low"
