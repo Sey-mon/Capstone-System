@@ -10,7 +10,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/assessment-form.css') }}?v={{ filemtime(public_path('css/nutritionist/assessment-form.css')) }}">
+    <link rel="stylesheet" href="@assetv('css/nutritionist/assessment-form.css')">
 @endpush
 
 @section('content')
@@ -341,5 +341,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/nutritionist/assessment-form.js') }}?v={{ filemtime(public_path('js/nutritionist/assessment-form.js')) }}"></script>
+    <script src="@assetv('js/nutritionist/assessment-form.js')"></script>
 @endpush

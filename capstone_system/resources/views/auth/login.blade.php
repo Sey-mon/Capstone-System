@@ -9,7 +9,7 @@
     <meta name="description" content="Login to SHARES - Smart Health and Recommender System for Excellence in Nutrition. Access your San Pedro City nutrition management account.">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('img/cho.png') }}?v={{ filemtime(public_path('img/cho.png')) }}">
+    <link rel="icon" type="image/png" href="@assetv('img/cho.png')">
     
     <!-- Preconnect to external resources for better performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://www.google.com">
     
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="{{ asset('css/login.css') }}?v={{ filemtime(public_path('css/login.css')) }}">
+    <link rel="stylesheet" href="@assetv('css/login.css')">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -30,7 +30,7 @@
     <nav class="main-nav">
         <div class="nav-container">
             <div class="nav-logo">
-                <img src="{{ asset('img/shares-logo.png') }}?v={{ filemtime(public_path('img/shares-logo.png')) }}" alt="SHARES Logo">
+                <img src="@assetv('img/shares-logo.png')" alt="SHARES Logo">
             </div>
             <div class="nav-links">
                 <a href="#home">Home</a>
@@ -298,7 +298,7 @@
                 <!-- About Section -->
                 <div class="footer-section">
                     <div class="footer-logo">
-                        <img src="{{ asset('img/shares-logo.png') }}?v={{ filemtime(public_path('img/shares-logo.png')) }}" alt="SHARES Logo">
+                        <img src="@assetv('img/shares-logo.png')" alt="SHARES Logo">
                     </div>
                     <p class="footer-about">
                         Smart Health and Recommender System for San Pedro City's Nutrition Program - Building a healthier, food-secure future for all San Pedrenses.
@@ -400,6 +400,6 @@
         });
     </script>
     
-    <script src="{{ asset('js/login.js') }}?v={{ filemtime(public_path('js/login.js')) }}"></script>
+    <script src="@assetv('js/login.js')"></script>
 </body>
 </html>

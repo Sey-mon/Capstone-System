@@ -180,9 +180,9 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/api-management.css') }}?v={{ filemtime(public_path('css/api-management.css')) }}">
+<link rel="stylesheet" href="@assetv('css/api-management.css')">
 @endpush
 
 @push('scripts')
-<script src="{{ asset('js/api-management.js') }}?v={{ filemtime(public_path('js/api-management.js')) }}"></script>
+<script src="@assetv('js/api-management.js')"></script>
 @endpush

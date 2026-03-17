@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Portal - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" type="image/png" href="{{ asset('img/cho.png') }}?v={{ filemtime(public_path('img/cho.png')) }}">
-    <link rel="stylesheet" href="{{ asset('css/login.css') }}?v={{ filemtime(public_path('css/login.css')) }}">
+    <link rel="icon" type="image/png" href="@assetv('img/cho.png')">
+    <link rel="stylesheet" href="@assetv('css/login.css')">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -479,7 +479,7 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/login.js') }}?v={{ filemtime(public_path('js/login.js')) }}"></script>
+    <script src="@assetv('js/login.js')"></script>
     <script>
         // reCAPTCHA v3 - Generate token on form submit
         const staffLoginForm = document.getElementById('staffLoginForm');

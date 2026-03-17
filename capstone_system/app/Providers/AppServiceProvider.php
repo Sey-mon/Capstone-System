@@ -8,6 +8,7 @@ use App\Observers\AssessmentObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -51,6 +52,12 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(6)->by($key),
                 Limit::perHour(60)->by($key),
             ];
+        });
+
+        // Register custom @assetv directive for smart cache busting
+        // Usage: @assetv('css/login.css')
+        Blade::directive('assetv', function ($path) {
+            return "<?php \$p = {$path}; echo asset(\$p) . '?v=' . (file_exists(public_path(\$p)) ? filemtime(public_path(\$p)) : '0'); ?>";
         });
     }
 }

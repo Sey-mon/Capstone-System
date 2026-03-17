@@ -10,7 +10,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/dashboard.css') }}?v={{ filemtime(public_path('css/nutritionist/dashboard.css')) }}">
+    <link rel="stylesheet" href="@assetv('css/nutritionist/dashboard.css')">
 @endpush
 
 @section('content')
@@ -218,5 +218,5 @@
         window.nutritionalData      = {!! json_encode($nutritionalStatus) !!};
     </script>
 
-    <script src="{{ asset('js/nutritionist/nutritionist-dashboard.js') }}?v={{ filemtime(public_path('js/nutritionist/nutritionist-dashboard.js')) }}"></script>
+    <script src="@assetv('js/nutritionist/nutritionist-dashboard.js')"></script>
 @endpush

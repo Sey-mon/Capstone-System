@@ -9,9 +9,9 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients.css') }}?v={{ filemtime(public_path('css/nutritionist/patients.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-swal.css') }}?v={{ filemtime(public_path('css/nutritionist/patients-swal.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/nutritionist/patients-archive.css') }}?v={{ filemtime(public_path('css/nutritionist/patients-archive.css')) }}">
+    <link rel="stylesheet" href="@assetv('css/nutritionist/patients.css')">
+    <link rel="stylesheet" href="@assetv('css/nutritionist/patients-swal.css')">
+    <link rel="stylesheet" href="@assetv('css/nutritionist/patients-archive.css')">
 @endpush
 
 @section('content')
@@ -339,6 +339,6 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('js/nutritionist/patients.js') }}?v={{ filemtime(public_path('js/nutritionist/patients.js')) }}"></script>
-<script src="{{ asset('js/nutritionist/patients-archive.js') }}?v={{ filemtime(public_path('js/nutritionist/patients-archive.js')) }}"></script>
+<script src="@assetv('js/nutritionist/patients.js')"></script>
+<script src="@assetv('js/nutritionist/patients-archive.js')"></script>
 @endsection

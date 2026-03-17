@@ -10,11 +10,11 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/parent/meal-plans.css') }}?v={{ filemtime(public_path('css/parent/meal-plans.css')) }}">
+<link rel="stylesheet" href="@assetv('css/parent/meal-plans.css')">
 @endpush
 
 @push('scripts')
-<script src="{{ asset('js/parent/meal-plans.js') }}?v={{ filemtime(public_path('js/parent/meal-plans.js')) }}"></script>
+<script src="@assetv('js/parent/meal-plans.js')"></script>
 @endpush
 
 @section('content')

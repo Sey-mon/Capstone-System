@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terms and Conditions - SHARES</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" type="image/png" href="{{ asset('img/cho.png') }}?v={{ filemtime(public_path('img/cho.png')) }}">
-    <link rel="stylesheet" href="{{ asset('css/register-parent.css') }}?v={{ filemtime(public_path('css/register-parent.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/terms.css') }}?v={{ filemtime(public_path('css/terms.css')) }}">
+    <link rel="icon" type="image/png" href="@assetv('img/cho.png')">
+    <link rel="stylesheet" href="@assetv('css/register-parent.css')">
+    <link rel="stylesheet" href="@assetv('css/terms.css')">
 </head>
 <body>
     <div class="terms-container">
