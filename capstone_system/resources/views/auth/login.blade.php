@@ -48,7 +48,7 @@
             <div class="hero-text">
                 <h1 class="hero-title">
                     <span class="title-line">WELCOME TO</span><br>
-                    <span class="title-highlight">SHARES</span>
+                    <span class="title-highlight"><span class="title-shar">SHAR</span><span class="title-es">ES</span></span>
                 </h1>
                 <p class="hero-subtitle">
                     Smart Health and Recommender System for Excellence in Nutrition - Transforming San Pedro City into a nutrition-smart community through data-driven insights and intelligent health recommendations
@@ -202,26 +202,18 @@
         </div>
     </section>
 
-    <!-- Mission Section -->
-    <section id="mission" class="content-section light-section">
+    <!-- Mission & Vision Section -->
+    <section id="mission-vision" class="content-section mission-vision-section">
         <div class="section-container">
-            <div class="feature-cards">
-                <div class="feature-card">
+            <div class="mission-vision-cards">
+                <div class="feature-card mission-card">
                     <div class="feature-icon mission-icon">
                         <i class="fas fa-bullseye"></i>
                     </div>
                     <h3>Our Mission</h3>
                     <p>To lead San Pedro City toward becoming a nutrition-smart city by 2032—where innovation, data, and inclusive systems drive improved nutritional outcomes for all. Through the effective implementation of the Philippine Plan of Action for Nutrition, the city will promote evidence-based strategies, digital solutions, and multisectoral coordination to ensure food safety, eliminate malnutrition—including micronutrient deficiencies—and guarantee year-round access to safe, nutritious, and affordable food. By integrating nutrition into the core of its smart city agenda, San Pedro commits to building a healthier, more resilient, and food-secure population.</p>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Vision Section -->
-    <section id="vision" class="content-section dark-section">
-        <div class="section-container">
-            <div class="feature-cards">
-                <div class="feature-card">
+                <div class="feature-card vision-card">
                     <div class="feature-icon vision-icon">
                         <i class="fas fa-eye"></i>
                     </div>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Portal - Nutrition System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('img/cho.png') }}?v={{ filemtime(public_path('img/cho.png')) }}">
     <link rel="stylesheet" href="{{ asset('css/login.css') }}?v={{ filemtime(public_path('css/login.css')) }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -223,58 +224,58 @@
         <div class="hero-content">
             <div class="hero-text">
                 <div class="slideshow-container">
-                    <!-- Slide 1: Dashboard Overview -->
+                    <!-- Slide 1: Patient Assessment -->
                     <div class="slide active">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-chart-pie"></i>
+                                <i class="fas fa-stethoscope"></i>
                             </div>
-                            <h3>Step 1: Dashboard Overview</h3>
-                            <p>After logging in, you'll see your Dashboard with real-time statistics of children in your barangay. The dashboard displays total patients, recent screenings, nutrition status breakdown with colorful charts, and quick access to urgent cases. You can view trends and monitor which children need immediate attention at a glance.</p>
+                            <h3>Step 1: Conduct Nutrition Assessment</h3>
+                            <p>Start by conducting comprehensive nutrition assessments for children in your barangay. Record anthropometric measurements (height, weight, MUAC), collect dietary history, and identify nutritional status (Normal, Underweight, Wasted, Stunted, Overweight). The AI system analyzes data against WHO standards and provides immediate health risk classifications to guide your intervention planning.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 2: Patient Management -->
+                    <!-- Slide 2: Dietary Counseling -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-user-injured"></i>
+                                <i class="fas fa-user-tie"></i>
                             </div>
-                            <h3>Step 2: Manage Patients</h3>
-                            <p>Click "Patients" to view all children assigned to your barangay. You can add new patients, update their information (name, birthdate, gender, parent contact), search and filter by status or age, and archive inactive cases. Each patient record includes their complete profile, screening history, and generated meal plans all in one place.</p>
+                            <h3>Step 2: Provide Dietary Counseling</h3>
+                            <p>Counsel parents and caregivers on age-appropriate nutrition, food safety practices, and local food choices. Access our comprehensive Food Database with nutritional values for 300+ Filipino foods. Create personalized feeding recommendations based on available foods, budget constraints, and cultural preferences. Document counseling sessions and track parent compliance over time.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 3: Nutrition Screening -->
+                    <!-- Slide 3: Generate Personalized Meal Plans -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-clipboard-list"></i>
+                                <i class="fas fa-apple-alt"></i>
                             </div>
-                            <h3>Step 3: Conduct Nutrition Screenings</h3>
-                            <p>Click "Screenings" to perform nutrition assessments. Select a child from the Patients list, then enter their current weight, height, and MUAC (Mid-Upper Arm Circumference). The AI-powered system instantly calculates BMI, weight-for-age, height-for-age, and diagnoses their nutrition status (Normal, Underweight, Wasted, Stunted, Overweight). Results are automatically saved with timestamps.</p>
+                            <h3>Step 3: Generate AI-Powered Meal Plans</h3>
+                            <p>Create evidence-based, personalized meal plans using our AI Nutritionist. Input child's age, weight, nutritional status, and available foods. The system generates balanced weekly meal plans (breakfast, lunch, dinner, snacks) meeting dietary requirements. Plans are tailored to the child's specific needs and nutrition goals. Download and print for distribution to families or create community feeding programs.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 4: Meal Plan Generation -->
+                    <!-- Slide 4: Monitor & Track Progress -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-utensils"></i>
+                                <i class="fas fa-chart-line"></i>
                             </div>
-                            <h3>Step 4: Generate AI Meal Plans</h3>
-                            <p>Visit "Meal Plans" to create personalized nutrition programs. Select a child, specify available local foods, dietary restrictions, and budget. The AI generates a complete weekly meal plan with breakfast, lunch, dinner, and snacks tailored to the child's age, weight, and nutritional needs. You can also create feeding programs for groups and download meal plans as PDF.</p>
+                            <h3>Step 4: Monitor Nutritional Progress</h3>
+                            <p>Track child development through periodic reassessments. Compare current measurements against baseline to measure improvement in nutritional status. View growth trends with visual charts showing weight gain, height growth, and nutrition status changes over time. Identify children at risk of wasting or stunting for early intervention. Generate progress reports for barangay health teams and CHO supervisors.</p>
                         </div>
                     </div>
 
-                    <!-- Slide 5: Reports & Food Database -->
+                    <!-- Slide 5: Generate Clinical Reports -->
                     <div class="slide">
                         <div class="slide-content">
                             <div class="slide-icon">
-                                <i class="fas fa-chart-bar"></i>
+                                <i class="fas fa-file-pdf"></i>
                             </div>
-                            <h3>Step 5: Reports & Food Database</h3>
-                            <p>Access "Reports" to generate and download PDF summaries including Children Monitoring Reports, Assessment Summaries, and Monthly Progress Reports for your barangay. The "Food Database" lets you browse nutritional information for hundreds of Filipino foods—search by name or category to view calories, protein, vitamins, and minerals to help recommend the best foods for children's meal plans.</p>
+                            <h3>Step 5: Generate Reports & Documentation</h3>
+                            <p>Create professional PDF reports for clinical documentation and program monitoring. Generate individual assessment reports with recommendations, barangay-level nutrition summaries showing stunting/wasting prevalence, and monthly monitoring reports tracking program effectiveness. Export data for CHO presentations and compliance with national nutrition surveillance requirements.</p>
                         </div>
                     </div>
 

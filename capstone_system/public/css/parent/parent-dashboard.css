@@ -2,9 +2,9 @@
 
 :root {
     /* Primary Colors - Fresh Green Theme */
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #34d399;
+    --primary: #4DA84E;
+    --primary-dark: #4DA84E;
+    --primary-light: #6DB76E;
     --primary-ultra-light: #d1fae5;
     --primary-hover: #0d9668;
     
@@ -432,7 +432,7 @@
 }
 
 .toggle-btn:hover {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(77, 168, 78, 0.1);
     color: var(--primary);
 }
 
@@ -459,7 +459,7 @@
 }
 
 .chart-btn:hover {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(77, 168, 78, 0.1);
     color: var(--primary);
 }
 
@@ -524,16 +524,16 @@
 }
 
 .insight-item.positive {
-    background: rgba(34, 197, 94, 0.08);
-    border-color: rgba(34, 197, 94, 0.2);
+    background: rgba(77, 168, 78, 0.08);
+    border-color: rgba(77, 168, 78, 0.2);
 }
 
 .insight-item.positive i {
-    color: #22c55e;
+    color: #4DA84E;
 }
 
 .insight-item.positive strong {
-    color: #16a34a;
+    color: #4DA84E;
 }
 
 .insight-item.negative {
@@ -665,7 +665,7 @@
 
 .nutrition-status.normal {
     background: #d1fae5;
-    color: #065f46;
+    color: #4DA84E;
 }
 
 .nutrition-status.moderate-acute-malnutrition,
@@ -819,7 +819,7 @@
 
 .growth-trend.improving {
     background: #d1fae5;
-    color: #065f46;
+    color: #4DA84E;
 }
 
 .growth-trend.declining {
@@ -1058,7 +1058,7 @@
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark), #047857);
+    background: linear-gradient(135deg, var(--primary-dark), #4DA84E);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
@@ -1100,7 +1100,7 @@
 }
 
 .add-child-description {
-    background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(77, 168, 78, 0.1) 0%, rgba(77, 168, 78, 0.1) 100%);
     border-left: 4px solid var(--primary);
     padding: 1rem 1.25rem;
     border-radius: 8px;
@@ -1155,7 +1155,7 @@
 .form-input-modern:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    box-shadow: 0 0 0 3px rgba(77, 168, 78, 0.1);
 }
 
 .form-input-modern::placeholder {
@@ -1189,7 +1189,7 @@
 
 .btn-confirm-modern:hover {
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.3) !important;
 }
 
 .btn-cancel-modern:hover {
@@ -1289,7 +1289,7 @@
 }
 
 .confirmation-question {
-    background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(77, 168, 78, 0.1) 0%, rgba(77, 168, 78, 0.1) 100%);
     border-radius: 12px;
     padding: 1.25rem;
     text-align: center;
@@ -1559,7 +1559,7 @@
 
 .quick-action-card:hover {
     border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.15);
     transform: translateY(-2px);
 }
 

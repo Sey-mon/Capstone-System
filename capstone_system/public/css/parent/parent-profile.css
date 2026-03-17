@@ -5,7 +5,7 @@
 }
 
 .profile-header {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
     border-radius: 20px;
     padding: 40px;
     color: white;
@@ -80,8 +80,8 @@
 }
 
 .tab-btn.active {
-    color: #10b981;
-    border-bottom-color: #10b981;
+    color: #4DA84E;
+    border-bottom-color: #4DA84E;
 }
 
 .tab-content {
@@ -131,8 +131,8 @@
 
 .form-control:focus {
     outline: none;
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    border-color: #4DA84E;
+    box-shadow: 0 0 0 3px rgba(77, 168, 78, 0.1);
     background: white;
 }
 
@@ -150,13 +150,13 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
     color: white;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 10px 30px rgba(77, 168, 78, 0.3);
 }
 
 .btn-secondary {
