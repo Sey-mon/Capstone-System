@@ -1,8 +1,8 @@
 /* ===== DESKTOP WEB APPLICATION DESIGN - CHILDREN PAGE ===== */
 
 :root {
-    --primary-green: #059669;
-    --secondary-green: #10b981;
+    --primary-green: #4DA84E;
+    --secondary-green: #4DA84E;
     --light-green: #d1fae5;
     --accent-green: #6ee7b7;
     --dark-text: #1e293b;
@@ -20,7 +20,7 @@
 
 /* Desktop Header Section - Enhanced */
 .desktop-header-section {
-    background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 50%, #4DA84E 100%);
     padding: 0;
     position: relative;
     overflow: hidden;
@@ -214,11 +214,11 @@
 }
 
 .header-stat-item.stat-primary .stat-background {
-    background: linear-gradient(135deg, #059669, #047857);
+    background: linear-gradient(135deg, #4DA84E, #4DA84E);
 }
 
 .header-stat-item.stat-success .stat-background {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #4DA84E, #4DA84E);
 }
 
 .header-stat-item.stat-info .stat-background {
@@ -251,13 +251,13 @@
 }
 
 .header-stat-item.stat-primary .header-stat-icon {
-    background: linear-gradient(135deg, #059669, #047857);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    background: linear-gradient(135deg, #4DA84E, #4DA84E);
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.3);
 }
 
 .header-stat-item.stat-success .header-stat-icon {
-    background: linear-gradient(135deg, #10b981, #059669);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, #4DA84E, #4DA84E);
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.3);
 }
 
 .header-stat-item.stat-info .header-stat-icon {
@@ -622,7 +622,7 @@
     margin: 0 auto 2rem;
     font-size: 3rem;
     color: white;
-    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 10px 30px rgba(77, 168, 78, 0.2);
 }
 
 .empty-title {
@@ -659,12 +659,12 @@
 .empty-actions .btn-primary {
     background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.3);
 }
 
 .empty-actions .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 8px 20px rgba(77, 168, 78, 0.4);
 }
 
 .empty-actions .btn-secondary {
@@ -969,7 +969,7 @@
 
 .status-positive {
     background: #f0fdf4;
-    color: #16a34a;
+    color: #4DA84E;
     border: 1px solid #bbf7d0;
 }
 
@@ -1112,7 +1112,7 @@ h2#swal2-title {
 
 /* Modal Header */
 .swal-modal-header {
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
     color: white;
     padding: 12px 25px;
     margin: 0;
@@ -1176,7 +1176,7 @@ h2#swal2-title {
 }
 
 .profile-section-title {
-    color: #059669;
+    color: #4DA84E;
     margin: 0 0 20px 0;
     font-size: 1.125rem;
     font-weight: 700;
@@ -1228,7 +1228,7 @@ h2#swal2-title {
 }
 
 .profile-label-green {
-    color: #047857;
+    color: #4DA84E;
 }
 
 .profile-value {
@@ -1241,7 +1241,7 @@ h2#swal2-title {
 }
 
 .profile-value-green {
-    color: #059669;
+    color: #4DA84E;
     font-weight: 700;
 }
 
@@ -1258,7 +1258,7 @@ h2#swal2-title {
 
 .profile-value-number {
     font-weight: 700;
-    color: #059669;
+    color: #4DA84E;
     font-size: 1.125rem;
 }
 
@@ -1353,7 +1353,7 @@ h2#swal2-title {
 .swal-patient-modal .section-title {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #059669;
+    color: #4DA84E;
     margin-bottom: 1.25rem;
     padding-bottom: 0.75rem;
     border-bottom: 2px solid #e9ecef;
@@ -1364,7 +1364,7 @@ h2#swal2-title {
 
 .swal-patient-modal .section-title i {
     font-size: 1.25rem;
-    color: #059669;
+    color: #4DA84E;
     opacity: 0.8;
 }
 
@@ -1440,8 +1440,8 @@ h2#swal2-title {
 }
 
 .swal-patient-modal .btn-secondary {
-    background: #059669 !important;
-    border: 2px solid #059669 !important;
+    background: #4DA84E !important;
+    border: 2px solid #4DA84E !important;
     color: white !important;
     padding: 0.875rem 2.5rem !important;
     font-size: 1rem !important;
@@ -1452,10 +1452,10 @@ h2#swal2-title {
 }
 
 .swal-patient-modal .btn-secondary:hover {
-    background: #047857 !important;
-    border-color: #047857 !important;
+    background: #4DA84E !important;
+    border-color: #4DA84E !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.3) !important;
 }
 
 /* Scrollbar Styling for Modal Content */
@@ -1502,7 +1502,7 @@ h2#swal2-title {
 
 /* Custom header for child profile modal */
 .child-profile-modal-header {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
     padding: 20px 25px;
     margin: -24px -32px 25px -32px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -1875,12 +1875,12 @@ h2#swal2-title {
     gap: 0.625rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    box-shadow: 0 2px 8px rgba(77, 168, 78, 0.3);
 }
 
 .btn-add-child:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+    box-shadow: 0 6px 16px rgba(77, 168, 78, 0.4);
 }
 
 .btn-add-child:active {
@@ -1919,7 +1919,7 @@ h2#swal2-title {
 }
 
 .add-child-description {
-    background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(77, 168, 78, 0.1) 0%, rgba(77, 168, 78, 0.1) 100%);
     border-left: 4px solid var(--primary-green);
     padding: 1rem 1.25rem;
     border-radius: 8px;
@@ -1974,7 +1974,7 @@ h2#swal2-title {
 .form-input-modern:focus {
     outline: none;
     border-color: var(--primary-green);
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    box-shadow: 0 0 0 3px rgba(77, 168, 78, 0.1);
 }
 
 .form-input-modern::placeholder {
@@ -2008,7 +2008,7 @@ h2#swal2-title {
 
 .btn-confirm-modern:hover {
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.3) !important;
 }
 
 .btn-cancel-modern:hover {
@@ -2108,7 +2108,7 @@ h2#swal2-title {
 }
 
 .confirmation-question {
-    background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(77, 168, 78, 0.1) 0%, rgba(77, 168, 78, 0.1) 100%);
     border-radius: 12px;
     padding: 1.25rem;
     text-align: center;

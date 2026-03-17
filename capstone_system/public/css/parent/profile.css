@@ -2,12 +2,12 @@
 /* ================================================== */
 /* Root Variables */
 :root {
-    --primary-green: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #34d399;
-    --secondary-green: #22c55e;
-    --accent-green: #86efac;
-    --success-green: #16a34a;
+    --primary-green: #4DA84E;
+    --primary-dark: #3A7D3A;
+    --primary-light: #6DB76E;
+    --secondary-green: #4DA84E;
+    --accent-green: #8EC68F;
+    --success-green: #3A7D3A;
     --white: #ffffff;
     --off-white: #f9fafb;
     --light-gray: #f3f4f6;
@@ -44,8 +44,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, rgba(16, 185, 129, 0.1) 25%, transparent 25%, transparent 75%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.1)),
-                linear-gradient(45deg, rgba(16, 185, 129, 0.1) 25%, transparent 25%, transparent 75%, rgba(16, 185, 129, 0.1) 75%, rgba(16, 185, 129, 0.1));
+    background: linear-gradient(45deg, rgba(77, 168, 78, 0.1) 25%, transparent 25%, transparent 75%, rgba(77, 168, 78, 0.1) 75%, rgba(77, 168, 78, 0.1)),
+                linear-gradient(45deg, rgba(77, 168, 78, 0.1) 25%, transparent 25%, transparent 75%, rgba(77, 168, 78, 0.1) 75%, rgba(77, 168, 78, 0.1));
     background-size: 60px 60px;
     background-position: 0 0, 30px 30px;
     opacity: 0.3;
@@ -101,7 +101,7 @@
     justify-content: center;
     font-size: 2.5rem;
     color: var(--white);
-    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 30px rgba(77, 168, 78, 0.3);
     border: 4px solid var(--white);
     transition: var(--transition);
     position: relative;
@@ -127,7 +127,7 @@
 
 .avatar-circle:hover {
     transform: scale(1.05);
-    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 12px 40px rgba(77, 168, 78, 0.4);
 }
 
 .avatar-status {
@@ -184,7 +184,7 @@
 }
 
 .verified-icon i {
-    filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(77, 168, 78, 0.3));
 }
 
 .profile-title {
@@ -294,11 +294,11 @@
 }
 
 .quick-stat-icon.children {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #4DA84E, #3A7D3A);
 }
 
 .quick-stat-icon.assessments {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #4DA84E, #3A7D3A);
 }
 
 .quick-stat-icon.active {
@@ -387,11 +387,11 @@
 }
 
 .card-icon.personal {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #4DA84E, #3A7D3A);
 }
 
 .card-icon.children {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #4DA84E, #3A7D3A);
 }
 
 .card-icon.status {
@@ -603,7 +603,7 @@
 }
 
 .child-status.active {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(77, 168, 78, 0.1) 0%, rgba(77, 168, 78, 0.05) 100%);
     color: var(--success-green);
 }
 
@@ -649,7 +649,7 @@
 
 .status-item.active,
 .status-item.verified {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(77, 168, 78, 0.1) 0%, rgba(77, 168, 78, 0.05) 100%);
     border-color: var(--accent-green);
 }
 
@@ -759,7 +759,7 @@
 .timeline-marker.active {
     border-color: var(--primary-green);
     background: var(--primary-green);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 4px rgba(77, 168, 78, 0.2);
     animation: pulse 2s infinite;
 }
 
@@ -847,7 +847,7 @@
 
 /* Mobile touch improvements */
 .action-btn {
-    -webkit-tap-highlight-color: rgba(16, 185, 129, 0.2);
+    -webkit-tap-highlight-color: rgba(77, 168, 78, 0.2);
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
@@ -887,12 +887,12 @@
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
     color: var(--white);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.3);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 6px 20px rgba(77, 168, 78, 0.4);
 }
 
 .btn-secondary {
@@ -1119,7 +1119,7 @@
 }
 
 .parent-swal-confirm {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
+    background: linear-gradient(135deg, #4DA84E, #3A7D3A) !important;
     border: none !important;
     border-radius: 10px !important;
     padding: 12px 30px !important;
@@ -1130,7 +1130,7 @@
 
 .parent-swal-confirm:hover {
     transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+    box-shadow: 0 6px 20px rgba(77, 168, 78, 0.4) !important;
 }
 
 .parent-swal-cancel {
@@ -1228,3 +1228,4 @@
     padding: 20px 30px 30px !important;
     margin: 0 !important;
 }
+

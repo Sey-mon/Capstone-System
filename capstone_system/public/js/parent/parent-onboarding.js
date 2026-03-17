@@ -61,7 +61,7 @@
                     <ul style="line-height: 1.8; padding-left: 1.5rem;">
                         <li><strong>Dashboard Overview:</strong> See your child's growth and health status</li>
                         <li><strong>Children Management:</strong> Link and monitor multiple children</li>
-                        <li><strong>Health Screenings:</strong> View detailed nutrition screenings</li>
+                        <li><strong>Nutrition Screenings:</strong> View detailed nutrition screenings</li>
                         <li><strong>Meal Plans:</strong> Access personalized meal recommendations</li>
                     </ul>
                 `,
@@ -88,19 +88,19 @@
                 icon: '<i class="fas fa-link" style="font-size: 3rem; color: #17a2b8;"></i>'
             },
             {
-                title: 'Monitor Growth & Health 📊',
+                title: 'Monitor Screening Results 📊',
                 content: `
                     <p style="line-height: 1.6; margin-bottom: 1.5rem;">
-                        Once your child is linked, you'll see comprehensive health information:
+                        Once your child is linked, you can view all nutrition screenings and health information:
                     </p>
                     <ul style="line-height: 1.8; padding-left: 1.5rem;">
-                        <li><strong>Growth Charts:</strong> Track weight and height over time</li>
-                        <li><strong>Nutrition Status:</strong> See current malnutrition indicators</li>
-                        <li><strong>Screening History:</strong> View past health check-ups</li>
-                        <li><strong>Recommendations:</strong> Get personalized nutrition advice</li>
+                        <li><strong>Screening Records:</strong> View all nutrition assessments conducted by your nutritionist</li>
+                        <li><strong>Growth Charts:</strong> Track weight, height, and MUAC measurements over time</li>
+                        <li><strong>Nutrition Status:</strong> See current nutrition classification (Normal, Underweight, Wasted, Stunted, Overweight)</li>
+                        <li><strong>Health Recommendations:</strong> Get personalized nutrition advice based on screenings</li>
                     </ul>
                     <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin-top: 1.5rem; border-left: 4px solid: #ffc107;">
-                        <p style="margin: 0;"><i class="fas fa-star" style="color: #ffc107;"></i> <strong>Pro Tip:</strong> Regular check-ups help track your child's progress more effectively!</p>
+                        <p style="margin: 0;"><i class="fas fa-star" style="color: #ffc107;"></i> <strong>Pro Tip:</strong> Regular screenings help track your child's progress more effectively!</p>
                     </div>
                 `,
                 icon: '<i class="fas fa-chart-line" style="font-size: 3rem; color: #28a745;"></i>'
@@ -109,7 +109,7 @@
                 title: 'Access Meal Plans 🍽️',
                 content: `
                     <p style="line-height: 1.6; margin-bottom: 1.5rem;">
-                        Get AI-powered personalized meal plans tailored to your child's nutritional needs:
+                        Get AI-powered personalized meal plans tailored to your child's nutritional needs identified in screenings:
                     </p>
                     <ul style="line-height: 1.8; padding-left: 1.5rem;">
                         <li>Balanced nutrition recommendations</li>
