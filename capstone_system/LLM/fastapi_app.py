@@ -443,12 +443,19 @@ def generate_feeding_program_meal_plan_endpoint(request: FeedingProgramMealPlanR
         
         if not result['success']:
             if result.get('error_type') == 'validation_failed':
+                # Log the detailed validation issues
+                issues = result.get('validation_issues', [])
+                audit = result.get('audit', {})
+                logger.error(f"🔴 MEAL PLAN VALIDATION FAILED:")
+                logger.error(f"   Issues: {issues}")
+                logger.error(f"   Audit: {audit}")
+                
                 raise HTTPException(
                     status_code=422,
                     detail={
                         'message': 'Plan blocked: generated output did not pass quality checks. Please try again.',
-                        'validation_issues': result.get('validation_issues', []),
-                        'audit': result.get('audit', {}),
+                        'validation_issues': issues,
+                        'audit': audit,
                     },
                 )
             raise HTTPException(status_code=500, detail=result.get('error', 'Failed to generate meal plan'))

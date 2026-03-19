@@ -70,19 +70,51 @@ def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool
     Each ingredient list item must reference ONLY:
     - explicitly allowed main ingredients
     - basic condiments/seasonings
+    
+    Includes Filipino-to-English synonym mappings to handle both names.
     """
     text = str(item_text).lower().strip()
     if not text:
         return True
 
+    # Common condiments and seasonings
     condiments = [
         'garlic', 'bawang', 'onion', 'sibuyas', 'oil', 'mantika', 'salt', 'asin',
         'soy sauce', 'toyo', 'fish sauce', 'patis', 'ginger', 'luya', 'water', 'tubig',
         'pepper', 'paminta', 'vinegar', 'suka',
     ]
+    
+    # Filipino ingredient name synonyms (map Filipino names to English equivalents)
+    ingredient_aliases = {
+        'manok': ['chicken', 'poultry', 'fowl'],
+        'bangus': ['milkfish', 'bangus fish'],
+        'tilapia': ['tilapia', 'mudfish'],
+        'isda': ['fish', 'seafood'],
+        'itlog': ['egg', 'eggs'],
+        'monggo': ['mung bean', 'mung beans', 'mongo beans'],
+        'kangkong': ['water spinach', 'morning glory', 'spinach'],
+        'kalabasa': ['squash', 'pumpkin', 'calabash'],
+        'sitaw': ['long beans', 'yard beans', 'string beans'],
+        'malunggay': ['moringa', 'malunggay leaves', 'drumstick leaves'],
+        'kamote': ['sweet potato', 'yam'],
+        'bigas': ['rice', 'grains'],
+        'tokwa': ['tofu', 'bean curd'],
+        'dilis': ['anchovy', 'dilis fish', 'anchovies'],
+        'tuyo': ['dried fish', 'salted fish'],
+        'baboy': ['pork', 'pork meat'],
+        'baka': ['beef', 'cattle meat'],
+        'mais': ['corn', 'maize'],
+    }
+    
     allowed = allowed_main + condiments
+    
+    # Build expanded list: include both Filipino names and their English synonyms
+    expanded_allowed = set(allowed)
+    for fil_name in allowed_main:
+        if fil_name in ingredient_aliases:
+            expanded_allowed.update(ingredient_aliases[fil_name])
 
-    # Break compound lines into rough ingredient segments.
+    # Break compound lines into rough ingredient segments
     segments = re.split(r',|/|\band\b|\bwith\b', text)
     segments = [s.strip() for s in segments if s.strip()]
 
@@ -91,7 +123,7 @@ def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool
 
     for segment in segments:
         matched = False
-        for kw in allowed:
+        for kw in expanded_allowed:
             if re.search(rf'\b{re.escape(kw)}\b', segment):
                 matched = True
                 break
@@ -100,20 +132,29 @@ def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool
     return True
 
 
-def create_feeding_program_llm():
-    """Create a standardized ChatGroq instance for feeding program functions."""
+def create_feeding_program_llm(is_heavy: bool = False):
+    """
+    Create a standardized ChatGroq instance for feeding program functions.
+    
+    Args:
+        is_heavy: If True, use higher token limits for 5-day plans (default False)
+    """
     api_key = os.getenv('GROQ_API_KEY')
     if not api_key:
         logger.error("GROQ_API_KEY not found in environment variables")
         raise ValueError("GROQ_API_KEY not found in environment variables")
     
     try:
+        # For 5-day plans (20 meals), we need more tokens
+        max_tokens = 6000 if is_heavy else 5000
+        timeout_sec = 150 if is_heavy else 120
+        
         return ChatGroq(
             api_key=SecretStr(api_key),
             model="meta-llama/llama-4-scout-17b-16e-instruct",
             temperature=0.1,   # Lower = tighter JSON structure adherence
-            max_tokens=5000,   # 5-day plan needs ~5000 tokens; truncation breaks JSON
-            timeout=120,
+            max_tokens=max_tokens,   # Increased for 5-day plans
+            timeout=timeout_sec,
             max_retries=2,
             model_kwargs={"response_format": {"type": "json_object"}},
         )
@@ -441,19 +482,46 @@ def _plan_dish_names(
         avoid_block = ''
 
     if available_ingredients:
+        # Build a clearer format for the available ingredients
+        avail_list = [p.strip() for p in available_ingredients.split(',')]
+        avail_count = len(avail_list)
+        avail_display = '\n'.join(f'   {i+1}. {ing}' for i, ing in enumerate(avail_list))
+        
         ingredient_hint = (
-            f'🔴 STRICT RULE — Use ONLY these main ingredients (no additions, no substitutions):\n'
-            f'   {available_ingredients}\n'
-            f'∙ Every dish MUST be built around ONLY the main ingredients listed above.\n'
-            f'∙ Do NOT add proteins, vegetables, or starches not present in the list above.\n'
-            f'∙ Basic cooking essentials (garlic, onion, oil, salt, soy sauce, fish sauce, ginger)\n'
-            f'  may be used as minor seasoning only — they are NOT featured ingredients.'
+            f'🔴🔴🔴 CRITICAL CONSTRAINT — USE ONLY THESE INGREDIENTS 🔴🔴🔴\n'
+            f'\n'
+            f'AVAILABLE INGREDIENTS ({avail_count} items):\n'
+            f'{avail_display}\n'
+            f'\n'
+            f'⚠️ MANDATORY RULES:\n'
+            f'✓ EVERY meal MUST use ONLY ingredients from the list above\n'
+            f'✓ Do NOT use ANY other proteins, vegetables, grains, or starches\n'
+            f'✓ Do NOT add tilapia, pork, beef, monggo, or any unlisted ingredient\n'
+            f'✓ Basic seasonings OK: garlic, onion, oil, salt, fish sauce, soy sauce, ginger\n'
+            f'✓ These seasonings do NOT count as "featured" ingredients\n'
+            f'\n'
+            f'❌ FORBIDDEN:\n'
+            f'✗ Any protein not in the list above\n'
+            f'✗ Any vegetable not in the list above\n'
+            f'✗ Any grain/starch not in the list above\n'
+            f'✗ Budget recommendations — ignore them completely\n'
+            f'✗ Food database suggestions — ignore them completely\n'
+            f'\n'
+            f'Example: If your available ingredients are "manok, bangus, kangkong":\n'
+            f'  ✅ DO: Adobong Manok, Pritong Bangus, Ginisang Kangkong\n'
+            f'  ❌ DON\'T: Any dish with tilapia, pork, monggo, or sitaw\n'
+            f'\n'
+            f'⭐ This constraint is ABSOLUTE. Every meal in every day MUST follow it.\n'
         )
+        ingredient_constraint_note = f"Use ONLY these {avail_count} ingredients"
     else:
+        avail_count = 0
         ingredient_hint = (
+            f"ℹ️ NO SPECIFIC INGREDIENTS PROVIDED — Use budget recommendations freely:\n"
             f"∙ Proteins to use: {', '.join(budget_context['proteins'][:5])}\n"
             f"∙ Vegetables to use: {', '.join(budget_context['vegetables'][:5])}"
         )
+        ingredient_constraint_note = "Use budget recommendations freely"
 
     prompt = (
         f'You are a Filipino pediatric nutritionist planning a {duration_days}-day '
@@ -854,15 +922,26 @@ YOUR TASK: Complete the {program_duration_days}-day meal plan — fill in ingred
 
 {fill_mode_notice}CRITICAL REQUIREMENTS:
 
-{'''1. **🔴 EXCLUSIVE INGREDIENT RULE — STRICTLY ENFORCED:**
-   - ONLY the available ingredients listed at the top are allowed as main ingredients.
-   - Do NOT add any protein, vegetable, starch, or featured ingredient not in the available list.
-   - Budget-recommended ingredients do NOT apply — available ingredients replace them entirely.
-   - Examples:
-     * "manok, kangkong, kamote" listed → ONLY those as main ingredients; no bangus, monggo, or extra veg
-     * "bangus, sitaw, kalabasa" listed → no chicken or other produce may appear anywhere in the plan
-   - Basic condiments (garlic, onion, oil, salt, soy sauce, fish sauce, ginger) are OK as seasoning.
-   - Every "ingredients" array in your JSON MUST reference ONLY the available list + basic condiments.''' if available_ingredients else '''1. **✅ NO SPECIFIED INGREDIENTS — USE BUDGET RECOMMENDATIONS FREELY:**
+{'''1. **🔴🔴🔴 EXCLUSIVE INGREDIENT RULE — ABSOLUTELY NO EXCEPTIONS 🔴🔴🔴**
+   
+   ⚠️ FAIL-SAFE RULE: Every single meal across ALL days must use ONLY:
+   - The {avail_count} ingredients listed in the AVAILABLE INGREDIENTS section above
+   - Basic seasonings: garlic, onion, oil, salt, fish sauce, soy sauce, ginger
+   
+   ❌ VIOLATION = MEAL PLAN REJECTED:
+   - If ANY meal uses an ingredient NOT in the list → PLAN FAILS
+   - If ANY meal uses tilapia when only manok/bangus allowed → PLAN FAILS
+   - If ANY meal uses monggo when only specified ingredients → PLAN FAILS
+   
+   ✅ REQUIRED FOR EVERY MEAL:
+   - Check the available ingredients list (items above)
+   - Verify EVERY ingredient in the meal is in that list or is a basic seasoning
+   - Do NOT guess or use "similar" ingredients
+   - Do NOT use budget-recommended ingredients if they\'re not in the list
+   - Do NOT add anything the user didn\'t explicitly provide
+   
+   🎯 YOUR JOB: Use ONLY the {avail_count} available ingredients to create varied, interesting Filipino dishes.
+      With constraints, creativity matters most!''' if available_ingredients else '''1. **✅ NO SPECIFIED INGREDIENTS — USE BUDGET RECOMMENDATIONS FREELY:**
    - No specific ingredients were provided; select varied Filipino ingredients appropriate for the budget.
    - Prioritize proteins, vegetables, and grains from the budget recommendations section.
    - Focus on seasonal, locally available, cost-effective Filipino ingredients.'''}
@@ -1105,7 +1184,7 @@ BEGIN JSON OUTPUT NOW:
                 )
             # ── End prompt build ─────────────────────────────────────────────
 
-            llm = create_feeding_program_llm()
+            llm = create_feeding_program_llm(is_heavy=True)  # Heavy mode for main plan
 
             start_time = time.time()
             response = llm.invoke(current_prompt)
@@ -1125,12 +1204,17 @@ BEGIN JSON OUTPUT NOW:
             # Clean the response - remove any text before first { and after last }
             cleaned_content = meal_plan_content.strip()
 
+            # DEBUG: Log the response length and first 500 chars
+            logger.warning(f"📊 LLM Response Stats: Length={len(meal_plan_content)} chars, Time={generation_time:.2f}s")
+            logger.warning(f"📄 Response preview (first 300 chars): {meal_plan_content[:300]}")
+            logger.warning(f"📄 Response tail (last 300 chars): {meal_plan_content[-300:]}")
+
             # Try to extract JSON if wrapped in markdown or has extra text
             import re
             json_match = re.search(r'\{[\s\S]*\}', cleaned_content)
             if json_match:
                 cleaned_content = json_match.group(0)
-                logger.info("Extracted JSON from response")
+                logger.info(f"Extracted JSON from response (extracted size: {len(cleaned_content)} chars)")
 
             # Validate it's valid JSON by attempting to parse
             try:
