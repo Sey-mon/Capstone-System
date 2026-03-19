@@ -90,6 +90,15 @@ def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool
         'coconut milk', 'gata', 'calamansi', 'kalamansi', 'kamias',
         'rice', 'bigas', 'flour', 'cornstarch', 'brown sugar', 'white sugar',
         'sauce', 'broth', 'stock', 'lemon', 'lime', 'bay leaf',
+        # Breakfast & Snack staples (Almusal & Meryenda)
+        'glutinous rice', 'cocoa powder', 'cocoa', 'sugar', 'pandesal', 'butter', 
+        'kakanin', 'kakanin flour', 'egg', 'eggs', 'milk', 'powdered milk',
+        'champorado', 'turon', 'banana cue', 'sago', 'honey', 'peanut butter',
+        'cheese', 'panatda', 'palitaw', 'biko', 'sapin-sapin', 'leche flan',
+        'ube', 'calamansi juice', 'condensed milk', 'chocolate', 'cinnamon',
+        'vanilla', 'nutmeg', 'bread', 'toast', 'jam', 'malunggay', 'moringa',
+        'banana', 'saba', 'papaya', 'mango', 'watermelon', 'pineapple', 'avocado',
+        'seasonal fruits', 'fresh fruit', 'mixed fruits',
     ]
     
     # Filipino ingredient name synonyms (map Filipino names to English equivalents)
