@@ -69,7 +69,8 @@ def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool
     Hard post-generation gate for strict ingredient mode.
     Each ingredient list item must reference ONLY:
     - explicitly allowed main ingredients
-    - basic condiments/seasonings
+    - basic condiments/seasonings (always allowed)
+    - Filipino staple cooking ingredients (always allowed)
     
     Includes Filipino-to-English synonym mappings to handle both names.
     """
@@ -77,11 +78,18 @@ def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool
     if not text:
         return True
 
-    # Common condiments and seasonings
+    # ALWAYS ALLOWED: Basic condiments and seasonings (universally used)
     condiments = [
         'garlic', 'bawang', 'onion', 'sibuyas', 'oil', 'mantika', 'salt', 'asin',
         'soy sauce', 'toyo', 'fish sauce', 'patis', 'ginger', 'luya', 'water', 'tubig',
         'pepper', 'paminta', 'vinegar', 'suka',
+    ]
+    
+    # ALWAYS ALLOWED: Filipino staple cooking ingredients (like salt & oil)
+    staple_cooking_ingredients = [
+        'coconut milk', 'gata', 'calamansi', 'kalamansi', 'kamias',
+        'rice', 'bigas', 'flour', 'cornstarch', 'brown sugar', 'white sugar',
+        'sauce', 'broth', 'stock', 'lemon', 'lime', 'bay leaf',
     ]
     
     # Filipino ingredient name synonyms (map Filipino names to English equivalents)
@@ -106,7 +114,7 @@ def _is_allowed_ingredient_item(item_text: str, allowed_main: List[str]) -> bool
         'mais': ['corn', 'maize'],
     }
     
-    allowed = allowed_main + condiments
+    allowed = allowed_main + condiments + staple_cooking_ingredients
     
     # Build expanded list: include both Filipino names and their English synonyms
     expanded_allowed = set(allowed)
@@ -361,8 +369,23 @@ def validate_meal_plan(
                     f"Prohibited ingredient in dish name: '{dish}' (Day {day_num} {actual_type})"
                 )
 
-            # Hard post-generation enforcement in strict ingredient mode
-            if strict_mode:
+            # ──────────────────────────────────────────────────────────────────
+            # STRICT ingredient validation for LUNCH & DINNER only
+            # (Tanghalian and Hapunan)
+            # 
+            # FLEXIBLE for BREAKFAST & SNACKS (Almusal & Meryenda)
+            # Allow common staples: cocoa powder, sugar, rice, etc.
+            # ──────────────────────────────────────────────────────────────────
+            actual_type_lower = actual_type.lower()
+            STRICT_MEALS = {'tanghalian', 'hapunan'}  # Lunch & Dinner
+            RELAXED_MEALS = {'almusal', 'meryenda'}   # Breakfast & Snacks
+            
+            # Skip ingredient check for breakfast & snacks
+            if strict_mode and actual_type_lower in RELAXED_MEALS:
+                continue  # Allow any ingredients for Almusal & Meryenda
+            
+            # Apply strict ingredient check for lunch & dinner only
+            if strict_mode and actual_type_lower in STRICT_MEALS:
                 ingredients = meal.get('ingredients', [])
                 if not isinstance(ingredients, list):
                     issues.append(
@@ -922,34 +945,37 @@ YOUR TASK: Complete the {program_duration_days}-day meal plan — fill in ingred
 
 {fill_mode_notice}CRITICAL REQUIREMENTS:
 
-{'''1. **🔴🔴🔴 EXCLUSIVE INGREDIENT RULE — ABSOLUTELY NO EXCEPTIONS 🔴🔴🔴**
+{'''1. **🔴🔴🔴 EXCLUSIVE INGREDIENT RULE — FOR LUNCH & DINNER ONLY 🔴🔴🔴**
    
-   ⚠️ FAIL-SAFE RULE: Every single meal across ALL days must use ONLY:
-   - The {avail_count} ingredients listed in the AVAILABLE INGREDIENTS section above
-   - Basic seasonings: garlic, onion, oil, salt, fish sauce, soy sauce, ginger
+   ⚠️ STRICT RULE for TANGHALIAN (Lunch) & HAPUNAN (Dinner):
+   - Use ONLY the {avail_count} ingredients listed in the AVAILABLE INGREDIENTS section
+   - Basic seasonings OK: garlic, onion, oil, salt, fish sauce, soy sauce, ginger
+   - Do NOT use any other proteins, vegetables, grains, or starches
    
-   ❌ VIOLATION = MEAL PLAN REJECTED:
-   - If ANY meal uses an ingredient NOT in the list → PLAN FAILS
-   - If ANY meal uses tilapia when only manok/bangus allowed → PLAN FAILS
-   - If ANY meal uses monggo when only specified ingredients → PLAN FAILS
+   ✅ FLEXIBLE for ALMUSAL (Breakfast) & MERYENDA (Snacks):
+   - Use common breakfast/snack staples: rice, cocoa powder, sugar, bread, etc.
+   - Mix in the available ingredients creatively (champorado with available protein)
+   - Example: Champorado with Tuyo (cocoa + sugar + rice + tuyo from available list)
+   - Example: Pandesal with Palaman (bread + peanut butter/cheese - common staples)
+   - Example: Banana Cue (banana + sugar + oil - common staples)
    
-   ✅ REQUIRED FOR EVERY MEAL:
-   - Check the available ingredients list (items above)
-   - Verify EVERY ingredient in the meal is in that list or is a basic seasoning
-   - Do NOT guess or use "similar" ingredients
-   - Do NOT use budget-recommended ingredients if they\'re not in the list
-   - Do NOT add anything the user didn\'t explicitly provide
-   
-   🎯 YOUR JOB: Use ONLY the {avail_count} available ingredients to create varied, interesting Filipino dishes.
-      With constraints, creativity matters most!''' if available_ingredients else '''1. **✅ NO SPECIFIED INGREDIENTS — USE BUDGET RECOMMENDATIONS FREELY:**
+   🎯 SUMMARY:
+   - BREAKFAST (Almusal): Be creative with common Filipino breakfast staples
+   - LUNCH (Tanghalian): STRICT - only available ingredients + seasonings
+   - SNACKS (Meryenda): Be creative with common Filipino snack ingredients  
+   - DINNER (Hapunan): STRICT - only available ingredients + seasonings''' if available_ingredients else '''1. **✅ NO SPECIFIED INGREDIENTS — USE BUDGET RECOMMENDATIONS FREELY:**
    - No specific ingredients were provided; select varied Filipino ingredients appropriate for the budget.
    - Prioritize proteins, vegetables, and grains from the budget recommendations section.
    - Focus on seasonal, locally available, cost-effective Filipino ingredients.'''}
 
-2. **NO DISH REPETITION (MANDATORY):**
+2. **NO DISH REPETITION (MANDATORY FOR ALL MEALS):**
    - Each meal across the ENTIRE {program_duration_days}-day period must be UNIQUE
-   - Example: If "Tinolang Manok" appears on Day 1, it CANNOT appear anywhere else
-   - Track all dishes to ensure zero repetition
+   - This includes Almusal, Tanghalian, Meryenda, and Hapunan
+   - Example: If "Tinolang Manok" appears on Day 1 Tanghalian, it CANNOT appear anywhere else
+   - Example: If "Champorado with Tuyo" appears on Day 1 Almusal, it CANNOT appear anywhere else
+   - Different breakfasts on each day (no repeating Champorado, no repeating Lugaw, etc.)
+   - Different snacks on each day (no repeating Banana Cue, no repeating Turon, etc.)
+   - Track all dishes to ensure zero repetition across all {program_duration_days} days and all meals
    - Use different cooking methods for same ingredients (Adobo, Sinigang, Tinola, Prito, Ginisa, etc.)
 
 3. **BATCH FEEDING FORMAT:**
