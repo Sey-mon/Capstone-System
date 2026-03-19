@@ -374,15 +374,15 @@ def validate_meal_plan(
             # (Tanghalian and Hapunan)
             # 
             # FLEXIBLE for BREAKFAST & SNACKS (Almusal & Meryenda)
-            # Allow common staples: cocoa powder, sugar, rice, etc.
+            # Do NOT validate ingredients for breakfast & snacks - allow any
             # ──────────────────────────────────────────────────────────────────
             actual_type_lower = actual_type.lower()
-            STRICT_MEALS = {'tanghalian', 'hapunan'}  # Lunch & Dinner
-            RELAXED_MEALS = {'almusal', 'meryenda'}   # Breakfast & Snacks
+            STRICT_MEALS = {'tanghalian', 'hapunan'}  # Lunch & Dinner only
+            RELAXED_MEALS = {'almusal', 'meryenda'}   # Breakfast & Snacks - NO VALIDATION
             
-            # Skip ingredient check for breakfast & snacks
-            if strict_mode and actual_type_lower in RELAXED_MEALS:
-                continue  # Allow any ingredients for Almusal & Meryenda
+            # NEVER check ingredients for breakfast & snacks (Almusal & Meryenda)
+            if actual_type_lower in RELAXED_MEALS:
+                continue  # Completely skip ingredient validation for Almusal & Meryenda
             
             # Apply strict ingredient check for lunch & dinner only
             if strict_mode and actual_type_lower in STRICT_MEALS:
@@ -904,6 +904,16 @@ FEEDING PROGRAM OVERVIEW:
 - Location: {barangay or 'General Philippines'}
 
 ═══════════════════════════════════════════════════════════════════
+🚫🚫🚫 CRITICAL RULE: ZERO DUPLICATE DISHES ACROSS ENTIRE PLAN 🚫🚫🚫
+═══════════════════════════════════════════════════════════════════
+⚠️ **YOU MUST GENERATE {program_duration_days * 4} COMPLETELY UNIQUE DISHES**
+⚠️ **NOT A SINGLE DISH MAY REPEAT IN THE ENTIRE MEAL PLAN**
+⚠️ **EVEN SLIGHT VARIATIONS ARE FORBIDDEN (e.g., "Adobong Manok" vs "Adobong Manok sa Gata" = DUPLICATE)**
+
+Your Response WILL BE REJECTED if you repeat any dish name. Every meal slot must have a completely
+different Filipino dish name. Track your generated dishes carefully to avoid ANY repetition.
+
+═══════════════════════════════════════════════════════════════════
 🔴 INGREDIENT PRIORITIZATION RULES
 ═══════════════════════════════════════════════════════════════════
 
@@ -1060,7 +1070,17 @@ YOUR TASK: Complete the {program_duration_days}-day meal plan — fill in ingred
    - Paksiw na Isda
    - Escabeche
 
-8. **MEAL VARIETY & DIVERSITY:**
+8. **🚫🚫🚫 CRITICAL: ZERO REPETITION — NO DUPLICATE DISHES IN THE ENTIRE MEAL PLAN 🚫🚫🚫:**
+   - **ABSOLUTELY NO DISH MAY REPEAT across the entire {program_duration_days}-day plan**
+   - This means 20 unique dishes (5 days × 4 meals) — each one completely different
+   - Even similar variants like "Adobong Manok" and "Adobong Manok with Gata" = DUPLICATES (forbidden)
+   - Track every dish name in your memory as you generate — never reuse any name
+   - Examples of FORBIDDEN repeats:
+     * ❌ Day 1 Almusal: "Champorado with Tuyo" → Day 3 Almusal: "Champorado with Tuyo" (DUPLICATE)
+     * ❌ Day 2 Tanghalian: "Tinolang Manok" → Day 4 Tanghalian: "Tinolang Manok with Malunggay" (TOO SIMILAR)
+     * ❌ Day 1 Hapunan: "Adobong Manok" → Day 5 Hapunan: "Adobong Manok sa Gata" (VARIANT = DUPLICATE)
+
+9. **MEAL VARIETY & DIVERSITY:**
    - Rotate proteins: Manok, Isda (bangus, tilapia, galunggong), Itlog, Monggo, Baboy
    - Rotate vegetables: Kangkong, Malunggay, Kalabasa, Sitaw, Talong, Ampalaya
    - Vary cooking methods each day (Adobo, Sinigang, Tinola, Pritong, Ginisa, Nilaga, Ginataang)
