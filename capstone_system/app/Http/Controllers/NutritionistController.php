@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class NutritionistController extends Controller
@@ -1698,11 +1700,22 @@ class NutritionistController extends Controller
                 'plan' => $plan
             ]);
 
-        } catch (\Exception $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Plan not found'
             ], 404);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch feeding program plan', [
+                'plan_id' => $id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load plan'
+            ], 500);
         }
     }
 
