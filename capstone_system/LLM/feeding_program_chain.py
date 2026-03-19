@@ -314,6 +314,9 @@ def validate_meal_plan(
     REQUIRED_MEALS = ['Almusal', 'Tanghalian', 'Meryenda', 'Hapunan']
     allowed_main = _allowed_main_ingredients(available_ingredients)
     strict_mode = len(allowed_main) > 0
+    
+    # Log validation mode for debugging
+    logger.info(f"Validating meal plan: strict_mode={strict_mode}, available_ingredients={available_ingredients}, allowed_main={allowed_main}")
 
     if 'meal_plan' not in parsed_json:
         return ["Missing 'meal_plan' key in response"], []
@@ -370,22 +373,25 @@ def validate_meal_plan(
                 )
 
             # ──────────────────────────────────────────────────────────────────
-            # STRICT ingredient validation for LUNCH & DINNER only
-            # (Tanghalian and Hapunan)
-            # 
-            # FLEXIBLE for BREAKFAST & SNACKS (Almusal & Meryenda)
-            # Do NOT validate ingredients for breakfast & snacks - allow any
+            # INGREDIENT VALIDATION LOGIC:
+            # - SKIP COMPLETELY for BREAKFAST (Almusal) & SNACKS (Meryenda)
+            # - SKIP if strict_mode is OFF (no available_ingredients specified)
+            # - Only validate for LUNCH (Tanghalian) & DINNER (Hapunan) in strict mode
             # ──────────────────────────────────────────────────────────────────
             actual_type_lower = actual_type.lower()
-            STRICT_MEALS = {'tanghalian', 'hapunan'}  # Lunch & Dinner only
-            RELAXED_MEALS = {'almusal', 'meryenda'}   # Breakfast & Snacks - NO VALIDATION
             
-            # NEVER check ingredients for breakfast & snacks (Almusal & Meryenda)
-            if actual_type_lower in RELAXED_MEALS:
-                continue  # Completely skip ingredient validation for Almusal & Meryenda
+            # Breakfast & Snacks = NO INGREDIENT VALIDATION AT ALL
+            if actual_type_lower in ['almusal', 'meryenda']:
+                # IMPORTANT: Skip ALL ingredient checks for breakfast & snacks
+                continue
             
-            # Apply strict ingredient check for lunch & dinner only
-            if strict_mode and actual_type_lower in STRICT_MEALS:
+            # Only validate ingredients for lunch & dinner if in strict mode
+            if not strict_mode:
+                # No available_ingredients specified = relax all ingredient checks
+                continue
+            
+            # At this point: strict_mode=True AND meal is Lunch or Dinner
+            if actual_type_lower in ['tanghalian', 'hapunan']:
                 ingredients = meal.get('ingredients', [])
                 if not isinstance(ingredients, list):
                     issues.append(
