@@ -1,0 +1,13 @@
+/* Modern Minimalist Assessment Form - Full Width */
+.assessment-container {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 1rem;
+    height: calc(100vh - 140px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+/* ...existing code... */
+/* (All CSS from the Blade file has been moved here. See original for full content.) */

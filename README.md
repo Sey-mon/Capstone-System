@@ -1,269 +1,456 @@
-# 🏥 Capstone Malnutrition Assessment & Management System
+# 🏥 SHAReS - Smart Health Assessment & Resource System
 
-A comprehensive web-based system for malnutrition assessment, treatment planning, and nutrition management for children aged 0-5 years, built with Laravel, FastAPI, and AI-powered analysis.
+A comprehensive **BMI Malnutrition Monitoring System** built with Laravel 12, featuring AI-powered meal planning, malnutrition assessment, and patient management.
 
-## 🏗️ System Architecture
-
-This capstone project consists of three integrated applications:
-
-### 1. **Main Capstone System** (`capstone_system/`)
-- **Framework**: Laravel 10 with MySQL
-- **Purpose**: Core web application for patient management, assessments, and reporting
-- **Users**: Admins, Nutritionists, Parents
-- **Features**: Patient registration, assessment tracking, comprehensive reporting
-
-### 2. **AI Meal Planning System** (`LLM/`)
-- **Framework**: FastAPI with Groq AI integration
-- **Purpose**: AI-powered meal plan generation and nutrition analysis
-- **Features**: Personalized meal recommendations, nutritionist notes, parent recipe management
-
-### 3. **Treatment Model System** (`RandomForest/`)
-- **Framework**: Python with Random Forest ML model
-- **Purpose**: Malnutrition assessment and evidence-based treatment planning
-- **Features**: 95% accuracy assessment, WHO guidelines integration, comprehensive treatment protocols
-
-## 🎯 Key Features
-
-### 👨‍⚕️ **For Nutritionists**
-- Complete patient management system
-- AI-powered assessment tools with treatment planning
-- Meal plan generation and review capabilities
-- Progress tracking and monitoring schedules
-- Professional profile management with verification system
-
-### 👥 **For Parents**
-- Child registration and profile management
-- View assessment results and treatment plans
-- Access personalized meal plans
-- Upload and manage family recipes
-- Track child's progress over time
-
-### 🛠️ **For Administrators**
-- User management and verification
-- Comprehensive reporting and analytics
-- System monitoring and data management
-- Audit logging and security oversight
-- Meal database administration
-
-## 📊 Core Functionality
-
-### **Assessment & Treatment Planning**
-- Random Forest ML model with 95% accuracy
-- WHO growth standards integration
-- Evidence-based treatment protocols
-- Personalized intervention recommendations
-- Risk assessment and monitoring schedules
-
-### **Meal Planning & Nutrition**
-- Filipino cuisine-focused meal database
-- AI-powered meal plan generation using Groq
-- Nutrition analysis and recommendations
-- Recipe management and sharing
-- Professional nutritionist oversight
-
-### **Data Management & Reporting**
-- Patient demographics and medical history
-- Assessment trends and analytics
-- User activity monitoring
-- PDF report generation
-- Data export capabilities
-
-## 🚀 Quick Start
-
-### Prerequisites
-- PHP 8.1+ with Laravel 10
-- MySQL 8.0+
-- Python 3.9+
-- Node.js 16+
-- Composer
-- npm/yarn
-
-### Installation
-
-#### 1. Main Laravel Application
-```bash
-cd capstone_system
-composer install
-npm install
-npm run build
-cp .env.example .env
-php artisan key:generate
-php artisan migrate --seed
-php artisan serve
-```
-
-#### 2. AI Meal Planning System
-```bash
-cd LLM
-pip install -r requirements.txt
-cp .env.example .env
-# Add your GROQ_API_KEY to .env
-python -m uvicorn fastapi_app:app --host 127.0.0.1 --port 8002
-
-#### 3. Treatment Model System
-```bash
-cd RandomForest
-pip install -r requirements.txt
-python -m uvicorn api_server:app --host 127.0.0.1 --port 8001 
-```
-
-### Default Login Credentials
-- **Admin**: admin@example.com / password123
-- **Nutritionist**: nutritionist@example.com / password123
-- **Parent**: parent@example.com / password123
-
-## 📁 Project Structure
-
-```
-Capstone-System/
-├── capstone_system/              # Main Laravel application
-│   ├── app/                      # Laravel application logic
-│   ├── resources/views/          # Blade templates
-│   ├── public/js/               # Frontend JavaScript
-│   ├── database/migrations/     # Database schema
-│   └── routes/                  # Application routes
-├── LLM/              # AI meal planning system
-│   ├── fastapi_app.py           # FastAPI server
-│   ├── nutrition_ai.py          # AI logic with Groq
-│   ├── data_manager.py          # Database operations
-│   └── requirements.txt         # Python dependencies
-├── RandomForest/ # ML assessment system
-│   ├── api_server.py            # Treatment API server
-│   ├── malnutrition_model.py    # Random Forest model
-│   ├── personalized_treatment_planner.py # Treatment protocols
-│   └── complete_system_demo.py  # System demonstration
-└── README.md                    # This file
-```
-
-## 🔧 Technology Stack
-
-### **Backend**
-- **Laravel 10**: Main web framework
-- **FastAPI**: AI meal planning API
-- **MySQL**: Primary database
-- **Python**: ML model and data processing
-- **Random Forest**: Machine learning algorithm
-
-### **Frontend**
-- **Blade Templates**: Server-side rendering
-- **Bootstrap 5**: UI framework
-- **JavaScript/jQuery**: Interactive features
-- **Chart.js**: Data visualization
-- **Font Awesome**: Icons
-
-### **AI & ML**
-- **Groq API**: Large language model for meal planning
-- **Scikit-learn**: Machine learning library
-- **WHO Growth Standards**: Assessment criteria
-- **LangChain**: AI workflow management
-
-## 📈 Assessment Features
-
-### **Malnutrition Classification**
-- Severe Acute Malnutrition (SAM)
-- Moderate Acute Malnutrition (MAM)
-- Normal nutrition status
-- Risk factor analysis
-
-### **Treatment Planning**
-- Immediate action recommendations
-- Personalized nutrition plans
-- Medical intervention protocols
-- Monitoring schedules
-- Success criteria and discharge planning
-
-### **Evidence-Based Protocols**
-- WHO guidelines integration
-- Age-appropriate interventions
-- Weight and height monitoring
-- Medical supplement recommendations
-- Emergency warning signs
-
-## 🍽️ Meal Planning System
-
-### **AI-Powered Features**
-- BMI-based meal recommendations
-- Allergy and medical condition considerations
-- Filipino cuisine focus
-- Nutritionist review and notes
-- Historical meal plan tracking
-
-### **Database**
-- Comprehensive Filipino meal database
-- Nutrition facts per serving
-- Recipe instructions and ingredients
-- Course categorization
-- Preparation and cooking times
-
-## 📊 Reporting & Analytics
-
-### **Available Reports**
-- Patient assessment trends
-- User activity analysis
-- Nutrition intervention outcomes
-- Growth monitoring statistics
-- System usage analytics
-
-### **Export Options**
-- PDF report generation
-- CSV data export
-- Filterable date ranges
-- Multi-user perspectives
-
-## 🔐 Security Features
-
-- Role-based access control
-- Professional verification system
-- Audit logging
-- Data encryption
-- Session management
-- CSRF protection
-
-## 🎓 Academic Integration
-
-This system is designed for:
-- **Capstone project requirements**
-- **Healthcare research**
-- **Nutrition program evaluation**
-- **Clinical decision support**
-- **Public health initiatives**
-
-## 🏆 Project Achievements
-
-✅ **Complete patient management system**  
-✅ **AI-powered assessment with 95% accuracy**  
-✅ **Evidence-based treatment planning**  
-✅ **Comprehensive meal planning system**  
-✅ **Multi-role user management**  
-✅ **Advanced reporting and analytics**  
-✅ **Mobile-responsive design**  
-✅ **Professional verification workflow**  
-
-## 📝 Documentation
-
-- [`Treatment_Model_Random_Forest/README.md`](Treatment_Model_Random_Forest/README.md) - ML model documentation
-- [`Treatment_Model_Random_Forest/EVIDENCE_VALIDATION.md`](RandomForest/EVIDENCE_VALIDATION.md) - Clinical validation guide
-- [`Groq_Meal_Plan/README.md`](LLM/README.md) - Meal planning system guide
-
-## 🤝 Contributing
-
-This is a capstone project for academic purposes. For questions or collaboration:
-
-1. Review the existing documentation
-2. Check the issue tracker
-3. Follow the established coding standards
-4. Test thoroughly before submitting changes
-
-## 📞 Support
-
-For technical support or questions about the system:
-- Review the documentation in each module
-- Check the database seeders for sample data
-- Refer to the evidence validation documentation for clinical protocols
-- Use the demo scripts to understand system integration
+![Laravel](https://img.shields.io/badge/Laravel-12.0-red?style=flat-square&logo=laravel)
+![PHP](https://img.shields.io/badge/PHP-8.2+-blue?style=flat-square&logo=php)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 ---
 
-**🎉 Capstone Project Status: Complete**
+## 📋 Table of Contents
 
-This comprehensive malnutrition assessment and management system represents a complete solution for healthcare professionals working with child nutrition programs, combining modern web technologies with evidence-based clinical protocols.
+- [Features](#-features)
+- [Requirements](#-requirements)
+- [Quick Setup](#-quick-setup-guide)
+- [Manual Setup](#-manual-setup)
+- [Configuration](#-configuration)
+- [Running the Application](#-running-the-application)
+- [Troubleshooting](#-troubleshooting)
+- [Tech Stack](#-tech-stack)
+- [License](#-license)
+
+---
+
+## ✨ Features
+
+- 🔐 **Multi-Role Authentication** (Admin, Nutritionist, Parent)
+- 👶 **Patient Management** with comprehensive child health records
+- 📊 **AI-Powered Malnutrition Assessment** using Random Forest ML
+- 🍽️ **Smart Meal Plan Generator** with LLM integration
+- 📅 **Weekly Meal Schedule** with interactive table view
+- 📈 **BMI Calculation & Tracking** with WHO standards
+- 📧 **Email Notifications** (Welcome, Password Reset, Verification)
+- 🎨 **Modern UI/UX** with TailwindCSS and AlpineJS
+- 📱 **Responsive Design** for all devices
+- 📄 **PDF Generation** for meal plans and reports
+
+---
+
+## 🔧 Requirements
+
+Before you begin, ensure you have the following installed:
+
+### Required Software
+
+- **PHP** >= 8.2 ([Download](https://www.php.net/downloads))
+- **Composer** ([Download](https://getcomposer.org/download/))
+- **Node.js** >= 18.x & NPM ([Download](https://nodejs.org/))
+- **MySQL** >= 8.0 or MariaDB ([XAMPP](https://www.apachefriends.org/) recommended for Windows)
+- **Git** ([Download](https://git-scm.com/))
+
+### PHP Extensions (Usually included in XAMPP)
+
+- OpenSSL
+- PDO
+- Mbstring
+- Tokenizer
+- XML
+- Ctype
+- JSON
+- BCMath
+- Fileinfo
+- GD
+
+### External API Services (Required for Full Functionality)
+
+- **Python LLM API** (Port 8002) - For AI meal plan generation
+- **Random Forest API** (Port 8001) - For malnutrition predictions
+
+---
+
+## 🚀 Quick Setup Guide
+
+### Option 1: Automated Setup (Recommended)
+
+```powershell
+# 1. Clone the repository
+git clone https://github.com/Sey-mon/Capstone-System.git
+cd Capstone-System\capstone_system
+
+# 2. Run the setup script
+composer setup
+```
+
+That's it! The setup script will:
+- Install PHP dependencies
+- Install Node.js dependencies
+- Copy and configure .env file
+- Generate application key
+- Create storage link
+- Run database migrations
+
+### Option 2: One-Line Setup with Database
+
+```powershell
+composer fresh-install
+```
+
+This will do everything from Option 1, PLUS:
+- Create the database
+- Run seeders with sample data
+
+---
+
+## 📖 Manual Setup
+
+If you prefer to set up manually or the automated scripts fail:
+
+### Step 1: Clone Repository
+
+```powershell
+git clone https://github.com/Sey-mon/Capstone-System.git
+cd Capstone-System\capstone_system
+```
+
+### Step 2: Install Dependencies
+
+```powershell
+# Install PHP dependencies
+composer install
+
+# Install JavaScript dependencies
+npm install
+```
+
+### Step 3: Environment Configuration
+
+```powershell
+# Copy environment file
+Copy-Item .env.example .env
+
+# Generate application key
+php artisan key:generate
+```
+
+### Step 4: Configure Database
+
+Edit `.env` file and set your database credentials:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=capstone_demo
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### Step 5: Create Database
+
+```powershell
+# Option 1: Using MySQL command line
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS capstone_demo;"
+
+# Option 2: Using phpMyAdmin (if using XAMPP)
+# Navigate to http://localhost/phpmyadmin and create database 'capstone_demo'
+```
+
+### Step 6: Run Migrations
+
+```powershell
+php artisan migrate
+```
+
+### Step 7: Create Storage Link
+
+```powershell
+php artisan storage:link
+```
+
+### Step 8: (Optional) Seed Database
+
+```powershell
+php artisan db:seed
+```
+
+---
+
+## ⚙️ Configuration
+
+### Email Configuration (Brevo SMTP)
+
+The application uses Brevo (formerly Sendinblue) for email notifications. Update in `.env`:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp-relay.brevo.com
+MAIL_PORT=587
+MAIL_USERNAME=your_brevo_username
+MAIL_PASSWORD=your_brevo_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your_email@example.com
+MAIL_FROM_NAME="SHAReS System"
+```
+
+### External API Configuration
+
+#### LLM API (Meal Plan Generation)
+
+```env
+LLM_API_URL=http://127.0.0.1:8002
+LLM_API_KEY=your_api_key_here
+LLM_API_TIMEOUT=30
+```
+
+#### Random Forest API (Malnutrition Assessment)
+
+```env
+RANDOM_FOREST_API_URL=http://127.0.0.1:8001
+RANDOM_FOREST_API_KEY=malnutrition-api-key-2025
+RANDOM_FOREST_API_TIMEOUT=30
+```
+
+> ⚠️ **Important**: The meal plan table functionality requires the LLM API to be running. Make sure to start your Python API servers before testing meal plan features.
+
+---
+
+## 🎮 Running the Application
+
+### Option 1: Quick Start (All Services)
+
+```powershell
+composer dev
+```
+
+This starts:
+- Laravel development server (http://localhost:8000)
+- Queue worker
+- Log viewer
+- Vite dev server (Hot reload)
+
+### Option 2: Individual Services
+
+```powershell
+# Terminal 1: Start Laravel server
+php artisan serve
+
+# Terminal 2: Start Vite (in new terminal)
+npm run dev
+
+# Terminal 3: Start queue worker (optional, in new terminal)
+php artisan queue:work
+```
+
+### Option 3: Simple Build
+
+```powershell
+# Build assets for production
+npm run build
+
+# Start Laravel server
+php artisan serve
+```
+
+### Access the Application
+
+- **Frontend**: http://localhost:8000
+- **phpMyAdmin** (if using XAMPP): http://localhost/phpmyadmin
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. "Class not found" errors
+
+```powershell
+composer dump-autoload
+php artisan config:clear
+php artisan cache:clear
+```
+
+#### 2. Permission errors on storage/logs
+
+```powershell
+# Windows (Run PowerShell as Administrator)
+icacls storage /grant Everyone:F /T
+icacls bootstrap/cache /grant Everyone:F /T
+```
+
+#### 3. Vite manifest not found
+
+```powershell
+npm install
+npm run build
+```
+
+#### 4. Database connection errors
+
+- Make sure MySQL/MariaDB is running (start Apache & MySQL in XAMPP)
+- Verify database credentials in `.env`
+- Check if database exists: `php artisan db:show`
+
+#### 5. Meal plan table not displaying
+
+- Ensure JavaScript files are loaded (check browser console F12)
+- Verify LLM API is running on port 8002
+- Check that meal plan has proper format with DAY 1-7 structure
+- Test API connection: `curl http://127.0.0.1:8002`
+
+#### 6. Node modules issues
+
+```powershell
+Remove-Item -Recurse -Force node_modules
+Remove-Item package-lock.json
+npm install
+```
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Laravel 12** - PHP Framework
+- **MySQL** - Database
+- **DomPDF** - PDF Generation
+- **Bacon QR Code** - QR Code Generation
+
+### Frontend
+- **TailwindCSS 4** - Utility-first CSS
+- **AlpineJS 3** - Lightweight JavaScript framework
+- **Vite 7** - Build tool
+- **Font Awesome** - Icons
+
+### APIs & Services
+- **Python FastAPI** - LLM meal plan generation
+- **Random Forest ML** - Malnutrition prediction
+- **Brevo SMTP** - Email delivery
+
+---
+
+## 📦 Useful Commands
+
+### Development
+
+```powershell
+# Clear all caches
+php artisan optimize:clear
+
+# Run migrations with fresh database
+php artisan migrate:fresh
+
+# Generate IDE helper files
+php artisan ide-helper:generate
+
+# Format code
+composer pint
+```
+
+### Testing
+
+```powershell
+# Run tests
+composer test
+
+# Run specific test
+php artisan test --filter=ExampleTest
+```
+
+### Production
+
+```powershell
+# Optimize for production
+php artisan optimize
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Build assets
+npm run build
+```
+
+---
+
+## 📄 License
+
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+## 👥 Authors
+
+**Capstone Development Team**
+- Repository: [Sey-mon/Capstone-System](https://github.com/Sey-mon/Capstone-System)
+
+---
+
+## 🙏 Acknowledgments
+
+Built with [Laravel](https://laravel.com) - The PHP Framework for Web Artisans
+
+For any issues or questions, please open an issue on the [GitHub repository](https://github.com/Sey-mon/Capstone-System/issues).
+
+---
+
+**Happy Coding! 🚀**
+
+
+## About Laravel
+
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
+
+## Learning Laravel
+
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+
+## Laravel Sponsors
+
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+
+### Premium Partners
+
+- **[Vehikl](https://vehikl.com)**
+- **[Tighten Co.](https://tighten.co)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Redberry](https://redberry.international/laravel-development)**
+- **[Active Logic](https://activelogic.com)**
+
+## Contributing
+
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#   c a p s t o n e _ p r o j 
+ 
+ #   C a p s t o n e - S y s t e m 
+ 
+ 

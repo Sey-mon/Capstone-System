@@ -1,0 +1,36 @@
+name: Feeding Program Quality
+
+on:
+  push:
+    paths:
+      - "LLM/feeding_program_chain.py"
+      - "LLM/test_feeding_program_quality.py"
+      - ".github/workflows/feeding-program-quality.yml"
+  pull_request:
+    paths:
+      - "LLM/feeding_program_chain.py"
+      - "LLM/test_feeding_program_quality.py"
+
+jobs:
+  quality-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: LLM
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run feeding quality tests
+        run: python -m unittest -v test_feeding_program_quality.py

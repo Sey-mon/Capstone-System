@@ -1,0 +1,139 @@
+/* Verify Email Page Styles */
+
+.verify-email-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 2rem;
+}
+
+.verify-email-card {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.verify-email-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    animation: iconBounce 0.6s ease-out;
+}
+
+.verify-email-icon i {
+    font-size: 40px;
+    color: white;
+}
+
+@keyframes iconBounce {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.verify-email-card h2 {
+    font-size: 1.75rem;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.verify-email-card p {
+    color: #6b7280;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.email-box {
+    background: #fffbf0;
+    border: 2px solid #ffe4cc;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.email-box strong {
+    color: #ff9800;
+}
+
+.resend-section {
+    margin: 1.5rem 0;
+}
+
+.resend-section p {
+    margin-bottom: 1rem;
+}
+
+.btn-resend {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-resend:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
+}
+
+.back-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+}
+
+.form-control:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+@media (max-width: 768px) {
+    .verify-email-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .verify-email-card h2 {
+        font-size: 1.5rem;
+    }
+}

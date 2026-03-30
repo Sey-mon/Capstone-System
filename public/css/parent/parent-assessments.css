@@ -1,0 +1,2209 @@
+/* ===== DESKTOP WEB APPLICATION DESIGN ===== */
+
+:root {
+    --primary-green: #4DA84E;
+    --secondary-green: #4DA84E;
+    --light-green: #d1fae5;
+    --accent-green: #6ee7b7;
+    --dark-text: #1e293b;
+    --gray-text: #64748b;
+    --light-gray: #f8fafc;
+    --border-gray: #e2e8f0;
+}
+
+/* Desktop Page Wrapper */
+.desktop-page-wrapper {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding: 0;
+}
+
+/* Desktop Header Section */
+.desktop-header-section {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1 1 300px;
+    min-width: 0;
+}
+
+.page-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.page-info {
+    flex: 1;
+}
+
+.page-main-title {
+    font-size: clamp(1.125rem, 2vw, 1.5rem);
+    font-weight: 700;
+    color: white;
+    margin: 0 0 0.25rem 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.page-description {
+    font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.header-right {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.header-stats-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.header-stat-item {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    padding: 0.75rem 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 120px;
+    flex: 0 1 auto;
+    transition: all 0.3s ease;
+}
+
+.header-stat-item:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.header-stat-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.header-stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.header-stat-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+/* Desktop Content Area */
+.desktop-content-area {
+    padding: 1.5rem 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Assessments Grid */
+.assessments-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+}
+
+/* Child Card - Horizontal Desktop Layout */
+.child-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-gray);
+    transition: all 0.3s ease;
+}
+
+.child-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-green);
+}
+
+/* Card Header - Horizontal Layout */
+.child-card-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.child-profile-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.child-avatar {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.child-info {
+    flex: 1;
+}
+
+.child-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 0.375rem 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.child-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.95);
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.meta-item i {
+    font-size: 0.8125rem;
+}
+
+.meta-divider {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 300;
+}
+
+.child-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Card Body */
+.child-card-body {
+    padding: 1.5rem;
+}
+
+.view-history-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+}
+
+.view-history-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.view-history-btn i {
+    margin-right: 0.5rem;
+}
+
+.no-data-badge {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Card Body - Desktop Layout */
+.card-body {
+    padding: 2rem;
+}
+
+.latest-assessment {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.assessment-header-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.assessment-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.assessment-title-section h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.assessment-title-section h4 i {
+    color: #4DA84E;
+}
+
+.assessment-date {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.assessment-date i {
+    color: #4DA84E;
+}
+
+.diagnosis-section-inline {
+    display: flex;
+    align-items: center;
+}
+
+/* Diagnosis Badges - Redesigned */
+.diagnosis-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.diagnosis-badge span {
+    white-space: nowrap;
+}
+
+.diagnosis-badge.critical {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.diagnosis-badge.warning {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fed7aa;
+}
+
+.diagnosis-badge.normal {
+    background: #f0fdf4;
+    color: #4DA84E;
+    border: 1px solid #bbf7d0;
+}
+
+.diagnosis-badge.unknown {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+/* Metrics Row - Horizontal Desktop Layout */
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-card {
+    background: var(--light-gray);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-gray);
+}
+
+.metric-card:hover {
+    background: #f1f5f9;
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+}
+
+.metric-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+.metric-icon-wrapper.weight {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.metric-icon-wrapper.height {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.metric-icon-wrapper.nutritionist {
+    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+}
+
+.metric-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.metric-label {
+    font-size: 0.8125rem;
+    color: var(--gray-text);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.metric-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--dark-text);
+    line-height: 1;
+}
+
+.metric-value small {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-text);
+    margin-left: 0.25rem;
+}
+
+/* Latest Assessment Section */
+.latest-assessment {
+    padding: 0;
+}
+
+/* Remarks Section */
+.remarks-section {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+}
+
+.remarks-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 0.75rem;
+    font-size: 0.9375rem;
+}
+
+.remarks-header i {
+    color: #f59e0b;
+}
+
+.remarks-content {
+    color: #78350f;
+    margin: 0;
+    line-height: 1.6;
+    font-size: 0.9375rem;
+}
+
+/* No Assessment State */
+.no-assessment {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #64748b;
+}
+
+.no-assessment-icon {
+    width: 80px;
+    height: 80px;
+    background: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: #cbd5e1;
+}
+
+.no-assessment h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #475569;
+}
+
+.no-assessment p {
+    color: #64748b;
+    font-size: 0.9375rem;
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Empty State - Desktop Centered */
+.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+    background: white;
+    border-radius: 16px;
+    margin-top: 2rem;
+}
+
+.empty-state-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 3rem;
+}
+
+.empty-state-icon {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 3rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(77, 168, 78, 0.2);
+}
+
+.empty-state h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #64748b;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.empty-state-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.empty-state-btn {
+    border: none;
+    padding: 0.875rem 1.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.empty-state-btn.primary {
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.3);
+}
+
+.empty-state-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(77, 168, 78, 0.4);
+}
+
+.empty-state-btn.secondary {
+    background: white;
+    color: #4DA84E;
+    border: 2px solid #4DA84E;
+}
+
+.empty-state-btn.secondary:hover {
+    background: #f0fdf4;
+    transform: translateY(-2px);
+}
+
+/* Modal Styles - Desktop Optimized */
+/* Modal Styles - Desktop Optimized */
+.assessment-modal .modal-dialog {
+    max-width: 1200px;
+}
+
+.assessment-modal .modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+.assessment-modal .modal-header {
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
+    color: white;
+    padding: 2rem 2.5rem;
+    border: none;
+}
+
+.modal-title-section h5 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modal-subtitle {
+    margin: 0;
+    opacity: 0.95;
+    font-size: 0.9375rem;
+    font-weight: 400;
+}
+
+.assessment-modal .btn-close {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    opacity: 1;
+    transition: all 0.3s ease;
+}
+
+.assessment-modal .btn-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.assessment-modal .modal-body {
+    padding: 2.5rem;
+    background: #f8fafc;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Timeline Styles - Desktop Layout */
+.assessment-timeline {
+    position: relative;
+}
+
+.timeline-item {
+    display: flex;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-item.latest .timeline-content {
+    background: white;
+    border-left: 4px solid #4DA84E;
+    box-shadow: 0 4px 12px rgba(77, 168, 78, 0.15);
+}
+
+.timeline-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 2rem;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.timeline-dot {
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 4px #e2e8f0;
+    z-index: 2;
+}
+
+.timeline-item.latest .timeline-dot {
+    background: linear-gradient(135deg, #4DA84E, #4DA84E);
+    width: 20px;
+    height: 20px;
+    box-shadow: 0 0 0 4px #4DA84E, 0 0 0 8px rgba(77, 168, 78, 0.2);
+}
+
+.timeline-line {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, #cbd5e1, #e2e8f0);
+    margin-top: 0.5rem;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.timeline-item:last-child .timeline-line {
+    display: none;
+}
+
+.timeline-content {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 1.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.timeline-content:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateX(4px);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.timeline-date {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.latest-badge {
+    background: linear-gradient(135deg, #4DA84E, #4DA84E);
+    color: white;
+    padding: 0.375rem 0.875rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.timeline-diagnosis {
+    margin-bottom: 1.25rem;
+}
+
+.timeline-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.metric-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.875rem;
+}
+
+.metric-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.metric-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.metric-item i {
+    color: #4DA84E;
+    width: 20px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.metric-item .metric-label {
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.875rem;
+}
+
+.metric-item .metric-value {
+    color: #1e293b;
+    margin-left: auto;
+    font-weight: 700;
+    font-size: 0.9375rem;
+}
+
+/* Scrollbar Styling */
+.assessment-modal .modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.assessment-modal .modal-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.assessment-modal .modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.assessment-modal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Responsive Design - Desktop First */
+@media (max-width: 1400px) {
+    .assessments-grid {
+        grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
+    }
+}
+
+@media (max-width: 1200px) {
+    .assessments-container {
+        padding: 1.5rem 2rem;
+    }
+    
+    .assessments-header {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .stats-summary {
+        justify-content: flex-start;
+    }
+    
+    .assessments-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .metrics-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .assessment-header-inline {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .diagnosis-section-inline {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .assessments-container {
+        padding: 1rem;
+    }
+    
+    .assessments-header {
+        padding: 1.5rem;
+    }
+    
+    .header-content h1.page-title {
+        font-size: 1.5rem;
+    }
+    
+    .stats-summary {
+        flex-direction: column;
+    }
+    
+    .stat-card {
+        width: 100%;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .child-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .child-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .meta-divider {
+        display: none;
+    }
+    
+    .metric-pair {
+        grid-template-columns: 1fr;
+    }
+    
+    .assessment-modal .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .assessment-modal .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .timeline-marker {
+        margin-right: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .breadcrumb {
+        font-size: 0.75rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .empty-state-actions {
+        flex-direction: column;
+    }
+    
+    .empty-state-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* SweetAlert2 Modal Styles - Parent Assessments Specific */
+/* Ensure full viewport coverage */
+html.swal2-shown,
+body.swal2-shown {
+    overflow: hidden !important;
+    height: 100% !important;
+}
+
+.swal2-container.parent-assessment-modal-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+}
+
+.swal2-popup.parent-assessment-modal-popup {
+    width: 90% !important;
+    max-width: 1200px !important;
+    padding: 0 !important;
+    border-radius: 20px !important;
+    border: 1px solid #000 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    position: relative !important;
+}
+
+.swal-assessment-container {
+    display: flex;
+    height: clamp(500px, 75vh, 85vh);
+    max-height: 900px;
+    min-height: 400px;
+    width: 100%;
+}
+
+/* ===================================
+   SCALABLE SIDEBAR FOR LARGE LISTS
+   Supports 1-100+ assessments with:
+   - Sticky header
+   - Scrollable list area
+   - Scroll shadow indicators
+   - Search/filter (10+ items)
+   - Scroll-to-top button
+   - Keyboard navigation
+   - Performance optimizations
+   =================================== */
+
+.swal-sidebar {
+    width: clamp(240px, 25%, 350px);
+    min-width: 240px;
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
+    padding: 0;
+    overflow: hidden;
+    border-right: 1px solid #000;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.swal-sidebar-header {
+    color: white;
+    padding: clamp(12px, 1.5vw, 20px);\n    padding-bottom: clamp(10px, 1.5vh, 15px);
+    border-bottom: 2px solid rgba(255,255,255,0.3);
+    background: linear-gradient(135deg, #4DA84E 0%, #4DA84E 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.swal-sidebar-header h4 {
+    margin: 0;
+    font-size: clamp(14px, 1.2vw, 16px);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.swal-sidebar-header p {
+    margin: 5px 0 0 0;
+    font-size: clamp(11px, 0.9vw, 12px);
+    opacity: 0.9;
+}
+
+/* Search/Filter Box for Large Lists */
+.swal-assessment-search {
+    margin-top: 10px;
+    position: relative;
+}
+
+.swal-assessment-search input {
+    width: 100%;
+    padding: 8px 32px 8px 12px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: 12px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.swal-assessment-search input::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+
+.swal-assessment-search input:focus {
+    background: rgba(255,255,255,0.25);
+    border-color: rgba(255,255,255,0.5);
+}
+
+.swal-assessment-search i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+}
+
+.swal-assessment-search.has-many {
+    display: block;
+}
+
+.swal-assessment-search.has-few {
+    display: none;
+}
+
+.swal-assessment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: clamp(12px, 1.5vw, 20px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    scroll-behavior: smooth;
+    position: relative;
+}
+
+.swal-assessment-item {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: clamp(8px, 1vw, 12px);
+    padding: clamp(8px, 1vw, 12px);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    position: relative;
+    animation: fadeInUp 0.3s ease forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stagger animation for list items */
+.swal-assessment-item:nth-child(1) { animation-delay: 0.05s; }
+.swal-assessment-item:nth-child(2) { animation-delay: 0.1s; }
+.swal-assessment-item:nth-child(3) { animation-delay: 0.15s; }
+.swal-assessment-item:nth-child(4) { animation-delay: 0.2s; }
+.swal-assessment-item:nth-child(5) { animation-delay: 0.25s; }
+.swal-assessment-item:nth-child(n+6) { animation-delay: 0.3s; }
+
+.swal-assessment-item:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateX(5px);
+    border-color: rgba(0,0,0,0.3);
+}
+
+.swal-assessment-item.active {
+    background: white;
+    color: #4DA84E;
+    border: 1px solid #000;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+.swal-assessment-item-date {
+    font-size: clamp(12px, 1vw, 14px);
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.swal-assessment-item-status {
+    font-size: clamp(10px, 0.85vw, 11px);
+    opacity: 0.9;
+}
+
+.swal-assessment-item.active .swal-assessment-item-status {
+    opacity: 1;
+    font-weight: 500;
+}
+
+.swal-latest-badge {
+    background: #4DA84E;
+    color: white;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    border: 1px solid #000;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+/* Scroll Shadow Indicators */
+.swal-sidebar::before,
+.swal-sidebar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 40px;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.swal-sidebar::before {
+    top: 70px; /* Below header */
+    background: linear-gradient(to bottom, rgba(5,150,105,0.8) 0%, rgba(5,150,105,0) 100%);
+}
+
+.swal-sidebar::after {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(5,150,105,0.8) 0%, rgba(5,150,105,0) 100%);
+}
+
+.swal-sidebar.has-scroll-top::before {
+    opacity: 1;
+}
+
+.swal-sidebar.has-scroll-bottom::after {
+    opacity: 1;
+}
+
+/* Assessment counter badge */
+.swal-assessment-counter {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    margin-left: 8px;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Large list optimization - Add will-change for better performance */
+.swal-assessment-list {
+    will-change: scroll-position;
+}
+
+.swal-assessment-item {
+    will-change: transform, background-color;
+}
+
+/* Loading state for large lists */
+.swal-assessment-list.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.swal-assessment-list.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Scroll indicator text */
+.swal-scroll-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.swal-assessment-list:empty + .swal-scroll-indicator {
+    opacity: 1;
+}
+
+/* Scroll to top button */
+.swal-scroll-top-btn {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 15;
+    color: #4DA84E;
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.swal-scroll-top-btn.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.swal-scroll-top-btn:hover {
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.swal-scroll-top-btn:active {
+    transform: translateY(0);
+}
+
+.swal-content-area {
+    flex: 1;
+    padding: clamp(16px, 3vw, 35px);
+    overflow-y: auto;
+    background: #f8fafc;
+    min-width: 0;
+}
+
+.swal-modal-header {
+    margin-bottom: 25px;
+}
+
+.swal-header-title {
+    font-size: clamp(18px, 2vw, 24px);
+    font-weight: 700;
+    color: #4DA84E;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.swal-header-subtitle {
+    font-size: clamp(12px, 1.1vw, 14px);
+    color: #64748b;
+    margin: 0;
+}
+
+.swal-assessment-detail {
+    background: white;
+    border-radius: clamp(12px, 1.2vw, 16px);
+    padding: clamp(16px, 2vw, 25px);
+    border: 1px solid #000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.swal-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.swal-detail-date {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.swal-diagnosis-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid #000;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.swal-diagnosis-badge.critical {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.swal-diagnosis-badge.warning {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.swal-diagnosis-badge.normal {
+    background: #d1fae5;
+    color: #4DA84E;
+}
+
+.swal-diagnosis-badge.unknown {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.swal-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 18vw, 200px), 1fr));
+    gap: clamp(10px, 1.2vw, 15px);
+    margin-bottom: clamp(15px, 2vh, 20px);
+}
+
+@media (max-width: 768px) {
+    .swal-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.swal-metric-card {
+    background: #f8fafc;
+    border-radius: clamp(8px, 1vw, 12px);
+    border: 1px solid #e5e7eb;
+    padding: clamp(10px, 1.2vw, 15px);
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 1vw, 12px);
+}
+
+.swal-metric-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.swal-metric-icon.weight {
+    background: #d1fae5;
+    color: #4DA84E;
+}
+
+.swal-metric-icon.height {
+    background: #d1fae5;
+    color: #4DA84E;
+}
+
+.swal-metric-icon.nutritionist {
+    background: #d1fae5;
+    color: #4DA84E;
+}
+
+.swal-metric-info {
+    flex: 1;
+}
+
+.swal-metric-label {
+    font-size: clamp(11px, 0.9vw, 12px);
+    color: #64748b;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.swal-metric-value {
+    font-size: clamp(14px, 1.2vw, 16px);
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.swal-remarks-section {
+    background: #f0fdf4;
+    border-left: 3px solid #4DA84E;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+    border: 1px solid #bbf7d0;
+}
+
+.swal-remarks-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4DA84E;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.swal-remarks-content {
+    font-size: 14px;
+    color: #4DA84E;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Nutritional Indicators Section */
+.swal-indicators-section {
+    margin-top: 20px;
+    padding: 0;
+    text-align: center;
+}
+
+.swal-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.swal-section-title i {
+    color: #4DA84E;
+}
+
+.swal-indicators-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    justify-items: center;
+}
+
+.swal-indicator-item {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s ease;
+    text-align: center;
+    align-items: center;
+    width: 100%;
+    max-width: 250px;
+}
+
+.swal-indicator-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(77, 168, 78, 0.1);
+    border-color: #8EC68F;
+}
+
+.swal-indicator-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4DA84E;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.swal-indicator-badge {
+    font-size: 14px;
+    font-weight: 700;
+    color: #4DA84E;
+    padding: 4px 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #d1fae5;
+    display: inline-block;
+    width: fit-content;
+}
+
+/* Scrollbar styling for SweetAlert modal */
+.swal-assessment-list::-webkit-scrollbar,
+.swal-content-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.swal-assessment-list::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+}
+
+.swal-assessment-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+}
+
+.swal-assessment-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+.swal-content-area::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.swal-content-area::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Responsive Modal Adjustments - Enhanced Scalability */
+@media (max-width: 640px) {
+    .swal2-popup.parent-assessment-modal-popup {
+        width: 98% !important;
+        max-width: none !important;
+    }
+    
+    .swal-assessment-container {
+        flex-direction: column;
+        height: 85vh;
+        min-height: 350px;
+    }
+    
+    .swal-sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: 160px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        flex-direction: row;
+        overflow-x: hidden;
+    }
+    
+    .swal-sidebar-header {
+        padding: 12px;
+        border-bottom: none;
+        border-right: 1px solid rgba(255,255,255,0.3);
+        flex-shrink: 0;
+        width: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .swal-assessment-list {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 8px;
+        padding: 12px;
+        flex: 1;
+    }
+    
+    .swal-assessment-item {
+        display: inline-block;
+        min-width: 160px;
+        flex-shrink: 0;
+    }
+    
+    .swal-scroll-top-btn {
+        display: none !important;
+    }
+    
+    .swal-sidebar::before,
+    .swal-sidebar::after {
+        display: none;
+    }
+    
+    .swal-content-area {
+        padding: 12px;
+        flex: 1;
+    }
+    
+    .swal-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .swal-detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+    .swal2-popup.parent-assessment-modal-popup {
+        width: 95% !important;
+    }
+    
+    .swal-assessment-container {
+        flex-direction: column;
+        height: 80vh;
+    }
+    
+    .swal-sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: 180px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        overflow-x: auto;
+    }
+    
+    .swal-assessment-list {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+    
+    .swal-assessment-item {
+        display: inline-block;
+        min-width: 170px;
+        flex-shrink: 0;
+    }
+    
+    .swal-metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .swal2-popup.parent-assessment-modal-popup {
+        width: 92% !important;
+        max-width: 900px !important;
+    }
+    
+    .swal-assessment-container {
+        height: clamp(450px, 70vh, 750px);
+    }
+    
+    .swal-sidebar {
+        width: clamp(220px, 28%, 280px);
+        min-width: 220px;
+    }
+    
+    .swal-content-area {
+        padding: clamp(18px, 2.5vw, 25px);
+    }
+}
+
+@media (min-width: 1025px) and (max-width: 1280px) {
+    .swal2-popup.parent-assessment-modal-popup {
+        width: 88% !important;
+        max-width: 1100px !important;
+    }
+    
+    .swal-assessment-container {
+        height: clamp(500px, 72vh, 800px);
+    }
+}
+
+@media (min-width: 1281px) and (max-width: 1536px) {
+    .swal2-popup.parent-assessment-modal-popup {
+        width: 85% !important;
+        max-width: 1300px !important;
+    }
+}
+
+@media (min-width: 1537px) {
+    .swal2-popup.parent-assessment-modal-popup {
+        width: 82% !important;
+        max-width: 1400px !important;
+    }
+    
+    .swal-assessment-container {
+        height: clamp(550px, 75vh, 900px);
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+    .swal-assessment-container {
+        height: 85vh !important;
+        min-height: 300px !important;
+    }
+    
+    .swal-sidebar {
+        padding: 10px;
+    }
+    
+    .swal-content-area {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .swal-assessment-container {
+        height: clamp(400px, 68vh, 700px);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .assessments-container {
+        background: white;
+        padding: 0;
+    }
+    
+    .card-actions,
+    .view-history-btn,
+    .empty-state-btn {
+        display: none;
+    }
+    
+    .assessment-card {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+    }
+}
+/* ===================================
+   Compact UI Optimizations
+   =================================== */
+
+/* Content area padding */
+.desktop-content-area {
+    padding: 16px 12px;
+}
+
+/* Header stats - make smaller */
+.header-stat-item {
+    padding: 8px 12px;
+    gap: 8px;
+}
+
+.header-stat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.header-stat-value {
+    font-size: 18px;
+}
+
+.header-stat-label {
+    font-size: 11px;
+}
+
+/* Page icon */
+.page-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+}
+
+.page-main-title {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+.page-description {
+    font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+}
+
+/* Child cards - more compact */
+.child-card {
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.child-card-header {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.child-avatar {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+}
+
+.child-name {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.child-meta {
+    font-size: 12px;
+}
+
+.meta-item {
+    font-size: 12px;
+}
+
+.meta-item i {
+    font-size: 11px;
+}
+
+.view-history-btn,
+.no-data-badge {
+    padding: 8px 14px;
+    font-size: 12px;
+}
+
+/* Assessment sections */
+.latest-assessment {
+    padding: 14px;
+}
+
+.assessment-header-inline h4 {
+    font-size: 15px;
+}
+
+.assessment-date {
+    font-size: 11px;
+}
+
+.diagnosis-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.diagnosis-badge i {
+    font-size: 11px;
+}
+
+/* Metric cards */
+.metric-card {
+    padding: 12px;
+}
+
+.metric-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+}
+
+.metric-label {
+    font-size: 11px;
+}
+
+.metric-value {
+    font-size: 16px;
+}
+
+.metric-value small {
+    font-size: 11px;
+}
+
+/* Remarks section */
+.remarks-section {
+    padding: 12px;
+}
+
+.remarks-header {
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.remarks-content {
+    font-size: 13px;
+}
+
+/* No assessment section */
+.no-assessment {
+    padding: 30px 20px;
+}
+
+.no-assessment-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+}
+
+.no-assessment h4 {
+    font-size: 16px;
+    margin: 12px 0 8px;
+}
+
+.no-assessment p {
+    font-size: 13px;
+}
+
+/* Empty state */
+.empty-state {
+    padding: 40px 20px;
+}
+
+.empty-state-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 32px;
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    margin: 16px 0 10px;
+}
+
+.empty-state p {
+    font-size: 13px;
+}
+
+.empty-state-btn {
+    padding: 10px 20px;
+    font-size: 13px;
+}
+
+.empty-state-btn i {
+    font-size: 12px;
+}
+
+/* Assessment details grid */
+.assessments-grid {
+    gap: 16px;
+}
+
+/* Modal/SweetAlert compact styles */
+.swal-header-title {
+    font-size: 18px;
+}
+
+.swal-assessment-item {
+    padding: 10px 14px;
+    font-size: 13px;
+}
+
+.swal-detail-header h3 {
+    font-size: 16px;
+}
+
+.swal-detail-date {
+    font-size: 12px;
+}
+
+.swal-diagnosis-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.swal-metrics-grid .metric-card {
+    padding: 10px;
+}
+/* ===== TREATMENT PLAN VIEW STYLES ===== */
+
+.swal-header-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.swal-treatment-button,
+.swal-pdf-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.swal-treatment-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+}
+
+.swal-treatment-button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.swal-pdf-button {
+    background: #4DA84E;
+    color: white;
+    border: none;
+}
+
+.swal-pdf-button:hover {
+    background: #4DA84E;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
+}
+
+.swal-treatment-container {
+    display: flex;
+    flex-direction: column;
+    height: 75vh;
+    background: #f8f9fa;
+}
+
+.swal-treatment-header {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.swal-back-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    background: #6c757d;
+    color: white;
+    border: none;
+}
+
+.swal-back-button:hover {
+    background: #5a6268;
+    transform: translateX(-3px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.swal-treatment-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2rem;
+}
+
+.swal-diagnosis-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.swal-confidence-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 24px;
+    font-weight: 600;
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.swal-treatment-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.swal-treatment-section.swal-emergency {
+    background: #fff3cd;
+    border-left: 4px solid #ff9800;
+}
+
+.swal-treatment-section.swal-emergency .swal-section-title {
+    color: #ff6f00;
+}
+
+.swal-treatment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.swal-treatment-list li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    border-bottom: 1px solid #f0f0f0;
+    line-height: 1.6;
+}
+
+.swal-treatment-list li:last-child {
+    border-bottom: none;
+}
+
+.swal-treatment-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1rem;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-green);
+    border-radius: 50%;
+}
+
+.swal-emergency .swal-treatment-list li::before {
+    background: #ff9800;
+}
+
+.treatment-popup .swal-treatment-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.treatment-popup .swal-treatment-content::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+.treatment-popup .swal-treatment-content::-webkit-scrollbar-thumb {
+    background: var(--primary-green);
+    border-radius: 3px;
+}
+
+.treatment-popup .swal-treatment-content::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-green);
+}
+

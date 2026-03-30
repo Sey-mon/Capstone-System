@@ -1,0 +1,68 @@
+/* Modal Backdrop Fix */
+/* Ensures modal backdrops don't persist and cause issues */
+
+.modal-backdrop {
+    transition: opacity 0.15s linear !important;
+}
+
+.modal-backdrop.fade:not(.show) {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+    overflow: hidden !important;
+    padding-right: 0 !important;
+}
+
+/* Ensure modals are properly layered */
+.modal {
+    z-index: 1050 !important;
+}
+
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+/* Emergency cleanup button for development */
+.emergency-cleanup-btn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: none; /* Hidden by default, can be shown via console */
+}
+
+.emergency-cleanup-btn:hover {
+    background: #ff5252;
+}
+
+/* Fix for modal content overflow */
+.modal-dialog {
+    max-height: calc(100vh - 2rem);
+}
+
+.modal-content {
+    max-height: inherit;
+}
+
+.modal-body {
+    overflow-y: auto;
+}
+
+/* Ensure proper modal closing animations */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+.modal.fade:not(.show) .modal-dialog {
+    transform: translate(0, -50px);
+}

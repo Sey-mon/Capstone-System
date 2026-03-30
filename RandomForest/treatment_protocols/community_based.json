@@ -1,0 +1,138 @@
+{
+  "version": "1.0",
+  "description": "Community-based treatment protocols adapted for resource-limited settings",
+  "protocols": {
+    "Severe Acute Malnutrition (SAM)": {
+      "with_edema": {
+        "treatment": "Community stabilization center",
+        "details": "Initial stabilization using locally available F75 equivalent (rice porridge with oil and sugar), transition to home-based RUTF alternatives when available",
+        "follow_up": "Daily visits by community health worker for first week, then every 2 days",
+        "priority": "critical",
+        "duration_weeks": "3-6",
+        "medications": [
+          "Local F75 equivalent",
+          "Home-made RUTF alternative",
+          "Basic antibiotics if available",
+          "Oral rehydration solution"
+        ],
+        "monitoring": [
+          "Daily weight (if scale available)",
+          "Visual appetite assessment",
+          "Edema check",
+          "Family support assessment"
+        ]
+      },
+      "without_edema": {
+        "treatment": "Community-based therapeutic care",
+        "details": "Home-based management with locally prepared therapeutic foods, family education, and community health worker supervision",
+        "follow_up": "Weekly community health worker visits, monthly clinic check-up",
+        "priority": "high",
+        "duration_weeks": "8-12",
+        "medications": [
+          "Local therapeutic food recipes",
+          "Vitamin A (when available)",
+          "Iron-rich local foods",
+          "Deworming (when available)"
+        ],
+        "monitoring": [
+          "Weekly weight (community scale)",
+          "Family feeding practices",
+          "Clinical signs",
+          "Community support"
+        ]
+      }
+    },
+    "Moderate Acute Malnutrition (MAM)": {
+      "standard": {
+        "treatment": "Community nutrition program",
+        "details": "Nutrition education, locally available supplementary foods, family counseling on food preparation and feeding practices",
+        "follow_up": "Bi-weekly community meetings, monthly individual assessment",
+        "priority": "medium",
+        "duration_weeks": "12-16",
+        "medications": [
+          "Local nutrient-dense foods",
+          "Fortified porridge",
+          "Vitamin A (when available)",
+          "Local iron sources"
+        ],
+        "monitoring": [
+          "Monthly weight",
+          "Family food security",
+          "Feeding practices",
+          "Community participation"
+        ]
+      }
+    },
+    "Normal": {
+      "standard": {
+        "treatment": "Prevention and community education",
+        "details": "Regular nutrition education, promotion of local nutritious foods, family planning counseling, and community garden programs",
+        "follow_up": "Quarterly community health education sessions",
+        "priority": "low",
+        "duration_weeks": "ongoing",
+        "medications": [
+          "Locally available vitamins",
+          "Fortified local foods",
+          "Traditional nutrient sources"
+        ],
+        "monitoring": [
+          "Quarterly growth checks",
+          "Community nutrition status",
+          "Food security assessment",
+          "Family education impact"
+        ]
+      }
+    },
+    "Overweight": {
+      "standard": {
+        "treatment": "Community dietary counseling and lifestyle education",
+        "details": "Educate family to reduce high-calorie foods (fried foods, sweetened drinks, excess rice). Promote locally available fruits and vegetables. Encourage at least 60 minutes of daily active play.",
+        "follow_up": "Monthly community weight monitoring for 6 months, then quarterly",
+        "priority": "low-medium",
+        "duration_weeks": "ongoing",
+        "medications": [
+          "No medications needed",
+          "Reduce cooking oil and sugar in household foods",
+          "Promote locally grown vegetables and fruits"
+        ],
+        "monitoring": [
+          "Monthly weight and height at community scale",
+          "Quarterly family dietary practice review",
+          "Active play and physical activity observation"
+        ]
+      }
+    },
+    "Obese": {
+      "standard": {
+        "treatment": "Community health worker referral to nearest health center",
+        "details": "Community health worker provides dietary education and refers family to health center for clinical evaluation. Emphasize reducing high-energy-density and processed foods. Promote traditional low-calorie local foods.",
+        "follow_up": "Monthly community follow-up with community health worker; health center visit every 3 months",
+        "priority": "medium",
+        "duration_weeks": "ongoing",
+        "medications": [
+          "Refer to clinic for blood pressure and blood glucose screening",
+          "Promote locally available low-calorie traditional foods",
+          "Reduce refined carbohydrates and cooking fats"
+        ],
+        "monitoring": [
+          "Monthly weight at community scale",
+          "Referral compliance tracking",
+          "Family dietary education impact assessment"
+        ]
+      }
+    }
+  },
+  "local_adaptations": {
+    "food_alternatives": {
+      "RUTF": ["Groundnut paste with milk powder", "Local nut-based paste", "Enriched porridge"],
+      "F75": ["Rice water with oil and sugar", "Millet porridge", "Local grain-based formula"],
+      "supplements": ["Local leafy greens for iron", "Palm oil for Vitamin A", "Fish powder for protein"]
+    },
+    "community_resources": [
+      "Community health workers",
+      "Village nutrition committees",
+      "Community gardens",
+      "Peer support groups"
+    ]
+  }
+}
