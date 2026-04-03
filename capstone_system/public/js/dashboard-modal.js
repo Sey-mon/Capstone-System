@@ -65,9 +65,5 @@ window.closeAnyModal = function() {
 
 // Check Bootstrap loading
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof bootstrap !== 'undefined') {
-        console.log('✅ Bootstrap loaded successfully');
-    } else {
-        console.error('❌ Bootstrap failed to load');
-    }
+    // Bootstrap check
 });

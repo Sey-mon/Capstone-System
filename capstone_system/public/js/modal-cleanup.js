@@ -21,8 +21,6 @@
 
         // Clean up any overflow hidden on html
         document.documentElement.style.overflow = '';
-
-        console.log('✅ Modal backdrops cleaned up');
     };
 
     // Enhanced modal show function
@@ -119,8 +117,6 @@
                 setTimeout(window.cleanupModalBackdrops, 100);
             });
         });
-
-        console.log('✅ Modal cleanup utility initialized');
     });
 
     // Cleanup when navigating away
@@ -151,8 +147,6 @@
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
         document.documentElement.style.overflow = '';
-
-        console.log(`🚨 Emergency modal cleanup completed - ${cleanedItems} items cleaned`);
         
         // Return count for programmatic use
         return cleanedItems;

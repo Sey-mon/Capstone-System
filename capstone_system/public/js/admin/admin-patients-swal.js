@@ -69,19 +69,19 @@ function showAddPatientModal() {
                                 <label for="first_name">
                                     <i class="fas fa-user"></i> First Name *
                                 </label>
-                                <input type="text" id="first_name" name="first_name" class="swal2-input" placeholder="Enter first name" required>
+                                <input type="text" id="first_name" name="first_name" class="swal2-input" placeholder="Enter first name" autocapitalize="words" style="text-transform: capitalize;" required>
                             </div>
                             <div class="form-group">
                                 <label for="middle_name">
                                     <i class="fas fa-user"></i> Middle Name
                                 </label>
-                                <input type="text" id="middle_name" name="middle_name" class="swal2-input" placeholder="Enter middle name (optional)">
+                                <input type="text" id="middle_name" name="middle_name" class="swal2-input" placeholder="Enter middle name (optional)" autocapitalize="words" style="text-transform: capitalize;">
                             </div>
                             <div class="form-group">
                                 <label for="last_name">
                                     <i class="fas fa-user"></i> Last Name *
                                 </label>
-                                <input type="text" id="last_name" name="last_name" class="swal2-input" placeholder="Enter last name" required>
+                                <input type="text" id="last_name" name="last_name" class="swal2-input" placeholder="Enter last name" autocapitalize="words" style="text-transform: capitalize;" required>
                             </div>
                         </div>
                         <div class="form-row">
@@ -1951,13 +1951,11 @@ function initializeEnhancedFeatures() {
     updatePatientCounts();
     setupSorting();
     switchView('table');
-    console.log('Enhanced Admin Patients features initialized');
 }
 
 function refreshPatientData() {
     cachePatientData();
     updatePatientCounts();
-    console.log('Patient data refreshed');
 }
 
 function cachePatientData() {
@@ -1985,8 +1983,6 @@ function cachePatientData() {
             });
         }
     });
-    
-    console.log(`Cached ${allPatients.length} patients`);
 }
 
 function setupEventListeners() {
@@ -2348,8 +2344,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         refreshPatientData();
     }, 100);
-
-    console.log('Admin Patients page loaded with SweetAlert2');
 });
 
 // Setup pagination links to preserve view preference using AJAX
