@@ -2230,6 +2230,9 @@ function updateSortIcons() {
 function switchView(view) {
     currentView = view;
     
+    // Store view preference in localStorage for persistence
+    localStorage.setItem('patientsViewPreference', view);
+
     document.querySelectorAll('.view-btn').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -2335,12 +2338,107 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupPaginationControls();
     
+    // Setup pagination with AJAX
+    setupPaginationLinks();
+    
+    // Restore view preference from localStorage (or default to table)
+    const savedView = localStorage.getItem('patientsViewPreference') || 'table';
+    switchView(savedView);
+    
     setTimeout(() => {
         refreshPatientData();
     }, 100);
 
     console.log('Admin Patients page loaded with SweetAlert2');
 });
+
+// Setup pagination links to preserve view preference using AJAX
+function setupPaginationLinks() {
+    // Add event listeners to all pagination links and button links
+    const paginationLinks = document.querySelectorAll('.pagination a, .pagination-wrapper a');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = new URL(this.href);
+            loadPatientPageViaAJAX(url.toString());
+        });
+    });
+}
+
+// Load patient page via AJAX to preserve view state
+function loadPatientPageViaAJAX(url) {
+    // Add loading state
+    const patientsContent = document.querySelector('.patients-content');
+    if (patientsContent) {
+        patientsContent.style.opacity = '0.6';
+        patientsContent.style.pointerEvents = 'none';
+    }
+
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Create a temporary container to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Extract the patients content
+        const newTableView = tempDiv.querySelector('#tableView');
+        const newGridView = tempDiv.querySelector('#gridView');
+        const newPaginationInfo = tempDiv.querySelector('.pagination-info');
+        const newPaginationWrapper = tempDiv.querySelector('.pagination-wrapper');
+        const newPaginationJump = tempDiv.querySelector('.pagination-jump');
+        
+        // Update table and grid views
+        const oldTableView = document.querySelector('#tableView');
+        const oldGridView = document.querySelector('#gridView');
+        if (newTableView && oldTableView) {
+            oldTableView.innerHTML = newTableView.innerHTML;
+        }
+        if (newGridView && oldGridView) {
+            oldGridView.innerHTML = newGridView.innerHTML;
+        }
+        
+        // Update pagination controls
+        if (newPaginationInfo) {
+            const oldPaginationInfo = document.querySelector('.pagination-info');
+            if (oldPaginationInfo) oldPaginationInfo.innerHTML = newPaginationInfo.innerHTML;
+        }
+        if (newPaginationWrapper) {
+            const oldPaginationWrapper = document.querySelector('.pagination-wrapper');
+            if (oldPaginationWrapper) oldPaginationWrapper.innerHTML = newPaginationWrapper.innerHTML;
+        }
+        if (newPaginationJump) {
+            const oldPaginationJump = document.querySelector('.pagination-jump');
+            if (oldPaginationJump) oldPaginationJump.innerHTML = newPaginationJump.innerHTML;
+        }
+        
+        // Re-setup event listeners for new pagination links
+        setupPaginationLinks();
+        setupPaginationControls();
+        setupActionButtons();
+        
+        // Always show the current view (table or grid)
+        switchView(currentView);
+        
+        // Remove loading state
+        if (patientsContent) {
+            patientsContent.style.opacity = '1';
+            patientsContent.style.pointerEvents = 'auto';
+        }
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    })
+    .catch(error => {
+        console.error('Error loading page:', error);
+        // Fallback to full page reload if AJAX fails
+        window.location.href = url;
+    });
+}
 
 // Setup pagination controls
 function setupPaginationControls() {
