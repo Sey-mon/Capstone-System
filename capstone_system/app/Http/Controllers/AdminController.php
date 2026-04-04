@@ -3957,7 +3957,7 @@ class AdminController extends Controller
             'category_id' => 'required|exists:item_categories,category_id',
             'unit' => 'required|string|max:50',
             'quantity' => 'required|integer|min:0',
-            'expiry_date' => 'nullable|date|after:today',
+            'expiry_date' => $isUpdate ? 'nullable|date' : 'nullable|date|after:today',
         ];
     }
 

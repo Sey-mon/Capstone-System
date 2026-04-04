@@ -32,6 +32,43 @@ function escapeHtml(text) {
     return text.toString().replace(/[&<>"']/g, m => map[m]);
 }
 
+// Helper function to format date for HTML5 date input (YYYY-MM-DD)
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    
+    // Handle different date formats
+    let date;
+    
+    // If it's already in YYYY-MM-DD format, return it
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+    }
+    
+    // Try to parse the date string
+    try {
+        if (dateString instanceof Date) {
+            date = dateString;
+        } else {
+            date = new Date(dateString);
+        }
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+        
+        // Format as YYYY-MM-DD
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    } catch (e) {
+        console.warn('Invalid date format:', dateString);
+        return '';
+    }
+}
+
 // Load categories, patients, and BNS data
 function loadData() {
     const categoriesEl = document.getElementById('categoriesData');
@@ -240,7 +277,7 @@ function showEditModal(item) {
     const itemName = escapeHtml(item.item_name || '');
     const unit = escapeHtml(item.unit || '');
     const quantity = escapeHtml(item.quantity || 0);
-    const expiryDate = item.expiry_date || '';
+    const expiryDate = formatDateForInput(item.expiry_date);
     
     Swal.fire({
         title: 'Edit Item',
