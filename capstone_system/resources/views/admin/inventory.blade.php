@@ -110,39 +110,6 @@
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="stats-grid-modern">
-        <div class="stat-card-modern stat-primary">
-            <div class="stat-icon-wrapper">
-                <i class="fas fa-boxes"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value">{{ $items->total() }}</div>
-                <div class="stat-label">Total Items</div>
-            </div>
-        </div>
-        
-        <div class="stat-card-modern stat-warning">
-            <div class="stat-icon-wrapper">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value">{{ $items->where('quantity', '<', 10)->count() }}</div>
-                <div class="stat-label">Low Stock</div>
-            </div>
-        </div>
-        
-        <div class="stat-card-modern stat-danger">
-            <div class="stat-icon-wrapper">
-                <i class="fas fa-exclamation-circle"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value">{{ $items->filter(function($item) { return $item->expiry_date && \Carbon\Carbon::now()->gt($item->expiry_date); })->count() }}</div>
-                <div class="stat-label">Expired Items</div>
-            </div>
-        </div>
-    </div>
-
     <!-- Inventory Table -->
     <div class="content-card-modern">
             <div class="table-container-modern">

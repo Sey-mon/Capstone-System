@@ -1141,6 +1141,7 @@ class AdminController extends Controller
     public function inventory()
     {
         $items = InventoryItem::with(['category', 'inventoryTransactions'])
+            ->whereNull('deleted_at')
             ->paginate(10);
         $categories = ItemCategory::all();
         $patients = Patient::select('patient_id', 'first_name', 'last_name')
@@ -1153,7 +1154,78 @@ class AdminController extends Controller
             ->select('user_id', 'first_name', 'last_name')
             ->orderBy('first_name')
             ->get();
-        return view('admin.inventory', compact('items', 'categories', 'patients', 'bns'));
+        
+        // Calculate stats for ALL ACTIVE items (database-wide, not soft-deleted)
+        $allItems = InventoryItem::whereNull('deleted_at')->get();
+        $lowStockCount = $allItems->where('quantity', '>=', 6)->where('quantity', '<=', 10)->count();
+        $criticalStockCount = $allItems->where('quantity', '<', 6)->count();
+        $expiredCount = $allItems->filter(function($item) { 
+            return $item->expiry_date && \Carbon\Carbon::now()->gt($item->expiry_date); 
+        })->count();
+        
+        return view('admin.inventory', compact('items', 'categories', 'patients', 'bns', 'allItems', 'lowStockCount', 'criticalStockCount', 'expiredCount'));
+    }
+
+    /**
+     * Get all inventory items as JSON (for AJAX filtering)
+     */
+    public function getAllInventoryItems()
+    {
+        try {
+            $items = InventoryItem::with(['category', 'inventoryTransactions'])
+                ->whereNull('deleted_at')
+                ->orderBy('item_id', 'desc')
+                ->get();
+            
+            // Format items for frontend
+            $formattedItems = $items->map(function($item) {
+                // Determine status
+                $status = 'Active';
+                $statusClass = 'in-stock';
+                
+                if ($item->quantity <= 0) {
+                    $status = 'Out of Stock';
+                    $statusClass = 'out-of-stock';
+                } elseif ($item->quantity < 6) {
+                    $status = 'Critical';
+                    $statusClass = 'critical';
+                } elseif ($item->quantity <= 10) {
+                    $status = 'Low Stock';
+                    $statusClass = 'low-stock';
+                }
+                
+                // Check if expired
+                if ($item->expiry_date && \Carbon\Carbon::now()->gt($item->expiry_date)) {
+                    $status = 'Expired';
+                    $statusClass = 'expired';
+                }
+                
+                return [
+                    'item_id' => $item->item_id,
+                    'item_name' => $item->item_name,
+                    'category_id' => $item->category_id,
+                    'category_name' => $item->category->category_name ?? 'Uncategorized',
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'expiry_date' => $item->expiry_date ? $item->expiry_date->format('M d, Y') : 'No expiry',
+                    'expiry_date_raw' => $item->expiry_date ? $item->expiry_date->format('Y-m-d') : null,
+                    'status' => $status,
+                    'status_class' => $statusClass,
+                    'transaction_count' => $item->inventoryTransactions->count()
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $formattedItems,
+                'total' => count($formattedItems)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch inventory items'
+            ], 500);
+        }
     }
 
     /**
@@ -1254,35 +1326,65 @@ class AdminController extends Controller
             $item = InventoryItem::findOrFail($id);
             $itemName = $item->item_name;
 
-            // Check if item has transactions
-            if ($item->inventoryTransactions()->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete item with existing transactions. Archive it instead.'
-                ], 422);
-            }
-
             // Log the activity before deletion
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'inventory_delete',
-                'description' => "Deleted inventory item: {$itemName} (Had {$item->quantity} {$item->unit})",
+                'description' => "Soft deleted inventory item: {$itemName} (Had {$item->quantity} {$item->unit})",
             ]);
 
+            // Soft delete the item
             $item->delete();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Inventory item deleted successfully!'
+                'message' => 'Inventory item archived successfully!'
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete inventory item. Please try again.'
+                'message' => 'Failed to archive inventory item. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Restore a soft-deleted inventory item
+     */
+    public function restoreInventoryItem($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $item = InventoryItem::withTrashed()->findOrFail($id);
+            $itemName = $item->item_name;
+
+            // Log the activity
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'inventory_restore',
+                'description' => "Restored inventory item: {$itemName} (Had {$item->quantity} {$item->unit})",
+            ]);
+
+            // Restore the item
+            $item->restore();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inventory item restored successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to restore inventory item. Please try again.'
             ], 500);
         }
     }

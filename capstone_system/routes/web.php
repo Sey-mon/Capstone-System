@@ -188,9 +188,11 @@ Route::middleware(['auth', 'account.verified', 'role:Admin', 'prevent.back'])->p
     
     // Inventory CRUD routes
     Route::post('/inventory', [AdminController::class, 'storeInventoryItem'])->name('inventory.store');
+    Route::get('/inventory/data/all', [AdminController::class, 'getAllInventoryItems'])->name('inventory.all');
     Route::get('/inventory/{id}', [AdminController::class, 'getInventoryItem'])->name('inventory.get');
     Route::put('/inventory/{id}', [AdminController::class, 'updateInventoryItem'])->name('inventory.update');
     Route::delete('/inventory/{id}', [AdminController::class, 'deleteInventoryItem'])->name('inventory.delete');
+    Route::post('/inventory/{id}/restore', [AdminController::class, 'restoreInventoryItem'])->name('inventory.restore');
     
     // Stock In/Out routes
     Route::post('/inventory/{id}/stock-in', [AdminController::class, 'stockIn'])->name('inventory.stock.in');

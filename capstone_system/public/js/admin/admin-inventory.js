@@ -12,6 +12,12 @@ let categoriesData = [];
 let patientsData = [];
 let bnsData = [];
 
+// Full-page search variables
+let allInventoryItems = []; // Store all items from database
+let filteredItems = []; // Store filtered results
+let currentFilteredPage = 1;
+let itemsPerPage = 10;
+
 // CSRF token for AJAX requests
 const csrfToken = document.querySelector('meta[name="csrf-token"]');
 if (!csrfToken) {
@@ -84,6 +90,34 @@ function loadData() {
     if (bnsEl) {
         bnsData = JSON.parse(bnsEl.dataset.bns || '[]');
     }
+}
+
+// Load all inventory items for full-page searching
+function loadAllInventoryItems() {
+    return fetch('/admin/inventory/data/all', {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': csrfTokenValue,
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            allInventoryItems = data.data || [];
+            filteredItems = [...allInventoryItems]; // Initialize filtered items
+            currentFilteredPage = 1;
+            console.log(`Loaded ${allInventoryItems.length} inventory items for search`);
+            return true;
+        } else {
+            console.error('Failed to load inventory items:', data.message);
+            return false;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading inventory items:', error);
+        return false;
+    });
 }
 
 // Generate category options HTML
@@ -451,53 +485,82 @@ function confirmDelete(itemId, itemName) {
 function deleteItem() {
     if (!currentItemId) return;
     
-    // Show loading
-    Swal.fire({
-        title: 'Deleting Item...',
-        html: 'Please wait',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
+    const itemName = document.querySelector(`button[data-item-id="${currentItemId}"]`)?.dataset.itemName || 'item';
     
-    fetch(`/admin/inventory/${currentItemId}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': csrfTokenValue,
-            'Accept': 'application/json',
+    // Show confirmation with text input
+    Swal.fire({
+        title: 'Delete Item?',
+        html: `
+            <p style="margin-bottom: 1rem; color: #666;">You are about to delete <strong>${escapeHtml(itemName)}</strong></p>
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #f44336;">This action will remove the item from your inventory.</p>
+            <p style="margin-bottom: 0.5rem; font-size: 0.9rem; color: #666;">Type <strong>"delete"</strong> to confirm:</p>
+            <input type="text" id="confirmDeleteInput" class="swal2-input" placeholder="Type 'delete' to confirm" style="margin-top: 0.5rem;">
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#f44336',
+        cancelButtonColor: '#6c757d',
+        preConfirm: () => {
+            const input = Swal.getPopup().querySelector('#confirmDeleteInput');
+            if (input.value.toLowerCase() !== 'delete') {
+                Swal.showValidationMessage('Please type "delete" to confirm');
+                return false;
+            }
+            return true;
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
             Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                text: data.message,
-                confirmButtonColor: '#43a047',
-                timer: 2000,
-                timerProgressBar: true
-            }).then(() => {
-                location.reload();
+                title: 'Deleting Item...',
+                html: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message,
-                confirmButtonColor: '#43a047'
+            
+            fetch(`/admin/inventory/${currentItemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfTokenValue,
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: data.message,
+                        confirmButtonColor: '#43a047',
+                        timer: 2000,
+                        timerProgressBar: true
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                        confirmButtonColor: '#43a047'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while deleting the item',
+                    confirmButtonColor: '#43a047'
+                });
             });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while deleting the item',
-            confirmButtonColor: '#43a047'
-        });
     });
 }
 
@@ -801,6 +864,8 @@ function setupRealTimeFilters() {
     const searchFilter = document.getElementById('searchFilter');
     const categoryFilter = document.getElementById('categoryFilter');
     const statusFilter = document.getElementById('statusFilter');
+    const expiryFromFilter = document.getElementById('expiryFromFilter');
+    const expiryToFilter = document.getElementById('expiryToFilter');
     
     if (searchFilter) {
         searchFilter.addEventListener('keydown', function(e) { if (e.key === 'Enter') filterTable(); });
@@ -824,93 +889,379 @@ function setupRealTimeFilters() {
     if (statusFilter) {
         statusFilter.addEventListener('change', filterTable);
     }
-    
-    // Add keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'f' && searchFilter) {
-            e.preventDefault();
-            searchFilter.focus();
-            searchFilter.select();
-        }
-        
-        if (e.key === 'Escape') {
-            clearFilters();
-            if (searchFilter) {
-                searchFilter.blur();
-            }
-        }
-    });
+    if (expiryFromFilter) {
+        expiryFromFilter.addEventListener('change', filterTable);
+    }
+    if (expiryToFilter) {
+        expiryToFilter.addEventListener('change', filterTable);
+    }
 }
 
 function filterTable() {
     const searchValue = document.getElementById('searchFilter')?.value.toLowerCase() || '';
     const categoryValue = document.getElementById('categoryFilter')?.value.toLowerCase() || '';
     const statusValue = document.getElementById('statusFilter')?.value.toLowerCase() || '';
+    const expiryFromValue = document.getElementById('expiryFromFilter')?.value || '';
+    const expiryToValue = document.getElementById('expiryToFilter')?.value || '';
     
-    const tableRows = document.querySelectorAll('.inventory-table tbody tr, .table-modern tbody tr');
-    let visibleCount = 0;
-    
-    tableRows.forEach(row => {
-        if (row.querySelector('td[colspan]')) {
-            return;
-        }
-        
-        // Get item name from user-info structure or item-name-main
-        const userInfo = row.querySelector('.user-info .user-name');
-        const itemNameMain = row.querySelector('.item-name-main');
-        const itemName = (userInfo?.textContent || itemNameMain?.textContent || '').toLowerCase();
-        
-        // Get category from badge
-        const categoryBadge = row.querySelector('.badge-role, .badge-admin, .category-badge');
-        const category = categoryBadge?.textContent.toLowerCase().trim() || '';
-        
-        // Get status from status-badge or stock-status
-        const statusElement = row.querySelector('.status-badge, .stock-status');
-        const status = statusElement?.textContent.toLowerCase().trim() || '';
-        
+    // Filter all items in memory (not just DOM rows)
+    filteredItems = allInventoryItems.filter(item => {
+        // Search filter
         const matchesSearch = searchValue === '' || 
-            itemName.includes(searchValue) || 
-            category.includes(searchValue);
+            item.item_name.toLowerCase().includes(searchValue) || 
+            item.category_name.toLowerCase().includes(searchValue);
         
-        const matchesCategory = categoryValue === '' || category.includes(categoryValue);
+        // Category filter
+        const matchesCategory = categoryValue === '' || 
+            item.category_name.toLowerCase().includes(categoryValue);
         
-        // Handle status filtering
+        // Status filter
         let matchesStatus = true;
         if (statusValue !== '') {
             if (statusValue === 'in-stock') {
-                matchesStatus = status.includes('active') || status.includes('in stock');
+                matchesStatus = item.status_class === 'in-stock';
             } else if (statusValue === 'low-stock') {
-                matchesStatus = status.includes('low stock');
+                matchesStatus = item.status_class === 'low-stock';
             } else if (statusValue === 'critical') {
-                matchesStatus = status.includes('critical');
+                matchesStatus = item.status_class === 'critical';
             } else if (statusValue === 'out-of-stock') {
-                matchesStatus = status.includes('out of stock');
+                matchesStatus = item.status_class === 'out-of-stock';
             } else if (statusValue === 'expired') {
-                matchesStatus = status.includes('expired');
+                matchesStatus = item.status_class === 'expired';
             }
         }
         
-        const shouldShow = matchesSearch && matchesCategory && matchesStatus;
-        
-        if (shouldShow) {
-            row.style.display = '';
-            visibleCount++;
-            
-            if (searchValue && matchesSearch) {
-                if (userInfo) highlightSearchTerms(userInfo, searchValue);
-                if (itemNameMain) highlightSearchTerms(itemNameMain, searchValue);
-                if (categoryBadge) highlightSearchTerms(categoryBadge, searchValue);
+        // Expiry date range filter
+        let matchesExpiryRange = true;
+        if (expiryFromValue || expiryToValue) {
+            if (!item.expiry_date_raw) {
+                matchesExpiryRange = false;
             } else {
-                if (userInfo) removeHighlights(userInfo);
-                if (itemNameMain) removeHighlights(itemNameMain);
-                if (categoryBadge) removeHighlights(categoryBadge);
+                const itemDate = new Date(item.expiry_date_raw);
+                const fromDate = expiryFromValue ? new Date(expiryFromValue) : null;
+                const toDate = expiryToValue ? new Date(expiryToValue) : null;
+                
+                if (fromDate && itemDate < fromDate) {
+                    matchesExpiryRange = false;
+                }
+                if (toDate && itemDate > toDate) {
+                    matchesExpiryRange = false;
+                }
             }
-        } else {
-            row.style.display = 'none';
         }
+        
+        return matchesSearch && matchesCategory && matchesStatus && matchesExpiryRange;
     });
     
-    updateFilterResults(visibleCount);
+    // Reset to first page when filtering
+    currentFilteredPage = 1;
+    
+    // Display the first page of filtered results
+    displayFilteredPage();
+    
+    // Update filter results info
+    updateFilterResults(filteredItems.length);
+}
+
+// Display current page of filtered results in the table
+function displayFilteredPage() {
+    const table = document.getElementById('inventoryTable');
+    const tableContainer = document.querySelector('.table-container-modern');
+    let noResultsMessage = document.getElementById('noResultsMessage');
+    
+    const startIndex = (currentFilteredPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageItems = filteredItems.slice(startIndex, endIndex);
+    
+    // If no results, show message and hide table
+    if (pageItems.length === 0 && filteredItems.length === 0) {
+        // Hide the table
+        if (tableContainer) tableContainer.style.display = 'none';
+        
+        // Create or show the no-results message
+        if (!noResultsMessage) {
+            noResultsMessage = document.createElement('div');
+            noResultsMessage.id = 'noResultsMessage';
+            noResultsMessage.style.cssText = `
+                padding: 3rem 2rem;
+                text-align: center;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border: 2px dashed #ddd;
+                margin: 2rem 0;
+            `;
+            tableContainer.parentElement.insertBefore(noResultsMessage, tableContainer.nextSibling);
+        }
+        
+        noResultsMessage.innerHTML = `
+            <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.5; color: #666; display: block;"></i>
+            <h3 style="font-size: 1.8rem; font-weight: 700; margin: 1rem 0 0.5rem 0; color: #333;">Nothing Found</h3>
+            <p style="margin: 0.75rem 0 1rem 0; font-size: 1rem; color: #666;">No items match your current filters.</p>
+            <p style="margin: 0 0 1.5rem 0; font-size: 0.95rem; color: #888;">Try adjusting your search criteria or clearing the filters.</p>
+            <button class="btn btn-secondary" style="margin-top: 0.5rem;" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                Clear All Filters
+            </button>
+        `;
+        noResultsMessage.style.display = 'block';
+        updatePagination(0, 1);
+        return;
+    }
+    
+    // Show table and hide message
+    if (tableContainer) tableContainer.style.display = 'block';
+    if (noResultsMessage) noResultsMessage.style.display = 'none';
+    
+    // Find table body
+    let tableBody = document.querySelector('table.table-modern tbody');
+    if (!tableBody) {
+        tableBody = document.querySelector('#inventoryTable tbody');
+    }
+    if (!tableBody) {
+        tableBody = document.querySelector('table tbody');
+    }
+    if (!tableBody) {
+        return;
+    }
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    // Add rows for items on current page
+    pageItems.forEach(item => {
+        const row = document.createElement('tr');
+        row.className = 'table-row-modern';
+        row.dataset.itemId = item.item_id;
+        row.innerHTML = `
+            <td>
+                <input type="checkbox" class="row-checkbox" value="${item.item_id}">
+            </td>
+            <td>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        ${item.item_name.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="user-name">${escapeHtml(item.item_name)}</div>
+                        <div class="user-email">${item.transaction_count} transactions</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span class="badge badge-role">
+                    ${escapeHtml(item.category_name)}
+                </span>
+            </td>
+            <td>
+                <div class="quantity-container">
+                    <span class="quantity-badge quantity-${item.quantity < 6 ? 'low' : (item.quantity <= 10 ? 'medium' : 'high')}">
+                        ${item.quantity}
+                    </span>
+                </div>
+            </td>
+            <td><span class="text-secondary">${escapeHtml(item.unit)}</span></td>
+            <td>
+                <span class="text-secondary">${escapeHtml(item.expiry_date)}</span>
+            </td>
+            <td>
+                <span class="stock-status ${item.status_class}">
+                    ${item.status}
+                </span>
+            </td>
+            <td>
+                <div class="action-buttons-modern">
+                    <button class="action-btn-modern action-btn-edit action-btn edit" 
+                            data-item-id="${item.item_id}"
+                            title="Edit Item">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn-modern action-btn-stock-in action-btn stock-in" 
+                            data-item-id="${item.item_id}"
+                            data-item-name="${item.item_name}"
+                            title="Stock In">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <button class="action-btn-modern action-btn-stock-out action-btn stock-out" 
+                            data-item-id="${item.item_id}"
+                            data-item-name="${item.item_name}"
+                            data-quantity="${item.quantity}"
+                            title="Stock Out">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                    <button class="action-btn-modern action-btn-view action-btn view" 
+                            data-audit-url="/admin/audit/logs"
+                            title="View Activity Logs">
+                        <i class="fas fa-history"></i>
+                    </button>
+                    <button class="action-btn-modern action-btn-delete action-btn delete" 
+                            data-item-id="${item.item_id}"
+                            data-item-name="${item.item_name}"
+                            title="Delete Item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+    
+    // Re-attach event listeners to new rows
+    attachRowEventListeners();
+    
+    // Update pagination controls
+    updatePagination(filteredItems.length, Math.ceil(filteredItems.length / itemsPerPage));
+}
+
+// Update pagination display
+function updatePagination(totalItems, totalPages) {
+    const paginationControls = document.querySelector('.pagination-controls');
+    const paginationInfo = document.querySelector('.pagination-info');
+    const gotoPage = document.querySelector('.pagination-goto');
+    const paginationFooter = document.querySelector('.pagination-footer-modern');
+    
+    if (!paginationInfo) return;
+    
+    // Update info text
+    const startItem = totalItems === 0 ? 0 : (currentFilteredPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentFilteredPage * itemsPerPage, totalItems);
+    paginationInfo.textContent = `Showing ${startItem} to ${endItem} of ${totalItems} items`;
+    
+    // Hide pagination footer if no results or only 1 page
+    if (paginationFooter) {
+        if (totalItems === 0 || totalPages <= 1) {
+            paginationFooter.style.display = 'none';
+            return;
+        } else {
+            paginationFooter.style.display = 'block';
+        }
+    }
+    
+    if (!paginationControls) return;
+    
+    // Clear existing pagination buttons
+    paginationControls.innerHTML = '';
+    
+    const nav = document.createElement('nav');
+    nav.className = 'pagination-nav';
+    
+    // Previous button
+    const prevBtn = document.createElement('button' );
+    prevBtn.className = `pagination-btn ${currentFilteredPage === 1 ? 'pagination-btn-disabled' : ''}`;
+    prevBtn.disabled = currentFilteredPage === 1;
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.addEventListener('click', () => {
+        if (currentFilteredPage > 1) {
+            currentFilteredPage--;
+            displayFilteredPage();
+        }
+    });
+    nav.appendChild(prevBtn);
+    
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentFilteredPage - 1 && i <= currentFilteredPage + 1)) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `pagination-btn ${i === currentFilteredPage ? 'pagination-btn-active' : ''}`;
+            pageBtn.textContent = i;
+            pageBtn.addEventListener('click', () => {
+                currentFilteredPage = i;
+                displayFilteredPage();
+            });
+            nav.appendChild(pageBtn);
+        } else if (i === 2 || i === totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.style.padding = '0.5rem';
+            ellipsis.textContent = '...';
+            nav.appendChild(ellipsis);
+        }
+    }
+    
+    // Next button
+    const nextBtn = document.createElement('button');
+    nextBtn.className = `pagination-btn ${currentFilteredPage === totalPages ? 'pagination-btn-disabled' : ''}`;
+    nextBtn.disabled = currentFilteredPage === totalPages;
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.addEventListener('click', () => {
+        if (currentFilteredPage < totalPages) {
+            currentFilteredPage++;
+            displayFilteredPage();
+        }
+    });
+    nav.appendChild(nextBtn);
+    
+    paginationControls.appendChild(nav);
+    
+    // Update goto page
+    if (gotoPage) {
+        const gotoInput = gotoPage.querySelector('#gotoPage');
+        if (gotoInput) {
+            gotoInput.max = totalPages;
+            gotoInput.value = currentFilteredPage;
+        }
+    }
+}
+
+// Attach event listeners to dynamically created rows
+function attachRowEventListeners() {
+    // Re-attach edit listeners
+    document.querySelectorAll('.action-btn.edit, .action-btn-edit').forEach(btn => {
+        btn.removeEventListener('click', handleEditClick);
+        btn.addEventListener('click', handleEditClick);
+    });
+    
+    // Re-attach stock-in listeners
+    document.querySelectorAll('.action-btn.stock-in, .action-btn-stock-in').forEach(btn => {
+        btn.removeEventListener('click', handleStockInClick);
+        btn.addEventListener('click', handleStockInClick);
+    });
+    
+    // Re-attach stock-out listeners
+    document.querySelectorAll('.action-btn.stock-out, .action-btn-stock-out').forEach(btn => {
+        btn.removeEventListener('click', handleStockOutClick);
+        btn.addEventListener('click', handleStockOutClick);
+    });
+    
+    // Re-attach view listeners
+    document.querySelectorAll('.action-btn.view, .action-btn-view').forEach(btn => {
+        btn.removeEventListener('click', handleViewClick);
+        btn.addEventListener('click', handleViewClick);
+    });
+    
+    // Re-attach delete listeners
+    document.querySelectorAll('.action-btn.delete, .action-btn-delete').forEach(btn => {
+        btn.removeEventListener('click', handleDeleteClick);
+        btn.addEventListener('click', handleDeleteClick);
+    });
+}
+
+// Event handlers
+function handleEditClick() {
+    const itemId = this.dataset.itemId;
+    openEditModal(itemId);
+}
+
+function handleStockInClick() {
+    const itemId = this.dataset.itemId;
+    const itemName = this.dataset.itemName;
+    openStockInModal(itemId, itemName);
+}
+
+function handleStockOutClick() {
+    const itemId = this.dataset.itemId;
+    const itemName = this.dataset.itemName;
+    const quantity = this.dataset.quantity;
+    openStockOutModal(itemId, itemName, quantity);
+}
+
+function handleViewClick() {
+    const auditUrl = this.dataset.auditUrl;
+    window.location.href = auditUrl;
+}
+
+function handleDeleteClick() {
+    const itemId = this.dataset.itemId;
+    const itemName = this.dataset.itemName;
+    confirmDelete(itemId, itemName);
 }
 
 function highlightSearchTerms(element, searchTerm) {
@@ -955,11 +1306,13 @@ function updateFilterResults(visibleCount) {
             noResultsRow.innerHTML = `
                 <td colspan="7" style="padding: 3rem; text-align: center;">
                     <div style="color: var(--text-secondary);">
-                        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                        <p>No items match your current filters.</p>
-                        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="clearFilters()">
+                        <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.3; color: #999;"></i>
+                        <h3 style="font-size: 1.5rem; font-weight: 600; margin: 0 0 0.5rem 0; color: var(--text-primary);">Nothing Found</h3>
+                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.95rem;">No items match your current filters.</p>
+                        <p style="margin: 0 0 1.5rem 0; font-size: 0.85rem; color: #999;">Try adjusting your search criteria or clearing the filters.</p>
+                        <button class="btn btn-secondary" style="margin-top: 0.5rem;" onclick="clearFilters()">
                             <i class="fas fa-times"></i>
-                            Clear Filters
+                            Clear All Filters
                         </button>
                     </div>
                 </td>
@@ -998,110 +1351,196 @@ function clearFilters() {
     const searchFilter = document.getElementById('searchFilter');
     const categoryFilter = document.getElementById('categoryFilter');
     const statusFilter = document.getElementById('statusFilter');
+    const expiryFromFilter = document.getElementById('expiryFromFilter');
+    const expiryToFilter = document.getElementById('expiryToFilter');
     
-    if (searchFilter) searchFilter.value = '';
+    if (searchFilter) {
+        searchFilter.value = '';
+        searchFilter.style.borderColor = 'var(--border-light)';
+        searchFilter.style.boxShadow = 'none';
+    }
     if (categoryFilter) categoryFilter.value = '';
     if (statusFilter) statusFilter.value = '';
+    if (expiryFromFilter) expiryFromFilter.value = '';
+    if (expiryToFilter) expiryToFilter.value = '';
     
-    const tableRows = document.querySelectorAll('.inventory-table tbody tr, .table-modern tbody tr');
-    tableRows.forEach(row => {
-        if (!row.querySelector('td[colspan]')) {
-            row.style.display = '';
-            
-            // Remove highlights from all potential cells
-            const userInfo = row.querySelector('.user-info .user-name');
-            const itemNameMain = row.querySelector('.item-name-main');
-            const categoryBadge = row.querySelector('.badge-role, .badge-admin, .category-badge');
-            
-            if (userInfo) removeHighlights(userInfo);
-            if (itemNameMain) removeHighlights(itemNameMain);
-            if (categoryBadge) removeHighlights(categoryBadge);
-        }
-    });
+    // Reset filtered items to all items
+    filteredItems = [...allInventoryItems];
+    currentFilteredPage = 1;
     
-    const existingInfo = document.querySelector('.filter-results-info');
-    if (existingInfo) {
-        existingInfo.remove();
-    }
+    // Redisplay table with all items
+    displayFilteredPage();
     
-    const existingNoResults = document.querySelector('.no-filter-results');
-    if (existingNoResults) {
-        existingNoResults.remove();
-    }
-    
-    const searchFilter2 = document.getElementById('searchFilter');
-    if (searchFilter2) {
-        searchFilter2.style.borderColor = 'var(--border-light)';
-        searchFilter2.style.boxShadow = 'none';
-    }
+    // Update filter info
+    updateFilterResults(filteredItems.length);
 }
 
-// Setup event listeners for buttons
+// Setup event listeners for static buttons
 function setupEventListeners() {
+    // Add item button
     document.querySelectorAll('.btn-add-item').forEach(btn => {
         btn.addEventListener('click', openAddModal);
     });
     
+    // Clear filters button
     document.querySelectorAll('.btn-clear-filters, .btn-clear-all, #clearAllBtn').forEach(btn => {
         btn.addEventListener('click', clearFilters);
     });
     
-    document.querySelectorAll('.action-btn.stock-in, .action-btn-stock-in').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            const itemName = this.dataset.itemName;
-            openStockInModal(itemId, itemName);
+    // Select all checkbox
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateSelectedCount();
         });
-    });
+    }
     
-    document.querySelectorAll('.action-btn.stock-out, .action-btn-stock-out').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            const itemName = this.dataset.itemName;
-            const quantity = this.dataset.quantity;
-            openStockOutModal(itemId, itemName, quantity);
+    // Bulk delete button
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', bulkDeleteItems);
+    }
+    
+    // Clear selections button
+    const clearSelectionsBtn = document.getElementById('clearSelectionsBtn');
+    if (clearSelectionsBtn) {
+        clearSelectionsBtn.addEventListener('click', () => {
+            document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            updateSelectedCount();
         });
-    });
+    }
+}
+
+// Update selected items count display
+function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+    const selectedCount = document.getElementById('selectedCount');
+    if (selectedCount) {
+        selectedCount.textContent = `${selectedCheckboxes.length} selected`;
+    }
+}
+
+// Bulk delete items
+function bulkDeleteItems(itemIds = null) {
+    // Get selected item IDs if not provided
+    if (!itemIds) {
+        const selectedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+        itemIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    }
     
-    document.querySelectorAll('.action-btn.edit, .action-btn-edit').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            openEditModal(itemId);
+    if (itemIds.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Items Selected',
+            text: 'Please select at least one item to delete',
+            confirmButtonColor: '#43a047'
         });
-    });
+        return;
+    }
     
-    document.querySelectorAll('.action-btn.view, .action-btn-view').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const auditUrl = this.dataset.auditUrl;
-            window.location.href = auditUrl;
-        });
-    });
-    
-    document.querySelectorAll('.action-btn.delete, .action-btn-delete').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            const itemName = this.dataset.itemName;
-            confirmDelete(itemId, itemName);
-        });
-    });
-    
-    document.querySelectorAll('.inventory-table tbody tr, .table-modern tbody tr').forEach(row => {
-        if (!row.querySelector('td[colspan]')) {
-            row.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = 'var(--bg-tertiary)';
+    Swal.fire({
+        title: 'Confirm Bulk Delete',
+        html: `
+            <p style="margin-bottom: 1rem; color: #666;">You are about to delete <strong>${itemIds.length} item${itemIds.length > 1 ? 's' : ''}</strong></p>
+            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #f44336;">This will remove these items from your inventory.</p>
+            <p style="margin-bottom: 0.5rem; font-size: 0.9rem; color: #666;">Type <strong>"delete"</strong> to confirm:</p>
+            <input type="text" id="confirmBulkDeleteInput" class="swal2-input" placeholder="Type 'delete' to confirm" style="margin-top: 0.5rem;">
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-trash"></i> Delete All',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#f44336',
+        cancelButtonColor: '#6c757d',
+        preConfirm: () => {
+            const input = Swal.getPopup().querySelector('#confirmBulkDeleteInput');
+            if (input.value.toLowerCase() !== 'delete') {
+                Swal.showValidationMessage('Please type "delete" to confirm');
+                return false;
+            }
+            return true;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Delete each item
+            let deleted = 0;
+            const total = itemIds.length;
+            
+            Swal.fire({
+                title: 'Deleting items...',
+                html: `<p>Deleting item 1 of ${total}</p>`,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
             
-            row.addEventListener('mouseleave', function() {
-                this.style.backgroundColor = 'transparent';
-            });
+            // Delete items sequentially
+            const deleteNextItem = (index) => {
+                if (index >= itemIds.length) {
+                    // Reload page after all deletions
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: `Successfully deleted ${deleted} item${deleted > 1 ? 's' : ''}!`,
+                        confirmButtonColor: '#43a047',
+                        timer: 2000,
+                        timerProgressBar: true
+                    }).then(() => {
+                        location.reload();
+                    });
+                    return;
+                }
+                
+                fetch(`/admin/inventory/${itemIds[index]}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfTokenValue,
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        deleted++;
+                    }
+                    // Update progress
+                    Swal.update({
+                        html: `<p>Deleting item ${index + 2} of ${total}</p>`
+                    });
+                    deleteNextItem(index + 1);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    deleteNextItem(index + 1);
+                });
+            };
+            
+            archiveNextItem(0);
         }
     });
 }
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // Load categories and patients data
     loadData();
+    
+    // Load all inventory items for full-page search
+    const itemsLoaded = await loadAllInventoryItems();
+    
+    if (itemsLoaded) {
+        // Display first page
+        displayFilteredPage();
+    }
     
     // Set up real-time filtering
     setupRealTimeFilters();
@@ -1115,7 +1554,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeBulkActions();
     initializeExportButtons();
     initializeAdvancedFilters();
-    initializeKeyboardShortcuts();
 });
 
 // Make functions globally available
@@ -1439,60 +1877,23 @@ function applyFilters() {
     });
 }
 
-// ==================== KEYBOARD SHORTCUTS ====================
-function initializeKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
-        // Ctrl/Cmd + N: Add new item
-        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-            e.preventDefault();
-            const addBtn = document.querySelector('.btn-add-item');
-            if (addBtn) addBtn.click();
-        }
-        
-        // Escape: Clear selections
-        if (e.key === 'Escape') {
-            const checkboxes = document.querySelectorAll('.row-checkbox:checked');
-            checkboxes.forEach(cb => cb.checked = false);
-            selectedItems.clear();
-            sessionStorage.removeItem('inventory_selections');
-            const selectAll = document.getElementById('selectAllCheckbox');
-            const bulkContainer = document.getElementById('bulkActionsContainer');
-            if (selectAll) selectAll.checked = false;
-            if (bulkContainer) bulkContainer.style.display = 'none';
-        }
-    });
-}
 
-// Add keyboard shortcuts help button
-setTimeout(() => {
-    const helpBtn = document.createElement('button');
-    helpBtn.innerHTML = '<i class="fas fa-keyboard"></i>';
-    helpBtn.className = 'btn btn-outline-info keyboard-shortcuts-btn';
-    helpBtn.title = 'Keyboard Shortcuts';
-    helpBtn.onclick = () => {
-        Swal.fire({
-            title: 'Keyboard Shortcuts',
-            html: `<div style="text-align: left;">
-                    <p><strong>Ctrl/Cmd + N:</strong> Add new item</p>
-                    <p><strong>Escape:</strong> Clear selections</p>
-                </div>`,
-            confirmButtonColor: '#43a047'
-        });
-    };
-    document.body.appendChild(helpBtn);
-}, 1000);
 
 // Pagination Go To Page Function
 function goToPage() {
-    const page = document.getElementById('gotoPage').value;
-    const paginationEl = document.getElementById('paginationData');
-    if (!paginationEl) return;
+    const gotoInput = document.getElementById('gotoPage');
+    if (!gotoInput) return;
     
-    const maxPage = parseInt(paginationEl.dataset.maxPage);
-    const pageUrl = paginationEl.dataset.pageUrl;
+    const page = parseInt(gotoInput.value);
+    const maxPage = parseInt(gotoInput.max) || 1;
     
     if (page >= 1 && page <= maxPage) {
-        window.location.href = pageUrl.replace('page=1', 'page=' + page);
+        currentFilteredPage = page;
+        displayFilteredPage();
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        gotoInput.value = currentFilteredPage;
     }
 }
 
