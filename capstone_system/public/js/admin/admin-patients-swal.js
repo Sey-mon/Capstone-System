@@ -423,6 +423,22 @@ function showAddPatientModal() {
                     }
                 });
             }
+
+            // Initialize Select2 for searchable combo boxes
+            setTimeout(() => {
+                if (typeof $ !== 'undefined' && $ && $.fn && $.fn.select2) {
+                    $('#parent_id, #nutritionist_id, #barangay_id').select2({
+                        dropdownParent: $('.swal-patient-modal'),
+                        width: '100%',
+                        allowClear: true,
+                        placeholder: 'Search or select...',
+                        minimumResultsForSearch: 0
+                    });
+                    console.log('Select2 initialized with inline search');
+                } else {
+                    console.log('Select2 not available');
+                }
+            }, 100);
         },
         preConfirm: () => {
             if (!validatePatientForm('addPatientForm')) {
@@ -827,6 +843,22 @@ function showEditPatientModal(patient) {
                     });
                 }
             });
+
+            // Initialize Select2 for searchable combo boxes
+            setTimeout(() => {
+                if (typeof $ !== 'undefined' && $ && $.fn && $.fn.select2) {
+                    $('#edit_parent_id, #edit_nutritionist_id, #edit_barangay_id').select2({
+                        dropdownParent: $('.swal-patient-modal'),
+                        width: '100%',
+                        allowClear: true,
+                        placeholder: 'Search or select...',
+                        minimumResultsForSearch: 0
+                    });
+                    console.log('Select2 initialized with inline search');
+                } else {
+                    console.log('Select2 not available');
+                }
+            }, 100);
         },
         preConfirm: () => {
             if (!validatePatientForm('editPatientForm')) {
