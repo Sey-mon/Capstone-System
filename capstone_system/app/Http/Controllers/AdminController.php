@@ -1146,7 +1146,14 @@ class AdminController extends Controller
         $patients = Patient::select('patient_id', 'first_name', 'last_name')
             ->orderBy('first_name')
             ->get();
-        return view('admin.inventory', compact('items', 'categories', 'patients'));
+        // Fetch BNS (Barangay Nutrition Specialists) - users with nutritionist role
+        $bns = User::whereHas('role', function ($query) {
+            $query->where('role_name', 'Nutritionist');
+        })
+            ->select('user_id', 'first_name', 'last_name')
+            ->orderBy('first_name')
+            ->get();
+        return view('admin.inventory', compact('items', 'categories', 'patients', 'bns'));
     }
 
     /**
@@ -3447,7 +3454,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'quantity' => 'required|integer|min:1',
-            'patient_id' => 'nullable|exists:patients,patient_id',
+            'bns_id' => 'required|exists:users,user_id',
             'remarks' => 'nullable|string|max:500',
         ]);
 
@@ -3470,29 +3477,33 @@ class AdminController extends Controller
             // Update item quantity
             $item->update(['quantity' => $newQuantity]);
 
+            // Get BNS name for the log
+            $bns = User::find($request->bns_id);
+            $bnsName = $bns ? "{$bns->first_name} {$bns->last_name}" : "Unknown BNS";
+
             // Create transaction record
             InventoryTransaction::create([
                 'item_id' => $item->item_id,
                 'user_id' => Auth::id(),
-                'patient_id' => $request->patient_id,
+                'bns_id' => $request->bns_id,
                 'transaction_type' => 'Out',
                 'quantity' => $request->quantity,
                 'transaction_date' => now(),
-                'remarks' => $request->remarks ?? "Stock out - Removed {$request->quantity} {$item->unit}(s)",
+                'remarks' => $request->remarks ?? "Stock out - Removed {$request->quantity} {$item->unit}(s) to {$bnsName}",
             ]);
 
             // Log the activity
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'stock_out',
-                'description' => "Stock out for {$item->item_name}: Removed {$request->quantity} {$item->unit}(s). Total: {$oldQuantity} → {$newQuantity}" . ($request->patient_id ? " (Patient involved)" : ""),
+                'description' => "Stock out for {$item->item_name}: Removed {$request->quantity} {$item->unit}(s) to BNS {$bnsName}. Total: {$oldQuantity} → {$newQuantity}",
             ]);
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => "Successfully removed {$request->quantity} {$item->unit}(s) from {$item->item_name}",
+                'message' => "Successfully removed {$request->quantity} {$item->unit}(s) from {$item->item_name} and distributed to {$bnsName}",
                 'item' => $item->load('category'),
                 'new_quantity' => $newQuantity
             ]);

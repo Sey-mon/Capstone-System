@@ -366,6 +366,7 @@
     <!-- Hidden data for SweetAlert2 modals -->
     <div id="categoriesData" class="hidden-data" data-categories='@json($categories)'></div>
     <div id="patientsData" class="hidden-data" data-patients='@json($patients ?? [])'></div>
+    <div id="bnsData" class="hidden-data" data-bns='@json($bns ?? [])'></div>
     <div id="paginationData" class="hidden-data" data-max-page="{{ $items->lastPage() }}" data-page-url="{{ $items->url(1) }}"></div>
     
     <script src="@assetv('js/admin/admin-inventory.js')"></script>

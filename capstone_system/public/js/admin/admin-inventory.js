@@ -10,6 +10,7 @@ let currentStockItemName = '';
 let currentAvailableStock = 0;
 let categoriesData = [];
 let patientsData = [];
+let bnsData = [];
 
 // CSRF token for AJAX requests
 const csrfToken = document.querySelector('meta[name="csrf-token"]');
@@ -31,16 +32,20 @@ function escapeHtml(text) {
     return text.toString().replace(/[&<>"']/g, m => map[m]);
 }
 
-// Load categories and patients data
+// Load categories, patients, and BNS data
 function loadData() {
     const categoriesEl = document.getElementById('categoriesData');
     const patientsEl = document.getElementById('patientsData');
+    const bnsEl = document.getElementById('bnsData');
     
     if (categoriesEl) {
         categoriesData = JSON.parse(categoriesEl.dataset.categories || '[]');
     }
     if (patientsEl) {
         patientsData = JSON.parse(patientsEl.dataset.patients || '[]');
+    }
+    if (bnsEl) {
+        bnsData = JSON.parse(bnsEl.dataset.bns || '[]');
     }
 }
 
@@ -60,6 +65,16 @@ function getPatientOptions(selectedId = '') {
     patientsData.forEach(patient => {
         const selected = patient.patient_id == selectedId ? 'selected' : '';
         options += `<option value="${patient.patient_id}" ${selected}>${patient.first_name} ${patient.last_name}</option>`;
+    });
+    return options;
+}
+
+// Generate BNS (Barangay Nutrition Specialist) options HTML
+function getBNSOptions(selectedId = '') {
+    let options = '<option value="">Select BNS</option>';
+    bnsData.forEach(bns => {
+        const selected = bns.user_id == selectedId ? 'selected' : '';
+        options += `<option value="${bns.user_id}" ${selected}>${bns.first_name} ${bns.last_name}</option>`;
     });
     return options;
 }
@@ -596,11 +611,11 @@ function openStockOutModal(itemId, itemName, availableStock) {
                 </div>
                 
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="swal-stockOutPatient" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Patient (Optional)</label>
-                    <select id="swal-stockOutPatient" name="patient_id" class="swal2-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
-                        ${getPatientOptions()}
+                    <label for="swal-stockOutBNS" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">BNS (Barangay Nutrition Specialist) <span style="color: #f44336;">*</span></label>
+                    <select id="swal-stockOutBNS" name="bns_id" class="swal2-input" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; margin: 0;">
+                        ${getBNSOptions()}
                     </select>
-                    <small style="display: block; margin-top: 0.25rem; color: #666; font-size: 0.875rem;">Select a patient if this stock out is for a specific patient</small>
+                    <small style="display: block; margin-top: 0.25rem; color: #666; font-size: 0.875rem;">Select the BNS who is receiving/distributing this stock</small>
                 </div>
                 
                 <div class="form-group" style="margin-bottom: 1rem;">
@@ -622,7 +637,7 @@ function openStockOutModal(itemId, itemName, availableStock) {
         },
         preConfirm: () => {
             const quantity = parseInt(document.getElementById('swal-stockOutQuantity').value);
-            const patientId = document.getElementById('swal-stockOutPatient').value;
+            const bnsId = document.getElementById('swal-stockOutBNS').value;
             const remarks = document.getElementById('swal-stockOutRemarks').value;
             
             if (!quantity || quantity < 1) {
@@ -635,14 +650,30 @@ function openStockOutModal(itemId, itemName, availableStock) {
                 return false;
             }
             
+            if (!bnsId) {
+                Swal.showValidationMessage('Please select a BNS');
+                return false;
+            }
+            
             return {
                 quantity: quantity,
-                patient_id: patientId || '',
+                bns_id: bnsId,
                 remarks: remarks || ''
             };
         },
         didOpen: () => {
             document.getElementById('swal-stockOutQuantity').focus();
+            
+            // Initialize Select2 on BNS dropdown with inline search
+            $('#swal-stockOutBNS').select2({
+                dropdownParent: $('.swal2-container'),
+                width: '100%',
+                allowClear: true,
+                placeholder: 'Search or select BNS...',
+                minimumResultsForSearch: 0
+            });
+            
+            console.log('Select2 initialized for stock out BNS dropdown');
         }
     }).then((result) => {
         if (result.isConfirmed) {
@@ -664,9 +695,7 @@ function processStockOut(data) {
     
     const formData = new FormData();
     formData.append('quantity', data.quantity);
-    if (data.patient_id) {
-        formData.append('patient_id', data.patient_id);
-    }
+    formData.append('bns_id', data.bns_id);
     formData.append('remarks', data.remarks);
     
     fetch(`/admin/inventory/${currentStockItemId}/stock-out`, {

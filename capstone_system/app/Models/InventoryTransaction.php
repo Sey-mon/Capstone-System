@@ -15,6 +15,7 @@ class InventoryTransaction extends Model
         'item_id',
         'user_id',
         'patient_id',
+        'bns_id',
         'transaction_type',
         'quantity',
         'transaction_date',
@@ -55,5 +56,13 @@ class InventoryTransaction extends Model
     public function patient()
     {
         return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+    }
+
+    /**
+     * Get the BNS (Barangay Nutrition Specialist) that receives the items in stock out.
+     */
+    public function bns()
+    {
+        return $this->belongsTo(User::class, 'bns_id', 'user_id');
     }
 }
