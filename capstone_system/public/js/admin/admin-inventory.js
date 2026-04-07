@@ -47,6 +47,24 @@ function escapeHtml(text) {
     return text.toString().replace(/[&<>"']/g, m => map[m]);
 }
 
+// Setup real-time auto-capitalize for input fields
+function setupAutoCapitalizeRealTime(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    input.addEventListener('input', function() {
+        // Get cursor position
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        
+        // Capitalize the value
+        this.value = this.value.replace(/\b\w/g, char => char.toUpperCase());
+        
+        // Restore cursor position
+        this.setSelectionRange(start, end);
+    });
+}
+
 // Helper function to format date for HTML5 date input (YYYY-MM-DD)
 function formatDateForInput(dateString) {
     if (!dateString) return '';
@@ -237,6 +255,9 @@ function openAddModal() {
         didOpen: () => {
             // Focus on first input
             document.getElementById('swal-itemName').focus();
+            // Setup real-time auto-capitalize
+            setupAutoCapitalizeRealTime('swal-itemName');
+            setupAutoCapitalizeRealTime('swal-unit');
         }
     }).then((result) => {
         if (result.isConfirmed) {
@@ -389,6 +410,9 @@ function showEditModal(item) {
         didOpen: () => {
             // Focus on first input
             document.getElementById('swal-itemName').focus();
+            // Setup real-time auto-capitalize
+            setupAutoCapitalizeRealTime('swal-itemName');
+            setupAutoCapitalizeRealTime('swal-unit');
         }
     }).then((result) => {
         if (result.isConfirmed) {

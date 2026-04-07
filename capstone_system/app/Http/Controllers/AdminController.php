@@ -1239,9 +1239,9 @@ class AdminController extends Controller
             DB::beginTransaction();
 
             $item = InventoryItem::create([
-                'item_name' => $request->item_name,
+                'item_name' => ucwords(strtolower(trim($request->item_name))),
                 'category_id' => $request->category_id,
-                'unit' => $request->unit,
+                'unit' => ucwords(strtolower(trim($request->unit))),
                 'quantity' => $request->quantity,
                 'expiry_date' => $request->expiry_date,
             ]);
@@ -1284,9 +1284,9 @@ class AdminController extends Controller
             $oldValues = $item->toArray();
 
             $item->update([
-                'item_name' => $request->item_name,
+                'item_name' => ucwords(strtolower(trim($request->item_name))),
                 'category_id' => $request->category_id,
-                'unit' => $request->unit,
+                'unit' => ucwords(strtolower(trim($request->unit))),
                 'quantity' => $request->quantity,
                 'expiry_date' => $request->expiry_date,
             ]);
