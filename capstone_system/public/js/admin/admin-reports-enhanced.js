@@ -53,6 +53,180 @@ function initializeEventListeners() {
 }
 
 /**
+ * Handle CSV Export
+ */
+function setupCSVExportHandler() {
+    const csvBtn = document.getElementById('csv-export-btn');
+    if (csvBtn) {
+        csvBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const link = document.createElement('a');
+            link.href = '/admin/reports/malnutrition-cases/export-csv';
+            link.click();
+            
+            showAlert('CSV file is being downloaded...', 'success', 2000);
+        });
+    }
+}
+
+/**
+ * Handle Pagination for Severe Cases
+ */
+function setupSamPaginationHandlers() {
+    let currentSamPage = 1;
+    const samPrevBtn = document.querySelector('.sam-prev-page');
+    const samNextBtn = document.querySelector('.sam-next-page');
+    
+    if (samNextBtn) {
+        const totalPages = parseInt(samNextBtn.getAttribute('data-total-pages')) || 1;
+        
+        samNextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentSamPage < totalPages) {
+                currentSamPage++;
+                loadSamCasesPage(currentSamPage, totalPages);
+            }
+        });
+    }
+    
+    if (samPrevBtn) {
+        samPrevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentSamPage > 1) {
+                currentSamPage--;
+                loadSamCasesPage(currentSamPage, parseInt(samNextBtn?.getAttribute('data-total-pages')) || 1);
+            }
+        });
+    }
+}
+
+/**
+ * Load SAM Cases Page via AJAX
+ */
+function loadSamCasesPage(page, totalPages) {
+    const PAGINATION_THRESHOLD = 25;
+    
+    fetch(`/admin/reports/malnutrition-cases/severe/paginated?page=${page}&per_page=${PAGINATION_THRESHOLD}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                const tbody = document.querySelector('h4:contains("Severe Acute Malnutrition (SAM)")') ? 
+                              document.querySelector('h4:contains("Severe Acute Malnutrition (SAM)")').closest('.report-section').querySelector('tbody') : null;
+                if (tbody) {
+                    let rows = result.data.patients.map(patient => `
+                        <tr>
+                            <td>${patient.name}</td>
+                            <td>${patient.barangay}</td>
+                            <td style="text-align: center;">${patient.age || 'N/A'}</td>
+                            <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.waz !== undefined && patient.waz !== null) ? patient.waz : 'N/A'}</td>
+                            <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.haz !== undefined && patient.haz !== null) ? patient.haz : 'N/A'}</td>
+                            <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.baz !== undefined && patient.baz !== null) ? patient.baz : 'N/A'}</td>
+                            <td style="font-size: 0.813rem; color: #6b7280;">${patient.recovery_status || 'N/A'}</td>
+                        </tr>
+                    `).join('');
+                    
+                    tbody.innerHTML = rows;
+                    
+                    // Update pagination info
+                    const pageInfo = document.getElementById('sam-page-info');
+                    if (pageInfo) {
+                        pageInfo.textContent = `Page ${page} of ${totalPages}`;
+                    }
+                    
+                    // Update button states
+                    const prevBtn = document.querySelector('.sam-prev-page');
+                    const nextBtn = document.querySelector('.sam-next-page');
+                    if (prevBtn) prevBtn.disabled = page === 1;
+                    if (nextBtn) nextBtn.disabled = page === totalPages;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading SAM cases page:', error);
+        });
+}
+
+/**
+ * Handle Pagination for MAM Cases
+ */
+function setupMamPaginationHandlers() {
+    let currentMamPage = 1;
+    const mamPrevBtn = document.querySelector('.mam-prev-page');
+    const mamNextBtn = document.querySelector('.mam-next-page');
+    
+    if (mamNextBtn) {
+        const totalPages = parseInt(mamNextBtn.getAttribute('data-total-pages')) || 1;
+        
+        mamNextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentMamPage < totalPages) {
+                currentMamPage++;
+                loadMamCasesPage(currentMamPage, totalPages);
+            }
+        });
+    }
+    
+    if (mamPrevBtn) {
+        mamPrevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentMamPage > 1) {
+                currentMamPage--;
+                loadMamCasesPage(currentMamPage, parseInt(mamNextBtn?.getAttribute('data-total-pages')) || 1);
+            }
+        });
+    }
+}
+
+/**
+ * Load MAM Cases Page via AJAX
+ */
+function loadMamCasesPage(page, totalPages) {
+    const PAGINATION_THRESHOLD = 25;
+    
+    fetch(`/admin/reports/malnutrition-cases/malnourished/paginated?page=${page}&per_page=${PAGINATION_THRESHOLD}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Find MAM patients tbody
+                const tableTitles = Array.from(document.querySelectorAll('h4'));
+                const mamTitle = tableTitles.find(t => t.textContent.includes('Moderate Acute Malnutrition (MAM)'));
+                const tbody = mamTitle?.closest('.report-section')?.querySelector('table tbody');
+                
+                if (tbody) {
+                    let rows = result.data.patients.map(patient => `
+                        <tr>
+                            <td>${patient.name}</td>
+                            <td>${patient.barangay}</td>
+                            <td style="text-align: center;">${patient.age || 'N/A'}</td>
+                            <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.waz !== undefined && patient.waz !== null) ? patient.waz : 'N/A'}</td>
+                            <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.haz !== undefined && patient.haz !== null) ? patient.haz : 'N/A'}</td>
+                            <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.baz !== undefined && patient.baz !== null) ? patient.baz : 'N/A'}</td>
+                            <td style="font-size: 0.813rem; color: #6b7280;">${patient.recovery_status || 'N/A'}</td>
+                        </tr>
+                    `).join('');
+                    
+                    tbody.innerHTML = rows;
+                    
+                    // Update pagination info
+                    const pageInfo = document.getElementById('mam-page-info');
+                    if (pageInfo) {
+                        pageInfo.textContent = `Page ${page} of ${totalPages}`;
+                    }
+                    
+                    // Update button states
+                    const prevBtn = document.querySelector('.mam-prev-page');
+                    const nextBtn = document.querySelector('.mam-next-page');
+                    if (prevBtn) prevBtn.disabled = page === 1;
+                    if (nextBtn) nextBtn.disabled = page === totalPages;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading MAM cases page:', error);
+        });
+}
+
+/**
  * Generate and display report
  */
 function generateReport(reportType, button) {
@@ -674,9 +848,10 @@ function generatePDF(reportType, title, content) {
 function addMalnutritionCasesPDF(doc, startY) {
     const distData = window.patientDistributionData || {
         normal: { count: 0, percentage: 0, patients: [] },
-        underweight: { count: 0, percentage: 0, patients: [] },
-        malnourished: { count: 0, percentage: 0, patients: [] },
-        severe_malnourishment: { count: 0, percentage: 0, patients: [] },
+        sam: { count: 0, percentage: 0, patients: [] },
+        mam: { count: 0, percentage: 0, patients: [] },
+        overweight: { count: 0, percentage: 0, patients: [] },
+        obese: { count: 0, percentage: 0, patients: [] },
         barangay_breakdown: {}
     };
     
@@ -687,9 +862,9 @@ function addMalnutritionCasesPDF(doc, startY) {
     startY += 10;
     
     // Summary statistics
-    const totalPatients = distData.normal.count + distData.underweight.count + 
-                         distData.malnourished.count + distData.severe_malnourishment.count;
-    const atRiskCount = distData.malnourished.count + distData.severe_malnourishment.count + distData.underweight.count;
+    const totalPatients = distData.normal.count + distData.overweight.count + 
+                         distData.obese.count + distData.mam.count + distData.sam.count;
+    const atRiskCount = distData.sam.count + distData.mam.count + distData.overweight.count + distData.obese.count;
     
     doc.setFontSize(12);
     doc.text('Overall Statistics:', 20, startY);
@@ -698,21 +873,23 @@ function addMalnutritionCasesPDF(doc, startY) {
     doc.setFontSize(10);
     doc.text(`• Total Patients: ${totalPatients}`, 25, startY);
     doc.text(`• At Risk Patients: ${atRiskCount} (${totalPatients > 0 ? Math.round((atRiskCount/totalPatients)*100) : 0}%)`, 25, startY + 7);
-    doc.text(`• Severe Cases: ${distData.severe_malnourishment.count}`, 25, startY + 14);
-    doc.text(`• Malnourished: ${distData.malnourished.count}`, 25, startY + 21);
-    doc.text(`• Underweight: ${distData.underweight.count}`, 25, startY + 28);
+    doc.text(`• SAM (Severe Acute Malnutrition): ${distData.sam.count}`, 25, startY + 14);
+    doc.text(`• MAM (Moderate Acute Malnutrition): ${distData.mam.count}`, 25, startY + 21);
+    doc.text(`• Overweight: ${distData.overweight.count}`, 25, startY + 28);
+    doc.text(`• Obese: ${distData.obese.count}`, 25, startY + 35);
     
-    startY += 40;
+    startY += 50;
     
     // Distribution table
     doc.autoTable({
         startY: startY,
-        head: [['Nutritional Status', 'Count', 'Percentage', 'BMI Range']],
+        head: [['Nutritional Status', 'Count', 'Percentage', 'Z-Score / BMI Range']],
         body: [
-            ['Severe Malnourishment', distData.severe_malnourishment.count.toString(), `${distData.severe_malnourishment.percentage}%`, '< 16'],
-            ['Malnourished', distData.malnourished.count.toString(), `${distData.malnourished.percentage}%`, '16-18.5'],
-            ['Underweight', distData.underweight.count.toString(), `${distData.underweight.percentage}%`, '< 17'],
-            ['Normal Weight', distData.normal.count.toString(), `${distData.normal.percentage}%`, '≥ 18.5']
+            ['Severe Acute Malnutrition (SAM)', distData.sam.count.toString(), `${distData.sam.percentage}%`, '≤ -3 SD'],
+            ['Moderate Acute Malnutrition (MAM)', distData.mam.count.toString(), `${distData.mam.percentage}%`, '≥ -2 SD'],
+            ['Overweight', distData.overweight.count.toString(), `${distData.overweight.percentage}%`, '+1 to +2 SD'],
+            ['Obese', distData.obese.count.toString(), `${distData.obese.percentage}%`, '> +2 SD'],
+            ['Normal Nutritional Status', distData.normal.count.toString(), `${distData.normal.percentage}%`, '-1 to +1 SD']
         ],
         theme: 'grid',
         headStyles: { fillColor: [46, 125, 50] },
@@ -729,12 +906,13 @@ function addMalnutritionCasesPDF(doc, startY) {
         startY += 8;
         
         const barangayData = Object.entries(distData.barangay_breakdown).map(([barangay, data]) => {
-            const priority = data.severe > 0 ? 'Critical' : (data.malnourished > 0 ? 'High' : 'Medium');
+            const priority = data.sam > 0 ? 'Critical' : (data.mam > 0 ? 'High' : (data.obese > 0 ? 'Moderate' : 'Low'));
             return [
                 barangay,
-                data.severe.toString(),
-                data.malnourished.toString(),
-                data.underweight.toString(),
+                data.sam.toString(),
+                data.mam.toString(),
+                data.overweight.toString(),
+                data.obese.toString(),
                 data.total.toString(),
                 priority
             ];
@@ -742,7 +920,7 @@ function addMalnutritionCasesPDF(doc, startY) {
         
         doc.autoTable({
             startY: startY,
-            head: [['Barangay', 'Severe', 'Malnourished', 'Underweight', 'Total', 'Priority']],
+            head: [['Barangay', 'SAM', 'MAM', 'Overweight', 'Obese', 'Total', 'Priority']],
             body: barangayData,
             theme: 'striped',
             headStyles: { fillColor: [220, 38, 38] },
@@ -752,82 +930,87 @@ function addMalnutritionCasesPDF(doc, startY) {
                 1: { halign: 'center', textColor: [153, 27, 27] },
                 2: { halign: 'center', textColor: [239, 68, 68] },
                 3: { halign: 'center', textColor: [245, 158, 11] },
-                4: { halign: 'center', fontStyle: 'bold' }
+                4: { halign: 'center', textColor: [217, 119, 6] },
+                5: { halign: 'center', fontStyle: 'bold' }
             }
         });
         
         startY = doc.lastAutoTable.finalY + 15;
     }
     
-    // Severe cases detail
-    if (distData.severe_malnourishment.patients && distData.severe_malnourishment.patients.length > 0) {
+    // SAM cases detail
+    if (distData.sam.patients && distData.sam.patients.length > 0) {
         doc.setFontSize(12);
         doc.setTextColor(153, 27, 27);
-        doc.text('Severe Cases - Immediate Attention Required:', 20, startY);
+        doc.text('Severe Acute Malnutrition (SAM) - Immediate Attention Required:', 20, startY);
         doc.setTextColor(0, 0, 0);
         startY += 8;
         
-        const severePatients = distData.severe_malnourishment.patients.slice(0, 15).map(patient => [
+        const samPatients = distData.sam.patients.map(patient => [
             patient.name,
             patient.barangay,
             patient.age?.toString() || 'N/A',
-            patient.bmi?.toString() || 'N/A',
-            patient.last_assessment
+            (patient.waz !== undefined && patient.waz !== null) ? patient.waz.toString() : 'N/A',
+            (patient.haz !== undefined && patient.haz !== null) ? patient.haz.toString() : 'N/A',
+            (patient.baz !== undefined && patient.baz !== null) ? patient.baz.toString() : 'N/A',
+            patient.recovery_status || 'N/A'
         ]);
         
         doc.autoTable({
             startY: startY,
-            head: [['Patient Name', 'Barangay', 'Age', 'BMI', 'Last Assessment']],
-            body: severePatients,
+            head: [['Patient Name', 'Barangay', 'Age', 'WAZ', 'HAZ', 'BAZ', 'Status']],
+            body: samPatients,
             theme: 'grid',
             headStyles: { fillColor: [153, 27, 27] },
             margin: { left: 20, right: 20 },
-            styles: { fontSize: 8 },
+            styles: { fontSize: 7 },
             columnStyles: {
                 2: { halign: 'center' },
-                3: { halign: 'center', textColor: [153, 27, 27], fontStyle: 'bold' }
+                3: { halign: 'center', textColor: [153, 27, 27], fontStyle: 'bold' },
+                4: { halign: 'center', textColor: [153, 27, 27], fontStyle: 'bold' },
+                5: { halign: 'center', textColor: [153, 27, 27], fontStyle: 'bold' }
             }
         });
         
         startY = doc.lastAutoTable.finalY + 10;
-        
-        if (distData.severe_malnourishment.patients.length > 15) {
-            doc.setFontSize(9);
-            doc.setTextColor(107, 114, 128);
-            doc.text(`... and ${distData.severe_malnourishment.patients.length - 15} more severe cases`, 25, startY);
-            startY += 10;
-        }
     }
     
-    // Recommendations
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Recommended Actions:', 20, startY);
-    startY += 8;
-    
-    doc.setFontSize(10);
-    doc.text('Priority 1 - Severe Cases:', 25, startY);
-    doc.setFontSize(9);
-    doc.text('  - Immediate medical referral and hospitalization', 30, startY + 6);
-    doc.text('  - Daily monitoring and emergency food assistance', 30, startY + 12);
-    
-    startY += 20;
-    
-    doc.setFontSize(10);
-    doc.text('Priority 2 - High-Risk Barangays:', 25, startY);
-    doc.setFontSize(9);
-    doc.text('  - Conduct household visits and assessments', 30, startY + 6);
-    doc.text('  - Implement community feeding programs', 30, startY + 12);
-    
-    startY += 20;
-    
-    doc.setFontSize(10);
-    doc.text('General Recommendations:', 25, startY);
-    doc.setFontSize(9);
-    doc.text('  - Weekly weight monitoring for all at-risk patients', 30, startY + 6);
-    doc.text('  - Monthly progress assessments and family counseling', 30, startY + 12);
-    
-    startY += 25;
+    // MAM cases detail
+    if (distData.mam.patients && distData.mam.patients.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(239, 68, 68);
+        doc.text('Moderate Acute Malnutrition (MAM) - Urgent Intervention Required:', 20, startY);
+        doc.setTextColor(0, 0, 0);
+        startY += 8;
+        
+        const mamPatients = distData.mam.patients.map(patient => [
+            patient.name,
+            patient.barangay,
+            patient.age?.toString() || 'N/A',
+            (patient.waz !== undefined && patient.waz !== null) ? patient.waz.toString() : 'N/A',
+            (patient.haz !== undefined && patient.haz !== null) ? patient.haz.toString() : 'N/A',
+            (patient.baz !== undefined && patient.baz !== null) ? patient.baz.toString() : 'N/A',
+            patient.recovery_status || 'N/A'
+        ]);
+        
+        doc.autoTable({
+            startY: startY,
+            head: [['Patient Name', 'Barangay', 'Age', 'WAZ', 'HAZ', 'BAZ', 'Status']],
+            body: mamPatients,
+            theme: 'grid',
+            headStyles: { fillColor: [239, 68, 68] },
+            margin: { left: 20, right: 20 },
+            styles: { fontSize: 7 },
+            columnStyles: {
+                2: { halign: 'center' },
+                3: { halign: 'center', textColor: [239, 68, 68], fontStyle: 'bold' },
+                4: { halign: 'center', textColor: [239, 68, 68], fontStyle: 'bold' },
+                5: { halign: 'center', textColor: [239, 68, 68], fontStyle: 'bold' }
+            }
+        });
+        
+        startY = doc.lastAutoTable.finalY + 10;
+    }
     
     return startY;
 }
@@ -1551,34 +1734,38 @@ function initPatientDistributionChart() {
     // Get data from PHP (passed via global variables)
     const distributionData = window.patientDistributionData || {
         normal: { count: 0, percentage: 0 },
-        underweight: { count: 0, percentage: 0 },
-        malnourished: { count: 0, percentage: 0 },
-        severe_malnourishment: { count: 0, percentage: 0 }
+        sam: { count: 0, percentage: 0 },
+        mam: { count: 0, percentage: 0 },
+        overweight: { count: 0, percentage: 0 },
+        obese: { count: 0, percentage: 0 }
     };
     
     const ctx = canvas.getContext('2d');
     window.patientDistributionPieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Normal Weight', 'Underweight', 'Malnourished', 'Severe Malnourishment'],
+            labels: ['Normal', 'SAM', 'MAM', 'Overweight', 'Obese'],
             datasets: [{
                 data: [
                     distributionData.normal.count,
-                    distributionData.underweight.count,
-                    distributionData.malnourished.count,
-                    distributionData.severe_malnourishment.count
+                    distributionData.sam.count,
+                    distributionData.mam.count,
+                    distributionData.overweight.count,
+                    distributionData.obese.count
                 ],
                 backgroundColor: [
                     '#10b981',
-                    '#f59e0b',
+                    '#991b1b',
                     '#ef4444',
-                    '#991b1b'
+                    '#f59e0b',
+                    '#d97706'
                 ],
                 borderColor: [
                     '#059669',
-                    '#f97316',
+                    '#7f1d1d',
                     '#dc2626',
-                    '#7f1d1d'
+                    '#f97316',
+                    '#b45309'
                 ],
                 borderWidth: 2,
                 hoverOffset: 10
@@ -1682,6 +1869,13 @@ function showReportModalWithContent(title, content, reportType) {
             cancelButton: 'btn btn-secondary'
         },
         didOpen: () => {
+            // Setup pagination and CSV export for malnutrition cases report
+            if (reportType === 'malnutrition-cases') {
+                setupCSVExportHandler();
+                setupSamPaginationHandlers();
+                setupMamPaginationHandlers();
+            }
+            
             // Re-initialize any charts in the modal
             if (content.includes('trendChart')) {
                 setTimeout(() => {
@@ -1742,30 +1936,39 @@ function generateMalnutritionCasesContent(distData = null) {
     if (!distData) {
         distData = window.patientDistributionData || {
             normal: { count: 0, percentage: 0, patients: [] },
-            underweight: { count: 0, percentage: 0, patients: [] },
-            malnourished: { count: 0, percentage: 0, patients: [] },
-            severe_malnourishment: { count: 0, percentage: 0, patients: [] },
+            overweight: { count: 0, percentage: 0, patients: [] },
+            obese: { count: 0, percentage: 0, patients: [] },
+            mam: { count: 0, percentage: 0, patients: [] },
+            sam: { count: 0, percentage: 0, patients: [] },
             barangay_breakdown: {}
         };
     }
     
-    const totalAtRisk = distData.severe_malnourishment.count + distData.malnourished.count + distData.underweight.count;
+    const totalAtRisk = distData.sam.count + distData.mam.count + distData.overweight.count + distData.obese.count;
     const totalPatients = totalAtRisk + distData.normal.count;
+    const PAGINATION_THRESHOLD = 25;
+    
+    // Check if pagination is needed
+    const samCaseCount = distData.sam.patients?.length || 0;
+    const mamCaseCount = distData.mam.patients?.length || 0;
+    const needSamPagination = samCaseCount > PAGINATION_THRESHOLD;
+    const needMamPagination = mamCaseCount > PAGINATION_THRESHOLD;
     
     // Prepare barangay data
     let barangayRows = '';
     if (distData.barangay_breakdown && Object.keys(distData.barangay_breakdown).length > 0) {
         barangayRows = Object.entries(distData.barangay_breakdown)
             .map(([barangay, data]) => {
-                const priorityLevel = data.severe > 0 ? 'Critical' : (data.malnourished > 0 ? 'High' : 'Medium');
-                const priorityColor = data.severe > 0 ? '#991b1b' : (data.malnourished > 0 ? '#dc2626' : '#f59e0b');
+                const priorityLevel = data.sam > 0 ? 'Critical' : (data.mam > 0 ? 'High' : (data.obese > 0 ? 'Moderate' : 'Low'));
+                const priorityColor = data.sam > 0 ? '#991b1b' : (data.mam > 0 ? '#dc2626' : (data.obese > 0 ? '#f59e0b' : '#3b82f6'));
                 
                 return `
                     <tr>
                         <td><strong>${barangay}</strong></td>
-                        <td style="text-align: center; color: #991b1b; font-weight: bold;">${data.severe}</td>
-                        <td style="text-align: center; color: #ef4444;">${data.malnourished}</td>
-                        <td style="text-align: center; color: #f59e0b;">${data.underweight}</td>
+                        <td style="text-align: center; color: #991b1b; font-weight: bold;">${data.sam}</td>
+                        <td style="text-align: center; color: #ef4444;">${data.mam}</td>
+                        <td style="text-align: center; color: #f59e0b;">${data.overweight}</td>
+                        <td style="text-align: center; color: #d97706;">${data.obese}</td>
                         <td style="text-align: center; font-weight: bold;">${data.total}</td>
                         <td style="text-align: center;">
                             <span style="color: ${priorityColor}; font-weight: 600;">${priorityLevel}</span>
@@ -1774,61 +1977,147 @@ function generateMalnutritionCasesContent(distData = null) {
                 `;
             }).join('');
     } else {
-        barangayRows = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;">No barangay data available</td></tr>';
+        barangayRows = '<tr><td colspan="7" style="text-align: center; color: #9ca3af;">No barangay data available</td></tr>';
     }
     
-    // Prepare detailed patient lists
-    let severePatientRows = '';
-    if (distData.severe_malnourishment.patients && distData.severe_malnourishment.patients.length > 0) {
-        severePatientRows = distData.severe_malnourishment.patients.map(patient => `
-            <tr>
-                <td>${patient.name}</td>
-                <td>${patient.barangay}</td>
-                <td style="text-align: center;">${patient.age || 'N/A'}</td>
-                <td style="text-align: center; color: #991b1b; font-weight: bold;">${patient.bmi || 'N/A'}</td>
-                <td style="font-size: 0.813rem; color: #6b7280;">${patient.last_assessment}</td>
-            </tr>
-        `).join('');
-    } else {
-        severePatientRows = '<tr><td colspan="5" style="text-align: center; color: #10b981;">No severe cases - excellent!</td></tr>';
-    }
+    // Prepare SAM patient rows (with or without pagination)
+    let samPatientRows = '';
+    let samPaginationHTML = '';
     
-    let malnourishedPatientRows = '';
-    if (distData.malnourished.patients && distData.malnourished.patients.length > 0) {
-        malnourishedPatientRows = distData.malnourished.patients.slice(0, 10).map(patient => `
-            <tr>
-                <td>${patient.name}</td>
-                <td>${patient.barangay}</td>
-                <td style="text-align: center;">${patient.age || 'N/A'}</td>
-                <td style="text-align: center; color: #ef4444; font-weight: bold;">${patient.bmi || 'N/A'}</td>
-                <td style="font-size: 0.813rem; color: #6b7280;">${patient.last_assessment}</td>
-            </tr>
-        `).join('');
-        
-        if (distData.malnourished.patients.length > 10) {
-            malnourishedPatientRows += `<tr><td colspan="5" style="text-align: center; font-style: italic; color: #6b7280;">... and ${distData.malnourished.patients.length - 10} more patients</td></tr>`;
+    if (distData.sam.patients && distData.sam.patients.length > 0) {
+        if (needSamPagination) {
+            // Show first page only
+            samPatientRows = distData.sam.patients.slice(0, PAGINATION_THRESHOLD).map(patient => `
+                <tr>
+                    <td>${patient.name}</td>
+                    <td>${patient.barangay}</td>
+                    <td style="text-align: center;">${patient.age || 'N/A'}</td>
+                    <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.waz !== undefined && patient.waz !== null) ? patient.waz : 'N/A'}</td>
+                    <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.haz !== undefined && patient.haz !== null) ? patient.haz : 'N/A'}</td>
+                    <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.baz !== undefined && patient.baz !== null) ? patient.baz : 'N/A'}</td>
+                    <td style="font-size: 0.813rem; color: #6b7280;">${patient.recovery_status || 'N/A'}</td>
+                </tr>
+            `).join('');
+            
+            // Calculate total pages
+            const totalPages = Math.ceil(samCaseCount / PAGINATION_THRESHOLD);
+            samPaginationHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding: 0.75rem; background: #fee2e2; border-radius: 8px;">
+                    <div style="font-size: 0.875rem; color: #6b7280;">
+                        Showing <strong>1-${Math.min(PAGINATION_THRESHOLD, samCaseCount)}</strong> of <strong>${samCaseCount}</strong> SAM cases
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-sm btn-outline-danger sam-prev-page" style="padding: 0.375rem 0.75rem; font-size: 0.8rem;" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <div id="sam-page-info" style="min-width: 60px; text-align: center; font-size: 0.875rem; font-weight: 600;">Page 1</div>
+                        <button class="btn btn-sm btn-danger sam-next-page" style="padding: 0.375rem 0.75rem; font-size: 0.8rem;" data-total-pages="${totalPages}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            samPatientRows = distData.sam.patients.map(patient => `
+                <tr>
+                    <td>${patient.name}</td>
+                    <td>${patient.barangay}</td>
+                    <td style="text-align: center;">${patient.age || 'N/A'}</td>
+                    <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.waz !== undefined && patient.waz !== null) ? patient.waz : 'N/A'}</td>
+                    <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.haz !== undefined && patient.haz !== null) ? patient.haz : 'N/A'}</td>
+                    <td style="text-align: center; color: #991b1b; font-weight: bold; font-size: 0.875rem;">${(patient.baz !== undefined && patient.baz !== null) ? patient.baz : 'N/A'}</td>
+                    <td style="font-size: 0.813rem; color: #6b7280;">${patient.recovery_status || 'N/A'}</td>
+                </tr>
+            `).join('');
         }
     } else {
-        malnourishedPatientRows = '<tr><td colspan="5" style="text-align: center; color: #9ca3af;">No malnourished patients</td></tr>';
+        samPatientRows = '<tr><td colspan="7" style="text-align: center; color: #10b981;">No SAM cases - excellent!</td></tr>';
+    }
+    
+    // Prepare MAM patient rows (with or without pagination)
+    let mamPatientRows = '';
+    let mamPaginationHTML = '';
+    
+    if (distData.mam.patients && distData.mam.patients.length > 0) {
+        if (needMamPagination) {
+            // Show first page only
+            mamPatientRows = distData.mam.patients.slice(0, PAGINATION_THRESHOLD).map(patient => `
+                <tr>
+                    <td>${patient.name}</td>
+                    <td>${patient.barangay}</td>
+                    <td style="text-align: center;">${patient.age || 'N/A'}</td>
+                    <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.waz !== undefined && patient.waz !== null) ? patient.waz : 'N/A'}</td>
+                    <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.haz !== undefined && patient.haz !== null) ? patient.haz : 'N/A'}</td>
+                    <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.baz !== undefined && patient.baz !== null) ? patient.baz : 'N/A'}</td>
+                    <td style="font-size: 0.813rem; color: #6b7280;">${patient.recovery_status || 'N/A'}</td>
+                </tr>
+            `).join('');
+            
+            // Calculate total pages
+            const totalPages = Math.ceil(mamCaseCount / PAGINATION_THRESHOLD);
+            mamPaginationHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding: 0.75rem; background: #fee2e2; border-radius: 8px;">
+                    <div style="font-size: 0.875rem; color: #6b7280;">
+                        Showing <strong>1-${Math.min(PAGINATION_THRESHOLD, mamCaseCount)}</strong> of <strong>${mamCaseCount}</strong> MAM cases
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-sm btn-outline-warning mam-prev-page" style="padding: 0.375rem 0.75rem; font-size: 0.8rem;" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <div id="mam-page-info" style="min-width: 60px; text-align: center; font-size: 0.875rem; font-weight: 600;">Page 1</div>
+                        <button class="btn btn-sm btn-warning mam-next-page" style="padding: 0.375rem 0.75rem; font-size: 0.8rem;" data-total-pages="${totalPages}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            mamPatientRows = distData.mam.patients.map(patient => `
+                <tr>
+                    <td>${patient.name}</td>
+                    <td>${patient.barangay}</td>
+                    <td style="text-align: center;">${patient.age || 'N/A'}</td>
+                    <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.waz !== undefined && patient.waz !== null) ? patient.waz : 'N/A'}</td>
+                    <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.haz !== undefined && patient.haz !== null) ? patient.haz : 'N/A'}</td>
+                    <td style="text-align: center; color: #ef4444; font-weight: bold; font-size: 0.875rem;">${(patient.baz !== undefined && patient.baz !== null) ? patient.baz : 'N/A'}</td>
+                    <td style="font-size: 0.813rem; color: #6b7280;">${patient.recovery_status || 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+    } else {
+        mamPatientRows = '<tr><td colspan="7" style="text-align: center; color: #9ca3af;">No MAM cases</td></tr>';
     }
     
     return `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0; color: #1f2937;">Malnutrition Cases Report</h3>
+            <button id="csv-export-btn" class="btn btn-success" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem;">
+                <i class="fas fa-download"></i>
+                Export CSV
+            </button>
+        </div>
+        
         <div class="report-summary">
-            <div class="stat-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="stat-grid" style="grid-template-columns: repeat(5, 1fr);">
                 <div class="stat-item">
-                    <div class="stat-label">Severe Cases</div>
-                    <div class="stat-value" style="color: #991b1b">${distData.severe_malnourishment.count}</div>
-                    <div class="stat-meta">${distData.severe_malnourishment.percentage}% of total</div>
+                    <div class="stat-label">SAM Cases</div>
+                    <div class="stat-value" style="color: #991b1b">${distData.sam.count}</div>
+                    <div class="stat-meta">${distData.sam.percentage}% of total</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Malnourished</div>
-                    <div class="stat-value" style="color: #ef4444">${distData.malnourished.count}</div>
-                    <div class="stat-meta">${distData.malnourished.percentage}% of total</div>
+                    <div class="stat-label">MAM Cases</div>
+                    <div class="stat-value" style="color: #ef4444">${distData.mam.count}</div>
+                    <div class="stat-meta">${distData.mam.percentage}% of total</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Underweight</div>
-                    <div class="stat-value" style="color: #f59e0b">${distData.underweight.count}</div>
-                    <div class="stat-meta">${distData.underweight.percentage}% of total</div>
+                    <div class="stat-label">Overweight</div>
+                    <div class="stat-value" style="color: #f59e0b">${distData.overweight.count}</div>
+                    <div class="stat-meta">${distData.overweight.percentage}% of total</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Obese</div>
+                    <div class="stat-value" style="color: #d97706">${distData.obese.count}</div>
+                    <div class="stat-meta">${distData.obese.percentage}% of total</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Total At Risk</div>
@@ -1845,9 +2134,10 @@ function generateMalnutritionCasesContent(distData = null) {
                 <thead>
                     <tr>
                         <th>Barangay</th>
-                        <th style="text-align: center;">Severe</th>
-                        <th style="text-align: center;">Malnourished</th>
-                        <th style="text-align: center;">Underweight</th>
+                        <th style="text-align: center;">SAM</th>
+                        <th style="text-align: center;">MAM</th>
+                        <th style="text-align: center;">Overweight</th>
+                        <th style="text-align: center;">Obese</th>
                         <th style="text-align: center;">Total</th>
                         <th style="text-align: center;">Priority</th>
                     </tr>
@@ -1859,9 +2149,9 @@ function generateMalnutritionCasesContent(distData = null) {
         </div>
         
         <div class="report-section">
-            <h4><i class="fas fa-exclamation-triangle" style="color: #991b1b; margin-right: 0.5rem;"></i>Severe Cases - Immediate Attention Required</h4>
-            <div class="alert alert-warning" style="background: #fef3c7; border-left: 4px solid #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                <strong>Critical:</strong> These patients require immediate medical attention and intervention (BMI < 16)
+            <h4><i class="fas fa-exclamation-triangle" style="color: #991b1b; margin-right: 0.5rem;"></i>Severe Acute Malnutrition (SAM) Cases</h4>
+            <div class="alert alert-danger" style="background: #fee2e2; border-left: 4px solid #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <strong>Critical:</strong> These patients require immediate medical attention and intervention (Z-score ≤ -3) - Total: ${samCaseCount}
             </div>
             <table class="data-table">
                 <thead>
@@ -1869,73 +2159,39 @@ function generateMalnutritionCasesContent(distData = null) {
                         <th>Patient Name</th>
                         <th>Barangay</th>
                         <th style="text-align: center;">Age</th>
-                        <th style="text-align: center;">BMI</th>
-                        <th>Last Assessment</th>
+                        <th style="text-align: center;">WAZ<br><small style="font-weight: normal;">(Weight-for-Age)</small></th>
+                        <th style="text-align: center;">HAZ<br><small style="font-weight: normal;">(Height-for-Age)</small></th>
+                        <th style="text-align: center;">BAZ<br><small style="font-weight: normal;">(BMI-for-Age)</small></th>
+                        <th style="text-align: center;">Recovery Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${severePatientRows}
+                    ${samPatientRows}
                 </tbody>
             </table>
+            ${samPaginationHTML}
         </div>
         
         <div class="report-section">
-            <h4><i class="fas fa-user-injured" style="color: #ef4444; margin-right: 0.5rem;"></i>Malnourished Patients (Top 10)</h4>
-            <p style="margin-bottom: 1rem; color: #6b7280;">Patients requiring nutritional intervention (BMI < 18.5)</p>
+            <h4><i class="fas fa-user-injured" style="color: #ef4444; margin-right: 0.5rem;"></i>Moderate Acute Malnutrition (MAM) Cases</h4>
+            <p style="margin-bottom: 1rem; color: #6b7280;">Patients requiring urgent nutritional intervention (Z-score -2 to -2.99) - Total: ${mamCaseCount}</p>
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>Patient Name</th>
                         <th>Barangay</th>
                         <th style="text-align: center;">Age</th>
-                        <th style="text-align: center;">BMI</th>
-                        <th>Last Assessment</th>
+                        <th style="text-align: center;">WAZ<br><small style="font-weight: normal;">(Weight-for-Age)</small></th>
+                        <th style="text-align: center;">HAZ<br><small style="font-weight: normal;">(Height-for-Age)</small></th>
+                        <th style="text-align: center;">BAZ<br><small style="font-weight: normal;">(BMI-for-Age)</small></th>
+                        <th style="text-align: center;">Recovery Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${malnourishedPatientRows}
+                    ${mamPatientRows}
                 </tbody>
             </table>
-        </div>
-        
-        <div class="report-section">
-            <h4><i class="fas fa-clipboard-list" style="color: #2e7d32; margin-right: 0.5rem;"></i>WHO BMI Classification Standards</h4>
-            <ul style="line-height: 1.8;">
-                <li><strong style="color: #991b1b;">Severe Malnourishment:</strong> BMI < 16 - Requires immediate medical attention and hospitalization</li>
-                <li><strong style="color: #ef4444;">Malnourished:</strong> BMI 16-18.5 - Needs urgent nutritional intervention and monitoring</li>
-                <li><strong style="color: #f59e0b;">Underweight:</strong> BMI < 17 - Monitor closely and provide nutritional support</li>
-                <li><strong style="color: #10b981;">Normal Weight:</strong> BMI ≥ 18.5 - Maintain current nutritional status</li>
-            </ul>
-        </div>
-        
-        <div class="report-section">
-            <h4><i class="fas fa-tasks" style="color: #2e7d32; margin-right: 0.5rem;"></i>Recommended Actions</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                <div style="background: #fee2e2; padding: 1rem; border-radius: 8px; border-left: 4px solid #dc2626;">
-                    <strong style="color: #991b1b;">Priority 1 - Severe Cases</strong>
-                    <ul style="margin-top: 0.5rem; font-size: 0.875rem;">
-                        <li>Immediate medical referral</li>
-                        <li>Daily monitoring required</li>
-                        <li>Emergency food assistance</li>
-                    </ul>
-                </div>
-                <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                    <strong style="color: #92400e;">Priority 2 - High-Risk Barangays</strong>
-                    <ul style="margin-top: 0.5rem; font-size: 0.875rem;">
-                        <li>Conduct household visits</li>
-                        <li>Community feeding programs</li>
-                        <li>Nutrition education sessions</li>
-                    </ul>
-                </div>
-                <div style="background: #dbeafe; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                    <strong style="color: #1e40af;">General Recommendations</strong>
-                    <ul style="margin-top: 0.5rem; font-size: 0.875rem;">
-                        <li>Weekly weight monitoring</li>
-                        <li>Monthly progress assessments</li>
-                        <li>Family counseling programs</li>
-                    </ul>
-                </div>
-            </div>
+            ${mamPaginationHTML}
         </div>
     `;
 }

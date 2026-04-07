@@ -1353,7 +1353,7 @@ function displayScreeningHistoryModal(patient, assessments) {
     // Build screening history sidebar
     let screeningList = '';
     assessments.forEach((assessment, index) => {
-        const date = new Date(assessment.assessment_date);
+        const date = new Date(assessment.assessment_date_raw);
         const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
         const classification = assessment.classification || 'No Classification';
         const isLatest = index === 0;
@@ -1371,7 +1371,7 @@ function displayScreeningHistoryModal(patient, assessments) {
     
     // Build latest screening details
     const classificationBadge = getClassificationBadge(latestAssessment.classification);
-    const latestDate = new Date(latestAssessment.assessment_date).toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+    const latestDate = new Date(latestAssessment.assessment_date_raw).toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
     
     Swal.fire({
         html: `

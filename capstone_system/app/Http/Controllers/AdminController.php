@@ -1835,6 +1835,183 @@ class AdminController extends Controller
     }
 
     /**
+     * Get Paginated Severe Cases (AJAX Pagination)
+     */
+    public function getPaginatedSevereCases()
+    {
+        $page = request('page', 1);
+        $perPage = request('per_page', 20);
+        
+        $distribution = $this->getPatientDistribution();
+        $severeCases = $distribution['severe_malnourishment']['patients'] ?? [];
+        
+        // Calculate pagination
+        $total = count($severeCases);
+        $totalPages = ceil($total / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $paginatedCases = array_slice($severeCases, $offset, $perPage);
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'patients' => $paginatedCases,
+                'pagination' => [
+                    'current_page' => $page,
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'total_pages' => $totalPages,
+                    'has_next' => $page < $totalPages,
+                    'has_prev' => $page > 1
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Get Paginated Malnourished Cases (AJAX Pagination)
+     */
+    public function getPaginatedMalnourishedCases()
+    {
+        $page = request('page', 1);
+        $perPage = request('per_page', 20);
+        
+        $distribution = $this->getPatientDistribution();
+        $malnourishedCases = $distribution['malnourished']['patients'] ?? [];
+        
+        // Calculate pagination
+        $total = count($malnourishedCases);
+        $totalPages = ceil($total / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $paginatedCases = array_slice($malnourishedCases, $offset, $perPage);
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'patients' => $paginatedCases,
+                'pagination' => [
+                    'current_page' => $page,
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'total_pages' => $totalPages,
+                    'has_next' => $page < $totalPages,
+                    'has_prev' => $page > 1
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Export Malnutrition Cases to CSV
+     */
+    public function exportMalnutritionCasesCSV()
+    {
+        $distribution = $this->getPatientDistribution();
+        
+        // Prepare CSV data
+        $csvData = [];
+        
+        // Add header
+        $csvData[] = ['MALNUTRITION CASES REPORT - ' . now()->format('M d, Y')];
+        $csvData[] = [];
+        $csvData[] = ['SUMMARY STATISTICS'];
+        $csvData[] = ['Total Patients', $distribution['normal']['count'] + $distribution['underweight']['count'] + $distribution['malnourished']['count'] + $distribution['severe_malnourishment']['count']];
+        $csvData[] = ['Severe Cases', $distribution['severe_malnourishment']['count']];
+        $csvData[] = ['Malnourished', $distribution['malnourished']['count']];
+        $csvData[] = ['Underweight', $distribution['underweight']['count']];
+        $csvData[] = ['Normal Weight', $distribution['normal']['count']];
+        $csvData[] = [];
+        
+        // Add barangay breakdown
+        if (!empty($distribution['barangay_breakdown'])) {
+            $csvData[] = ['CASES BY BARANGAY'];
+            $csvData[] = ['Barangay', 'Severe', 'Malnourished', 'Underweight', 'Total', 'Priority'];
+            
+            foreach ($distribution['barangay_breakdown'] as $barangay => $data) {
+                $priority = $data['severe'] > 0 ? 'Critical' : ($data['malnourished'] > 0 ? 'High' : 'Medium');
+                $csvData[] = [$barangay, $data['severe'], $data['malnourished'], $data['underweight'], $data['total'], $priority];
+            }
+            $csvData[] = [];
+        }
+        
+        // Add severe cases
+        if (!empty($distribution['severe_malnourishment']['patients'])) {
+            $csvData[] = ['SEVERE CASES - IMMEDIATE ATTENTION REQUIRED (Z-Score ≤ -3 SD)'];
+            $csvData[] = ['Patient Name', 'Barangay', 'Age', 'Weight (kg)', 'Height (cm)', 'WAZ (Weight-for-Age)', 'HAZ (Height-for-Age)', 'BAZ (BMI-for-Age)', 'Recovery Status', 'Last Assessment'];
+            
+            foreach ($distribution['severe_malnourishment']['patients'] as $patient) {
+                $csvData[] = [
+                    $patient['name'], 
+                    $patient['barangay'], 
+                    $patient['age'] ?? 'N/A', 
+                    $patient['weight'] ?? 'N/A',
+                    $patient['height'] ?? 'N/A',
+                    $patient['waz'] ?? 'N/A', 
+                    $patient['haz'] ?? 'N/A',
+                    $patient['baz'] ?? 'N/A',
+                    $patient['recovery_status'] ?? 'N/A',
+                    $patient['last_assessment']
+                ];
+            }
+            $csvData[] = [];
+        }
+        
+        // Add malnourished cases
+        if (!empty($distribution['malnourished']['patients'])) {
+            $csvData[] = ['MALNOURISHED PATIENTS (Z-Score -2 to -2.99 SD)'];
+            $csvData[] = ['Patient Name', 'Barangay', 'Age', 'Weight (kg)', 'Height (cm)', 'WAZ (Weight-for-Age)', 'HAZ (Height-for-Age)', 'BAZ (BMI-for-Age)', 'Recovery Status', 'Last Assessment'];
+            
+            foreach ($distribution['malnourished']['patients'] as $patient) {
+                $csvData[] = [
+                    $patient['name'], 
+                    $patient['barangay'], 
+                    $patient['age'] ?? 'N/A',
+                    $patient['weight'] ?? 'N/A',
+                    $patient['height'] ?? 'N/A',
+                    $patient['waz'] ?? 'N/A', 
+                    $patient['haz'] ?? 'N/A',
+                    $patient['baz'] ?? 'N/A',
+                    $patient['recovery_status'] ?? 'N/A',
+                    $patient['last_assessment']
+                ];
+            }
+            $csvData[] = [];
+        }
+        
+        // Add WHO Z-Score Classification Reference
+        $csvData[] = ['WHO Z-SCORE CLASSIFICATION REFERENCE'];
+        $csvData[] = [];
+        $csvData[] = ['Severity Level', 'Z-Score Range', 'Description'];
+        $csvData[] = ['Severe Malnutrition', '<= -3 SD', 'Requires immediate medical attention and hospitalization'];
+        $csvData[] = ['Moderate Malnutrition', '-2 to -2.99 SD', 'Needs urgent nutritional intervention and close monitoring'];
+        $csvData[] = ['Mild Malnutrition (Underweight)', '-1 to -1.99 SD', 'Requires nutritional support and regular follow-up'];
+        $csvData[] = ['Normal', '-1 to +1 SD', 'Healthy nutritional status'];
+        $csvData[] = [];
+        $csvData[] = ['Z-Score Indicators:'];
+        $csvData[] = ['WAZ', 'Weight-for-Age Z-score', 'Detects acute malnutrition'];
+        $csvData[] = ['HAZ', 'Height-for-Age Z-score', 'Detects chronic malnutrition (stunting)'];
+        $csvData[] = ['BAZ', 'BMI-for-Age Z-score', 'Anthropometric assessment for older children'];
+        
+        // Generate CSV
+        $fileName = 'Malnutrition_Cases_Report_' . now()->format('Y-m-d_Hi') . '.csv';
+        
+        $response = response()->stream(function () use ($csvData) {
+            $file = fopen('php://output', 'w');
+            foreach ($csvData as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ]);
+        
+        return $response;
+    }
+
+    /**
      * Get Patient Progress Report (API)
      */
     public function getPatientProgressReport()
@@ -3747,14 +3924,70 @@ class AdminController extends Controller
     /**
      * Get patient distribution data by nutrition status
      */
+    /**
+     * Classify malnutrition severity based on WHO Z-score indicators
+     * WHO Standards: Between SD (Standard Deviation)
+     * - Normal: Between -1 and +1 SD
+     * - Mild: Between -1 and -1.99 SD
+     * - Moderate: Between -2 and -2.99 SD  
+     * - Severe: <= -3 SD
+     */
+    private function classifyMalnutritionSeverity($assessment, $patient)
+    {
+        if (!$assessment) {
+            return 'normal';
+        }
+
+        $indicators = [
+            'waz' => $assessment->weight_for_age,      // Weight-for-Age Z-score
+            'haz' => $assessment->height_for_age,      // Height-for-Age Z-score
+            'baz' => $assessment->bmi_for_age,         // BMI-for-Age Z-score
+        ];
+
+        // Track worst indicators for malnutrition and overnutrition
+        $worstMalnutrition = 0;  // 0=normal, 1=MAM mild, 2=MAM moderate, 3=SAM
+        $worstOvernutrition = 0; // 0=normal, 1=overweight, 2=obese
+
+        // Evaluate each indicator
+        foreach ($indicators as $indicator => $zScore) {
+            if ($zScore !== null && is_numeric($zScore)) {
+                if ($zScore <= -3) {
+                    $worstMalnutrition = max($worstMalnutrition, 3); // SAM
+                } elseif ($zScore <= -2) {
+                    $worstMalnutrition = max($worstMalnutrition, 2); // MAM Moderate
+                } elseif ($zScore < -1) {
+                    $worstMalnutrition = max($worstMalnutrition, 1); // MAM Mild
+                } elseif ($zScore > 2) {
+                    $worstOvernutrition = max($worstOvernutrition, 2); // Obese
+                } elseif ($zScore > 1) {
+                    $worstOvernutrition = max($worstOvernutrition, 1); // Overweight
+                }
+            }
+        }
+
+        // Determine category - malnutrition takes priority
+        if ($worstMalnutrition === 3) {
+            return 'sam';
+        } elseif ($worstMalnutrition >= 1) {
+            return 'mam';
+        } elseif ($worstOvernutrition === 2) {
+            return 'obese';
+        } elseif ($worstOvernutrition === 1) {
+            return 'overweight';
+        } else {
+            return 'normal';
+        }
+    }
+
     private function getPatientDistribution()
     {
         $patients = Patient::with(['assessments', 'barangay'])->get();
         $distribution = [
             'normal' => ['count' => 0, 'percentage' => 0, 'patients' => []],
-            'underweight' => ['count' => 0, 'percentage' => 0, 'patients' => []],
-            'malnourished' => ['count' => 0, 'percentage' => 0, 'patients' => []],
-            'severe_malnourishment' => ['count' => 0, 'percentage' => 0, 'patients' => []],
+            'overweight' => ['count' => 0, 'percentage' => 0, 'patients' => []],
+            'obese' => ['count' => 0, 'percentage' => 0, 'patients' => []],
+            'mam' => ['count' => 0, 'percentage' => 0, 'patients' => []],
+            'sam' => ['count' => 0, 'percentage' => 0, 'patients' => []],
         ];
         
         $barangay_breakdown = [];
@@ -3763,92 +3996,72 @@ class AdminController extends Controller
             // Get the latest assessment for each patient
             $latestAssessment = $patient->assessments()->latest()->first();
             $category = 'normal';
-            $bmi = null;
             
             if ($latestAssessment) {
-                // Calculate BMI if we have weight and height
-                if ($latestAssessment->weight_kg && $latestAssessment->height_cm) {
-                    $height_m = $latestAssessment->height_cm / 100;
-                    $bmi = round($latestAssessment->weight_kg / ($height_m * $height_m), 2);
-                    
-                    // Classify based on BMI (WHO standards)
-                    if ($bmi < 16) {
-                        $category = 'severe_malnourishment';
-                    } elseif ($bmi < 17) {
-                        $category = 'underweight';
-                    } elseif ($bmi < 18.5) {
-                        $category = 'malnourished';
-                    } else {
-                        $category = 'normal';
-                    }
-                } else {
-                    // If no weight/height data, check recovery status
-                    if ($latestAssessment->recovery_status === 'severe') {
-                        $category = 'severe_malnourishment';
-                    } elseif ($latestAssessment->recovery_status === 'moderate') {
-                        $category = 'malnourished';
-                    } elseif ($latestAssessment->recovery_status === 'mild') {
-                        $category = 'underweight';
-                    } else {
-                        $category = 'normal';
-                    }
-                }
-            } else {
-                // Patient with no assessments - classify based on initial data
-                if ($patient->weight_kg && $patient->height_cm) {
-                    $height_m = $patient->height_cm / 100;
-                    $bmi = round($patient->weight_kg / ($height_m * $height_m), 2);
-                    
-                    if ($bmi < 16) {
-                        $category = 'severe_malnourishment';
-                    } elseif ($bmi < 17) {
-                        $category = 'underweight';
-                    } elseif ($bmi < 18.5) {
-                        $category = 'malnourished';
-                    } else {
-                        $category = 'normal';
-                    }
-                }
+                // Use WHO Z-score based classification
+                $category = $this->classifyMalnutritionSeverity($latestAssessment, $patient);
             }
-            
+
             $distribution[$category]['count']++;
             
             // Add patient details for at-risk categories
             if ($category !== 'normal') {
                 $barangayName = $patient->barangay ? $patient->barangay->barangay_name : 'Unknown';
                 
+                // Prepare indicator details
+                $indicators = [];
+                if ($latestAssessment) {
+                    if ($latestAssessment->weight_for_age !== null) {
+                        $indicators['WAZ'] = round($latestAssessment->weight_for_age, 2);
+                    }
+                    if ($latestAssessment->height_for_age !== null) {
+                        $indicators['HAZ'] = round($latestAssessment->height_for_age, 2);
+                    }
+                    if ($latestAssessment->bmi_for_age !== null) {
+                        $indicators['BAZ'] = round($latestAssessment->bmi_for_age, 2);
+                    }
+                }
+                
                 $distribution[$category]['patients'][] = [
                     'name' => $patient->first_name . ' ' . $patient->last_name,
                     'barangay' => $barangayName,
-                    'bmi' => $bmi,
+                    'weight' => $latestAssessment ? $latestAssessment->weight_kg : null,
+                    'height' => $latestAssessment ? $latestAssessment->height_cm : null,
+                    'waz' => $latestAssessment->weight_for_age ?? 'N/A',
+                    'haz' => $latestAssessment->height_for_age ?? 'N/A',
+                    'baz' => $latestAssessment->bmi_for_age ?? 'N/A',
+                    'indicators' => $indicators,
                     'age' => $patient->birthdate ? $patient->birthdate->age : ($patient->age_months ? intval($patient->age_months / 12) : null),
-                    'last_assessment' => $latestAssessment ? $latestAssessment->created_at->format('M d, Y') : 'No assessment'
+                    'last_assessment' => $latestAssessment ? $latestAssessment->created_at->format('M d, Y') : 'No assessment',
+                    'recovery_status' => $latestAssessment->recovery_status ?? 'Not assessed'
                 ];
                 
                 // Track barangay breakdown
                 if (!isset($barangay_breakdown[$barangayName])) {
                     $barangay_breakdown[$barangayName] = [
-                        'severe' => 0,
-                        'malnourished' => 0,
-                        'underweight' => 0,
+                        'sam' => 0,
+                        'mam' => 0,
+                        'overweight' => 0,
+                        'obese' => 0,
                         'total' => 0
                     ];
                 }
                 
-                if ($category === 'severe_malnourishment') {
-                    $barangay_breakdown[$barangayName]['severe']++;
-                } elseif ($category === 'malnourished') {
-                    $barangay_breakdown[$barangayName]['malnourished']++;
-                } elseif ($category === 'underweight') {
-                    $barangay_breakdown[$barangayName]['underweight']++;
+                if ($category === 'sam') {
+                    $barangay_breakdown[$barangayName]['sam']++;
+                } elseif ($category === 'mam') {
+                    $barangay_breakdown[$barangayName]['mam']++;
+                } elseif ($category === 'overweight') {
+                    $barangay_breakdown[$barangayName]['overweight']++;
+                } elseif ($category === 'obese') {
+                    $barangay_breakdown[$barangayName]['obese']++;
                 }
                 $barangay_breakdown[$barangayName]['total']++;
             }
         }
 
         // Calculate percentages
-        $total = $distribution['normal']['count'] + $distribution['underweight']['count'] + 
-                 $distribution['malnourished']['count'] + $distribution['severe_malnourishment']['count'];
+        $total = array_sum(array_column($distribution, 'count'));
         
         if ($total > 0) {
             foreach ($distribution as $key => $data) {

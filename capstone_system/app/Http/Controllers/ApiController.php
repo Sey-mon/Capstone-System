@@ -320,14 +320,17 @@ class ApiController extends Controller
             // Also get nutritional indicators for storing in assessment
             $indicatorsResult = $malnutritionService->assessMalnutritionOnly($childData);
             
-            // Extract classification from indicators
-            $extractClassification = function($indicator) {
-                if (is_array($indicator) && isset($indicator['classification'])) {
-                    return $indicator['classification'];
-                } elseif (is_array($indicator) && isset($indicator['status'])) {
-                    return $indicator['status'];
-                } elseif (is_string($indicator)) {
-                    return $indicator;
+            // Extract Z-score values from nested API response
+            $extractZScore = function($indicator) {
+                if (is_array($indicator)) {
+                    // Check for 'zscore' key (weight_for_age, height_for_age)
+                    if (isset($indicator['zscore'])) {
+                        return floatval($indicator['zscore']);
+                    }
+                    // Check for 'value' key (BMI)
+                    if (isset($indicator['value'])) {
+                        return floatval($indicator['value']);
+                    }
                 }
                 return null;
             };
@@ -339,9 +342,9 @@ class ApiController extends Controller
                 'assessment_date' => now(),
                 'weight_kg' => $request->weight_kg,
                 'height_cm' => $request->height_cm,
-                'weight_for_age' => $extractClassification($indicatorsResult['weight_for_age'] ?? null),
-                'height_for_age' => $extractClassification($indicatorsResult['height_for_age'] ?? null),
-                'bmi_for_age' => $extractClassification($indicatorsResult['bmi'] ?? $indicatorsResult['bmi_for_age'] ?? null),
+                'weight_for_age' => $extractZScore($indicatorsResult['weight_for_age'] ?? null),
+                'height_for_age' => $extractZScore($indicatorsResult['height_for_age'] ?? null),
+                'bmi_for_age' => $extractZScore($indicatorsResult['bmi'] ?? null),
                 'treatment' => json_encode($result['treatment_plan'] ?? []),
                 'notes' => $request->notes,
                 'completed_at' => now(),

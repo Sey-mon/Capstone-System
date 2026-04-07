@@ -240,6 +240,14 @@ Route::middleware(['auth', 'account.verified', 'role:Admin', 'prevent.back'])->p
     
     // Dynamic report API endpoints
     Route::get('/reports/malnutrition-cases', [AdminController::class, 'getMalnutritionCasesReport'])->name('reports.malnutrition-cases');
+    
+    // AJAX Pagination for Malnutrition Cases
+    Route::get('/reports/malnutrition-cases/severe/paginated', [AdminController::class, 'getPaginatedSevereCases'])->name('reports.severe.paginated');
+    Route::get('/reports/malnutrition-cases/malnourished/paginated', [AdminController::class, 'getPaginatedMalnourishedCases'])->name('reports.malnourished.paginated');
+    
+    // CSV Export
+    Route::get('/reports/malnutrition-cases/export-csv', [AdminController::class, 'exportMalnutritionCasesCSV'])->name('reports.malnutrition-cases.export-csv');
+    
     Route::get('/reports/patient-progress', [AdminController::class, 'getPatientProgressReport'])->name('reports.patient-progress');
     Route::get('/reports/low-stock-alert', [AdminController::class, 'getLowStockAlertReport'])->name('reports.low-stock-alert');
     Route::get('/reports/monthly-trends', [AdminController::class, 'getMonthlyTrendsReport'])->name('reports.monthly-trends');

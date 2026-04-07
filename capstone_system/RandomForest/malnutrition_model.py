@@ -1643,14 +1643,10 @@ class MalnutritionAssessment:
                 primary_diagnosis = "Severe Acute Malnutrition (SAM)"
                 risk_level = "High"
                 confidence = 0.9
-            elif risk_score >= 3:
+            elif risk_score >= 1:
                 primary_diagnosis = "Moderate Acute Malnutrition (MAM)"
                 risk_level = "Moderate"
                 confidence = 0.8
-            elif risk_score >= 1:
-                primary_diagnosis = "At Risk of Malnutrition"
-                risk_level = "Low"
-                confidence = 0.7
             elif overweight_score >= 2:
                 primary_diagnosis = "Obese"
                 risk_level = "Moderate"

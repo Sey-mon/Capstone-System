@@ -554,9 +554,10 @@
         @if(isset($reports['patient_distribution']))
         window.patientDistributionData = {
             normal: {!! json_encode($reports['patient_distribution']['normal']) !!},
-            underweight: {!! json_encode($reports['patient_distribution']['underweight']) !!},
-            malnourished: {!! json_encode($reports['patient_distribution']['malnourished']) !!},
-            severe_malnourishment: {!! json_encode($reports['patient_distribution']['severe_malnourishment']) !!},
+            overweight: {!! json_encode($reports['patient_distribution']['overweight']) !!},
+            obese: {!! json_encode($reports['patient_distribution']['obese']) !!},
+            mam: {!! json_encode($reports['patient_distribution']['mam']) !!},
+            sam: {!! json_encode($reports['patient_distribution']['sam']) !!},
             barangay_breakdown: {!! json_encode($reports['patient_distribution']['barangay_breakdown'] ?? []) !!}
         };
         @endif
