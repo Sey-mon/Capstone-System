@@ -269,14 +269,21 @@
             <div class="card-header" style="border-top: 1px solid var(--border-light); margin-top: 1rem; padding-top: 1rem;">
                 <h3 class="card-title">Item Categories</h3>
                 <div style="display: flex; gap: 0.75rem;">
-                    <div class="input-with-icon">
-                        <i class="fas fa-search"></i>
+                    <div style="position: relative; width: 250px;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; z-index: 2;"></i>
                         <input type="text" 
                                id="categorySearch" 
                                placeholder="Search categories..." 
-                               class="filter-input"
-                               style="width: 250px; padding-left: 2.5rem;"
-                               onkeydown="if(event.key==='Enter') searchTable('categories')">
+                               class="search-input-field"
+                               style="width: 100%; padding: 10px 40px 10px 40px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; color: #374151; background: white;"
+                               oninput="toggleCategoryClear()">
+                        <button type="button" class="search-clear-btn-field" 
+                                id="clearCategoryBtn"
+                                onclick="clearCategorySearch()"
+                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.125rem; padding: 0; margin: 0; z-index: 10;" 
+                                title="Clear search">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
                     </div>
                     <button class="btn btn-primary" onclick="openAddCategoryModal()">
                         <i class="fas fa-plus"></i>
@@ -340,55 +347,6 @@
                     </tbody>
                 </table>
             </div>
-
-            @if(method_exists($categories, 'links') && $categories->hasPages())
-            <div class="pagination-footer-modern">
-                <div class="pagination-info-modern">
-                    Showing {{ $categories->firstItem() ?? 0 }} to {{ $categories->lastItem() ?? 0 }} of {{ $categories->total() }} categories
-                </div>
-                
-                <div class="pagination-controls-modern">
-                    @if($categories->onFirstPage())
-                        <button class="pagination-btn" disabled>
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                    @else
-                        <a href="{{ $categories->previousPageUrl() }}" class="pagination-btn">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    @endif
-                    
-                    @foreach($categories->getUrlRange(1, $categories->lastPage()) as $page => $url)
-                        @if($page == $categories->currentPage())
-                            <button class="pagination-btn active">{{ $page }}</button>
-                        @else
-                            <a href="{{ $url }}" class="pagination-btn">{{ $page }}</a>
-                        @endif
-                    @endforeach
-                    
-                    @if($categories->hasMorePages())
-                        <a href="{{ $categories->nextPageUrl() }}" class="pagination-btn">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    @else
-                        <button class="pagination-btn" disabled>
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    @endif
-                </div>
-                
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="color: #6b7280; font-size: 0.875rem;">Go to</span>
-                    <input type="number" 
-                           class="filter-input" 
-                           style="width: 70px; padding: 0.5rem;"
-                           min="1" 
-                           max="{{ $categories->lastPage() }}"
-                           placeholder="{{ $categories->currentPage() }}"
-                           onchange="if(this.value) window.location.href='{{ $categories->url(1) }}'.replace('categories_page=1', 'categories_page='+this.value)">
-                </div>
-            </div>
-            @endif
         </div>
 
         <!-- Barangays Tab -->
@@ -396,14 +354,21 @@
             <div class="card-header" style="border-top: 1px solid var(--border-light); margin-top: 1rem; padding-top: 1rem;">
                 <h3 class="card-title">Barangays</h3>
                 <div style="display: flex; gap: 0.75rem;">
-                    <div class="input-with-icon">
-                        <i class="fas fa-search"></i>
+                    <div style="position: relative; width: 250px;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; z-index: 2;"></i>
                         <input type="text" 
                                id="barangaySearch" 
                                placeholder="Search barangays..." 
-                               class="filter-input"
-                               style="width: 250px; padding-left: 2.5rem;"
-                               onkeydown="if(event.key==='Enter') searchTable('barangays')">
+                               class="search-input-field"
+                               style="width: 100%; padding: 10px 40px 10px 40px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; color: #374151; background: white;"
+                               oninput="toggleBarangayClear()">
+                        <button type="button" class="search-clear-btn-field" 
+                                id="clearBarangayBtn"
+                                onclick="clearBarangaySearch()"
+                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.125rem; padding: 0; margin: 0; z-index: 10;" 
+                                title="Clear search">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
                     </div>
                     <button class="btn btn-primary" onclick="openAddBarangayModal()">
                         <i class="fas fa-plus"></i>
@@ -467,55 +432,6 @@
                     </tbody>
                 </table>
             </div>
-
-            @if(method_exists($barangays, 'links') && $barangays->hasPages())
-            <div class="pagination-footer-modern">
-                <div class="pagination-info-modern">
-                    Showing {{ $barangays->firstItem() ?? 0 }} to {{ $barangays->lastItem() ?? 0 }} of {{ $barangays->total() }} barangays
-                </div>
-                
-                <div class="pagination-controls-modern">
-                    @if($barangays->onFirstPage())
-                        <button class="pagination-btn" disabled>
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                    @else
-                        <a href="{{ $barangays->previousPageUrl() }}" class="pagination-btn">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    @endif
-                    
-                    @foreach($barangays->getUrlRange(1, $barangays->lastPage()) as $page => $url)
-                        @if($page == $barangays->currentPage())
-                            <button class="pagination-btn active">{{ $page }}</button>
-                        @else
-                            <a href="{{ $url }}" class="pagination-btn">{{ $page }}</a>
-                        @endif
-                    @endforeach
-                    
-                    @if($barangays->hasMorePages())
-                        <a href="{{ $barangays->nextPageUrl() }}" class="pagination-btn">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    @else
-                        <button class="pagination-btn" disabled>
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    @endif
-                </div>
-                
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="color: #6b7280; font-size: 0.875rem;">Go to</span>
-                    <input type="number" 
-                           class="filter-input" 
-                           style="width: 70px; padding: 0.5rem;"
-                           min="1" 
-                           max="{{ $barangays->lastPage() }}"
-                           placeholder="{{ $barangays->currentPage() }}"
-                           onchange="if(this.value) window.location.href='{{ $barangays->url(1) }}'.replace('barangays_page=1', 'barangays_page='+this.value)">
-                </div>
-            </div>
-            @endif
         </div>
     </div>
 
