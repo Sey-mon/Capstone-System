@@ -308,8 +308,6 @@
 
 .user-name {
     font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 0.125rem;
 }
 
 .user-email {
