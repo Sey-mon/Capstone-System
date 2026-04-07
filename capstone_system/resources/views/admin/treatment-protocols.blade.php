@@ -146,15 +146,10 @@
                     <h3>Clinical Protocols</h3>
                     <span class="protocol-count">{{ isset($protocols['protocols']['protocols']) ? count($protocols['protocols']['protocols']) : 0 }} Available</span>
                 </div>
-                <div class="nav-tabs-modern" id="protocolTabs" role="tablist">
+                <div class="nav-tabs-modern-display">
                     @if(isset($protocols['protocols']['protocols']))
                         @foreach($protocols['protocols']['protocols'] as $index => $protocolName)
-                        <button class="nav-tab-modern {{ $index === 0 ? 'active' : '' }}" 
-                                id="protocol-{{ $index }}-tab" 
-                                data-bs-toggle="tab" 
-                                data-bs-target="#protocol-{{ $index }}" 
-                                type="button" 
-                                role="tab">
+                        <div class="nav-tab-badge">
                             <div class="tab-icon">
                                 <i class="fas {{ $index === 0 ? 'fa-stethoscope' : ($index === 1 ? 'fa-user-md' : 'fa-heartbeat') }}"></i>
                             </div>
@@ -162,8 +157,7 @@
                                 <span class="tab-title">{{ ucwords(str_replace('_', ' ', $protocolName)) }}</span>
                                 <span class="tab-subtitle">{{ $index === 0 ? 'Severe Acute' : ($index === 1 ? 'Moderate Acute' : 'Standard Care') }}</span>
                             </div>
-                            <div class="tab-indicator"></div>
-                        </button>
+                        </div>
                         @endforeach
                     @endif
                 </div>
@@ -172,10 +166,7 @@
             <div class="tab-content-modern" id="protocolTabContent">
                 @if(isset($protocols['protocols']['protocols']))
                     @foreach($protocols['protocols']['protocols'] as $index => $protocolName)
-                    <div class="tab-pane-modern fade {{ $index === 0 ? 'show active' : '' }}" 
-                         id="protocol-{{ $index }}" 
-                         role="tabpanel" 
-                         aria-labelledby="protocol-{{ $index }}-tab">
+                    <div class="protocol-section-display">
                         
                         <div class="protocol-content-modern">
                             <div class="protocol-header-modern">
@@ -218,10 +209,28 @@
                                         </div>
                                         <div class="section-content-card">
                                             <ul class="treatment-steps">
-                                                <li><strong>Initial Assessment:</strong> Comprehensive nutritional and medical evaluation</li>
-                                                <li><strong>Intervention Plan:</strong> Customized treatment based on severity and complications</li>
-                                                <li><strong>Monitoring:</strong> Regular follow-up and progress evaluation</li>
-                                                <li><strong>Family Education:</strong> Caregiver training and support</li>
+                                                @if($protocolName === 'sam_protocol')
+                                                    <li><strong>Emergency Stabilization:</strong> Address life-threatening complications (severe dehydration, shock, infection)</li>
+                                                    <li><strong>Nutritional Rehabilitation:</strong> Therapeutic feeding with specialized high-protein, energy-dense formula</li>
+                                                    <li><strong>Medical Complications Management:</strong> Treat anemia, infection, electrolyte imbalances</li>
+                                                    <li><strong>Micronutrient Supplementation:</strong> Vitamin A, zinc, iron, and other essential nutrients</li>
+                                                    <li><strong>Intensive Monitoring:</strong> Daily clinical assessment, vital signs, weight tracking</li>
+                                                    <li><strong>Psychosocial Support:</strong> Maternal support and child stimulation programs</li>
+                                                @elseif($protocolName === 'mam_protocol')
+                                                    <li><strong>Initial Assessment:</strong> Comprehensive nutritional and medical evaluation</li>
+                                                    <li><strong>Supplementary Feeding:</strong> Energy and protein-enriched supplementary foods</li>
+                                                    <li><strong>Micronutrient Fortification:</strong> Fortified foods and micronutrient powders</li>
+                                                    <li><strong>Hygiene and Water Sanitation:</strong> Prevention of infectious diseases</li>
+                                                    <li><strong>Bi-weekly Monitoring:</strong> Regular weight and MUAC measurements</li>
+                                                    <li><strong>Community Education:</strong> Dietary diversity and child feeding practices</li>
+                                                @else
+                                                    <li><strong>Growth Monitoring:</strong> Regular weight and height measurements</li>
+                                                    <li><strong>Preventive Nutrition:</strong> Adequate diet with essential food groups</li>
+                                                    <li><strong>Immunization:</strong> Age-appropriate vaccines as per schedule</li>
+                                                    <li><strong>Health Education:</strong> Promotion of healthy lifestyle and nutrition</li>
+                                                    <li><strong>Developmental Screening:</strong> Assess cognitive and motor development</li>
+                                                    <li><strong>Monthly Follow-up:</strong> Routine health checks and counseling</li>
+                                                @endif
                                             </ul>
                                         </div>
                                     </div>
@@ -245,6 +254,34 @@
                                                     <span class="spec-label">Setting:</span>
                                                     <span class="spec-value">{{ $protocolName === 'sam_protocol' ? 'Hospital/Clinic' : 'Community/Outpatient' }}</span>
                                                 </div>
+                                                @if($protocolName === 'sam_protocol')
+                                                    <div class="spec-item">
+                                                        <span class="spec-label">Entry Criteria:</span>
+                                                        <span class="spec-value">MUAC <115mm or WHZ <-3 SD</span>
+                                                    </div>
+                                                    <div class="spec-item">
+                                                        <span class="spec-label">Exit Criteria:</span>
+                                                        <span class="spec-value">MUAC >115mm and WHZ >-2 SD</span>
+                                                    </div>
+                                                @elseif($protocolName === 'mam_protocol')
+                                                    <div class="spec-item">
+                                                        <span class="spec-label">Entry Criteria:</span>
+                                                        <span class="spec-value">MUAC 115-125mm or WHZ -1 to -2 SD</span>
+                                                    </div>
+                                                    <div class="spec-item">
+                                                        <span class="spec-label">Duration:</span>
+                                                        <span class="spec-value">12 weeks to recovery</span>
+                                                    </div>
+                                                @else
+                                                    <div class="spec-item">
+                                                        <span class="spec-label">Frequency:</span>
+                                                        <span class="spec-value">Monthly nutrition check-ups</span>
+                                                    </div>
+                                                    <div class="spec-item">
+                                                        <span class="spec-label">Reference Standard:</span>
+                                                        <span class="spec-value">WHO Growth Standards</span>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

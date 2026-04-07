@@ -207,6 +207,11 @@ Route::middleware(['auth', 'account.verified', 'role:Admin', 'prevent.back'])->p
     Route::get('/treatment-protocols', [ApiController::class, 'treatmentProtocols'])->name('treatment.protocols');
     Route::get('/api-status', [ApiController::class, 'apiStatus'])->name('api.status');
     
+    // AJAX API endpoints for modal content
+    Route::get('/api/who-standards', [ApiController::class, 'whoStandardsAjax'])->name('api.who.standards');
+    Route::get('/api/treatment-protocols', [ApiController::class, 'treatmentProtocolsAjax'])->name('api.treatment.protocols');
+    Route::get('/api/dataset/{type}', [ApiController::class, 'getDataset'])->name('api.dataset');
+    
     // Category CRUD routes
     Route::get('/categories/data/all', [AdminController::class, 'getAllCategories'])->name('categories.all');
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');

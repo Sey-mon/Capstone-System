@@ -350,7 +350,7 @@
                     </p>
                     <button class="btn btn-primary">
                         <i class="fas fa-plus"></i>
-                        Add First Patient
+                        Add Patient
                     </button>
                 </div>
             @endif

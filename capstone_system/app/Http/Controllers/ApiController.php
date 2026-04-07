@@ -90,6 +90,154 @@ class ApiController extends Controller
         }
     }
 
+    /**
+     * Get WHO standards content for AJAX
+     */
+    public function whoStandardsAjax(MalnutritionService $malnutritionService)
+    {
+        try {
+            $maleWfa = $malnutritionService->getWhoStandards('male', 'wfa');
+            $femaleWfa = $malnutritionService->getWhoStandards('female', 'wfa');
+            $maleLhfa = $malnutritionService->getWhoStandards('male', 'lhfa');
+            $femaleLhfa = $malnutritionService->getWhoStandards('female', 'lhfa');
+
+            return view('admin.ajax-content.who-standards', compact(
+                'maleWfa', 'femaleWfa', 'maleLhfa', 'femaleLhfa'
+            ))->render();
+        } catch (\Exception $e) {
+            return response()->view('admin.ajax-content.error', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get treatment protocols content for AJAX
+     */
+    public function treatmentProtocolsAjax(MalnutritionService $malnutritionService)
+    {
+        try {
+            $protocols = $malnutritionService->getTreatmentProtocols();
+            return view('admin.ajax-content.treatment-protocols', compact('protocols'))->render();
+        } catch (\Exception $e) {
+            return response()->view('admin.ajax-content.error', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get dataset viewer for AJAX
+     */
+    public function getDataset(MalnutritionService $malnutritionService, $type)
+    {
+        try {
+            // Map dataset type parameters
+            $typeMap = [
+                'male_wfa' => ['gender' => 'male', 'indicator' => 'wfa', 'title' => 'Male - Weight for Age', 'type' => 'WFA'],
+                'female_wfa' => ['gender' => 'female', 'indicator' => 'wfa', 'title' => 'Female - Weight for Age', 'type' => 'WFA'],
+                'male_lhfa' => ['gender' => 'male', 'indicator' => 'lhfa', 'title' => 'Male - Length/Height for Age', 'type' => 'LHFA'],
+                'female_lhfa' => ['gender' => 'female', 'indicator' => 'lhfa', 'title' => 'Female - Length/Height for Age', 'type' => 'LHFA'],
+            ];
+
+            if (!isset($typeMap[$type])) {
+                return response()->view('admin.ajax-content.error', [
+                    'error' => 'Dataset not found'
+                ], 404);
+            }
+
+            $typeConfig = $typeMap[$type];
+            
+            // Fetch the WHO standards data
+            $apiResponse = $malnutritionService->getWhoStandards($typeConfig['gender'], $typeConfig['indicator']);
+            
+            // Transform the API response into a table-friendly format
+            $data = $this->transformWhoData($apiResponse, $typeConfig['type']);
+            
+            $dataset = [
+                'data' => $data,
+                'title' => $typeConfig['title'],
+                'type' => $typeConfig['type']
+            ];
+
+            return view('admin.ajax-content.dataset-viewer', $dataset)->render();
+        } catch (\Exception $e) {
+            Log::error('Dataset retrieval error', [
+                'type' => $type,
+                'error' => $e->getMessage()
+            ]);
+            return response()->view('admin.ajax-content.error', [
+                'error' => 'Failed to load dataset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Transform WHO API response into table format
+     */
+    private function transformWhoData($apiResponse, $type)
+    {
+        $data = [];
+        
+        // Extract the data from API response
+        if (is_array($apiResponse)) {
+            // If response has 'data' key containing the standards
+            if (isset($apiResponse['data']) && is_array($apiResponse['data'])) {
+                $standards = $apiResponse['data'];
+            } else {
+                $standards = $apiResponse;
+            }
+        } else {
+            return [];
+        }
+        
+        // Transform WHO Z-score data into table rows
+        // API returns data keyed by month/age, we need to convert to array format
+        foreach ($standards as $key => $row) {
+            if (is_array($row)) {
+                // Create a new row with standardized keys
+                $tableRow = [];
+                
+                // Set the age/height as the first column
+                if ($type === 'WFA') {
+                    $tableRow['age'] = $key; // Month
+                } else {
+                    $tableRow['height'] = $key; // Height in cm or month
+                }
+                
+                // Map WHO Z-score columns to display names
+                if (isset($row['SD3neg'])) {
+                    $tableRow['sd_minus_3'] = $row['SD3neg'] ?? 0;
+                }
+                if (isset($row['SD2neg'])) {
+                    $tableRow['sd_minus_2'] = $row['SD2neg'] ?? 0;
+                }
+                if (isset($row['SD1neg'])) {
+                    $tableRow['sd_minus_1'] = $row['SD1neg'] ?? 0;
+                }
+                if (isset($row['SD0']) || isset($row['M'])) {
+                    $tableRow['median'] = $row['SD0'] ?? $row['M'] ?? 0;
+                }
+                if (isset($row['SD1'])) {
+                    $tableRow['sd_plus_1'] = $row['SD1'] ?? 0;
+                }
+                if (isset($row['SD2'])) {
+                    $tableRow['sd_plus_2'] = $row['SD2'] ?? 0;
+                }
+                if (isset($row['SD3'])) {
+                    $tableRow['sd_plus_3'] = $row['SD3'] ?? 0;
+                }
+                
+                // Only add row if it has data
+                if (count($tableRow) > 1) {
+                    $data[] = $tableRow;
+                }
+            }
+        }
+        
+        return $data;
+    }
+
     // ========================================
     // MALNUTRITION ASSESSMENT API METHODS
     // ========================================

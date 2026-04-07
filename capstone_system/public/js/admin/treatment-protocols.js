@@ -206,41 +206,59 @@ function getIconForType(type) {
     return icons[type] || 'fa-info-circle';
 }
 
-// Enhanced tab functionality
+// Enhanced tab functionality - Only use if Bootstrap is not available
 function initializeModernTabs() {
     const tabButtons = document.querySelectorAll('.nav-tab-modern');
     const tabPanes = document.querySelectorAll('.tab-pane-modern');
 
+    if (tabButtons.length === 0) return; // Exit if no tabs found
+
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             const targetId = this.getAttribute('data-bs-target');
             
+            if (!targetId) return;
+            
             // Remove active class from all tabs and panes
-            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+            });
             tabPanes.forEach(pane => {
                 pane.classList.remove('show', 'active');
             });
             
             // Add active class to clicked tab
             this.classList.add('active');
+            this.setAttribute('aria-selected', 'true');
             
             // Show corresponding pane
             const targetPane = document.querySelector(targetId);
             if (targetPane) {
                 targetPane.classList.add('show', 'active');
                 
-                // Animate the content
-                targetPane.style.opacity = '0';
-                targetPane.style.transform = 'translateY(20px)';
-                
-                setTimeout(() => {
-                    targetPane.style.transition = 'all 0.3s ease-out';
-                    targetPane.style.opacity = '1';
-                    targetPane.style.transform = 'translateY(0)';
-                }, 50);
+                // Animate the content - preserve inline styles after animation
+                targetPane.style.opacity = '1';
+                targetPane.style.transform = 'translateY(0)';
+                targetPane.style.transition = 'all 0.3s ease-out';
             }
         });
     });
+    
+    // Ensure first tab is properly initialized
+    const firstButton = tabButtons[0];
+    if (firstButton) {
+        firstButton.classList.add('active');
+        firstButton.setAttribute('aria-selected', 'true');
+        const firstTargetId = firstButton.getAttribute('data-bs-target');
+        const firstPane = document.querySelector(firstTargetId);
+        if (firstPane) {
+            firstPane.classList.add('show', 'active');
+            firstPane.style.opacity = '1';
+            firstPane.style.transform = 'translateY(0)';
+        }
+    }
 }
 
 // Protocol card animations
@@ -292,17 +310,15 @@ function scrollToActiveTab() {
 
 // Initialize all functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize modern tabs if not using Bootstrap
-    if (!window.bootstrap) {
-        initializeModernTabs();
-    }
+    // Tabs are now static badges - no click functionality needed
+    // All protocols are displayed at once
     
     // Initialize animations
     initializeCardAnimations();
     initializeExpandAnimations();
     
-    // Scroll to active tab on load
-    setTimeout(scrollToActiveTab, 500);
+    // Scroll to top on load
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     
     // Add stagger animation to metric cards
     const metricCards = document.querySelectorAll('.metric-card-modern');
@@ -315,6 +331,19 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
         }, index * 150);
+    });
+    
+    // Add stagger animation to protocol sections
+    const protocolSections = document.querySelectorAll('.protocol-section-display');
+    protocolSections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            section.style.transition = 'all 0.5s ease-out';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, (index + 1) * 200);
     });
     
     // Add stagger animation to info cards
@@ -330,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 800 + (index * 150));
     });
     
-    console.log('🏥 Treatment Protocols page initialized with modern functionality');
+    console.log('🏥 Treatment Protocols page initialized - All protocols displayed');
 });
 
 // Handle window resize for responsive adjustments

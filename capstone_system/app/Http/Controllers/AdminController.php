@@ -99,16 +99,28 @@ class AdminController extends Controller
                 ->pluck('latest_assessment_id');
             
             // Count by diagnosis from treatment JSON field (stored at $.patient_info.diagnosis)
+            // Handle both JSON stored diagnoses (SAM, MAM, Normal) and plain text treatment field
             $samCount = Assessment::whereIn('assessment_id', $latestAssessments)
-                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%SEVERE ACUTE MALNUTRITION%'")
+                ->where(function($query) {
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%SAM%'")
+                          ->orWhereRaw("treatment LIKE '%Severe Acute Malnutrition%'")
+                          ->orWhereRaw("treatment LIKE '%SEVERE ACUTE MALNUTRITION%'");
+                })
                 ->count();
             
             $mamCount = Assessment::whereIn('assessment_id', $latestAssessments)
-                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%MODERATE ACUTE MALNUTRITION%'")
+                ->where(function($query) {
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%MAM%'")
+                          ->orWhereRaw("treatment LIKE '%Moderate Acute Malnutrition%'")
+                          ->orWhereRaw("treatment LIKE '%MODERATE ACUTE MALNUTRITION%'");
+                })
                 ->count();
             
             $normalCount = Assessment::whereIn('assessment_id', $latestAssessments)
-                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%NORMAL NUTRITIONAL STATUS%'")
+                ->where(function($query) {
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(treatment, '$.patient_info.diagnosis')) LIKE '%Normal%'")
+                          ->orWhereRaw("treatment LIKE '%Normal Nutritional Status%'");
+                })
                 ->count();
             
             // Inventory by category
@@ -431,13 +443,44 @@ class AdminController extends Controller
         $query = User::with('role')->withTrashed();
         
         if ($request->input('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('first_name', 'like', "%$search%")
-                  ->orWhere('last_name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('contact_number', 'like', "%$search%");
-            });
+            $search = trim((string) $request->input('search'));
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $parts = array_filter(explode(' ', $search));
+                    
+                    // Always check email and contact first
+                    $q->where('email', 'like', "%$search%")
+                      ->orWhere('contact_number', 'like', "%$search%")
+                      // Check if entire search is in first_name
+                      ->orWhere('first_name', 'like', "%$search%")
+                      // Check if entire search is in last_name
+                      ->orWhere('last_name', 'like', "%$search%");
+                    
+                    if (count($parts) >= 2) {
+                        // For multi-word searches, try different split combinations
+                        
+                        // Split at position 1: first word as first_name, rest as last_name
+                        $q->orWhere(function($or) use ($parts) {
+                            $or->where('first_name', 'like', "%{$parts[0]}%")
+                               ->where('last_name', 'like', "%".implode(' ', array_slice($parts, 1))."%");
+                        });
+                        
+                        // Split at last position: all but last word in first_name, last word in last_name
+                        if (count($parts) > 2) {
+                            $q->orWhere(function($or) use ($parts) {
+                                $or->where('first_name', 'like', "%".implode(' ', array_slice($parts, 0, -1))."%")
+                                   ->where('last_name', 'like', "%{$parts[count($parts)-1]}%");
+                            });
+                        }
+                        
+                        // Try each word individually in either field
+                        foreach ($parts as $part) {
+                            $q->orWhere('first_name', 'like', "%$part%")
+                              ->orWhere('last_name', 'like', "%$part%");
+                        }
+                    }
+                });
+            }
         }
         
         if ($request->input('role')) {
@@ -532,11 +575,38 @@ class AdminController extends Controller
 
         // Search by name
         if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%$search%")
-                  ->orWhere('last_name', 'like', "%$search%");
-            });
+            $search = trim((string) $request->input('search'));
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $parts = array_filter(explode(' ', $search));
+                    
+                    // Always check full name match first
+                    $q->where('first_name', 'like', "%$search%")
+                      ->orWhere('last_name', 'like', "%$search%");
+                    
+                    if (count($parts) >= 2) {
+                        // Split at position 1: first word as first_name, rest as last_name
+                        $q->orWhere(function($or) use ($parts) {
+                            $or->where('first_name', 'like', "%{$parts[0]}%")
+                               ->where('last_name', 'like', "%".implode(' ', array_slice($parts, 1))."%");
+                        });
+                        
+                        // Split at last position: all but last word in first_name, last word in last_name
+                        if (count($parts) > 2) {
+                            $q->orWhere(function($or) use ($parts) {
+                                $or->where('first_name', 'like', "%".implode(' ', array_slice($parts, 0, -1))."%")
+                                   ->where('last_name', 'like', "%{$parts[count($parts)-1]}%");
+                            });
+                        }
+                        
+                        // Try each word individually
+                        foreach ($parts as $part) {
+                            $q->orWhere('first_name', 'like', "%$part%")
+                              ->orWhere('last_name', 'like', "%$part%");
+                        }
+                    }
+                });
+            }
         }
 
         // Filter by barangay
@@ -885,13 +955,40 @@ class AdminController extends Controller
 
             // Apply filters
             if ($request->filled('search')) {
-                $search = $request->search;
-                $query->where(function($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('custom_patient_id', 'like', "%{$search}%")
-                      ->orWhere('contact_number', 'like', "%{$search}%");
-                });
+                $search = trim((string) $request->search);
+                if ($search) {
+                    $query->where(function($q) use ($search) {
+                        $parts = array_filter(explode(' ', $search));
+                        
+                        // Always check full name match and other basic fields
+                        $q->where('first_name', 'like', "%$search%")
+                          ->orWhere('last_name', 'like', "%$search%")
+                          ->orWhere('custom_patient_id', 'like', "%{$search}%")
+                          ->orWhere('contact_number', 'like', "%{$search}%");
+                        
+                        if (count($parts) >= 2) {
+                            // Split at position 1: first word as first_name, rest as last_name
+                            $q->orWhere(function($or) use ($parts) {
+                                $or->where('first_name', 'like', "%{$parts[0]}%")
+                                   ->where('last_name', 'like', "%".implode(' ', array_slice($parts, 1))."%");
+                            });
+                            
+                            // Split at last position: all but last word in first_name, last word in last_name
+                            if (count($parts) > 2) {
+                                $q->orWhere(function($or) use ($parts) {
+                                    $or->where('first_name', 'like', "%".implode(' ', array_slice($parts, 0, -1))."%")
+                                       ->where('last_name', 'like', "%{$parts[count($parts)-1]}%");
+                                });
+                            }
+                            
+                            // Try each word individually
+                            foreach ($parts as $part) {
+                                $q->orWhere('first_name', 'like', "%$part%")
+                                  ->orWhere('last_name', 'like', "%$part%");
+                            }
+                        }
+                    });
+                }
             }
 
             if ($request->filled('barangay')) {

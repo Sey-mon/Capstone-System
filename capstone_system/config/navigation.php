@@ -33,6 +33,7 @@ return [
             'route' => 'admin.api.management',
             'icon' => 'fas fa-robot',
             'text' => 'API Management',
+            'related_routes' => ['who.standards', 'treatment.protocols'],
         ],
         [
             'route' => 'admin.knowledge-base.index',
