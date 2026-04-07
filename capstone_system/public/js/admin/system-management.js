@@ -2,10 +2,21 @@
  * System Management with SweetAlert2 and AJAX
  */
 
+// Global variables for full-page search
+let allCategories = [];
+let filteredCategories = [];
+let currentCategoryPage = 1;
+let itemsPerPage = 10;
+
+let allBarangays = [];
+let filteredBarangays = [];
+let currentBarangayPage = 1;
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     setupTabSwitching();
     restoreActiveTab();
+    setupSearchListeners();
 });
 
 // Tab Switching
@@ -35,6 +46,13 @@ function switchTab(tab) {
     if (targetContent) {
         targetContent.style.display = 'block';
         targetContent.classList.add('active');
+        
+        // Load data for this tab if needed
+        if (tab === 'categories') {
+            loadAllCategories();
+        } else if (tab === 'barangays') {
+            loadAllBarangays();
+        }
     }
 }
 
@@ -62,7 +80,7 @@ function restoreActiveTab() {
 }
 
 // HTML Escape Function
-function escapeHtml(text) {
+function escapeHtml(text, escapeQuotes = false) {
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -70,7 +88,11 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    let result = text.replace(/[&<>"']/g, m => map[m]);
+    if (escapeQuotes) {
+        result = result.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+    }
+    return result;
 }
 
 // ============================================
@@ -568,46 +590,324 @@ function clearFilters() {
 // TABLE SEARCH FUNCTIONALITY
 // ============================================
 
-function searchTable(tableType) {
-    const searchId = tableType === 'categories' ? 'categorySearch' : 'barangaySearch';
-    const searchInput = document.getElementById(searchId);
-    const searchValue = searchInput.value.toLowerCase();
-    const contentId = tableType === 'categories' ? 'categories-content' : 'barangays-content';
-    const tabContent = document.getElementById(contentId);
+function setupSearchListeners() {
+    const categorySearchInput = document.getElementById('categorySearch');
+    const barangaySearchInput = document.getElementById('barangaySearch');
     
+    if (categorySearchInput) {
+        categorySearchInput.addEventListener('keyup', function() {
+            searchCategories();
+        });
+        categorySearchInput.addEventListener('input', function() {
+            searchCategories();
+        });
+    }
+    
+    if (barangaySearchInput) {
+        barangaySearchInput.addEventListener('keyup', function() {
+            searchBarangays();
+        });
+        barangaySearchInput.addEventListener('input', function() {
+            searchBarangays();
+        });
+    }
+}
+
+async function loadAllCategories() {
+    if (allCategories.length > 0) return; // Already loaded
+    
+    try {
+        const response = await fetch('/admin/categories/data/all');
+        const data = await response.json();
+        
+        if (data.success) {
+            allCategories = data.data;
+            displayCategoriesPage(1);
+        }
+    } catch (error) {
+        console.error('Failed to load categories:', error);
+    }
+}
+
+async function loadAllBarangays() {
+    if (allBarangays.length > 0) return; // Already loaded
+    
+    try {
+        const response = await fetch('/admin/barangays/data/all');
+        const data = await response.json();
+        
+        if (data.success) {
+            allBarangays = data.data;
+            displayBarangaysPage(1);
+        }
+    } catch (error) {
+        console.error('Failed to load barangays:', error);
+    }
+}
+
+function searchCategories() {
+    const searchInput = document.getElementById('categorySearch');
+    const searchValue = searchInput.value.toLowerCase().trim();
+    
+    if (searchValue === '') {
+        filteredCategories = [...allCategories];
+    } else {
+        filteredCategories = allCategories.filter(category => {
+            const name = category.category_name.toLowerCase();
+            return name.includes(searchValue);
+        });
+    }
+    
+    currentCategoryPage = 1;
+    displayCategoriesPage(1);
+}
+
+function searchBarangays() {
+    const searchInput = document.getElementById('barangaySearch');
+    const searchValue = searchInput.value.toLowerCase().trim();
+    
+    if (searchValue === '') {
+        filteredBarangays = [...allBarangays];
+    } else {
+        filteredBarangays = allBarangays.filter(barangay => {
+            const name = barangay.barangay_name.toLowerCase();
+            return name.includes(searchValue);
+        });
+    }
+    
+    currentBarangayPage = 1;
+    displayBarangaysPage(1);
+}
+
+function displayCategoriesPage(pageNum) {
+    const tabContent = document.getElementById('categories-content');
     if (!tabContent) return;
     
-    const rows = tabContent.querySelectorAll('tbody tr');
-    let visibleCount = 0;
+    const tbody = tabContent.querySelector('tbody');
+    if (!tbody) return;
     
-    rows.forEach(row => {
-        if (row.querySelector('.empty-state')) {
-            return;
-        }
-        
-        const text = row.textContent.toLowerCase();
-        const matchesSearch = text.includes(searchValue);
-        
-        if (matchesSearch) {
-            row.style.display = '';
-            visibleCount++;
-            
-            // Highlight matching text
-            if (searchValue) {
-                row.querySelectorAll('td').forEach(cell => {
-                    if (!cell.querySelector('.action-buttons-modern')) {
-                        const originalText = cell.textContent;
-                        const regex = new RegExp(`(${searchValue})`, 'gi');
-                        if (regex.test(originalText)) {
-                            cell.innerHTML = originalText.replace(regex, '<mark>$1</mark>');
-                        }
-                    }
-                });
-            }
+    // Use filteredCategories if search is active, otherwise use allCategories
+    const items = filteredCategories.length > 0 || document.getElementById('categorySearch').value ? filteredCategories : allCategories;
+    
+    if (items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <h3>No categories found</h3>
+                        <p>Get started by creating your first category</p>
+                        <button class="btn btn-primary" onclick="openAddCategoryModal()">
+                            <i class="fas fa-plus"></i>
+                            Add Category
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    const startIndex = (pageNum - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedItems = items.slice(startIndex, endIndex);
+    
+    tbody.innerHTML = paginatedItems.map(category => `
+        <tr>
+            <td style="font-weight: 500;">${escapeHtml(category.category_name)}</td>
+            <td>
+                <span class="status-badge primary">
+                    <i class="fas fa-box"></i>
+                    ${category.items_count} items
+                </span>
+            </td>
+            <td>
+                <div class="action-buttons-modern">
+                    <button class="action-btn edit" 
+                            onclick="openEditCategoryModal(${category.category_id})"
+                            title="Edit Category">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete" 
+                            onclick="confirmDeleteCategory(${category.category_id}, '${escapeHtml(category.category_name, true)}')"
+                            title="${category.items_count > 0 ? `Cannot delete - ${category.items_count} items associated` : 'Delete Category'}"
+                            ${category.items_count > 0 ? 'disabled' : ''}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    updateCategoryPagination(items.length, pageNum);
+}
+
+function displayBarangaysPage(pageNum) {
+    const tabContent = document.getElementById('barangays-content');
+    if (!tabContent) return;
+    
+    const tbody = tabContent.querySelector('tbody');
+    if (!tbody) return;
+    
+    // Use filteredBarangays if search is active, otherwise use allBarangays
+    const items = filteredBarangays.length > 0 || document.getElementById('barangaySearch').value ? filteredBarangays : allBarangays;
+    
+    if (items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h3>No barangays found</h3>
+                        <p>Get started by adding your first barangay</p>
+                        <button class="btn btn-primary" onclick="openAddBarangayModal()">
+                            <i class="fas fa-plus"></i>
+                            Add Barangay
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    const startIndex = (pageNum - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedItems = items.slice(startIndex, endIndex);
+    
+    tbody.innerHTML = paginatedItems.map(barangay => `
+        <tr>
+            <td style="font-weight: 500;">${escapeHtml(barangay.barangay_name)}</td>
+            <td>
+                <span class="status-badge success">
+                    <i class="fas fa-user-injured"></i>
+                    ${barangay.patients_count} patients
+                </span>
+            </td>
+            <td>
+                <div class="action-buttons-modern">
+                    <button class="action-btn edit" 
+                            onclick="openEditBarangayModal(${barangay.barangay_id})"
+                            title="Edit Barangay">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete" 
+                            onclick="confirmDeleteBarangay(${barangay.barangay_id}, '${escapeHtml(barangay.barangay_name, true)}')"
+                            title="${barangay.patients_count > 0 ? `Cannot delete - ${barangay.patients_count} patients associated` : 'Delete Barangay'}"
+                            ${barangay.patients_count > 0 ? 'disabled' : ''}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    updateBarangayPagination(items.length, pageNum);
+}
+
+function updateCategoryPagination(totalItems, currentPage) {
+    const tabContent = document.getElementById('categories-content');
+    if (!tabContent) return;
+    
+    let paginationFooter = tabContent.querySelector('.pagination-footer-modern');
+    if (!paginationFooter) {
+        paginationFooter = document.createElement('div');
+        paginationFooter.className = 'pagination-footer-modern';
+        tabContent.appendChild(paginationFooter);
+    }
+    
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    
+    let html = `
+        <div class="pagination-info-modern">
+            Showing ${startItem} to ${endItem} of ${totalItems} categories
+        </div>
+        <div class="pagination-controls-modern">
+    `;
+    
+    if (currentPage === 1) {
+        html += '<button class="pagination-btn" disabled><i class="fas fa-chevron-left"></i></button>';
+    } else {
+        html += `<button class="pagination-btn" onclick="currentCategoryPage=${currentPage - 1}; displayCategoriesPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    }
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            html += `<button class="pagination-btn active">${i}</button>`;
         } else {
-            row.style.display = 'none';
+            html += `<button class="pagination-btn" onclick="currentCategoryPage=${i}; displayCategoriesPage(${i})">${i}</button>`;
         }
-    });
+    }
+    
+    if (currentPage === totalPages) {
+        html += '<button class="pagination-btn" disabled><i class="fas fa-chevron-right"></i></button>';
+    } else {
+        html += `<button class="pagination-btn" onclick="currentCategoryPage=${currentPage + 1}; displayCategoriesPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    }
+    
+    html += '</div>';
+    paginationFooter.innerHTML = html;
+}
+
+function updateBarangayPagination(totalItems, currentPage) {
+    const tabContent = document.getElementById('barangays-content');
+    if (!tabContent) return;
+    
+    let paginationFooter = tabContent.querySelector('.pagination-footer-modern');
+    if (!paginationFooter) {
+        paginationFooter = document.createElement('div');
+        paginationFooter.className = 'pagination-footer-modern';
+        tabContent.appendChild(paginationFooter);
+    }
+    
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    
+    let html = `
+        <div class="pagination-info-modern">
+            Showing ${startItem} to ${endItem} of ${totalItems} barangays
+        </div>
+        <div class="pagination-controls-modern">
+    `;
+    
+    if (currentPage === 1) {
+        html += '<button class="pagination-btn" disabled><i class="fas fa-chevron-left"></i></button>';
+    } else {
+        html += `<button class="pagination-btn" onclick="currentBarangayPage=${currentPage - 1}; displayBarangaysPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    }
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            html += `<button class="pagination-btn active">${i}</button>`;
+        } else {
+            html += `<button class="pagination-btn" onclick="currentBarangayPage=${i}; displayBarangaysPage(${i})">${i}</button>`;
+        }
+    }
+    
+    if (currentPage === totalPages) {
+        html += '<button class="pagination-btn" disabled><i class="fas fa-chevron-right"></i></button>';
+    } else {
+        html += `<button class="pagination-btn" onclick="currentBarangayPage=${currentPage + 1}; displayBarangaysPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    }
+    
+    html += '</div>';
+    paginationFooter.innerHTML = html;
+}
+
+function searchTable(tableType) {
+    // Legacy function - redirect to new search methods
+    if (tableType === 'categories') {
+        searchCategories();
+    } else if (tableType === 'barangays') {
+        searchBarangays();
+    }
 }
 
 // ============================================

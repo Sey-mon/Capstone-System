@@ -208,12 +208,14 @@ Route::middleware(['auth', 'account.verified', 'role:Admin', 'prevent.back'])->p
     Route::get('/api-status', [ApiController::class, 'apiStatus'])->name('api.status');
     
     // Category CRUD routes
+    Route::get('/categories/data/all', [AdminController::class, 'getAllCategories'])->name('categories.all');
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
     Route::get('/categories/{id}', [AdminController::class, 'getCategory'])->name('categories.get');
     Route::put('/categories/{id}', [AdminController::class, 'updateCategory'])->name('categories.update');
     Route::delete('/categories/{id}', [AdminController::class, 'deleteCategory'])->name('categories.delete');
     
     // Barangay CRUD routes
+    Route::get('/barangays/data/all', [AdminController::class, 'getAllBarangays'])->name('barangays.all');
     Route::post('/barangays', [AdminController::class, 'storeBarangay'])->name('barangays.store');
     Route::get('/barangays/{id}', [AdminController::class, 'getBarangay'])->name('barangays.get');
     Route::put('/barangays/{id}', [AdminController::class, 'updateBarangay'])->name('barangays.update');

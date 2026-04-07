@@ -171,6 +171,7 @@ function openCreateModal() {
                             </div>
                         </div>
                         <textarea id="swal-foodName" class="modern-input modern-textarea" rows="4" placeholder="E.g., Fresh Atlantic Salmon - Rich in omega-3 fatty acids..."></textarea>
+                        <div id="swal-duplicate-check" style="margin-top: 8px; font-size: 13px;"></div>
                     </div>
                 </div>
 
@@ -266,6 +267,45 @@ function openCreateModal() {
                 input.addEventListener('blur', function() {
                     this.parentElement.classList.remove('input-focused');
                 });
+            });
+
+            // Add real-time duplicate checking
+            const nameInput = document.getElementById('swal-foodName');
+            let checkTimeout;
+            
+            nameInput.addEventListener('input', function() {
+                clearTimeout(checkTimeout);
+                const value = this.value.trim();
+                const checkDiv = document.getElementById('swal-duplicate-check');
+                
+                if (value.length < 3) {
+                    checkDiv.innerHTML = '';
+                    return;
+                }
+                
+                checkDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking for duplicates...';
+                
+                checkTimeout = setTimeout(() => {
+                    fetch('/admin/foods/check-duplicate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ name: value })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            checkDiv.innerHTML = `<span style="color: #f59e0b;"><i class="fas fa-exclamation-triangle"></i> ${data.message}</span>`;
+                        } else {
+                            checkDiv.innerHTML = `<span style="color: #10b981;"><i class="fas fa-check-circle"></i> ${data.message}</span>`;
+                        }
+                    })
+                    .catch(() => {
+                        checkDiv.innerHTML = '';
+                    });
+                }, 800);
             });
         }
     }).then((result) => {

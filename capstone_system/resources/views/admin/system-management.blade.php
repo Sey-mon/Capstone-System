@@ -331,7 +331,7 @@
                                     <p>Get started by creating your first category</p>
                                     <button class="btn btn-primary" onclick="openAddCategoryModal()">
                                         <i class="fas fa-plus"></i>
-                                        Add Your First Category
+                                        Add Category
                                     </button>
                                 </div>
                             </td>
@@ -458,7 +458,7 @@
                                     <p>Get started by adding your first barangay</p>
                                     <button class="btn btn-primary" onclick="openAddBarangayModal()">
                                         <i class="fas fa-plus"></i>
-                                        Add Your First Barangay
+                                        Add Barangay
                                     </button>
                                 </div>
                             </td>

@@ -4488,4 +4488,68 @@ class AdminController extends Controller
         
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Get all categories as JSON for client-side filtering
+     */
+    public function getAllCategories()
+    {
+        try {
+            $categories = ItemCategory::withCount('inventoryItems')
+                ->orderBy('category_id', 'desc')
+                ->get();
+            
+            // Format categories for frontend
+            $formattedCategories = $categories->map(function($category) {
+                return [
+                    'category_id' => $category->category_id,
+                    'category_name' => $category->category_name,
+                    'items_count' => $category->inventory_items_count ?? 0
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $formattedCategories,
+                'total' => count($formattedCategories)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch categories'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all barangays as JSON for client-side filtering
+     */
+    public function getAllBarangays()
+    {
+        try {
+            $barangays = Barangay::withCount('patients')
+                ->orderBy('barangay_id', 'desc')
+                ->get();
+            
+            // Format barangays for frontend
+            $formattedBarangays = $barangays->map(function($barangay) {
+                return [
+                    'barangay_id' => $barangay->barangay_id,
+                    'barangay_name' => $barangay->barangay_name,
+                    'patients_count' => $barangay->patients_count ?? 0
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $formattedBarangays,
+                'total' => count($formattedBarangays)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch barangays'
+            ], 500);
+        }
+    }
 }
