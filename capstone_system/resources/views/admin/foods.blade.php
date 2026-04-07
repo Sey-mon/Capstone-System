@@ -107,9 +107,6 @@
         <button class="btn btn-primary" onclick="openCreateModal()">
             <i class="fas fa-plus"></i> Add Food
         </button>
-        <button class="btn btn-success" onclick="openQuickAddModal()" title="Quick add with less fields">
-            <i class="fas fa-bolt"></i> Quick Add
-        </button>
     </div>
 
     <!-- Bulk Actions Bar (Hidden by default) -->

@@ -10,7 +10,6 @@
  * - Auto-dismissible alerts
  * - Loading states and animations
  * - Bulk selection and batch operations
- * - Quick add modal with duplicate checking
  * - View food details
  * - Enhanced delete confirmation
  */
@@ -269,17 +268,47 @@ function openCreateModal() {
                 });
             });
 
-            // Add real-time duplicate checking
+            // Track duplicate status
+            let hasDuplicate = false;
+
+            // Add auto-capitalize helper function
+            const autoCapitalize = (element) => {
+                element.addEventListener('input', function() {
+                    const value = this.value;
+                    const capitalized = value.replace(/\b\w/g, char => char.toUpperCase());
+                    if (value !== capitalized) {
+                        this.value = capitalized;
+                    }
+                });
+            };
+
+            // Add auto-capitalize to alternate names and nutrition tags
+            const alternateNamesInput = document.getElementById('swal-alternateNames');
+            const nutritionTagsInput = document.getElementById('swal-nutritionTags');
+            if (alternateNamesInput) autoCapitalize(alternateNamesInput);
+            if (nutritionTagsInput) autoCapitalize(nutritionTagsInput);
+
+            // Add real-time duplicate checking and auto-capitalize
             const nameInput = document.getElementById('swal-foodName');
             let checkTimeout;
             
             nameInput.addEventListener('input', function() {
-                clearTimeout(checkTimeout);
-                const value = this.value.trim();
-                const checkDiv = document.getElementById('swal-duplicate-check');
+                // Auto-capitalize: first letter of each word
+                const value = this.value;
+                const capitalized = value.replace(/\b\w/g, char => char.toUpperCase());
+                if (value !== capitalized) {
+                    this.value = capitalized;
+                }
                 
-                if (value.length < 3) {
+                clearTimeout(checkTimeout);
+                const trimmedValue = this.value.trim();
+                const checkDiv = document.getElementById('swal-duplicate-check');
+                const confirmBtn = document.querySelector('.swal2-confirm');
+                
+                if (trimmedValue.length < 3) {
                     checkDiv.innerHTML = '';
+                    hasDuplicate = false;
+                    if (confirmBtn) confirmBtn.disabled = false;
                     return;
                 }
                 
@@ -292,18 +321,38 @@ function openCreateModal() {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                         },
-                        body: JSON.stringify({ name: value })
+                        body: JSON.stringify({ name: trimmedValue })
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.exists) {
                             checkDiv.innerHTML = `<span style="color: #f59e0b;"><i class="fas fa-exclamation-triangle"></i> ${data.message}</span>`;
+                            hasDuplicate = true;
+                            if (confirmBtn) {
+                                confirmBtn.disabled = true;
+                                confirmBtn.style.opacity = '0.5';
+                                confirmBtn.style.cursor = 'not-allowed';
+                                confirmBtn.title = 'This food already exists. Please use a different name.';
+                            }
                         } else {
                             checkDiv.innerHTML = `<span style="color: #10b981;"><i class="fas fa-check-circle"></i> ${data.message}</span>`;
+                            hasDuplicate = false;
+                            if (confirmBtn) {
+                                confirmBtn.disabled = false;
+                                confirmBtn.style.opacity = '1';
+                                confirmBtn.style.cursor = 'pointer';
+                                confirmBtn.title = '';
+                            }
                         }
                     })
                     .catch(() => {
                         checkDiv.innerHTML = '';
+                        hasDuplicate = false;
+                        if (confirmBtn) {
+                            confirmBtn.disabled = false;
+                            confirmBtn.style.opacity = '1';
+                            confirmBtn.style.cursor = 'pointer';
+                        }
                     });
                 }, 800);
             });
@@ -463,6 +512,26 @@ function editFood(id) {
                         this.parentElement.classList.remove('input-focused');
                     });
                 });
+
+                // Add auto-capitalize helper function
+                const autoCapitalize = (element) => {
+                    element.addEventListener('input', function() {
+                        const value = this.value;
+                        const capitalized = value.replace(/\b\w/g, char => char.toUpperCase());
+                        if (value !== capitalized) {
+                            this.value = capitalized;
+                        }
+                    });
+                };
+
+                // Add auto-capitalize to all relevant fields
+                const nameInput = document.getElementById('swal-foodName');
+                const alternateNamesInput = document.getElementById('swal-alternateNames');
+                const nutritionTagsInput = document.getElementById('swal-nutritionTags');
+                
+                if (nameInput) autoCapitalize(nameInput);
+                if (alternateNamesInput) autoCapitalize(alternateNamesInput);
+                if (nutritionTagsInput) autoCapitalize(nutritionTagsInput);
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -542,157 +611,6 @@ function submitFoodForm(method, url, data) {
     });
 }
 
-// ========== QUICK ADD MODAL ==========
-function openQuickAddModal() {
-    Swal.fire({
-        title: '<i class="fas fa-bolt"></i> Quick Add Food',
-        html: `
-            <div class="modern-form-container">
-                <div class="alert alert-info" style="margin-bottom: 20px; text-align: left;">
-                    <i class="fas fa-info-circle"></i> Quick add requires only essential fields. You can edit later for complete details.
-                </div>
-                
-                <div class="modern-form-group">
-                    <label class="modern-label">Food Name & Description <span class="required-badge">*</span></label>
-                    <textarea id="quick-foodName" class="modern-input modern-textarea" rows="3" placeholder="Enter food name and brief description..."></textarea>
-                    <div id="quick-duplicate-check" style="margin-top: 8px; font-size: 13px;"></div>
-                </div>
-
-                <div class="modern-form-group">
-                    <label class="modern-label">Energy (kcal) <span class="required-badge">*</span></label>
-                    <input id="quick-energyKcal" type="number" step="0.1" class="modern-input" placeholder="0.0">
-                </div>
-
-                <div class="modern-form-group">
-                    <label class="modern-label">Alternate Names <span style="color: #9ca3af;">(Optional)</span></label>
-                    <input id="quick-alternateNames" class="modern-input" placeholder="Separate with commas">
-                </div>
-
-                <div class="modern-form-group">
-                    <label class="modern-label">Tags <span style="color: #9ca3af;">(Optional)</span></label>
-                    <input id="quick-nutritionTags" class="modern-input" placeholder="protein, vitamins, etc.">
-                </div>
-            </div>
-        `,
-        width: '600px',
-        showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-bolt"></i> Quick Add',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#10b981',
-        didOpen: () => {
-            // Add real-time duplicate checking
-            const nameInput = document.getElementById('quick-foodName');
-            let checkTimeout;
-            
-            nameInput.addEventListener('input', function() {
-                clearTimeout(checkTimeout);
-                const value = this.value.trim();
-                const checkDiv = document.getElementById('quick-duplicate-check');
-                
-                if (value.length < 3) {
-                    checkDiv.innerHTML = '';
-                    return;
-                }
-                
-                checkDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking for duplicates...';
-                
-                checkTimeout = setTimeout(() => {
-                    fetch('/admin/foods/check-duplicate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({ name: value })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.exists) {
-                            checkDiv.innerHTML = `<span style="color: #f59e0b;"><i class="fas fa-exclamation-triangle"></i> ${data.message}</span>`;
-                        } else {
-                            checkDiv.innerHTML = `<span style="color: #10b981;"><i class="fas fa-check-circle"></i> ${data.message}</span>`;
-                        }
-                    })
-                    .catch(() => {
-                        checkDiv.innerHTML = '';
-                    });
-                }, 800);
-            });
-        },
-        preConfirm: () => {
-            const foodName = document.getElementById('quick-foodName').value.trim();
-            const energyKcal = document.getElementById('quick-energyKcal').value;
-            const alternateNames = document.getElementById('quick-alternateNames').value.trim();
-            const nutritionTags = document.getElementById('quick-nutritionTags').value.trim();
-            
-            if (!foodName) {
-                Swal.showValidationMessage('Please enter food name');
-                return false;
-            }
-            if (!energyKcal || energyKcal < 0) {
-                Swal.showValidationMessage('Please enter valid energy (kcal)');
-                return false;
-            }
-            
-            return { foodName, energyKcal, alternateNames, nutritionTags };
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const data = result.value;
-            submitQuickAdd(data);
-        }
-    });
-}
-
-function submitQuickAdd(data) {
-    Swal.fire({
-        title: 'Adding...',
-        html: 'Please wait',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
-    
-    fetch('/admin/foods/quick-add', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-            food_name_and_description: data.foodName,
-            energy_kcal: data.energyKcal,
-            alternate_common_names: data.alternateNames,
-            nutrition_tags: data.nutritionTags
-        })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return response.json();
-    })
-    .then(result => {
-        if (result.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Added!',
-                text: result.message,
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.reload();
-            });
-        } else {
-            throw new Error(result.message || 'Failed to add food');
-        }
-    })
-    .catch(error => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message
-        });
-    });
-}
 
 // ========== VIEW FOOD DETAILS ==========
 function viewFood(id) {

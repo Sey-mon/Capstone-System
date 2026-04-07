@@ -63,21 +63,34 @@ function bulkApprove() {
     }
     
     Swal.fire({
-        title: 'Approve Selected Requests?',
+        title: '<i class="fas fa-check-circle"></i> Approve Selected Requests?',
         html: `
-            <p>You are about to approve <strong>${selectedRequests.size}</strong> request(s).</p>
-            <p>These will be added to the food database.</p>
-            <div class="modern-form-group" style="margin-top: 20px;">
-                <label class="modern-label">Admin Notes (Optional)</label>
-                <textarea id="bulk-approve-notes" class="modern-input modern-textarea" rows="3" placeholder="Add notes visible to BNS..."></textarea>
+            <div style="text-align: left;">
+                <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+                    <i class="fas fa-info-circle" style="color: #10b981; margin-right: 8px;"></i>
+                    <span style="color: #047857; font-weight: 500;">You are about to approve <strong>${selectedRequests.size}</strong> request(s).</span>
+                </div>
+                <p style="color: #6b7280; margin-bottom: 20px; font-size: 14px;">These foods will be added to the database.</p>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                        <i class="fas fa-sticky-note" style="color: #6b7280; margin-right: 6px;"></i>
+                        Admin Notes (Optional)
+                    </label>
+                    <textarea id="bulk-approve-notes" class="modern-input modern-textarea" rows="3" placeholder="Add notes visible to BNS..." style="font-size: 14px;"></textarea>
+                </div>
             </div>
         `,
+        width: '600px',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#10b981',
         cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, Approve All',
+        confirmButtonText: '<i class="fas fa-check"></i> Yes, Approve All',
         cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'modern-modal-popup',
+            htmlContainer: 'modern-modal-body'
+        },
         preConfirm: () => {
             return {
                 notes: document.getElementById('bulk-approve-notes').value.trim()
@@ -145,25 +158,41 @@ function bulkReject() {
     }
     
     Swal.fire({
-        title: 'Reject Selected Requests?',
+        title: '<i class="fas fa-times-circle"></i> Reject Selected Requests?',
         html: `
-            <p>You are about to reject <strong>${selectedRequests.size}</strong> request(s).</p>
-            <div class="modern-form-group" style="margin-top: 20px;">
-                <label class="modern-label">Reason for Rejection <span class="required-badge">*</span></label>
-                <textarea id="bulk-reject-notes" class="modern-input modern-textarea" rows="4" placeholder="Explain why these requests are being rejected..." required></textarea>
-                <small class="input-hint">This will be visible to the BNS</small>
+            <div style="text-align: left;">
+                <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+                    <i class="fas fa-alert-circle" style="color: #dc2626; margin-right: 8px;"></i>
+                    <span style="color: #991b1b; font-weight: 500;">You are about to reject <strong>${selectedRequests.size}</strong> request(s).</span>
+                </div>
+                <p style="color: #6b7280; margin-bottom: 20px; font-size: 14px;">The BNS will receive these rejection reasons and can resubmit with improvements.</p>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                        <i class="fas fa-pencil-alt" style="color: #dc2626; margin-right: 6px;"></i>
+                        Reason for Rejection <span style="color: #ef4444;">*</span>
+                    </label>
+                    <textarea id="bulk-reject-notes" class="modern-input modern-textarea" rows="4" placeholder="Explain why these requests are being rejected..." style="font-size: 14px; border-color: #fee2e2;" required></textarea>
+                    <small style="display: block; margin-top: 6px; color: #6b7280; font-size: 12px;">
+                        <i class="fas fa-eye" style="margin-right: 4px;"></i>This will be visible to the BNS.
+                    </small>
+                </div>
             </div>
         `,
+        width: '600px',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, Reject All',
+        confirmButtonText: '<i class="fas fa-times"></i> Yes, Reject All',
         cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'modern-modal-popup',
+            htmlContainer: 'modern-modal-body'
+        },
         preConfirm: () => {
             const notes = document.getElementById('bulk-reject-notes').value.trim();
             if (!notes) {
-                Swal.showValidationMessage('Please provide a reason for rejection');
+                Swal.showValidationMessage('<i class="fas fa-exclamation-circle"></i> Please provide a reason');
                 return false;
             }
             return { notes };
@@ -225,18 +254,34 @@ function performBulkReject(notes) {
 // ========== SINGLE APPROVE ==========
 function approveRequest(id) {
     Swal.fire({
-        title: 'Approve Request?',
+        title: '<i class="fas fa-check-circle"></i> Approve Request?',
         html: `
-            <p>This will add the food to the database.</p>
-            <div class="modern-form-group" style="margin-top: 20px;">
-                <label class="modern-label">Admin Notes (Optional)</label>
-                <textarea id="approve-notes" class="modern-input modern-textarea" rows="3" placeholder="Add notes..."></textarea>
+            <div style="text-align: left;">
+                <p style="color: #374151; margin-bottom: 20px; font-weight: 500;">This will add the food to the database.</p>
+                <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+                    <i class="fas fa-info-circle" style="color: #10b981; margin-right: 8px;"></i>
+                    <span style="color: #047857; font-size: 13px;">The food item will be added to the food database and available for nutritionists to use.</span>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                        <i class="fas fa-sticky-note" style="color: #6b7280; margin-right: 6px;"></i>
+                        Admin Notes (Optional)
+                    </label>
+                    <textarea id="approve-notes" class="modern-input modern-textarea" rows="3" placeholder="Add any notes for the BNS (optional)..." style="font-size: 14px;"></textarea>
+                </div>
             </div>
         `,
+        width: '600px',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#10b981',
-        confirmButtonText: 'Yes, Approve',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-check"></i> Yes, Approve',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'modern-modal-popup',
+            htmlContainer: 'modern-modal-body'
+        },
         preConfirm: () => {
             return {
                 notes: document.getElementById('approve-notes').value.trim()
@@ -296,22 +341,41 @@ function performApprove(id, notes) {
 // ========== SINGLE REJECT ==========
 function rejectRequest(id) {
     Swal.fire({
-        title: 'Reject Request?',
+        title: '<i class="fas fa-times-circle"></i> Reject Request?',
         html: `
-            <div class="modern-form-group">
-                <label class="modern-label">Reason for Rejection <span class="required-badge">*</span></label>
-                <textarea id="reject-notes" class="modern-input modern-textarea" rows="4" placeholder="Explain why this request is being rejected..." required></textarea>
-                <small class="input-hint">This will be visible to the BNS</small>
+            <div style="text-align: left;">
+                <p style="color: #374151; margin-bottom: 20px; font-weight: 500;">Please provide a reason for the rejection.</p>
+                <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+                    <i class="fas fa-alert-circle" style="color: #dc2626; margin-right: 8px;"></i>
+                    <span style="color: #991b1b; font-size: 13px;">The BNS will receive this rejection reason and can resubmit with improvements.</span>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                        <i class="fas fa-pencil-alt" style="color: #dc2626; margin-right: 6px;"></i>
+                        Reason for Rejection <span style="color: #ef4444;">*</span>
+                    </label>
+                    <textarea id="reject-notes" class="modern-input modern-textarea" rows="4" placeholder="Explain clearly why this request is being rejected..." style="font-size: 14px; border-color: #fee2e2;" required></textarea>
+                    <small style="display: block; margin-top: 6px; color: #6b7280; font-size: 12px;">
+                        <i class="fas fa-eye" style="margin-right: 4px;"></i>This will be visible to the BNS.
+                    </small>
+                </div>
             </div>
         `,
+        width: '600px',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
-        confirmButtonText: 'Yes, Reject',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-times"></i> Yes, Reject',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'modern-modal-popup',
+            htmlContainer: 'modern-modal-body'
+        },
         preConfirm: () => {
             const notes = document.getElementById('reject-notes').value.trim();
             if (!notes) {
-                Swal.showValidationMessage('Please provide a reason');
+                Swal.showValidationMessage('<i class="fas fa-exclamation-circle"></i> Please provide a reason');
                 return false;
             }
             return { notes };
