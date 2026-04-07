@@ -1,6 +1,13 @@
 /**
  * Admin Inventory JavaScript with SweetAlert2
  * Handles inventory management functionality using AJAX
+ * 
+ * AJAX Filtering Features:
+ * - Loads ALL inventory items via /admin/inventory/data/all endpoint
+ * - Client-side filtering and pagination (not per-page like Laravel pagination)
+ * - Search filters work across ALL items, not just current page
+ * - Debounced search for better performance (300ms delay)
+ * - Filter state tracked with hasActiveFilters variable
  */
 
 let currentItemId = null;
@@ -17,6 +24,8 @@ let allInventoryItems = []; // Store all items from database
 let filteredItems = []; // Store filtered results
 let currentFilteredPage = 1;
 let itemsPerPage = 10;
+let searchDebounceTimeout = null;
+let hasActiveFilters = false; // Track if any filters are active
 
 // CSRF token for AJAX requests
 const csrfToken = document.querySelector('meta[name="csrf-token"]');
@@ -870,6 +879,14 @@ function setupRealTimeFilters() {
     if (searchFilter) {
         searchFilter.addEventListener('keydown', function(e) { if (e.key === 'Enter') filterTable(); });
         
+        // Add input event with debouncing for real-time search
+        searchFilter.addEventListener('input', function() {
+            clearTimeout(searchDebounceTimeout);
+            searchDebounceTimeout = setTimeout(() => {
+                filterTable();
+            }, 300); // Wait 300ms after user stops typing
+        });
+        
         searchFilter.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary-color)';
             this.style.boxShadow = '0 0 0 3px rgba(67, 160, 71, 0.1)';
@@ -903,6 +920,9 @@ function filterTable() {
     const statusValue = document.getElementById('statusFilter')?.value.toLowerCase() || '';
     const expiryFromValue = document.getElementById('expiryFromFilter')?.value || '';
     const expiryToValue = document.getElementById('expiryToFilter')?.value || '';
+    
+    // Track if any filters are active
+    hasActiveFilters = searchValue !== '' || categoryValue !== '' || statusValue !== '' || expiryFromValue !== '' || expiryToValue !== '';
     
     // Filter all items in memory (not just DOM rows)
     filteredItems = allInventoryItems.filter(item => {
@@ -1107,6 +1127,9 @@ function displayFilteredPage() {
     
     // Re-attach event listeners to new rows
     attachRowEventListeners();
+    
+    // Re-setup filters in case new filter controls were added
+    setupRealTimeFilters();
     
     // Update pagination controls
     updatePagination(filteredItems.length, Math.ceil(filteredItems.length / itemsPerPage));
@@ -1364,6 +1387,9 @@ function clearFilters() {
     if (expiryFromFilter) expiryFromFilter.value = '';
     if (expiryToFilter) expiryToFilter.value = '';
     
+    // Reset filter state
+    hasActiveFilters = false;
+    
     // Reset filtered items to all items
     filteredItems = [...allInventoryItems];
     currentFilteredPage = 1;
@@ -1398,6 +1424,26 @@ function setupEventListeners() {
             updateSelectedCount();
         });
     }
+    
+    // Intercept server-side pagination links if filters are active
+    // This prevents full page reloads when filters are applied
+    const paginationLinks = document.querySelectorAll('.pagination-btn[href]');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (hasActiveFilters) {
+                e.preventDefault();
+                // Extract page number from URL if possible, otherwise stay on current page
+                const href = this.getAttribute('href');
+                if (href && href.includes('page=')) {
+                    const pageMatch = href.match(/page=(\d+)/);
+                    if (pageMatch) {
+                        currentFilteredPage = parseInt(pageMatch[1]);
+                        displayFilteredPage();
+                    }
+                }
+            }
+        });
+    });
     
     // Bulk delete button
     const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
@@ -1524,9 +1570,16 @@ function bulkDeleteItems(itemIds = null) {
                 });
             };
             
-            archiveNextItem(0);
+            deleteNextItem(0);
         }
     });
+}
+
+// Helper function to re-apply filters with current filter values
+function reApplyFilters() {
+    if (hasActiveFilters) {
+        filterTable();
+    }
 }
 
 // Initialize when DOM is loaded
@@ -1535,15 +1588,25 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadData();
     
     // Load all inventory items for full-page search
-    const itemsLoaded = await loadAllInventoryItems();
-    
-    if (itemsLoaded) {
-        // Display first page
-        displayFilteredPage();
+    let itemsLoaded = false;
+    try {
+        itemsLoaded = await loadAllInventoryItems();
+    } catch (error) {
+        console.error('Failed to load inventory items:', error);
     }
     
-    // Set up real-time filtering
-    setupRealTimeFilters();
+    if (itemsLoaded && allInventoryItems && allInventoryItems.length > 0) {
+        console.log('✓ Loaded ' + allInventoryItems.length + ' items for client-side filtering');
+        // Display first page with all items
+        displayFilteredPage();
+    } else {
+        console.warn('⚠ No items loaded from AJAX, using server-rendered page');
+    }
+    
+    // Set up real-time filtering - this must be after all filter elements are in DOM
+    setTimeout(() => {
+        setupRealTimeFilters();
+    }, 100);
     
     // Setup event listeners for buttons
     setupEventListeners();
