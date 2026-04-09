@@ -796,13 +796,10 @@ function generatePDF(reportType, title, content) {
                 // Close the loading dialog
                 Swal.close();
                 // Call the dedicated individual patient PDF function
-                if (window.currentPatientIndex !== undefined) {
-                    const monthlyData = window.monthlyProgressData || { patient_progress: [] };
-                    const patients = monthlyData.patient_progress || [];
-                    const patient = patients[window.currentPatientIndex];
-                    if (patient) {
-                        generateIndividualPatientPDF(window.currentPatientIndex, patient.name);
-                    }
+                if (window.currentPatientData && typeof generateIndividualPatientPDF === 'function') {
+                    generateIndividualPatientPDF();
+                } else {
+                    alert('Patient data not available. Please try again.');
                 }
                 return; // Exit early since generateIndividualPatientPDF handles everything
             } else {
@@ -2826,7 +2823,7 @@ function generatePatientSelectionList(patients, searchTerm = '') {
         
         return `
             <div class="patient-selection-item" 
-                onclick="showIndividualPatientReport(${index})"
+                onclick="showIndividualPatientReport(${patient.id})"
                 style="padding: 1rem; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; background: white;"
                 onmouseover="this.style.background='#f0f9ff'; this.style.borderLeft='4px solid #3b82f6'"
                 onmouseout="this.style.background='white'; this.style.borderLeft='none'">
@@ -2881,14 +2878,17 @@ function filterIndividualPatients() {
 /**
  * Show detailed report for individual patient
  */
-function showIndividualPatientReport(patientIndex) {
+function showIndividualPatientReport(patientId) {
     const patients = window.currentPatientsList || [];
-    const patient = patients[patientIndex];
+    const patient = patients.find(p => p.id === patientId);
     
     if (!patient) {
         showAlert('Patient data not found', 'error');
         return;
     }
+    
+    // Store patient ID for PDF generation
+    window.currentPatientId = patientId;
     
     const title = `Individual Patient Report: ${patient.name}`;
     const loadingContent = '<div style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #2e7d32;"></i><p style="margin-top: 1rem; color: #6b7280;">Loading patient report...</p></div>';
@@ -2896,7 +2896,7 @@ function showIndividualPatientReport(patientIndex) {
     showReportModalWithContent(title, loadingContent, 'individual-patient-detail');
     
     // Fetch detailed patient report from API
-    fetch(`/admin/reports/individual-patient/${patient.id}`)
+    fetch(`/admin/reports/individual-patient/${patientId}`)
         .then(response => response.json())
         .then(result => {
             if (result.success) {
@@ -2931,8 +2931,8 @@ function generateIndividualPatientReportContent(data) {
                 </h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 1rem;">
                     <div>
-                        <span style="color: #6b7280; font-size: 0.75rem; display: block;">Date of Birth</span>
-                        <span style="color: #1e40af; font-weight: 600;">${patient.date_of_birth}</span>
+                        <span style="color: #6b7280; font-size: 0.75rem; display: block;">Age</span>
+                        <span style="color: #1e40af; font-weight: 600;">${data.summary.age_years || 'N/A'} years</span>
                     </div>
                     <div>
                         <span style="color: #6b7280; font-size: 0.75rem; display: block;">Sex</span>
@@ -2941,10 +2941,6 @@ function generateIndividualPatientReportContent(data) {
                     <div>
                         <span style="color: #6b7280; font-size: 0.75rem; display: block;">Barangay</span>
                         <span style="color: #1e40af; font-weight: 600;">${patient.barangay}</span>
-                    </div>
-                    <div>
-                        <span style="color: #6b7280; font-size: 0.75rem; display: block;">Address</span>
-                        <span style="color: #1e40af; font-weight: 600;">${patient.address}</span>
                     </div>
                 </div>
             </div>
@@ -2958,16 +2954,16 @@ function generateIndividualPatientReportContent(data) {
                 <div class="stat-item">
                     <div class="stat-label">Weight Change</div>
                     <div class="stat-value" style="color: ${summary.weight_change > 0 ? '#10b981' : summary.weight_change < 0 ? '#ef4444' : '#6b7280'}">
-                        ${summary.weight_change ? (summary.weight_change > 0 ? '+' : '') + summary.weight_change + ' kg' : 'N/A'}
+                        ${summary.weight_change !== null && summary.weight_change !== undefined ? (summary.weight_change > 0 ? '+' : '') + summary.weight_change.toFixed(1) + ' kg' : 'Only 1 assessment'}
                     </div>
-                    <div class="stat-meta">Overall trend</div>
+                    <div class="stat-meta">${summary.initial_weight || 'N/A'} → ${summary.current_weight || 'N/A'} kg</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">BMI Change</div>
-                    <div class="stat-value" style="color: ${summary.bmi_change > 0 ? '#10b981' : summary.bmi_change < 0 ? '#ef4444' : '#6b7280'}">
-                        ${summary.bmi_change ? (summary.bmi_change > 0 ? '+' : '') + summary.bmi_change : 'N/A'}
+                    <div class="stat-label">Height Change</div>
+                    <div class="stat-value" style="color: ${summary.height_change > 0 ? '#10b981' : summary.height_change < 0 ? '#ef4444' : '#6b7280'}">
+                        ${summary.height_change !== null && summary.height_change !== undefined ? (summary.height_change > 0 ? '+' : '') + summary.height_change.toFixed(1) + ' cm' : 'Only 1 assessment'}
                     </div>
-                    <div class="stat-meta">Progress indicator</div>
+                    <div class="stat-meta">${summary.initial_height || 'N/A'} → ${summary.current_height || 'N/A'} cm</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Current Status</div>
@@ -3204,73 +3200,105 @@ function applyUserActivityDateFilter() {
 /**
  * Generate PDF for individual patient
  */
-function generateIndividualPatientPDF(patientIndex, patientName) {
+function generateIndividualPatientPDF() {
+    console.log('generateIndividualPatientPDF called');
+    console.log('currentPatientData available:', !!window.currentPatientData);
+    
     // Validation check
-    if (patientIndex === undefined || patientIndex === null || patientIndex === '') {
-        showAlert('Please select a patient first before generating PDF', 'warning');
+    if (!window.currentPatientData || !window.currentPatientData.patient) {
+        console.error('Patient data not available:', window.currentPatientData);
+        alert('Patient data not available. Please select a patient and try again.');
         return;
     }
     
-    const monthlyData = window.monthlyProgressData || { patient_progress: [] };
-    const patients = monthlyData.patient_progress || [];
-    const patient = patients[patientIndex];
-    
-    if (!patient) {
-        showAlert('Patient data not found. Please select a patient from the list.', 'error');
-        return;
-    }
-    
-    // Check if jsPDF is loaded
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-        showAlert('PDF library not loaded. Please refresh the page and try again.', 'error');
-        return;
-    }
-    
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Add official header with logos
-    let yPos = addPDFHeader(doc, 'Individual Patient Report');
-    
-    // Patient Info Section
-    yPos += 5;
-    doc.setFontSize(16);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Patient: ${patient.name}`, 20, yPos);
-    yPos += 10;
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Barangay: ${patient.barangay}`, 20, yPos);
-    doc.text(`Age: ${patient.age || 'N/A'} years old`, 100, yPos);
-    yPos += 7;
-    doc.text(`First Assessment Date: ${patient.first_assessment_date}`, 20, yPos);
-    yPos += 7;
-    doc.text(`Latest Assessment Date: ${patient.last_assessment_date}`, 20, yPos);
-    yPos += 7;
-    doc.text(`Total Assessments Completed: ${patient.total_assessments}`, 20, yPos);
-    yPos += 12;
-    
-    // Progress Status Box
-    doc.setDrawColor(46, 125, 50);
-    doc.setLineWidth(0.5);
-    let statusColor = patient.progress_trend === 'improving' ? [16, 185, 129] : 
-                     patient.progress_trend === 'declining' ? [239, 68, 68] : [59, 130, 246];
-    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-    doc.rect(20, yPos, 170, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Progress Status: ${patient.progress_trend === 'improving' ? '↗ IMPROVING' : patient.progress_trend === 'declining' ? '↘ DECLINING' : '→ STABLE'}`, 105, yPos + 5.5, { align: 'center' });
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
-    yPos += 15;
-    
-    // Weight and BMI Comparison Table
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text('Nutritional Assessment Data:', 20, yPos);
-    yPos += 8;
+    try {
+        // Extract patient data from API response
+        const apiData = window.currentPatientData;
+        const firstAssessment = apiData.assessments && apiData.assessments.length > 0 ? apiData.assessments[apiData.assessments.length - 1] : null;
+        const latestAssessment = apiData.assessments && apiData.assessments.length > 0 ? apiData.assessments[0] : null;
+        
+        const patient = {
+            name: apiData.patient.name,
+            barangay: apiData.patient.barangay,
+            sex: apiData.patient.sex,
+            age_years: apiData.patient.age_years,
+            age_months: apiData.patient.age_months,
+            first_assessment_date: apiData.summary.first_assessment_date,
+            last_assessment_date: apiData.summary.latest_assessment_date,
+            total_assessments: apiData.summary.total_assessments,
+            progress_trend: apiData.summary.progress_trend,
+            initial_weight: apiData.summary.initial_weight,
+            current_weight: apiData.summary.current_weight,
+            weight_change: apiData.summary.weight_change,
+            initial_height: apiData.summary.initial_height,
+            current_height: apiData.summary.current_height,
+            height_change: apiData.summary.height_change,
+            initial_bmi: apiData.summary.initial_bmi,
+            current_bmi: apiData.summary.current_bmi,
+            bmi_change: apiData.summary.bmi_change,
+            initial_weight_for_age: apiData.summary.initial_weight_for_age,
+            current_weight_for_age: apiData.summary.current_weight_for_age,
+            weight_for_age_change: apiData.summary.weight_for_age_change,
+            initial_height_for_age: apiData.summary.initial_height_for_age,
+            current_height_for_age: apiData.summary.current_height_for_age,
+            height_for_age_change: apiData.summary.height_for_age_change,
+            initial_bmi_for_age: apiData.summary.initial_bmi_for_age,
+            current_bmi_for_age: apiData.summary.current_bmi_for_age,
+            bmi_for_age_change: apiData.summary.bmi_for_age_change,
+            recovery_status: apiData.summary.current_status,
+            current_diagnosis: apiData.summary.current_diagnosis || 'N/A'
+        };
+        
+        console.log('Patient object created:', patient);
+        
+        // Check if jsPDF is loaded
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            console.error('jsPDF not loaded');
+            alert('PDF library not loaded. Please refresh the page and try again.');
+            return;
+        }
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Add official header with logos
+        let yPos = addPDFHeader(doc, 'Individual Patient Report');
+        
+        // Patient Info Section
+        yPos += 5;
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(`Patient: ${patient.name}`, 20, yPos);
+        yPos += 10;
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Barangay: ${patient.barangay}`, 20, yPos);
+        doc.text(`Sex: ${patient.sex}`, 100, yPos);
+        yPos += 7;
+        doc.text(`Age: ${patient.age_years || 'N/A'} years (${patient.age_months || 'N/A'} months)`, 20, yPos);
+        yPos += 7;
+        doc.text(`First Assessment Date: ${patient.first_assessment_date}`, 20, yPos);
+        yPos += 7;
+        doc.text(`Latest Assessment Date: ${patient.last_assessment_date}`, 20, yPos);
+        yPos += 7;
+        doc.text(`Total Assessments Completed: ${patient.total_assessments}`, 20, yPos);
+        yPos += 12;
+        
+        // Progress Status
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text(`Diagnosis: ${patient.current_diagnosis}`, 20, yPos);
+        doc.setFont(undefined, 'normal');
+        yPos += 8;
+        yPos += 7;
+        
+        // Weight and BMI Comparison Table
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('Nutritional Assessment Data:', 20, yPos);
+        yPos += 8;
     
     doc.autoTable({
         startY: yPos,
@@ -3283,10 +3311,28 @@ function generateIndividualPatientPDF(patientIndex, patientName) {
                 (patient.weight_change != null && patient.weight_change !== '') ? (patient.weight_change > 0 ? '+' : '') + Number(patient.weight_change).toFixed(1) + ' kg' : 'N/A'
             ],
             [
-                'BMI',
-                (patient.initial_bmi != null && patient.initial_bmi !== '') ? Number(patient.initial_bmi).toFixed(2) : 'N/A',
-                (patient.current_bmi != null && patient.current_bmi !== '') ? Number(patient.current_bmi).toFixed(2) : 'N/A',
-                (patient.bmi_change != null && patient.bmi_change !== '') ? (patient.bmi_change > 0 ? '+' : '') + Number(patient.bmi_change).toFixed(2) : 'N/A'
+                'Height (cm)',
+                (patient.initial_height != null && patient.initial_height !== '') ? Number(patient.initial_height).toFixed(2) : 'N/A',
+                (patient.current_height != null && patient.current_height !== '') ? Number(patient.current_height).toFixed(2) : 'N/A',
+                (patient.height_change != null && patient.height_change !== '') ? (patient.height_change > 0 ? '+' : '') + Number(patient.height_change).toFixed(2) + ' cm' : 'N/A'
+            ],
+            [
+                'Weight for Age (Z-score)',
+                (patient.initial_weight_for_age != null) ? Number(patient.initial_weight_for_age).toFixed(2) : 'N/A',
+                (patient.current_weight_for_age != null) ? Number(patient.current_weight_for_age).toFixed(2) : 'N/A',
+                (patient.weight_for_age_change != null) ? (patient.weight_for_age_change >= 0 ? '+' : '') + Number(patient.weight_for_age_change).toFixed(2) : 'N/A'
+            ],
+            [
+                'Height for Age (Z-score)',
+                (patient.initial_height_for_age != null) ? Number(patient.initial_height_for_age).toFixed(2) : 'N/A',
+                (patient.current_height_for_age != null) ? Number(patient.current_height_for_age).toFixed(2) : 'N/A',
+                (patient.height_for_age_change != null) ? (patient.height_for_age_change >= 0 ? '+' : '') + Number(patient.height_for_age_change).toFixed(2) : 'N/A'
+            ],
+            [
+                'BMI for Age (Z-score)',
+                (patient.initial_bmi_for_age != null) ? Number(patient.initial_bmi_for_age).toFixed(2) : 'N/A',
+                (patient.current_bmi_for_age != null) ? Number(patient.current_bmi_for_age).toFixed(2) : 'N/A',
+                (patient.bmi_for_age_change != null) ? (patient.bmi_for_age_change >= 0 ? '+' : '') + Number(patient.bmi_for_age_change).toFixed(2) : 'N/A'
             ],
             [
                 'Recovery Status',
@@ -3324,71 +3370,6 @@ function generateIndividualPatientPDF(patientIndex, patientName) {
     
     yPos = doc.lastAutoTable.finalY + 15;
     
-    // Progress Interpretation
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text('Progress Interpretation:', 20, yPos);
-    yPos += 8;
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    let interpretation = '';
-    
-    // Safe number formatting helper
-    const formatWeight = (val) => (val != null && val !== '') ? Math.abs(Number(val)).toFixed(1) : '0';
-    const formatBMI = (val) => (val != null && val !== '') ? Number(val).toFixed(2) : '0';
-    
-    if (patient.progress_trend === 'improving') {
-        interpretation = `The patient shows positive nutritional progress. Weight has ${patient.weight_change > 0 ? 'increased by ' + formatWeight(patient.weight_change) + ' kg' : 'remained stable'} and BMI has ${patient.bmi_change > 0 ? 'improved by ' + formatBMI(patient.bmi_change) + ' points' : 'shown positive trends'}. This indicates the current intervention plan is effective.`;
-    } else if (patient.progress_trend === 'declining') {
-        interpretation = `The patient's nutritional status shows concerning trends. Weight has ${patient.weight_change < 0 ? 'decreased by ' + formatWeight(patient.weight_change) + ' kg' : 'not improved as expected'} and BMI has ${patient.bmi_change < 0 ? 'declined by ' + formatBMI(Math.abs(patient.bmi_change)) + ' points' : 'not shown improvement'}. Immediate review of the intervention plan is recommended.`;
-    } else {
-        interpretation = `The patient maintains a stable nutritional condition with minimal changes in weight and BMI measurements. Continue monitoring and maintain the current care plan while watching for any changes in status.`;
-    }
-    
-    const interpretationLines = doc.splitTextToSize(interpretation, 170);
-    doc.text(interpretationLines, 20, yPos);
-    yPos += (interpretationLines.length * 5) + 10;
-    
-    // Clinical Recommendations
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text('Clinical Recommendations:', 20, yPos);
-    yPos += 8;
-    
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'normal');
-    
-    if (patient.progress_trend === 'improving') {
-        doc.text('✓ Continue current intervention plan and nutritional supplementation', 25, yPos);
-        yPos += 6;
-        doc.text('✓ Maintain regular follow-up assessments every 2-4 weeks', 25, yPos);
-        yPos += 6;
-        doc.text('✓ Continue nutritional counseling with family members', 25, yPos);
-        yPos += 6;
-        doc.text('✓ Monitor for sustained improvement and adjust plan as needed', 25, yPos);
-    } else if (patient.progress_trend === 'declining') {
-        doc.text('⚠ URGENT: Review and modify current intervention plan immediately', 25, yPos);
-        yPos += 6;
-        doc.text('⚠ Consider medical referral for comprehensive health assessment', 25, yPos);
-        yPos += 6;
-        doc.text('⚠ Increase frequency of monitoring to weekly assessments', 25, yPos);
-        yPos += 6;
-        doc.text('⚠ Provide additional food supplementation and family support', 25, yPos);
-        yPos += 6;
-        doc.text('⚠ Conduct home visit to assess environmental and social factors', 25, yPos);
-    } else {
-        doc.text('• Continue current monitoring schedule and intervention plan', 25, yPos);
-        yPos += 6;
-        doc.text('• Maintain regular assessments every 4 weeks', 25, yPos);
-        yPos += 6;
-        doc.text('• Watch for any changes in status or new symptoms', 25, yPos);
-        yPos += 6;
-        doc.text('• Continue nutritional education and family counseling', 25, yPos);
-    }
-    
-    yPos += 12;
-    
     // Add footer note
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
@@ -3396,9 +3377,20 @@ function generateIndividualPatientPDF(patientIndex, patientName) {
     doc.text(`by City Health Office Nutrition Program`, 20, yPos + 4);
     
     // Save PDF
-    doc.save(`Patient_Report_${patient.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
-    
-    showAlert(`PDF report generated for ${patient.name}`, 'success');
+    try {
+        const fileName = `Patient_Report_${patient.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+        console.log('Saving PDF as:', fileName);
+        doc.save(fileName);
+        console.log('PDF saved successfully');
+        alert(`✓ PDF report generated for ${patient.name}`);
+    } catch (error) {
+        console.error('Error saving PDF:', error);
+        alert('Error saving PDF: ' + error.message);
+    }
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Error generating PDF: ' + error.message);
+    }
 }
 
 

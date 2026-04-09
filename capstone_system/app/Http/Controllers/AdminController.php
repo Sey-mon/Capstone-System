@@ -2093,6 +2093,20 @@ class AdminController extends Controller
             ->get()
             ->map(function($patient) {
                 $latestAssessment = $patient->assessments()->latest()->first();
+                $firstAssessment = $patient->assessments()->oldest()->first();
+                
+                // Calculate progress trend
+                $bmiChange = null;
+                if ($firstAssessment && $latestAssessment && $patient->assessments->count() > 1) {
+                    if ($latestAssessment->weight_kg && $latestAssessment->height_cm && $firstAssessment->weight_kg && $firstAssessment->height_cm) {
+                        $latestBmi = $latestAssessment->weight_kg / pow($latestAssessment->height_cm / 100, 2);
+                        $firstBmi = $firstAssessment->weight_kg / pow($firstAssessment->height_cm / 100, 2);
+                        $bmiChange = $latestBmi - $firstBmi;
+                    }
+                }
+                
+                $progressTrend = $bmiChange > 0 ? 'improving' : ($bmiChange < 0 ? 'declining' : 'stable');
+                
                 return [
                     'id' => $patient->patient_id,
                     'custom_id' => $patient->custom_patient_id,
@@ -2100,7 +2114,9 @@ class AdminController extends Controller
                     'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown',
                     'age' => $patient->birthdate ? $patient->birthdate->age : ($patient->age_months ? intval($patient->age_months / 12) : null),
                     'total_assessments' => $patient->assessments->count(),
-                    'last_assessment' => $latestAssessment ? $latestAssessment->created_at->format('M d, Y') : 'No assessments'
+                    'last_assessment' => $latestAssessment ? $latestAssessment->created_at->format('M d, Y') : 'No assessments',
+                    'progress_trend' => $progressTrend,
+                    'bmi_change' => $bmiChange
                 ];
             });
         
@@ -2134,31 +2150,76 @@ class AdminController extends Controller
                 $bmi = round($assessment->weight_kg / ($height_m * $height_m), 2);
             }
             
+            // Extract diagnosis from treatment JSON
+            $diagnosis = null;
+            if ($assessment->treatment) {
+                $treatmentData = json_decode($assessment->treatment, true);
+                if (is_array($treatmentData) && isset($treatmentData['patient_info']['diagnosis'])) {
+                    $diagnosis = $treatmentData['patient_info']['diagnosis'];
+                }
+            }
+            
             return [
                 'id' => $assessment->assessment_id,
                 'date' => $assessment->assessment_date ? $assessment->assessment_date->format('M d, Y') : $assessment->created_at->format('M d, Y'),
                 'weight' => $assessment->weight_kg,
                 'height' => $assessment->height_cm,
                 'bmi' => $bmi,
+                'weight_for_age' => $assessment->weight_for_age ?? null,
+                'height_for_age' => $assessment->height_for_age ?? null,
+                'bmi_for_age' => $assessment->bmi_for_age ?? null,
                 'muac' => $assessment->muac_cm ?? null,
                 'recovery_status' => $assessment->recovery_status ?? 'N/A',
+                'diagnosis' => $diagnosis ?? 'N/A',
                 'notes' => $assessment->notes ?? ''
             ];
         });
         
         $latestAssessment = $assessments->first();
+        $secondLatestAssessment = $assessments->count() > 1 ? $assessments[1] : null;
         $firstAssessment = $assessments->last();
         
-        $weightChange = null;
-        $bmiChange = null;
+        // Use second latest as initial, latest as current for comparison
+        $comparisonInitial = $secondLatestAssessment ?? $firstAssessment;
+        $comparisonCurrent = $latestAssessment;
         
-        if ($firstAssessment && $latestAssessment && $assessments->count() > 1) {
-            if ($firstAssessment['weight'] && $latestAssessment['weight']) {
-                $weightChange = round($latestAssessment['weight'] - $firstAssessment['weight'], 2);
+        $weightChange = null;
+        $heightChange = null;
+        $bmiChange = null;
+        $weightForAgeChange = null;
+        $heightForAgeChange = null;
+        $bmiForAgeChange = null;
+        
+        if ($comparisonInitial && $comparisonCurrent) {
+            if ($comparisonInitial['weight'] && $comparisonCurrent['weight']) {
+                $weightChange = $comparisonCurrent['weight'] - $comparisonInitial['weight'];
             }
-            if ($firstAssessment['bmi'] && $latestAssessment['bmi']) {
-                $bmiChange = round($latestAssessment['bmi'] - $firstAssessment['bmi'], 2);
+            if ($comparisonInitial['height'] && $comparisonCurrent['height']) {
+                $heightChange = $comparisonCurrent['height'] - $comparisonInitial['height'];
             }
+            if ($comparisonInitial['bmi'] && $comparisonCurrent['bmi']) {
+                $bmiChange = round($comparisonCurrent['bmi'] - $comparisonInitial['bmi'], 2);
+            }
+            if ($comparisonInitial['weight_for_age'] !== null && $comparisonCurrent['weight_for_age'] !== null) {
+                $weightForAgeChange = round($comparisonCurrent['weight_for_age'] - $comparisonInitial['weight_for_age'], 2);
+            }
+            if ($comparisonInitial['height_for_age'] !== null && $comparisonCurrent['height_for_age'] !== null) {
+                $heightForAgeChange = round($comparisonCurrent['height_for_age'] - $comparisonInitial['height_for_age'], 2);
+            }
+            if ($comparisonInitial['bmi_for_age'] !== null && $comparisonCurrent['bmi_for_age'] !== null) {
+                $bmiForAgeChange = round($comparisonCurrent['bmi_for_age'] - $comparisonInitial['bmi_for_age'], 2);
+            }
+        }
+        
+        // Calculate age properly
+        $ageYears = null;
+        $ageMonths = null;
+        if ($patient->birthdate) {
+            $ageYears = $patient->birthdate->age;
+            $ageMonths = $patient->birthdate->diffInMonths();
+        } elseif ($patient->age_months) {
+            $ageMonths = intval($patient->age_months);
+            $ageYears = intval($ageMonths / 12);
         }
         
         return response()->json([
@@ -2168,19 +2229,36 @@ class AdminController extends Controller
                     'id' => $patient->patient_id,
                     'name' => $patient->first_name . ' ' . $patient->last_name,
                     'date_of_birth' => $patient->birthdate ? $patient->birthdate->format('M d, Y') : 'N/A',
-                    'age' => $patient->birthdate ? $patient->birthdate->age : ($patient->age_months ? intval($patient->age_months / 12) : null),
+                    'age_years' => $ageYears,
+                    'age_months' => $ageMonths,
                     'sex' => $patient->sex ?? 'N/A',
-                    'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown',
-                    'address' => $patient->address ?? 'N/A'
+                    'barangay' => $patient->barangay ? $patient->barangay->barangay_name : 'Unknown'
                 ],
                 'assessments' => $assessments,
                 'summary' => [
                     'total_assessments' => $assessments->count(),
                     'first_assessment_date' => $firstAssessment ? $firstAssessment['date'] : null,
                     'latest_assessment_date' => $latestAssessment ? $latestAssessment['date'] : null,
+                    'initial_weight' => $comparisonInitial ? $comparisonInitial['weight'] : null,
+                    'current_weight' => $latestAssessment ? $latestAssessment['weight'] : null,
                     'weight_change' => $weightChange,
+                    'initial_height' => $comparisonInitial ? $comparisonInitial['height'] : null,
+                    'current_height' => $latestAssessment ? $latestAssessment['height'] : null,
+                    'height_change' => $heightChange,
+                    'initial_bmi' => $comparisonInitial ? $comparisonInitial['bmi'] : null,
+                    'current_bmi' => $latestAssessment ? $latestAssessment['bmi'] : null,
                     'bmi_change' => $bmiChange,
+                    'initial_weight_for_age' => $comparisonInitial ? $comparisonInitial['weight_for_age'] : null,
+                    'current_weight_for_age' => $latestAssessment ? $latestAssessment['weight_for_age'] : null,
+                    'weight_for_age_change' => $weightForAgeChange,
+                    'initial_height_for_age' => $comparisonInitial ? $comparisonInitial['height_for_age'] : null,
+                    'current_height_for_age' => $latestAssessment ? $latestAssessment['height_for_age'] : null,
+                    'height_for_age_change' => $heightForAgeChange,
+                    'initial_bmi_for_age' => $comparisonInitial ? $comparisonInitial['bmi_for_age'] : null,
+                    'current_bmi_for_age' => $latestAssessment ? $latestAssessment['bmi_for_age'] : null,
+                    'bmi_for_age_change' => $bmiForAgeChange,
                     'current_status' => $latestAssessment ? $latestAssessment['recovery_status'] : 'No assessments',
+                    'current_diagnosis' => $latestAssessment ? $latestAssessment['diagnosis'] : 'N/A',
                     'progress_trend' => $bmiChange > 0 ? 'improving' : ($bmiChange < 0 ? 'declining' : 'stable')
                 ]
             ],
