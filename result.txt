@@ -1,0 +1,55 @@
+root@srv1573313:/home/shares-app/htdocs/shares-app.site/capstone_system# stat /home/shares-app
+stat /home/shares-app/htdocs
+stat /home/shares-app/htdocs/shares-app.site
+stat /home/shares-app/htdocs/shares-app.site/capstone_system
+stat /home/shares-app/htdocs/shares-app.site/capstone_system/LLM
+stat /home/shares-app/htdocs/shares-app.site/capstone_system/RandomForest
+  File: /home/shares-app
+  Size: 4096            Blocks: 8          IO Block: 4096   directory
+Device: 8,1     Inode: 1612350     Links: 12
+Access: (0770/drwxrwx---)  Uid: ( 1002/shares-app)   Gid: ( 1004/shares-app)
+Access: 2026-04-10 06:13:15.166247874 +0000
+Modify: 2026-04-10 06:03:12.019639007 +0000
+Change: 2026-04-10 06:03:12.019639007 +0000
+ Birth: 2026-04-10 05:11:25.197823617 +0000
+  File: /home/shares-app/htdocs
+  Size: 4096            Blocks: 8          IO Block: 4096   directory
+Device: 8,1     Inode: 1612360     Links: 3
+Access: (0770/drwxrwx---)  Uid: ( 1002/shares-app)   Gid: ( 1004/shares-app)
+Access: 2026-04-10 20:19:09.540297457 +0000
+Modify: 2026-04-10 20:18:40.662171903 +0000
+Change: 2026-04-10 20:18:40.662171903 +0000
+ Birth: 2026-04-10 05:11:25.199823626 +0000
+  File: /home/shares-app/htdocs/shares-app.site
+  Size: 4096            Blocks: 8          IO Block: 4096   directory
+Device: 8,1     Inode: 2097195     Links: 4
+Access: (0775/drwxrwxr-x)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-04-10 20:25:01.759828841 +0000
+Modify: 2026-04-10 20:24:55.625802171 +0000
+Change: 2026-04-10 20:24:55.625802171 +0000
+ Birth: 2026-04-10 20:18:40.661171899 +0000
+  File: /home/shares-app/htdocs/shares-app.site/capstone_system
+  Size: 4096            Blocks: 8          IO Block: 4096   directory
+Device: 8,1     Inode: 2097243     Links: 16
+Access: (0775/drwxrwxr-x)  Uid: (   33/www-data)   Gid: (   33/www-data)
+Access: 2026-04-10 21:33:55.412819753 +0000
+Modify: 2026-04-10 21:31:13.989117001 +0000
+Change: 2026-04-10 21:33:55.547820340 +0000
+ Birth: 2026-04-10 20:24:55.625802171 +0000
+  File: /home/shares-app/htdocs/shares-app.site/capstone_system/LLM
+  Size: 4096            Blocks: 8          IO Block: 4096   directory
+Device: 8,1     Inode: 2097252     Links: 5
+Access: (0775/drwxrwxr-x)  Uid: (   33/www-data)   Gid: (   33/www-data)
+Access: 2026-04-10 21:40:39.707579827 +0000
+Modify: 2026-04-10 21:40:39.706579823 +0000
+Change: 2026-04-10 21:40:39.706579823 +0000
+ Birth: 2026-04-10 20:24:55.626802175 +0000
+  File: /home/shares-app/htdocs/shares-app.site/capstone_system/RandomForest
+  Size: 4096            Blocks: 8          IO Block: 4096   directory
+Device: 8,1     Inode: 2097265     Links: 6
+Access: (0775/drwxrwxr-x)  Uid: (   33/www-data)   Gid: (   33/www-data)
+Access: 2026-04-10 21:45:20.668802773 +0000
+Modify: 2026-04-10 21:45:20.667802768 +0000
+Change: 2026-04-10 21:45:20.667802768 +0000
+ Birth: 2026-04-10 20:24:55.628802184 +0000
+
