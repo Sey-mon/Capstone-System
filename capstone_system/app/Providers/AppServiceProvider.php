@@ -56,8 +56,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Register custom @assetv directive for smart cache busting
         // Usage: @assetv('css/login.css')
-        Blade::directive('assetv', function ($path) {
-            return "<?php \$p = {$path}; echo asset(\$p) . '?v=' . (file_exists(public_path(\$p)) ? filemtime(public_path(\$p)) : '0'); ?>";
+        // Use environment variable for version to avoid filemtime() calls on every render
+        $assetVersion = env('ASSET_VERSION', time());
+        Blade::directive('assetv', function ($path) use ($assetVersion) {
+            return "<?php echo asset({$path}) . '?v=' . '{$assetVersion}'; ?>";
         });
     }
 }
