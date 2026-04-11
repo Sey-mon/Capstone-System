@@ -52,7 +52,7 @@
         
         <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-title">Total Screenings</div>
+                <div class="stat-title">Total Assessments</div>
                 <div class="stat-icon warning">
                     <i class="fas fa-clipboard-list"></i>
                 </div>

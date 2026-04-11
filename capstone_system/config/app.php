@@ -107,6 +107,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Custom Encryption Keys for Data Security
+    |--------------------------------------------------------------------------
+    |
+    | These keys are used for encrypting sensitive user data (PII) in the database.
+    | IMPORTANT: These must be the same values used to encrypt existing data!
+    |
+    */
+
+    'encryption_key' => env('APP_ENCRYPTION_KEY', 'default-key-change-this'),
+    'user_data_key' => env('USER_DATA_ENCRYPTION_KEY', 'user-key-change-this'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
     |
