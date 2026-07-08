@@ -1,4 +1,4 @@
-# 🏥 Capstone Malnutrition Assessment & Management System
+# 🏥 SHARES
 
 A comprehensive web-based system for malnutrition assessment, treatment planning, and nutrition management for children aged 0-5 years, built with Laravel, FastAPI, and AI-powered analysis.
 
